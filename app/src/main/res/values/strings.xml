@@ -1,0 +1,64 @@
+<resources>
+    // example naming convention
+    // error_
+    // msg_
+    // title_
+    // action_
+    <string name="app_name">TAC</string>
+
+    <string name="title_brand_name_short">TAC</string>
+    <string name="title_brand_name">Take a Conversation</string>
+    <string name="title_copyright_name">Made by MQV Inc.</string>
+    <string name="title_chat">Chats</string>
+    <string name="title_people">People</string>
+    <string name="title_active_people">Active people</string>
+    <string name="title_conversation_dummy">Conversation Title</string>
+    <string name="title_timestamp_dummy">\u2022 3:06 PM</string>
+    // created application at 08/02/2021
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_login_with_phone">Login with phone number</string>
+    <string name="title_login_with_facebook">Login with facebook</string>
+    <string name="title_login_with_google">Login with google</string>
+
+    <string name="action_search_message">Search</string>
+    <string name="action_add_new_message">Add a new message</string>
+    <string name="action_create_account">Create account</string>
+    <string name="action_done">Done</string>
+    <string name="action_create">Create</string>
+    <string name="action_register">Register</string>
+    <string name="action_log_in">Log in</string>
+    <string name="action_send">Send</string>
+    <string name="action_resend">Resend</string>
+    <string name="action_verify">Verify</string>
+
+    <string name="msg_conversation_content_dummy">You: text a new message here</string>
+    <string name="msg_forgot_password"><u>Forgot password?</u></string>
+    <string name="msg_login_failed">"Login failed"</string>
+    <string name="msg_login_successfully">Login successfully</string>
+    <string name="msg_register_failed">Register failed</string>
+    <string name="msg_register_successfully">Register successfully</string>
+    <string name="msg_generate_otp_title_dummy">Enter your phone number in the box below.</string>
+    <string name="msg_generate_otp_detail_dummy">We will send you a SMS to verify your account</string>
+    <string name="msg_verify_otp_title_dummy"><![CDATA[Enter the verification code we just sent you via SMS. The code
+    will be expired in <font color=\'#6200EE\'>%d</font> seconds.]]></string>
+    <string name="msg_verify_otp_not_receiver">If you didn\'t receive a code!</string>
+    <string name="msg_verification_code_not_available">Your verification code is not available right now.</string>
+
+    <string name="error_phone_verification">Verification failed, please try again!</string>
+    <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
+
+    <string name="prompt_email_or_phone">Email or Phone number</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_phone_number">Phone number</string>
+    <string name="prompt_password">Password</string>
+    <string name="prompt_display_name">Display Name</string>
+    <string name="prompt_re_password">Re-password</string>
+
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >8 characters</string>
+    <string name="invalid_re_password">Password doesn\'t match</string>
+    <string name="invalid_display_name">Display name doesn\'t allowed empty</string>
+    <string name="invalid_phone_format">The phone number is invalid</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

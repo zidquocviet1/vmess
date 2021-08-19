@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/all_padding_default"
+    tools:context=".activity.GenerateOtpActivity">
+
+    <ImageView
+        android:id="@+id/image_banner"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@null"
+        android:src="@drawable/image_generate_otp_message_sent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0" />
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/msg_generate_otp_title_dummy"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image_banner" />
+
+    <TextView
+        android:id="@+id/text_detail"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginEnd="@dimen/all_margin"
+        android:alpha="0.6"
+        android:gravity="center"
+        android:text="@string/msg_generate_otp_detail_dummy"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_title" />
+
+    <EditText
+        android:id="@+id/edit_text_phone"
+        style="@style/EditTextCustomColor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginTop="@dimen/all_margin"
+        android:layout_marginEnd="@dimen/all_margin"
+        android:autofillHints="phone"
+        android:hint="@string/prompt_phone_number"
+        android:inputType="phone"
+        android:padding="14dp"
+        android:selectAllOnFocus="true"
+        app:layout_constraintEnd_toEndOf="@id/text_title"
+        app:layout_constraintStart_toStartOf="@id/text_title"
+        app:layout_constraintTop_toBottomOf="@id/text_detail" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_send"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin"
+        android:enabled="false"
+        android:padding="14dp"
+        android:text="@string/action_send"
+        app:cornerRadius="@dimen/button_corner_radius_medium"
+        app:layout_constraintEnd_toEndOf="@id/edit_text_phone"
+        app:layout_constraintStart_toStartOf="@id/edit_text_phone"
+        app:layout_constraintTop_toBottomOf="@id/edit_text_phone"
+        app:layout_constraintWidth_percent="0.3"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/all_margin_top_soft"
+        android:theme="@style/ProgressbarLoadingColor"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/edit_text_phone"
+        app:layout_constraintEnd_toEndOf="@id/edit_text_phone"
+        app:layout_constraintTop_toTopOf="@id/edit_text_phone" />
+</androidx.constraintlayout.widget.ConstraintLayout>

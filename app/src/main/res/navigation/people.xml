@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/people"
+    app:startDestination="@id/peopleListFragment">
+    <fragment
+        android:id="@+id/peopleListFragment"
+        android:name="com.mqv.realtimechatapplication.ui.fragment.PeopleListFragment"
+        android:label="@string/title_people"
+        tools:layout="@layout/fragment_people_list" >
+        <action
+            android:id="@+id/action_peopleListFragment_to_activePeopleFragment2"
+            app:destination="@id/activePeopleFragment2" />
+    </fragment>
+    <fragment
+        android:id="@+id/activePeopleFragment2"
+        android:name="com.mqv.realtimechatapplication.ui.fragment.ActivePeopleFragment"
+        android:label="fragment_active_people"
+        tools:layout="@layout/fragment_active_people" />
+</navigation>

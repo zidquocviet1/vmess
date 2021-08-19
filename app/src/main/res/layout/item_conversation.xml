@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingStart="10dp"
+    android:paddingEnd="@dimen/all_margin">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_conversation"
+        android:layout_width="@dimen/image_conversation"
+        android:layout_height="@dimen/image_conversation"
+        android:src="@drawable/ic_round_account"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_title_conversation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/text_appearance_margin"
+        android:text="@string/title_conversation_dummy"
+        android:textSize="18sp"
+        android:maxLength="30"
+        app:layout_constraintVertical_bias="1"
+        app:layout_constraintBottom_toBottomOf="@id/guide_line"
+        app:layout_constraintStart_toEndOf="@id/image_conversation"
+        app:layout_constraintTop_toTopOf="@id/image_conversation" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guide_line"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_content_conversation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/msg_conversation_content_dummy"
+        app:layout_constraintVertical_bias="0"
+        android:textSize="14sp"
+        android:maxLength="30"
+        app:layout_constraintBottom_toBottomOf="@id/image_conversation"
+        app:layout_constraintStart_toStartOf="@id/text_title_conversation"
+        app:layout_constraintTop_toTopOf="@id/guide_line"/>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_created_at"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_timestamp_dummy"
+        android:textSize="14sp"
+        android:layout_marginStart="@dimen/all_margin_top_soft"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintBottom_toBottomOf="@id/text_content_conversation"
+        app:layout_constraintEnd_toStartOf="@id/image_state"
+        app:layout_constraintStart_toEndOf="@id/text_content_conversation"
+        app:layout_constraintTop_toTopOf="@id/text_content_conversation" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_state"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:background="@drawable/ic_round_account"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

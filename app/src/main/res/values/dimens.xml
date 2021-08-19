@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="all_margin">14dp</dimen>
+    <dimen name="all_margin_top_soft">6dp</dimen>
+    <dimen name="all_padding_default">8dp</dimen>
+
+    <dimen name="text_input_corner_radius">24dp</dimen>
+    <dimen name="text_title_size">24sp</dimen>
+    <dimen name="text_appearance_margin">10dp</dimen>
+
+    <dimen name="image_conversation">70dp</dimen>
+    <dimen name="image_icon_size">48dp</dimen>
+
+    <dimen name="image_user_avatar_extra_small">24dp</dimen>
+    <dimen name="image_user_avatar_small">40dp</dimen>
+    <dimen name="image_user_avatar_medium">60dp</dimen>
+
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="button_height_default">60dp</dimen>
+    <dimen name="button_corner_radius_soft">20dp</dimen>
+    <dimen name="button_corner_radius_medium">40dp</dimen>
+    <dimen name="button_corner_radius_hard">60dp</dimen>
+</resources>
