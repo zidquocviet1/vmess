@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.data.repository;
 
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
+import com.mqv.realtimechatapplication.network.model.CustomUser;
 import com.mqv.realtimechatapplication.util.Resource;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -13,5 +14,5 @@ public interface LoginRepository {
 
     Resource<LoggedInUser> login(String username, String password);
 
-    Observable<ApiResponse<String>> test(String token);
+    Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(String token);
 }

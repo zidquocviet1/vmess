@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.network.service;
 
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
+import com.mqv.realtimechatapplication.network.model.CustomUser;
 import com.mqv.realtimechatapplication.util.Const;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -18,6 +19,6 @@ public interface UserService {
                                                  @Field("password") String password);
 
     @GET(value = "user/info")
-    Observable<ApiResponse<String>> fetchUserInfo(@Header(Const.AUTHORIZATION) String token,
-                                                  @Header(Const.AUTHORIZER) String authorizer);
+    Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(@Header(Const.AUTHORIZATION) String token,
+                                                            @Header(Const.AUTHORIZER) String authorizer);
 }

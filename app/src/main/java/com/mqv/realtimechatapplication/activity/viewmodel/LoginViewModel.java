@@ -9,19 +9,19 @@ import android.util.Patterns;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.ui.data.LoggedInUserView;
 import com.mqv.realtimechatapplication.data.result.LoginResult;
 import com.mqv.realtimechatapplication.ui.validator.LoginFormState;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
+import java.net.HttpURLConnection;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -83,12 +83,14 @@ public class LoginViewModel extends ViewModel {
         return password != null && password.trim().length() > 5;
     }
 
-    public void test(String token) {
-        cd.add(loginRepository.test(token)
+    public void fetchCustomUserInfo(String token) {
+        cd.add(loginRepository.fetchCustomUserInfo(token)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(stringApiResponse -> {
-                    if (stringApiResponse.getStatusCode() == 200) {
+                .subscribe(response -> {
+                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                        var user = response.getSuccess();
+
                         Logging.show("Hello from Spring Boot");
                     }
                 }, Throwable::printStackTrace));

@@ -20,12 +20,8 @@ import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
 import javax.inject.Singleton;
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;

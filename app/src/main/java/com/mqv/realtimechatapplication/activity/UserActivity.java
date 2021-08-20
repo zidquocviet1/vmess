@@ -25,8 +25,8 @@ public class UserActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user);
-        FirebaseUser user = getIntent().getParcelableExtra(Const.EXTRA_USER_INFO);
         FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser user = auth.getCurrentUser();
 
         findViewById(R.id.button_update).setOnClickListener(v -> {
             // TODO: call upload photo to the Spring server if success then call reload user

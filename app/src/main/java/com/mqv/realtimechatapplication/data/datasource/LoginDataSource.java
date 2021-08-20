@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.data.datasource;
 
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
+import com.mqv.realtimechatapplication.network.model.CustomUser;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Resource;
 
@@ -37,7 +38,7 @@ public class LoginDataSource {
         // TODO: revoke authentication
     }
 
-    public Observable<ApiResponse<String>> test(String token){
-        return service.fetchUserInfo(token, "firebase");
+    public Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(String token){
+        return service.fetchCustomUserInfo(token, "firebase");
     }
 }

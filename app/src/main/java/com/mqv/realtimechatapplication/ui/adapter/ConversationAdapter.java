@@ -11,12 +11,17 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.MessageStatus;
 
 import java.util.List;
+import java.util.Random;
 
 public class ConversationAdapter extends ListAdapter<Conversation, ConversationAdapter.ConversationViewHolder> {
     private final List<Conversation> data;
@@ -42,6 +47,7 @@ public class ConversationAdapter extends ListAdapter<Conversation, ConversationA
     @Override
     public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         var view = LayoutInflater.from(context).inflate(R.layout.item_conversation, parent, false);
+
         return new ConversationViewHolder(view);
     }
 
@@ -60,19 +66,31 @@ public class ConversationAdapter extends ListAdapter<Conversation, ConversationA
         }
 
         public void bind(Conversation item, Context context){
-            Drawable imageState;
+            var randomIndex = new Random().nextInt(Const.DUMMIES_IMAGES_URL.length);
+
             if (item.getStatus() == MessageStatus.SEEN){
-                imageState = context.getDrawable(R.drawable.ic_facebook);
+                Glide.with(context)
+                        .load(Const.DUMMIES_IMAGES_URL[randomIndex])
+                        .centerCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .signature(new ObjectKey(Const.DUMMIES_IMAGES_URL[randomIndex]))
+                        .into(mBinding.imageState);
             }else if (item.getStatus() == MessageStatus.NOT_RECEIVED){
-                imageState = context.getDrawable(R.drawable.ic_check_circle_outline);
+                mBinding.imageState.setBackground(context.getDrawable(R.drawable.ic_check_circle_outline));
                 mBinding.imageState.setBackgroundTintList(context.getColorStateList(R.color.ic_background_tint));
             }else{
-                imageState = context.getDrawable(R.drawable.ic_round_check_circle);
+                mBinding.imageState.setBackground(context.getDrawable(R.drawable.ic_round_check_circle));
                 mBinding.imageState.setBackgroundTintList(context.getColorStateList(R.color.ic_background_tint));
             }
             mBinding.textTitleConversation.setText(item.getTitle());
             mBinding.textContentConversation.setText(item.getLastMessage());
-            mBinding.imageState.setBackground(imageState);
+
+            Glide.with(context)
+                    .load(Const.DUMMIES_IMAGES_URL[randomIndex])
+                    .centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .signature(new ObjectKey(Const.DUMMIES_IMAGES_URL[randomIndex]))
+                    .into(mBinding.imageConversation);
         }
     }
 }

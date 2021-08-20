@@ -12,10 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUserMetadata;
 import com.google.firebase.auth.GetTokenResult;
 import com.mqv.realtimechatapplication.activity.viewmodel.LoginViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityLoginBinding;
@@ -158,7 +156,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
                                 if (task.isSuccessful()){
                                     var result = task.getResult();
                                     if (result != null){
-                                        mViewModel.test("Bearer " + result.getToken());
+                                        mViewModel.fetchCustomUserInfo("Bearer " + result.getToken());
                                     }
                                 }
                             }

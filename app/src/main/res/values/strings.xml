@@ -5,6 +5,8 @@
     // title_
     // action_
     <string name="app_name">TAC</string>
+    <string name="author_app_first_name">Viet</string>
+    <string name="author_app_last_name">Mai</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>

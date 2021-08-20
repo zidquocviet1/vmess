@@ -3,6 +3,7 @@ package com.mqv.realtimechatapplication.data.repository;
 import com.mqv.realtimechatapplication.data.datasource.LoginDataSource;
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
+import com.mqv.realtimechatapplication.network.model.CustomUser;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Resource;
 
@@ -54,7 +55,7 @@ public class LoginRepositoryImpl implements LoginRepository{
     }
 
     @Override
-    public Observable<ApiResponse<String>> test(String token) {
-        return dataSource.test(token);
+    public Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(String token) {
+        return dataSource.fetchCustomUserInfo(token);
     }
 }

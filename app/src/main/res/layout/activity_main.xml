@@ -18,6 +18,30 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_background_icon"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="@dimen/all_margin"
+        android:foreground="?selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@color/base_background_color"
+        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/image_avatar"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <ImageView
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/ic_round_add"
+        android:backgroundTint="@color/black"
+        app:layout_constraintBottom_toBottomOf="@id/image_background_icon"
+        app:layout_constraintEnd_toEndOf="@id/image_background_icon"
+        app:layout_constraintStart_toStartOf="@id/image_background_icon"
+        app:layout_constraintTop_toTopOf="@id/image_background_icon" />
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title"
         style="@style/TitleTextAppearance"

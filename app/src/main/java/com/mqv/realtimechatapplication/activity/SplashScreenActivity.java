@@ -7,7 +7,6 @@ import android.os.Bundle;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.util.Const;
 
 public class SplashScreenActivity extends AppCompatActivity {
 
@@ -19,7 +18,6 @@ public class SplashScreenActivity extends AppCompatActivity {
         var user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null){
             var intent = new Intent(getApplicationContext(), MainActivity.class);
-            intent.putExtra(Const.EXTRA_USER_INFO, user);
             startActivity(intent);
         }else {
             startActivity(new Intent(getApplicationContext(), LoginActivity.class));

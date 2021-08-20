@@ -10,13 +10,16 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.mqv.core.model.Chat;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationAdapter;
+import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.MessageStatus;
@@ -27,6 +30,7 @@ import java.util.Arrays;
 
 public class ConversationFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>{
     private ConversationAdapter adapter;
+    private RankUserConversationAdapter rankUserConversationAdapter;
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -48,7 +52,6 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Logging.show("Conversation Fragment onCreateView called");
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
@@ -64,6 +67,12 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
             mViewModel.getConversationList().observe(this, conversations -> {
                 if (conversations != null && !conversations.isEmpty()){
                     adapter.submitList(conversations);
+                }
+            });
+
+            mViewModel.getRemoteUserList().observe(this, remoteUsers -> {
+                if (remoteUsers != null && !remoteUsers.isEmpty()){
+                    rankUserConversationAdapter.submitList(remoteUsers);
                 }
             });
         }
@@ -97,8 +106,16 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
         adapter = new ConversationAdapter(listConversation, getContext());
         adapter.submitList(listConversation);
 
+        rankUserConversationAdapter = new RankUserConversationAdapter(getContext());
+
         mBinding.recyclerMessages.setAdapter(adapter);
         mBinding.recyclerMessages.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         mBinding.recyclerMessages.setItemAnimator(new DefaultItemAnimator());
+        mBinding.recyclerMessages.setNestedScrollingEnabled(false);
+        mBinding.recyclerMessages.setHasFixedSize(false);
+
+        mBinding.recyclerRankChat.setAdapter(rankUserConversationAdapter);
+        mBinding.recyclerRankChat.setLayoutManager(new GridLayoutManager(getContext(), 1, RecyclerView.HORIZONTAL, false));
+        mBinding.recyclerRankChat.setItemAnimator(new DefaultItemAnimator());
     }
 }

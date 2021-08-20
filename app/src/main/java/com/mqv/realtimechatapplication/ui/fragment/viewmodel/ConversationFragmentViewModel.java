@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.MessageStatus;
 
@@ -14,10 +15,11 @@ import java.util.List;
 
 public class ConversationFragmentViewModel extends ViewModel {
     private final MutableLiveData<List<Conversation>> conversationList;
+    private final MutableLiveData<List<RemoteUser>> remoteUserList;
 
     public ConversationFragmentViewModel() {
-        Logging.show("Conversation Fragment View Model created");
         conversationList = new MutableLiveData<>();
+        remoteUserList = new MutableLiveData<>();
 
         newData();
     }
@@ -26,8 +28,12 @@ public class ConversationFragmentViewModel extends ViewModel {
         return conversationList;
     }
 
+    public LiveData<List<RemoteUser>> getRemoteUserList() {
+        return remoteUserList;
+    }
+
     /// test
-    public void newData(){
+    public void newData() {
         var listConversation = Arrays.asList(
                 new Conversation(1L, "Phạm Thảo Duyên", "You: ok", LocalDateTime.now(), MessageStatus.RECEIVED),
                 new Conversation(2L, "Phạm Băng Băng", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),
@@ -45,6 +51,20 @@ public class ConversationFragmentViewModel extends ViewModel {
                 new Conversation(14L, "Ngo Diec Pham 2", "You: 2 phut hon", LocalDateTime.now(), MessageStatus.NOT_RECEIVED),
                 new Conversation(15L, "Luu Duc Hoa 2", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED)
         );
+
+        var listRemoteUser = Arrays.asList(
+                new RemoteUser("1", "Thảo Duyên", "Phạm"),
+                new RemoteUser("2", "Băng Băng", "Phạm"),
+                new RemoteUser("3", "Lệ Dĩnh", "Triệu"),
+                new RemoteUser("4", "Diệc Phàm", "Ngô"),
+                new RemoteUser("5", "Đức Hoa", "Lưu"),
+                new RemoteUser("6", "Viet", "Mai"),
+                new RemoteUser("7", "Han", "Ngoc"),
+                new RemoteUser("8", "Nhu", "Tran"),
+                new RemoteUser("9", "Mai", "Phuong"),
+                new RemoteUser("10", "Tuyen", "Huyen")
+        );
         conversationList.setValue(listConversation);
+        remoteUserList.setValue(listRemoteUser);
     }
 }

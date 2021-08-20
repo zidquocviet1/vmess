@@ -7,7 +7,9 @@
     android:background="?selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:paddingStart="10dp"
+    android:paddingStart="14dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
     android:paddingEnd="@dimen/all_margin">
 
     <com.google.android.material.imageview.ShapeableImageView
@@ -27,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/text_appearance_margin"
         android:text="@string/title_conversation_dummy"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:maxLength="30"
         app:layout_constraintVertical_bias="1"
         app:layout_constraintBottom_toBottomOf="@id/guide_line"
