@@ -1,22 +1,22 @@
 package com.mqv.realtimechatapplication.activity;
 
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.DISPLAY_NAME_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.EMAIL_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.PASSWORD_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.RE_PASSWORD_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.SUCCESS;
+
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.RegisterViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityRegisterBinding;
 import com.mqv.realtimechatapplication.util.Const;
 
-import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,7 +26,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRegisterBinding> {
     private EditText usernameEdit, displayNameEdit, passwordEdit, rePasswordEdit;
-    private boolean isPhoneType = false;
 
     @Override
     public void binding() {
@@ -53,40 +52,40 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
 
     @Override
     public void setupObserver() {
-        mViewModel.getRegisterFormState().observe(this, state -> {
-            if (state == null)
+        mViewModel.getRegisterValidationResult().observe(this, result -> {
+            if (result == null)
                 return;
 
-            mBinding.buttonRegister.setEnabled(state.isDataValid());
+            mBinding.buttonRegister.setEnabled(result == SUCCESS);
 
-            if (state.getUsernameError() != null) {
-                mBinding.textLayoutUsername.setError(getString(state.getUsernameError()));
+            if (result == EMAIL_ERROR) {
+                mBinding.textLayoutUsername.setError(getString(result.getMessage()));
             } else {
                 mBinding.textLayoutUsername.setErrorEnabled(false);
             }
 
-            if (state.getDisplayNameError() != null) {
-                mBinding.textLayoutDisplayName.setError(getString(state.getDisplayNameError()));
+            if (result == DISPLAY_NAME_ERROR) {
+                mBinding.textLayoutDisplayName.setError(getString(result.getMessage()));
             } else {
                 mBinding.textLayoutDisplayName.setErrorEnabled(false);
             }
 
-            if (state.getPasswordError() != null) {
-                mBinding.textLayoutPassword.setError(getString(state.getPasswordError()));
+            if (result == PASSWORD_ERROR) {
+                mBinding.textLayoutPassword.setError(getString(result.getMessage()));
             } else {
                 mBinding.textLayoutPassword.setErrorEnabled(false);
             }
 
-            if (state.getRePasswordError() != null) {
-                mBinding.textLayoutRePassword.setError(getString(state.getRePasswordError()));
+            if (result == RE_PASSWORD_ERROR) {
+                mBinding.textLayoutRePassword.setError(getString(result.getMessage()));
             } else {
                 mBinding.textLayoutRePassword.setErrorEnabled(false);
             }
         });
     }
 
-    private void setupEvent(){
-        var textChanged = new TextWatcher(){
+    private void setupEvent() {
+        var textChanged = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -103,8 +102,7 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
                         usernameEdit.getText().toString().trim(),
                         displayNameEdit.getText().toString().trim(),
                         passwordEdit.getText().toString().trim(),
-                        rePasswordEdit.getText().toString().trim(),
-                        isPhoneType
+                        rePasswordEdit.getText().toString().trim()
                 );
             }
         };
@@ -113,28 +111,6 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
         displayNameEdit.addTextChangedListener(textChanged);
         passwordEdit.addTextChangedListener(textChanged);
         rePasswordEdit.addTextChangedListener(textChanged);
-
-        mBinding.textLayoutUsername.setEndIconOnClickListener(v -> {
-            isPhoneType = !isPhoneType;
-            if (!isPhoneType){
-                usernameEdit.setHint(R.string.prompt_email);
-                usernameEdit.setInputType(EditorInfo.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-            }else{
-                usernameEdit.setHint(R.string.prompt_phone_number);
-                usernameEdit.setInputType(EditorInfo.TYPE_CLASS_NUMBER);
-            }
-            mBinding.textLayoutUsername.setEndIconActivated(isPhoneType);
-
-            if (!TextUtils.isEmpty(usernameEdit.getText().toString().trim())){
-                mViewModel.registerDataChanged(
-                        usernameEdit.getText().toString().trim(),
-                        displayNameEdit.getText().toString().trim(),
-                        passwordEdit.getText().toString().trim(),
-                        rePasswordEdit.getText().toString().trim(),
-                        isPhoneType
-                );
-            }
-        });
 
         mBinding.buttonRegister.setOnClickListener((v) -> {
             Map<String, Object> user = new HashMap<>();

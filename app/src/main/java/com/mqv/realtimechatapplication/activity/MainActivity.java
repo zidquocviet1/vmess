@@ -82,10 +82,16 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
                                      @Nullable Bundle bundle) {
         var id = navDestination.getId();
 
-        if (id == R.id.peopleListFragment) {
+        if (id == R.id.peopleListFragment || id == R.id.activePeopleFragment2) {
             mBinding.textTitle.setText(R.string.title_people);
+            mBinding.buttonAllPeople.setVisibility(View.VISIBLE);
+            mBinding.buttonAddConversation.setVisibility(View.GONE);
+            mBinding.buttonQrScanner.setVisibility(View.GONE);
         } else if (id == R.id.conversationFragment) {
             mBinding.textTitle.setText(R.string.title_chat);
+            mBinding.buttonAllPeople.setVisibility(View.GONE);
+            mBinding.buttonAddConversation.setVisibility(View.VISIBLE);
+            mBinding.buttonQrScanner.setVisibility(View.VISIBLE);
         }
     }
 }

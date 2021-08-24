@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <PreferenceCategory
+        android:key="@string/key_pref_category_accounts"
+        android:layout="@layout/item_preference_category"
+        android:title="@string/title_preference_manage_accounts">
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:layout="@layout/item_preference_category"
+        android:title="@string/title_preference_profile">
+        <Preference
+            android:icon="@drawable/ic_preferences_dark_mode"
+            android:key="@string/key_pref_dark_mode"
+            android:title="@string/title_preference_item_dark_mode" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_messages_requests"
+            android:key="@string/key_pref_messages_requests"
+            android:title="@string/title_preference_item_messages_requests" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_toggle_status"
+            android:key="@string/key_pref_active_status"
+            android:title="@string/title_preference_item_active_status" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_at"
+            android:key="@string/key_pref_username"
+            android:title="@string/title_preference_item_username" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_qr_code"
+            android:key="@string/key_pref_qr_code"
+            android:title="@string/title_preference_item_qr_code" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:layout="@layout/item_preference_category"
+        android:title="@string/title_preference_preferences">
+        <Preference
+            android:icon="@drawable/ic_preferences_alarm"
+            android:key="@string/key_pref_notifications_and_sounds"
+            android:title="Notifications &amp; Sounds" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_archive"
+            android:key="@string/key_pref_archived_chats"
+            android:title="Archived Chats" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_privacy"
+            android:key="@string/key_pref_privacy"
+            android:title="@string/title_preference_item_privacy" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_story"
+            android:key="@string/key_pref_story"
+            android:title="@string/title_preference_item_story" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_phone_contact"
+            android:key="@string/key_pref_phone_contacts"
+            android:title="Phone Contacts" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_photo_media"
+            android:key="@string/key_pref_photos_and_media"
+            android:title="Photos &amp; Media" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:layout="@layout/item_preference_category"
+        android:title="@string/title_preference_system">
+        <Preference
+            android:icon="@drawable/ic_preferences_account_settings"
+            android:key="@string/key_pref_account_settings"
+            android:title="@string/title_preference_item_account_settings" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_report_problem"
+            android:key="@string/key_pref_report_problem"
+            android:title="@string/title_preference_item_report_problem" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_robot_help"
+            android:key="@string/key_pref_help"
+            android:title="@string/title_preference_item_help" />
+
+        <Preference
+            android:icon="@drawable/ic_preferences_legal_and_policies"
+            android:key="@string/title_preference_item_legal_policies"
+            android:title="@string/title_preference_item_legal_policies" />
+    </PreferenceCategory>
+</androidx.preference.PreferenceScreen>

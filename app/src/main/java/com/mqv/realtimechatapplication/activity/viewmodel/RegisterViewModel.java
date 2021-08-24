@@ -1,19 +1,19 @@
 package com.mqv.realtimechatapplication.activity.viewmodel;
 
-import android.text.TextUtils;
-import android.util.Patterns;
+import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isDisplayNameValid;
+import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isEmailValid;
+import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isPasswordValid;
+import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isRePasswordValid;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.RegisterRepository;
-import com.mqv.realtimechatapplication.ui.validator.RegisterFormState;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
+import com.mqv.realtimechatapplication.ui.validator.RegisterForm;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -21,48 +21,35 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
 public class RegisterViewModel extends ViewModel {
-    private final MutableLiveData<RegisterFormState> registerFormState = new MutableLiveData<>();
+    private final MutableLiveData<LoginRegisterValidationResult> registerValidationResult = new MutableLiveData<>();
     private final RegisterRepository repository;
 
     @Inject
-    public RegisterViewModel(RegisterRepository registerRepository){
+    public RegisterViewModel(RegisterRepository registerRepository) {
         this.repository = registerRepository;
     }
 
-    public LiveData<RegisterFormState> getRegisterFormState(){ return registerFormState; }
+
+    public LiveData<LoginRegisterValidationResult> getRegisterValidationResult() {
+        return registerValidationResult;
+    }
 
     public void registerDataChanged(String username,
                                     String displayName,
                                     String password,
-                                    String rePassword,
-                                    boolean isPhoneType){
-        if (!isUserNameValid(isPhoneType, username)){
-            var form = new RegisterFormState();
-            form.setUsernameError(R.string.invalid_username);
-            registerFormState.setValue(form);
-        }else if (TextUtils.isEmpty(displayName)){
-            var form = new RegisterFormState();
-            form.setDisplayNameError(R.string.invalid_display_name);
-            registerFormState.setValue(form);
-        }else if (password.length() < 8){
-            var form = new RegisterFormState();
-            form.setPasswordError(R.string.invalid_password);
-            registerFormState.setValue(form);
-        }else if (!rePassword.equals(password)){
-            var form = new RegisterFormState();
-            form.setRePasswordError(R.string.invalid_re_password);
-            registerFormState.setValue(form);
-        }else{
-            registerFormState.setValue(new RegisterFormState(true));
-        }
+                                    String rePassword) {
+        var form = new RegisterForm(username, displayName, password, rePassword);
+
+        var result = isEmailValid()
+                .and(isDisplayNameValid())
+                .and(isPasswordValid())
+                .and(isRePasswordValid())
+                .apply(form);
+
+        registerValidationResult.setValue(result);
     }
 
-    private boolean isUserNameValid(boolean isPhoneType, String input){
-        return isPhoneType ? Pattern.compile(Const.PHONE_REGEX_PATTERN).matcher(input).matches()
-                : Patterns.EMAIL_ADDRESS.matcher(input).matches();
-    }
-
-    public void register(Map<String, Object> payload){
+    public void register(Map<String, Object> payload) {
         repository.login(payload);
     }
 }

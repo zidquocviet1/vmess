@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <dimen name="all_margin">14dp</dimen>
     <dimen name="all_margin_top_soft">6dp</dimen>
     <dimen name="all_padding_default">8dp</dimen>
+    <dimen name="all_padding_common">16dp</dimen>
 
     <dimen name="text_input_corner_radius">24dp</dimen>
     <dimen name="text_title_size">24sp</dimen>
@@ -18,8 +19,14 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <dimen name="custom_app_bar_height">52dp</dimen>
+
     <dimen name="button_height_default">60dp</dimen>
     <dimen name="button_corner_radius_soft">20dp</dimen>
     <dimen name="button_corner_radius_medium">40dp</dimen>
     <dimen name="button_corner_radius_hard">60dp</dimen>
+
+    // override the max_width of the menu items in bottom navigation view
+    <dimen name="design_bottom_navigation_item_max_width" tools:override="true">600dp</dimen>
+    <dimen name="design_bottom_navigation_active_item_max_width" tools:override="true">600dp</dimen>
 </resources>

@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity;
 
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.*;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -46,18 +48,18 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
     @Override
     public void setupObserver() {
-        mViewModel.getLoginFormState().observe(this, loginFormState -> {
-            if (loginFormState == null) {
+        mViewModel.getLoginValidationResult().observe(this, result -> {
+            if (result == null)
                 return;
-            }
-            mBinding.buttonLogin.setEnabled(loginFormState.isDataValid());
 
-            if (loginFormState.getUsernameError() != null) {
-                mBinding.textLayoutEmail.setError(getString(loginFormState.getUsernameError()));
+            mBinding.buttonLogin.setEnabled(result == SUCCESS);
+
+            if (result == EMAIL_ERROR) {
+                mBinding.textLayoutEmail.setError(getString(result.getMessage()));
             } else mBinding.textLayoutEmail.setErrorEnabled(false);
 
-            if (loginFormState.getPasswordError() != null) {
-                mBinding.textLayoutPassword.setError(getString(loginFormState.getPasswordError()));
+            if (result == PASSWORD_ERROR) {
+                mBinding.textLayoutPassword.setError(getString(result.getMessage()));
             } else mBinding.textLayoutPassword.setErrorEnabled(false);
         });
 
@@ -153,9 +155,9 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
                         .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
                             @Override
                             public void onComplete(@NonNull Task<GetTokenResult> task) {
-                                if (task.isSuccessful()){
+                                if (task.isSuccessful()) {
                                     var result = task.getResult();
-                                    if (result != null){
+                                    if (result != null) {
                                         mViewModel.fetchCustomUserInfo("Bearer " + result.getToken());
                                     }
                                 }

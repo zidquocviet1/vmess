@@ -1,4 +1,5 @@
 <resources>
+    // ICONS RESOURCE: https://www.flaticon.com/
     // example naming convention
     // error_
     // msg_
@@ -7,6 +8,7 @@
     <string name="app_name">TAC</string>
     <string name="author_app_first_name">Viet</string>
     <string name="author_app_last_name">Mai</string>
+    <string name="author_app_full_name">Mai Quoc Viet</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
@@ -21,6 +23,26 @@
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
     <string name="title_login_with_google">Login with google</string>
+    <string name="title_user_information">Me</string>
+
+    <string name="title_preference_profile">Profile</string>
+    <string name="title_preference_preferences">Preferences</string>
+    <string name="title_preference_system">System</string>
+    <string name="title_preference_manage_accounts">Accounts</string>
+
+    <string name="title_preference_item_manage_accounts">Manage Accounts</string>
+    <string name="title_preference_item_manage_accounts_summary">Signed in</string>
+    <string name="title_preference_item_dark_mode">Dark Mode</string>
+    <string name="title_preference_item_messages_requests">Messages Requests</string>
+    <string name="title_preference_item_active_status">Active Status</string>
+    <string name="title_preference_item_username">Username</string>
+    <string name="title_preference_item_qr_code">QR Code</string>
+    <string name="title_preference_item_privacy">Privacy</string>
+    <string name="title_preference_item_story">Story</string>
+    <string name="title_preference_item_account_settings">Account Settings</string>
+    <string name="title_preference_item_report_problem">Report Problem</string>
+    <string name="title_preference_item_help">Help</string>
+    <string name="title_preference_item_legal_policies">Legal &amp; Policies</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -32,6 +54,7 @@
     <string name="action_send">Send</string>
     <string name="action_resend">Resend</string>
     <string name="action_verify">Verify</string>
+    <string name="action_edit_profile">Edit Profile</string>
 
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
@@ -57,10 +80,28 @@
     <string name="prompt_re_password">Re-password</string>
 
     <string name="invalid_username">Not a valid username</string>
-    <string name="invalid_password">Password must be >8 characters</string>
+    <string name="invalid_password">Password must be >8 characters. Example: Abcdef!1</string>
     <string name="invalid_re_password">Password doesn\'t match</string>
     <string name="invalid_display_name">Display name doesn\'t allowed empty</string>
     <string name="invalid_phone_format">The phone number is invalid</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="key_pref_category_accounts">key_pref_category_accounts</string>
+    <string name="key_pref_manage_accounts">key_pref_manage_accounts</string>
+    <string name="key_pref_dark_mode">key_pref_dark_mode</string>
+    <string name="key_pref_messages_requests">key_pref_messages_requests</string>
+    <string name="key_pref_active_status">key_pref_active_status</string>
+    <string name="key_pref_username">key_pref_username</string>
+    <string name="key_pref_qr_code">key_pref_qr_code</string>
+    <string name="key_pref_privacy">key_pref_privacy</string>
+    <string name="key_pref_story">key_pref_story</string>
+    <string name="key_pref_notifications_and_sounds">key_pref_notifications_and_sounds</string>
+    <string name="key_pref_archived_chats">key_pref_archived_chats</string>
+    <string name="key_pref_phone_contacts">key_pref_phone_contacts</string>
+    <string name="key_pref_photos_and_media">key_pref_photos_and_media</string>
+    <string name="key_pref_account_settings">key_pref_account_settings</string>
+    <string name="key_pref_report_problem">key_pref_report_problem</string>
+    <string name="key_pref_help">key_pref_help</string>
+    <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
 </resources>

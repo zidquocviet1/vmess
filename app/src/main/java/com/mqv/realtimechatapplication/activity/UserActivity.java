@@ -1,65 +1,94 @@
 package com.mqv.realtimechatapplication.activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
-import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.widget.Toast;
+import android.view.View;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
-import com.google.firebase.auth.UserProfileChangeRequest;
+import androidx.annotation.NonNull;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
+import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
+import com.mqv.realtimechatapplication.ui.fragment.UserPreferencesFragment;
 import com.mqv.realtimechatapplication.util.Const;
-import com.mqv.realtimechatapplication.util.Logging;
 
-public class UserActivity extends AppCompatActivity {
+public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBinding> implements View.OnClickListener {
+    @Override
+    public void binding() {
+        mBinding = ActivityUserBinding.inflate(getLayoutInflater());
+    }
+
+    @NonNull
+    @Override
+    public Class<UserViewModel> getViewModelClass() {
+        return UserViewModel.class;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user);
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        FirebaseUser user = auth.getCurrentUser();
 
-        findViewById(R.id.button_update).setOnClickListener(v -> {
+        mBinding.buttonBack.setOnClickListener(this);
+
+        findViewById(R.id.button_edit_profile).setOnClickListener(v -> {
             // TODO: call upload photo to the Spring server if success then call reload user
-            user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    Toast.makeText(getApplicationContext(), "Reload User", Toast.LENGTH_SHORT).show();
-                }
-            });
+//            user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
+//                @Override
+//                public void onComplete(@NonNull Task<Void> task) {
+//                    Toast.makeText(getApplicationContext(), "Reload User", Toast.LENGTH_SHORT).show();
+//                }
+//            });
         });
 
-        findViewById(R.id.button_log_out).setOnClickListener(v -> {
-            auth.signOut();
+//        findViewById(R.id.button_log_out).setOnClickListener(v -> {
+//            // TODO: Loi cho nay can phai check lai ben Android Studio Arctic Fox
+////            auth.signOut();
+//
+////            finishAffinity();
+//
+//            var loginIntent = new Intent(UserActivity.this, LoginActivity.class);
+////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//
+//            startActivity(loginIntent);
+//        });
 
-            var loginIntent = new Intent(UserActivity.this, LoginActivity.class);
-            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        var userPreferences = new UserPreferencesFragment();
 
-            startActivity(loginIntent);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.frame_layout_preferences, userPreferences)
+                .commit();
+    }
 
-            finish();
+    @Override
+    public void setupObserver() {
+        mViewModel.getFirebaseUser().observe(this, user -> {
+            //TODO: reformat the url in the develop mode
+            var uri = user.getPhotoUrl();
+            if (uri != null) {
+                var url = uri.toString().replace("localhost", Const.BASE_IP);
+
+                Glide.with(getApplicationContext())
+                        .load(url)
+                        .centerCrop()
+                        .error(R.drawable.ic_round_account)
+                        .signature(new ObjectKey(url))
+                        .into(mBinding.imageAvatar);
+            }
+            mBinding.textDisplayName.setText(user.getDisplayName());
         });
+    }
 
-        findViewById(R.id.button_get_token).setOnClickListener(v -> {
-            user.getIdToken(true)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()){
-                            var result = task.getResult();
-                            if (result != null){
-                                Logging.show(result.getToken());
-                            }
-                        }
-                    });
-        });
+    @Override
+    public void onClick(View v) {
+        var id = v.getId();
+
+        if (id == mBinding.buttonBack.getId()){
+            onBackPressed();
+        }
     }
 }

@@ -4,36 +4,91 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".activity.UserActivity">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_update"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Update"
+    <LinearLayout
+        android:id="@+id/custom_app_bar"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/custom_app_bar_height"
+        android:elevation="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_back"
+            style="@style/MaterialIconButton"
+            android:layout_marginStart="@dimen/all_margin"
+            android:backgroundTint="@color/white"
+            app:icon="@drawable/ic_back" />
+
+        <TextView
+            style="@style/TitleTextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_weight="9"
+            android:text="@string/title_user_information"
+            android:textSize="22sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_edit_profile"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="@dimen/all_margin"
+            android:layout_weight="1"
+            android:backgroundTint="@color/base_background_color"
+            android:text="@string/action_edit_profile"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
+            app:cornerRadius="@dimen/button_corner_radius_medium"
+            app:rippleColor="@android:color/darker_gray" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nested_scroll_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/custom_app_bar">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_log_out"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logout"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button_update"
-        app:layout_constraintTop_toTopOf="parent" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:descendantFocusability="blocksDescendants"
+            android:orientation="vertical">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_get_token"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Get id token"
-        android:layout_marginEnd="@dimen/all_margin"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button_update"
-        app:layout_constraintTop_toTopOf="parent" />
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_avatar"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/all_margin"
+                android:src="@drawable/ic_round_account"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <TextView
+                android:id="@+id/text_display_name"
+                style="@style/TitleTextAppearance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/author_app_full_name" />
+
+            <FrameLayout
+                android:id="@+id/frame_layout_preferences"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

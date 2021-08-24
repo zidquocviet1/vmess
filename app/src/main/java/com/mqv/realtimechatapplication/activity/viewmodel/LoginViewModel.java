@@ -4,14 +4,14 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import android.util.Patterns;
-
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.ui.data.LoggedInUserView;
 import com.mqv.realtimechatapplication.data.result.LoginResult;
-import com.mqv.realtimechatapplication.ui.validator.LoginFormState;
+import com.mqv.realtimechatapplication.ui.validator.LoginForm;
+import com.mqv.realtimechatapplication.ui.validator.LoginFormValidator;
+import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
@@ -26,7 +26,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class LoginViewModel extends ViewModel {
-    private final MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
+    private final MutableLiveData<LoginRegisterValidationResult> loginValidationResult = new MutableLiveData<>();
     private final MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
     private final CompositeDisposable cd = new CompositeDisposable();
     private final LoginRepository loginRepository;
@@ -36,8 +36,8 @@ public class LoginViewModel extends ViewModel {
         this.loginRepository = loginRepository;
     }
 
-    public LiveData<LoginFormState> getLoginFormState() {
-        return loginFormState;
+    public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
+        return loginValidationResult;
     }
 
     public LiveData<LoginResult> getLoginResult() {
@@ -57,30 +57,13 @@ public class LoginViewModel extends ViewModel {
     }
 
     public void loginDataChanged(String username, String password) {
-        if (!isUserNameValid(username)) {
-            loginFormState.setValue(new LoginFormState(R.string.invalid_username, null));
-        } else if (!isPasswordValid(password)) {
-            loginFormState.setValue(new LoginFormState(null, R.string.invalid_password));
-        } else {
-            loginFormState.setValue(new LoginFormState(true));
-        }
-    }
+        var form = new LoginForm(username, password);
 
-    // A placeholder username validation check
-    private boolean isUserNameValid(String username) {
-        if (username == null) {
-            return false;
-        }
-        if (username.contains("@")) {
-            return Patterns.EMAIL_ADDRESS.matcher(username).matches();
-        } else {
-            return !username.trim().isEmpty();
-        }
-    }
+        var result = LoginFormValidator.isUsernameValid()
+                .and(LoginFormValidator.isPasswordValid())
+                .apply(form);
 
-    // A placeholder password validation check
-    private boolean isPasswordValid(String password) {
-        return password != null && password.trim().length() > 5;
+        loginValidationResult.setValue(result);
     }
 
     public void fetchCustomUserInfo(String token) {

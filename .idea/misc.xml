@@ -5,10 +5,21 @@
       <map>
         <entry key="..\:/ComputerSience_TDT/Android/Sdk/platforms/android-30/data/res/layout/auto_complete_list.xml" value="0.1921875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/background_splash_screen.xml" value="0.203125" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic__preferences_alarm.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic__preferences_archive.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_back.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_bubble_chat.xml" value="0.1375" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_check_circle_outline.xml" value="0.203125" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_facebook.xml" value="0.20833333333333334" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_launcher_background.xml" value="0.203125" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.203125" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_alarm.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_archive.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_manage_accounts.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_messages_requests.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_phone_contact.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_photo_media.xml" value="0.1375" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_preferences_qr_code.xml" value="0.1375" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_round_check_circle.xml" value="0.20833333333333334" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/ic_search.xml" value="0.20833333333333334" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/img_chat_main_pressed.xml" value="0.203125" />
@@ -25,15 +36,17 @@
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout-w936dp/activity_login.xml" value="0.16" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_generate_otp.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_login.xml" value="0.18" />
-        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_main.xml" value="0.22" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_main.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_register.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_splash_screen.xml" value="0.18697916666666667" />
-        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_user.xml" value="0.1921875" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_user.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_verify_otp.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/fragment_active_people.xml" value="0.1921875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/fragment_conversation.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/fragment_people_list.xml" value="0.18645833333333334" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_conversation.xml" value="0.33" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_preference_category.xml" value="0.19166666666666668" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_preference_content.xml" value="0.25" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_rank_chat.xml" value="0.1921875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_rank_conversation.xml" value="0.67" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_user_message.xml" value="0.18697916666666667" />
@@ -42,10 +55,11 @@
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.203125" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/network_security_config.xml" value="0.17291666666666666" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/test.xml" value="0.18697916666666667" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/user_information_settings.xml" value="0.22" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

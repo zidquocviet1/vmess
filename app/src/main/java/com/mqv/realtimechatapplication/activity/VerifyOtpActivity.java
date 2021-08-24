@@ -154,6 +154,7 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        // TODO: check the snippet code again
                         // Sign in success, update UI with the signed-in user's information
                         Logging.show("signInWithCredential:success");
 
@@ -162,7 +163,6 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
                         // Update UI
                         var intent = new Intent(VerifyOtpActivity.this, MainActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        intent.putExtra(Const.EXTRA_USER_INFO, user);
                         startActivity(intent);
                         finish();
                     } else {

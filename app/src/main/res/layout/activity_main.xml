@@ -18,29 +18,33 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_background_icon"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_qr_scanner"
+        style="@style/MaterialIconButton"
         android:layout_marginEnd="@dimen/all_margin"
-        android:foreground="?selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:background="@color/base_background_color"
+        app:icon="@drawable/ic_qr_scanner"
+        app:layout_constraintBottom_toBottomOf="@id/button_add_conversation"
+        app:layout_constraintEnd_toStartOf="@id/button_add_conversation"
+        app:layout_constraintTop_toTopOf="@id/button_add_conversation" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_add_conversation"
+        style="@style/MaterialIconButton"
+        android:layout_marginEnd="@dimen/all_margin"
+        app:icon="@drawable/ic_edit"
         app:layout_constraintBottom_toBottomOf="@id/image_avatar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/image_avatar"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+        app:layout_constraintTop_toTopOf="@id/image_avatar" />
 
-    <ImageView
-        android:layout_width="22dp"
-        android:layout_height="22dp"
-        android:background="@drawable/ic_round_add"
-        android:backgroundTint="@color/black"
-        app:layout_constraintBottom_toBottomOf="@id/image_background_icon"
-        app:layout_constraintEnd_toEndOf="@id/image_background_icon"
-        app:layout_constraintStart_toStartOf="@id/image_background_icon"
-        app:layout_constraintTop_toTopOf="@id/image_background_icon" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_all_people"
+        style="@style/MaterialIconButton"
+        android:layout_marginEnd="@dimen/all_margin"
+        android:visibility="gone"
+        app:icon="@drawable/ic_contact_page"
+        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/image_avatar" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title"

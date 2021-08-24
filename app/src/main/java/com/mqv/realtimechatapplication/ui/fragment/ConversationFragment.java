@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.mqv.core.model.Chat;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationAdapter;
@@ -41,18 +40,6 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
     @Override
     public Class<ConversationFragmentViewModel> getViewModelClass() {
         return ConversationFragmentViewModel.class;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Logging.show("Conversation Fragment onCreate called");
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @Override
