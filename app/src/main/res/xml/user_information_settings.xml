@@ -6,8 +6,7 @@
     <PreferenceCategory
         android:key="@string/key_pref_category_accounts"
         android:layout="@layout/item_preference_category"
-        android:title="@string/title_preference_manage_accounts">
-    </PreferenceCategory>
+        android:title="@string/title_preference_manage_accounts"/>
 
     <PreferenceCategory
         android:layout="@layout/item_preference_category"
@@ -15,7 +14,11 @@
         <Preference
             android:icon="@drawable/ic_preferences_dark_mode"
             android:key="@string/key_pref_dark_mode"
-            android:title="@string/title_preference_item_dark_mode" />
+            android:title="@string/title_preference_item_dark_mode">
+            <intent
+                android:action="@string/action_pref_dark_mode"
+                android:targetClass=".activity.preferences.PreferenceDarkModeActivity" />
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_messages_requests"

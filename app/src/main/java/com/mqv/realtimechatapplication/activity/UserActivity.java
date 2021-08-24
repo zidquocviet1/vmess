@@ -1,7 +1,5 @@
 package com.mqv.realtimechatapplication.activity;
 
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
@@ -57,10 +55,8 @@ public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBindin
 //            startActivity(loginIntent);
 //        });
 
-        var userPreferences = new UserPreferencesFragment();
-
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.frame_layout_preferences, userPreferences)
+                .replace(R.id.frame_layout_preferences, new UserPreferencesFragment())
                 .commit();
     }
 

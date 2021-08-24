@@ -56,6 +56,10 @@
     <string name="action_verify">Verify</string>
     <string name="action_edit_profile">Edit Profile</string>
 
+    <!--The action to open activity in the preference screen-->
+    <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
+    <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
+
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
     <string name="msg_login_failed">"Login failed"</string>

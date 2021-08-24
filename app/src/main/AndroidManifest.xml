@@ -14,13 +14,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.preferences.PreferenceDarkModeActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.tac.open.dark.mode" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".activity.preferences.PreferenceManageAccountsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.tac.open.manage.accounts" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.UserActivity"
             android:exported="true" />
         <activity
             android:name=".activity.VerifyOtpActivity"
             android:configChanges="orientation"
             android:exported="true"
-            android:windowSoftInputMode="stateVisible"/>
+            android:windowSoftInputMode="stateVisible" />
         <activity
             android:name=".activity.GenerateOtpActivity"
             android:exported="true" />
@@ -32,7 +50,7 @@
             android:name=".activity.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
-            android:windowSoftInputMode="adjustPan"/>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.SplashScreenActivity"
             android:exported="true"
@@ -70,4 +88,5 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/purple_200" />
     </application>
+
 </manifest>

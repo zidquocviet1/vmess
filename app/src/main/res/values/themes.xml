@@ -16,6 +16,7 @@
         // set status bar color to transparent
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLightStatusBar">true</item> // use this attribute to change the text status color
         <item name="preferenceTheme">@style/PrefsTheme</item>
     </style>
