@@ -1,4 +1,4 @@
-package com.mqv.realtimechatapplication.ui.fragment;
+package com.mqv.realtimechatapplication.ui.fragment.preference;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
@@ -41,7 +41,7 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
 
         @SuppressLint("RestrictedApi")
         var screen = getPreferenceManager()
-                .inflateFromResource(context, R.xml.user_information_settings, null);
+                .inflateFromResource(context, R.xml.pref_user_information_settings, null);
         var category = Objects.requireNonNull((PreferenceGroup)
                 screen.findPreference(getString(R.string.key_pref_category_accounts)));
 

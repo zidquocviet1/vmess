@@ -1,30 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/all_padding_common"
-    android:paddingTop="@dimen/all_padding_default"
-    android:paddingEnd="@dimen/all_padding_common"
-    android:paddingBottom="@dimen/all_padding_default">
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackground"
+    android:baselineAligned="false"
+    android:clipToPadding="false"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:paddingLeft="@dimen/all_padding_common">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+android:id/icon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_round_account"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+android:id/title"
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/icon_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/all_margin"
-        android:text="Message Requests"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@android:id/icon"
-        app:layout_constraintStart_toEndOf="@android:id/icon"
-        app:layout_constraintTop_toTopOf="@android:id/icon" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:gravity="start|center_vertical"
+        android:minWidth="40dp"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
+
+        <ImageView
+            android:src="@drawable/ic_birthday"
+            android:id="@android:id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@null"
+            app:maxHeight="48dp"
+            app:maxWidth="48dp" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:text="September 17, 2000"
+            android:id="@android:id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceListItem" />
+
+        <TextView
+            android:id="@android:id/summary"
+            style="@style/PreferenceSummaryTextStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@android:id/title"
+            android:layout_alignStart="@android:id/title"
+            android:layout_alignLeft="@android:id/title"
+            android:layout_gravity="start"
+            android:maxLines="10"
+            android:textAlignment="viewStart"
+            android:textColor="?android:attr/textColorSecondary" />
+    </RelativeLayout>
+</LinearLayout>

@@ -1,4 +1,5 @@
 <resources>
+    // created application at 08/02/2021
     // ICONS RESOURCE: https://www.flaticon.com/
     // example naming convention
     // error_
@@ -18,12 +19,15 @@
     <string name="title_active_people">Active people</string>
     <string name="title_conversation_dummy">Conversation Title</string>
     <string name="title_timestamp_dummy">\u2022 3:06 PM</string>
-    // created application at 08/02/2021
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
     <string name="title_login_with_google">Login with google</string>
     <string name="title_user_information">Me</string>
+    <string name="title_display_name">Display Name</string>
+    <string name="title_biography">Biography</string>
+    <string name="title_birthday">Birthday</string>
+    <string name="title_address">Address</string>
 
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
@@ -43,6 +47,11 @@
     <string name="title_preference_item_report_problem">Report Problem</string>
     <string name="title_preference_item_help">Help</string>
     <string name="title_preference_item_legal_policies">Legal &amp; Policies</string>
+    <string name="title_profile_picture">Profile Picture</string>
+    <string name="title_cover_photo">Cover Photo</string>
+    <string name="title_bio">Bio</string>
+    <string name="title_details">Details</string>
+    <string name="title_links">Links</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -55,10 +64,19 @@
     <string name="action_resend">Resend</string>
     <string name="action_verify">Verify</string>
     <string name="action_edit_profile">Edit Profile</string>
-
+    <string name="action_cancel">Cancel</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_save">Save</string>
+    <string name="action_take_photo">Take photo</string>
+    <string name="action_choose_photo">Choose existing photo</string>
+    <array name="action_change_avatar">
+        <item>@string/action_take_photo</item>
+        <item>@string/action_choose_photo</item>
+    </array>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
+    <string name="action_pref_edit_profile">com.tac.open.edit.profile</string>
 
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
@@ -108,4 +126,5 @@
     <string name="key_pref_report_problem">key_pref_report_problem</string>
     <string name="key_pref_help">key_pref_help</string>
     <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
+    <string name="key_pref_edit_profile">key_pref_edit_profile</string>
 </resources>

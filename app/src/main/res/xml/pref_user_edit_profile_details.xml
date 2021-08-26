@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:icon="@drawable/ic_display_name"
+        android:layout="@layout/item_preference_content"
+        android:title="@string/author_app_full_name" />
+    <Preference
+        android:icon="@drawable/ic_transgender"
+        android:layout="@layout/item_preference_content"
+        android:title="Male" />
+    <Preference
+        android:icon="@drawable/ic_birthday"
+        android:layout="@layout/item_preference_content"
+        android:title="September 17, 2000" />
+    <Preference
+        android:icon="@drawable/ic_home"
+        android:layout="@layout/item_preference_content"
+        android:title="Lives in Ho Chi Minh City, Vietnam" />
+    <Preference
+        android:icon="@drawable/ic_location"
+        android:layout="@layout/item_preference_content"
+        android:title="From Cai Be, Tien Giang, Vietnam" />
+
+    <Preference
+        android:icon="@drawable/ic_watch_later"
+        android:layout="@layout/item_preference_content"
+        android:title="Joined July 2015" />
+    <Preference
+        android:icon="@drawable/ic_two_hearts"
+        android:layout="@layout/item_preference_content"
+        android:title="Relationship Status" />
+</PreferenceScreen>

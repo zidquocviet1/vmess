@@ -1,9 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".activity.preferences.PreferenceDarkModeActivity">
-</RelativeLayout>
+
+    <include
+        android:id="@+id/included_appbar"
+        layout="@layout/custom_appbar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/all_padding_common"
+        android:paddingEnd="@dimen/all_padding_common"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/included_appbar">
+
+        <RadioGroup
+            android:id="@+id/radio_group_mode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="0dp">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Off" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="On" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="System" />
+        </RadioGroup>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_marginStart="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="If system is selected, TAC will automatically adjust your appearance based on your device's system settings" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,7 +10,7 @@ import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
-import com.mqv.realtimechatapplication.ui.fragment.UserPreferencesFragment;
+import com.mqv.realtimechatapplication.ui.fragment.preference.UserPreferencesFragment;
 import com.mqv.realtimechatapplication.util.Const;
 
 public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBinding> implements View.OnClickListener {
@@ -29,17 +29,8 @@ public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBindin
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding.buttonBack.setOnClickListener(this);
-
-        findViewById(R.id.button_edit_profile).setOnClickListener(v -> {
-            // TODO: call upload photo to the Spring server if success then call reload user
-//            user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
-//                @Override
-//                public void onComplete(@NonNull Task<Void> task) {
-//                    Toast.makeText(getApplicationContext(), "Reload User", Toast.LENGTH_SHORT).show();
-//                }
-//            });
-        });
+        mBinding.includedAppbar.buttonBack.setOnClickListener(this);
+        mBinding.includedAppbar.toolbar.setTitle(R.string.action_edit_profile);
 
 //        findViewById(R.id.button_log_out).setOnClickListener(v -> {
 //            // TODO: Loi cho nay can phai check lai ben Android Studio Arctic Fox
@@ -83,7 +74,7 @@ public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBindin
     public void onClick(View v) {
         var id = v.getId();
 
-        if (id == mBinding.buttonBack.getId()){
+        if (id == mBinding.includedAppbar.buttonBack.getId()){
             onBackPressed();
         }
     }

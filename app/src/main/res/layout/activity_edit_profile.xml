@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".activity.EditProfileActivity">
+
+    <include
+        android:id="@+id/included_appbar"
+        layout="@layout/custom_appbar" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="none"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/included_appbar">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/text_profile_picture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/all_padding_common"
+                android:text="@string/title_profile_picture"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_picture"
+                style="@style/MaterialIconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:backgroundTint="@color/white"
+                android:paddingEnd="@dimen/all_padding_common"
+                android:text="@string/action_edit"
+                android:textAllCaps="false"
+                android:textColor="@color/purple_500"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/text_profile_picture"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/text_profile_picture" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_avatar"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_marginTop="@dimen/all_margin"
+                android:background="@drawable/ic_round_account"
+                android:scaleType="centerCrop"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_profile_picture"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <View
+                android:id="@+id/divider_picture"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/all_padding_common"
+                android:layout_marginTop="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_padding_common"
+                android:background="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/image_avatar" />
+
+            <TextView
+                android:id="@+id/text_cover_photo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/title_cover_photo"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@id/divider_picture"
+                app:layout_constraintTop_toBottomOf="@id/divider_picture" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_cover"
+                style="@style/MaterialIconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:backgroundTint="@color/white"
+                android:text="@string/action_edit"
+                android:textAllCaps="false"
+                android:textColor="@color/purple_500"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/text_cover_photo"
+                app:layout_constraintEnd_toEndOf="@id/divider_picture"
+                app:layout_constraintTop_toTopOf="@+id/text_cover_photo" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_cover"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="@dimen/all_margin"
+                android:background="@color/purple_500"
+                android:scaleType="centerCrop"
+                app:layout_constraintEnd_toEndOf="@id/button_edit_cover"
+                app:layout_constraintStart_toStartOf="@id/text_cover_photo"
+                app:layout_constraintTop_toBottomOf="@id/text_cover_photo"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize5Percent" />
+
+            <View
+                android:id="@+id/divider_cover"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/all_padding_common"
+                android:layout_marginTop="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_padding_common"
+                android:background="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/image_cover" />
+
+            <TextView
+                android:id="@+id/text_title_bio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/title_bio"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@id/divider_cover"
+                app:layout_constraintTop_toBottomOf="@id/divider_cover" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_bio"
+                style="@style/MaterialIconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:backgroundTint="@color/white"
+                android:text="@string/action_edit"
+                android:textAllCaps="false"
+                android:textColor="@color/purple_500"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/text_title_bio"
+                app:layout_constraintEnd_toEndOf="@id/divider_picture"
+                app:layout_constraintTop_toTopOf="@+id/text_title_bio" />
+
+            <TextView
+                android:id="@+id/text_bio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="XII \nCS Student"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_title_bio" />
+
+            <View
+                android:id="@+id/divider_bio"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/all_padding_common"
+                android:layout_marginTop="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_padding_common"
+                android:background="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/text_bio" />
+
+            <TextView
+                android:id="@+id/text_title_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/title_details"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@id/divider_bio"
+                app:layout_constraintTop_toBottomOf="@id/divider_bio" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_details"
+                style="@style/MaterialIconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:backgroundTint="@color/white"
+                android:text="@string/action_edit"
+                android:textAllCaps="false"
+                android:textColor="@color/purple_500"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/text_title_details"
+                app:layout_constraintEnd_toEndOf="@id/divider_bio"
+                app:layout_constraintTop_toTopOf="@+id/text_title_details" />
+
+            <FrameLayout
+                android:id="@+id/frame_layout_preferences_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_title_details" />
+
+            <View
+                android:id="@+id/divider_details"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/all_padding_common"
+                android:layout_marginTop="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_padding_common"
+                android:background="@color/black"
+                app:layout_constraintTop_toBottomOf="@id/frame_layout_preferences_details" />
+
+            <TextView
+                android:id="@+id/text_title_links"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/title_links"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@id/divider_details"
+                app:layout_constraintTop_toBottomOf="@id/divider_details" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_links"
+                style="@style/MaterialIconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:backgroundTint="@color/white"
+                android:text="@string/action_edit"
+                android:textAllCaps="false"
+                android:textColor="@color/purple_500"
+                app:cornerRadius="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/text_title_links"
+                app:layout_constraintEnd_toEndOf="@id/divider_details"
+                app:layout_constraintTop_toTopOf="@+id/text_title_links" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_links"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:listitem="@layout/item_preference_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/text_title_links" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!--    <com.google.android.material.textfield.TextInputLayout-->
+    <!--        android:id="@+id/text_layout_display_name"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginStart="@dimen/all_margin"-->
+    <!--        android:layout_marginTop="@dimen/all_margin"-->
+    <!--        android:layout_marginEnd="@dimen/all_margin"-->
+    <!--        android:hint="@string/title_display_name"-->
+    <!--        app:boxBackgroundColor="@color/white"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/image_avatar">-->
+
+    <!--        <com.google.android.material.textfield.TextInputEditText-->
+    <!--            android:id="@+id/edit_text_display_name"-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="match_parent"-->
+    <!--            android:inputType="text"-->
+    <!--            android:maxLength="50"-->
+    <!--            android:maxLines="1" />-->
+    <!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <!--    <com.google.android.material.textfield.TextInputLayout-->
+    <!--        android:id="@+id/text_layout_bio"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="20dp"-->
+    <!--        android:hint="@string/title_biography"-->
+    <!--        app:boxBackgroundColor="@color/white"-->
+    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_display_name"-->
+    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_display_name"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_display_name">-->
+
+    <!--        <com.google.android.material.textfield.TextInputEditText-->
+    <!--            android:id="@+id/edit_text_bio"-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="match_parent"-->
+    <!--            android:inputType="text" />-->
+    <!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <!--    <com.google.android.material.textfield.TextInputLayout-->
+    <!--        android:id="@+id/text_layout_birthday"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="20dp"-->
+    <!--        android:focusable="false"-->
+    <!--        android:hint="@string/title_birthday"-->
+    <!--        app:boxBackgroundColor="@color/white"-->
+    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_bio"-->
+    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_bio"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_bio">-->
+
+    <!--        <com.google.android.material.textfield.TextInputEditText-->
+    <!--            android:id="@+id/edit_text_birthday"-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="match_parent"-->
+    <!--            android:focusable="false" />-->
+    <!--    </com.google.android.material.textfield.TextInputLayout>-->
+
+    <!--    <com.google.android.material.textfield.TextInputLayout-->
+    <!--        android:id="@+id/text_layout_address"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginTop="20dp"-->
+    <!--        android:hint="@string/title_address"-->
+    <!--        app:boxBackgroundColor="@color/white"-->
+    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_birthday"-->
+    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_birthday"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_birthday">-->
+
+    <!--        <com.google.android.material.textfield.TextInputEditText-->
+    <!--            android:id="@+id/edit_text_address"-->
+    <!--            android:layout_width="match_parent"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:inputType="text" />-->
+    <!--    </com.google.android.material.textfield.TextInputLayout>-->
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

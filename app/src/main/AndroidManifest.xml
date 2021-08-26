@@ -4,6 +4,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-feature android:name="android.hardware.camera.any" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -14,8 +22,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.SelectPhotoActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activity.EditProfileActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.tac.open.edit.profile" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.preferences.PreferenceDarkModeActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.dark.mode" />
 

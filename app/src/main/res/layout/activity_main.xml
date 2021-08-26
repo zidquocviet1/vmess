@@ -39,7 +39,7 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                    android:theme="@style/Theme.AppCompat.Light.NoActionBar"
                     app:title="@string/title_chat">
 
                     <com.google.android.material.button.MaterialButton
@@ -71,6 +71,15 @@
                         app:layout_constraintTop_toTopOf="@id/button_add_conversation" />
                 </com.google.android.material.appbar.MaterialToolbar>
             </LinearLayout>
+
+            <TextView
+                android:visibility="gone"
+                android:id="@+id/text_subtitle"
+                android:layout_gravity="center_horizontal"
+                android:text="No Internet Connection"
+                android:textColor="@android:color/holo_red_light"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
         </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.fragment.app.FragmentContainerView

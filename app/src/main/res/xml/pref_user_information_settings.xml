@@ -6,11 +6,20 @@
     <PreferenceCategory
         android:key="@string/key_pref_category_accounts"
         android:layout="@layout/item_preference_category"
-        android:title="@string/title_preference_manage_accounts"/>
+        android:title="@string/title_preference_manage_accounts" />
 
     <PreferenceCategory
         android:layout="@layout/item_preference_category"
         android:title="@string/title_preference_profile">
+        <Preference
+            android:icon="@drawable/ic_preferences_edit_profile"
+            android:key="@string/key_pref_edit_profile"
+            android:title="@string/action_edit_profile">
+            <intent
+                android:action="@string/action_pref_edit_profile"
+                android:targetClass=".activity.EditProfileActivity" />
+        </Preference>
+
         <Preference
             android:icon="@drawable/ic_preferences_dark_mode"
             android:key="@string/key_pref_dark_mode"

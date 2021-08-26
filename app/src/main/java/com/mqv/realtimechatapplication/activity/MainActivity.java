@@ -1,6 +1,10 @@
 package com.mqv.realtimechatapplication.activity;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.view.View;
 
@@ -18,6 +22,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.util.Objects;
 
@@ -34,6 +39,13 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         return MainViewModel.class;
     }
 
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Logging.show("Receiver is triggered");
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +57,11 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         navController.addOnDestinationChangedListener(this);
 
         mBinding.imageAvatar.setOnClickListener(this);
+        mBinding.buttonAddConversation.setOnClickListener(this);
+
+        // TODO: using request network callback instead
+        var intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(receiver, intentFilter);
     }
 
     @Override
@@ -73,6 +90,8 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         if (id == mBinding.imageAvatar.getId()) {
             var intent = new Intent(getApplicationContext(), UserActivity.class);
             startActivity(intent);
+        }else if (id == mBinding.buttonAddConversation.getId()){
+            mBinding.textSubtitle.setVisibility(View.VISIBLE);
         }
     }
 
