@@ -3,7 +3,6 @@ package com.mqv.realtimechatapplication.ui.fragment.preference;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -33,6 +32,9 @@ import com.mqv.realtimechatapplication.util.Logging;
 
 import java.util.Objects;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class UserPreferencesFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -61,11 +63,15 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
                 //TODO: reformat the url in the develop mode
                 var url = uri.toString().replace("localhost", Const.BASE_IP);
 
-                Glide.with(context)
+                Glide.with(this)
+                        .asBitmap()
                         .load(url)
+                        .centerCrop()
+                        .override(88, 88)
+                        .signature(new ObjectKey(url))
                         .listener(new RequestListener<>() {
                             @Override
-                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
                                 signedInItem.setIcon(R.drawable.ic_preferences_image_user_not_found);
                                 category.addPreference(signedInItem);
                                 category.addPreference(manageAccountsItem);
@@ -73,13 +79,9 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
                             }
 
                             @Override
-                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                var srcBmp = ((BitmapDrawable) resource.mutate()).getBitmap();
-                                var dstBmp = createCenterCropBitmap(srcBmp);
-                                var scaledBmp = Bitmap.createScaledBitmap(dstBmp, 88, 88, false);
-
-                                RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(getResources(), scaledBmp);
-                                rbd.setCornerRadius(Math.max(scaledBmp.getHeight(), scaledBmp.getWidth()) / 2.0f);
+                            public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                                RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                                rbd.setCornerRadius(Math.max(resource.getHeight(), resource.getWidth()) / 2.0f);
 
                                 signedInItem.setIcon(rbd);
                                 category.addPreference(signedInItem);
@@ -87,11 +89,9 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
                                 return false;
                             }
                         })
-                        .centerCrop()
-                        .signature(new ObjectKey(url))
-                        .into(new CustomTarget<Drawable>() {
+                        .into(new CustomTarget<Bitmap>() {
                             @Override
-                            public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
 
                             }
 
@@ -162,6 +162,7 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
         return super.onPreferenceTreeClick(preference);
     }
 
+    @Deprecated
     private Bitmap createCenterCropBitmap(Bitmap srcBmp) {
         Bitmap dstBmp;
         var height = srcBmp.getHeight();
@@ -172,7 +173,6 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
         } else {
             dstBmp = Bitmap.createBitmap(srcBmp, 0, height / 2 - width / 2, width, width);
         }
-
         return dstBmp;
     }
 }

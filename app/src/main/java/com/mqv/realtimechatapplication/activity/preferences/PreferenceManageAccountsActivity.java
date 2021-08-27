@@ -2,18 +2,39 @@ package com.mqv.realtimechatapplication.activity.preferences;
 
 import android.os.Bundle;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.AndroidViewModel;
 
-import com.google.android.material.appbar.MaterialToolbar;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.ToolbarActivity;
+import com.mqv.realtimechatapplication.databinding.ActivityPreferenceManageAccountsBinding;
 
-public class PreferenceManageAccountsActivity extends AppCompatActivity {
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class PreferenceManageAccountsActivity extends
+        ToolbarActivity<AndroidViewModel, ActivityPreferenceManageAccountsBinding> {
+    @Override
+    public void binding() {
+        mBinding = ActivityPreferenceManageAccountsBinding.inflate(getLayoutInflater());
+    }
+
+    @Override
+    public Class<AndroidViewModel> getViewModelClass() {
+        return null;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_preference_manage_accounts);
 
-        findViewById(R.id.button_back).setOnClickListener(v -> onBackPressed());
+        setupToolbar();
+
+        updateActionBarTitle(R.string.label_switch_accounts);
+    }
+
+    @Override
+    public void setupObserver() {
+
     }
 }

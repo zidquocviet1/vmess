@@ -24,7 +24,10 @@ import com.mqv.realtimechatapplication.util.Const;
 
 import java.util.Arrays;
 
-public class EditProfileActivity extends BaseActivity<EditProfileViewModel, ActivityEditProfileBinding>
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, ActivityEditProfileBinding>
         implements View.OnClickListener {
     @Override
     public void binding() {
@@ -41,8 +44,10 @@ public class EditProfileActivity extends BaseActivity<EditProfileViewModel, Acti
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding.includedAppbar.toolbar.setTitle(R.string.action_edit_profile);
-        mBinding.includedAppbar.buttonBack.setOnClickListener(this);
+        setupToolbar();
+
+        updateActionBarTitle(R.string.label_edit_profile);
+
         mBinding.imageAvatar.setOnClickListener(this);
         mBinding.imageCover.setOnClickListener(this);
         mBinding.buttonEditBio.setOnClickListener(this);
@@ -58,6 +63,7 @@ public class EditProfileActivity extends BaseActivity<EditProfileViewModel, Acti
 //                    Toast.makeText(getApplicationContext(), "Reload User", Toast.LENGTH_SHORT).show();
 //                }
 //            });
+
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout_preferences_details, new UserDetailsPreferenceFragment())
                 .commit();

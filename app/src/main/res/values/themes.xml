@@ -11,8 +11,8 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <item name="android:textColorPrimary">@color/black</item>
         <!-- Customize your theme here. -->
+        <item name="android:textColorPrimary">@color/black</item>
         // set status bar color to transparent
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
@@ -62,7 +62,7 @@
 
     <style name="TitleTextAppearance" parent="">
         <item name="android:textSize">@dimen/text_title_size</item>
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">@color/text_color</item>
         <item name="android:textStyle">bold</item>
         <item name="android:maxLength">30</item>
     </style>
@@ -105,8 +105,23 @@
         <item name="android:insetBottom">0dp</item>
         <item name="iconGravity">textStart</item>
         <item name="iconPadding">0dp</item>
-        <item name="iconTint">@color/black</item>
+        <item name="iconTint">@color/text_color</item>
         <item name="rippleColor">@android:color/darker_gray</item>
         <item name="backgroundTint">@color/base_background_color</item>
+    </style>
+
+    <style name="MaterialIconButton.BackgroundColor" parent="MaterialIconButton">
+        <item name="iconTint">@color/text_color</item>
+        <item name="textAllCaps">false</item>
+        <item name="backgroundTint">?android:colorBackground</item>
+    </style>
+
+    <style name="Divider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginStart">@dimen/all_padding_common</item>
+        <item name="android:layout_marginTop">@dimen/all_padding_common</item>
+        <item name="android:layout_marginEnd">@dimen/all_padding_common</item>
+        <item name="background">@color/text_color</item>
     </style>
 </resources>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.appbar.AppBarLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.appbar.AppBarLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/appbar"
     style="@style/Widget.MaterialComponents.AppBarLayout.Surface"
@@ -19,7 +18,7 @@
             style="@style/MaterialIconButton"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="@dimen/all_margin"
-            android:backgroundTint="@color/white"
+            android:backgroundTint="?android:colorBackground"
             app:icon="@drawable/ic_back" />
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -27,6 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            app:title="Switch Accounts" />
+            app:title="Switch Accounts"
+            app:titleTextColor="@color/text_color" />
     </LinearLayout>
 </com.google.android.material.appbar.AppBarLayout>

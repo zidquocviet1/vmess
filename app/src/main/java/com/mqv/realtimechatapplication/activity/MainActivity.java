@@ -26,6 +26,9 @@ import com.mqv.realtimechatapplication.util.Logging;
 
 import java.util.Objects;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBinding>
         implements View.OnClickListener, NavController.OnDestinationChangedListener {
     @Override
@@ -68,7 +71,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
     public void setupObserver() {
         mViewModel.getFirebaseUser().observe(this, user -> {
             if (user != null){
-                // reformat the photoURL in the dev mode
+                // TODO: reformat the photoURL in the dev mode
                 if (user.getPhotoUrl() != null){
                     var reformatPhotoUrl = user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
                     Glide.with(this)

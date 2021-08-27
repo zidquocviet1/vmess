@@ -1,7 +1,6 @@
 package com.mqv.realtimechatapplication.activity;
 
 import android.os.Bundle;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
@@ -13,7 +12,10 @@ import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
 import com.mqv.realtimechatapplication.ui.fragment.preference.UserPreferencesFragment;
 import com.mqv.realtimechatapplication.util.Const;
 
-public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBinding> implements View.OnClickListener {
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBinding> {
     @Override
     public void binding() {
         mBinding = ActivityUserBinding.inflate(getLayoutInflater());
@@ -29,8 +31,9 @@ public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBindin
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mBinding.includedAppbar.buttonBack.setOnClickListener(this);
-        mBinding.includedAppbar.toolbar.setTitle(R.string.action_edit_profile);
+        setupToolbar();
+
+        updateActionBarTitle(R.string.label_user_information);
 
 //        findViewById(R.id.button_log_out).setOnClickListener(v -> {
 //            // TODO: Loi cho nay can phai check lai ben Android Studio Arctic Fox
@@ -68,14 +71,5 @@ public class UserActivity extends BaseActivity<UserViewModel, ActivityUserBindin
             }
             mBinding.textDisplayName.setText(user.getDisplayName());
         });
-    }
-
-    @Override
-    public void onClick(View v) {
-        var id = v.getId();
-
-        if (id == mBinding.includedAppbar.buttonBack.getId()){
-            onBackPressed();
-        }
     }
 }

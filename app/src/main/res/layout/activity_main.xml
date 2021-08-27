@@ -40,7 +40,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-                    app:title="@string/title_chat">
+                    app:title="@string/title_chat"
+                    app:titleTextColor="@color/text_color">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/button_all_people"
@@ -73,13 +74,13 @@
             </LinearLayout>
 
             <TextView
-                android:visibility="gone"
                 android:id="@+id/text_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="No Internet Connection"
                 android:textColor="@android:color/holo_red_light"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:visibility="gone" />
         </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.fragment.app.FragmentContainerView

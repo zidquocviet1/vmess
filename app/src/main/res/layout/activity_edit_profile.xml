@@ -25,25 +25,22 @@
 
             <TextView
                 android:id="@+id/text_profile_picture"
+                style="@style/TitleTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="@dimen/all_padding_common"
                 android:text="@string/title_profile_picture"
-                android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_edit_picture"
-                style="@style/MaterialIconButton"
+                style="@style/MaterialIconButton.BackgroundColor"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:backgroundTint="@color/white"
                 android:paddingEnd="@dimen/all_padding_common"
                 android:text="@string/action_edit"
-                android:textAllCaps="false"
                 android:textColor="@color/purple_500"
                 app:cornerRadius="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/text_profile_picture"
@@ -69,29 +66,26 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/black"
+                android:background="@color/text_color"
                 app:layout_constraintTop_toBottomOf="@id/image_avatar" />
 
             <TextView
                 android:id="@+id/text_cover_photo"
+                style="@style/TitleTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/all_margin"
                 android:text="@string/title_cover_photo"
-                android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="@id/divider_picture"
                 app:layout_constraintTop_toBottomOf="@id/divider_picture" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_edit_cover"
-                style="@style/MaterialIconButton"
+                style="@style/MaterialIconButton.BackgroundColor"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:backgroundTint="@color/white"
                 android:text="@string/action_edit"
-                android:textAllCaps="false"
                 android:textColor="@color/purple_500"
                 app:cornerRadius="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/text_cover_photo"
@@ -117,29 +111,26 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/black"
+                android:background="@color/text_color"
                 app:layout_constraintTop_toBottomOf="@id/image_cover" />
 
             <TextView
                 android:id="@+id/text_title_bio"
+                style="@style/TitleTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/all_margin"
                 android:text="@string/title_bio"
-                android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="@id/divider_cover"
                 app:layout_constraintTop_toBottomOf="@id/divider_cover" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_edit_bio"
-                style="@style/MaterialIconButton"
+                style="@style/MaterialIconButton.BackgroundColor"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:backgroundTint="@color/white"
                 android:text="@string/action_edit"
-                android:textAllCaps="false"
                 android:textColor="@color/purple_500"
                 app:cornerRadius="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/text_title_bio"
@@ -163,29 +154,26 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/black"
+                android:background="@color/text_color"
                 app:layout_constraintTop_toBottomOf="@id/text_bio" />
 
             <TextView
                 android:id="@+id/text_title_details"
+                style="@style/TitleTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/all_margin"
                 android:text="@string/title_details"
-                android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="@id/divider_bio"
                 app:layout_constraintTop_toBottomOf="@id/divider_bio" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_edit_details"
-                style="@style/MaterialIconButton"
+                style="@style/MaterialIconButton.BackgroundColor"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:backgroundTint="@color/white"
                 android:text="@string/action_edit"
-                android:textAllCaps="false"
                 android:textColor="@color/purple_500"
                 app:cornerRadius="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/text_title_details"
@@ -207,29 +195,26 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/black"
+                android:background="@color/text_color"
                 app:layout_constraintTop_toBottomOf="@id/frame_layout_preferences_details" />
 
             <TextView
                 android:id="@+id/text_title_links"
+                style="@style/TitleTextAppearance"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/all_margin"
                 android:text="@string/title_links"
-                android:textColor="@color/black"
                 android:textSize="20sp"
-                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="@id/divider_details"
                 app:layout_constraintTop_toBottomOf="@id/divider_details" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_edit_links"
-                style="@style/MaterialIconButton"
+                style="@style/MaterialIconButton.BackgroundColor"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:backgroundTint="@color/white"
                 android:text="@string/action_edit"
-                android:textAllCaps="false"
                 android:textColor="@color/purple_500"
                 app:cornerRadius="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/text_title_links"
@@ -240,10 +225,10 @@
                 android:id="@+id/recycler_view_links"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:listitem="@layout/item_preference_content"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/text_title_links" />
+                app:layout_constraintTop_toBottomOf="@id/text_title_links"
+                tools:listitem="@layout/item_preference_content" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 

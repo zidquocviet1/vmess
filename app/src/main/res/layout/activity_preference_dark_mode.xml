@@ -27,16 +27,19 @@
             android:padding="0dp">
 
             <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/radio_off"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Off" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/radio_on"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="On" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/radio_system"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"

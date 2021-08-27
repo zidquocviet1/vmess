@@ -11,6 +11,12 @@
     <string name="author_app_last_name">Mai</string>
     <string name="author_app_full_name">Mai Quoc Viet</string>
 
+    // activity label
+    <string name="label_switch_accounts">Switch Accounts</string>
+    <string name="label_dark_mode">Dark Mode</string>
+    <string name="label_user_information">Me</string>
+    <string name="label_edit_profile">Edit Profile</string>
+
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
     <string name="title_copyright_name">Made by MQV Inc.</string>
@@ -23,7 +29,6 @@
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
     <string name="title_login_with_google">Login with google</string>
-    <string name="title_user_information">Me</string>
     <string name="title_display_name">Display Name</string>
     <string name="title_biography">Biography</string>
     <string name="title_birthday">Birthday</string>

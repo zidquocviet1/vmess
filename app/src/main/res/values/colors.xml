@@ -13,4 +13,6 @@
     <color name="hint_text_color_with_icon">#999999</color>
     <color name="base_background_color">#F5F5F5</color>
     <color name="color_preference_category">#B6B4B4</color>
+    <color name="text_color">@color/black</color>
+    <color name="navigation_background">@color/white</color>
 </resources>
