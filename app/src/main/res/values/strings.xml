@@ -16,6 +16,7 @@
     <string name="label_dark_mode">Dark Mode</string>
     <string name="label_user_information">Me</string>
     <string name="label_edit_profile">Edit Profile</string>
+    <string name="label_select_photo">Select Photo</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>

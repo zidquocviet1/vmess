@@ -154,7 +154,7 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/text_color"
+                android:background="?android:attr/textColorSecondary"
                 app:layout_constraintTop_toBottomOf="@id/text_bio" />
 
             <TextView

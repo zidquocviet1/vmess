@@ -41,14 +41,15 @@
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout-land/activity_verify_otp.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout-w1240dp/activity_login.xml" value="0.1671875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout-w936dp/activity_login.xml" value="0.16" />
-        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_edit_profile.xml" value="0.12" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_edit_details.xml" value="0.19166666666666668" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_edit_profile.xml" value="0.18" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_generate_otp.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_login.xml" value="0.18" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_preference_dark_mode.xml" value="0.18" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_preference_manage_accounts.xml" value="0.22" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_register.xml" value="0.2" />
-        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_select_photo.xml" value="0.19166666666666668" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_select_photo.xml" value="0.15" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_splash_screen.xml" value="0.18697916666666667" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_user.xml" value="0.2" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/activity_verify_otp.xml" value="0.2" />
@@ -60,6 +61,7 @@
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_conversation.xml" value="0.33" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_preference_category.xml" value="0.19166666666666668" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_preference_content.xml" value="0.5" />
+        <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_profile_image_thumbnail.xml" value="0.14" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_rank_chat.xml" value="0.1921875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_rank_conversation.xml" value="0.67" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/layout/item_user_message.xml" value="0.18697916666666667" />

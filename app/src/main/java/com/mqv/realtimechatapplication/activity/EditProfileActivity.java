@@ -29,6 +29,13 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, ActivityEditProfileBinding>
         implements View.OnClickListener {
+    public static final String EXTRA_PROFILE_PICTURE = "profile_picture";
+    public static final String EXTRA_COVER_PHOTO = "cover_photo";
+    public static final String EXTRA_CHANGE_PHOTO = "change_photo";
+
+    private boolean isOpenSelectPhotoPending = false;
+    private String extraSelected;
+
     @Override
     public void binding() {
         mBinding = ActivityEditProfileBinding.inflate(getLayoutInflater());
@@ -70,6 +77,17 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
     }
 
     @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED && isOpenSelectPhotoPending) {
+            startActivity(SelectPhotoActivity.class);
+            isOpenSelectPhotoPending = false;
+        }
+    }
+
+    @Override
     public void setupObserver() {
         mViewModel.getFirebaseUser().observe(this, user -> {
             if (user != null) {
@@ -103,47 +121,60 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         var id = v.getId();
 
         if (id == mBinding.imageAvatar.getId() || id == mBinding.buttonEditPicture.getId()) {
-            //TODO: open change photo
+            isOpenSelectPhotoPending = true;
+            extraSelected = EXTRA_PROFILE_PICTURE;
             checkPermission();
         } else if (id == mBinding.imageCover.getId() || id == mBinding.buttonEditCover.getId()) {
-            //TODO: open change photo with parameter is ImageCover
-        } else if (id == mBinding.buttonEditBio.getId()){
+            isOpenSelectPhotoPending = true;
+            extraSelected = EXTRA_COVER_PHOTO;
+            checkPermission();
+        } else if (id == mBinding.buttonEditBio.getId()) {
 
-        }else if (id == mBinding.buttonEditDetails.getId()){
+        } else if (id == mBinding.buttonEditDetails.getId()) {
+            startActivity(EditDetailsActivity.class);
+        } else if (id == mBinding.buttonEditLinks.getId()) {
 
-        }else if (id == mBinding.buttonEditLinks.getId()){
-
-        }else if (id == mBinding.includedAppbar.buttonBack.getId()) {
-            onBackPressed();
         }
     }
 
-    private void checkPermission(){
+    private void startActivity(Class<?> target) {
+        var intent = new Intent(getApplicationContext(), target);
+
+        if (target == SelectPhotoActivity.class){
+            intent.putExtra(EXTRA_CHANGE_PHOTO, extraSelected);
+        }
+
+        startActivity(intent);
+    }
+
+    private void checkPermission() {
         /*
-        * Following to the recommendation of Google Android Developer about the permission privacy
-        * We should use this pattern to request any permissions in this app
-        * */
+         * Following to the recommendation of Google Android Developer about the permission privacy
+         * We should use this pattern to request any permissions in this app
+         * */
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED){
-            startActivity(new Intent(this, SelectPhotoActivity.class));
-        }else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)){
+                PackageManager.PERMISSION_GRANTED) {
+            startActivity(SelectPhotoActivity.class);
+            isOpenSelectPhotoPending = false;
+        } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             /*
-            * First time to ask about a permission. If user deny grant the permission, don't show this again
-            * Go to the section below
-            * */
+             * First time to ask about a permission. If user deny grant the permission, don't show this again
+             * Go to the section below
+             * */
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Request Permission")
                     .setMessage("Grant a permission to allow this app access a gallery")
                     .setNegativeButton("Not now", null)
                     .setPositiveButton("Continue", (dialog, which) -> {
                         permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
-                            if (result){
-                                startActivity(new Intent(this, SelectPhotoActivity.class));
+                            if (result) {
+                                startActivity(SelectPhotoActivity.class);
+                                isOpenSelectPhotoPending = false;
                             }
                         });
                     })
                     .create().show();
-        }else{
+        } else {
             /*
              * In this section, show a dialog to explain why this app need a permission
              * and make the user go to settings to open it

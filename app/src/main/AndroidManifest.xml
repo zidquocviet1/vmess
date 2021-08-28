@@ -22,6 +22,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.EditDetailsActivity"
+            android:exported="true" />
+        <activity
             android:name=".activity.SelectPhotoActivity"
             android:exported="true" />
         <activity

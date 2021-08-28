@@ -40,12 +40,12 @@
         android:paddingBottom="8dp">
 
         <TextView
-            android:text="September 17, 2000"
             android:id="@android:id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="marquee"
             android:singleLine="true"
+            android:text="September 17, 2000"
             android:textAppearance="?android:attr/textAppearanceListItem" />
 
         <TextView
