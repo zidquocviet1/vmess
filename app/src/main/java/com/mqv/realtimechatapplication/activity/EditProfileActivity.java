@@ -32,6 +32,7 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
     public static final String EXTRA_PROFILE_PICTURE = "profile_picture";
     public static final String EXTRA_COVER_PHOTO = "cover_photo";
     public static final String EXTRA_CHANGE_PHOTO = "change_photo";
+    public static final String EXTRA_IMAGE_THUMBNAIL = "image_thumbnail";
 
     private boolean isOpenSelectPhotoPending = false;
     private String extraSelected;

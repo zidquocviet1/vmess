@@ -14,14 +14,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemProfileImageThumbnailBinding;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
+import com.mqv.realtimechatapplication.util.Logging;
+
+import java.util.function.Consumer;
 
 public class ImageThumbnailAdapter extends
         ListAdapter<ImageThumbnail, ImageThumbnailAdapter.ImageThumbnailViewHolder> {
     private final Context mContext;
-    public static final int IMAGE_WIDTH = 120*2;
-    public static final int IMAGE_HEIGHT = 120*2;
+    private final int mRealWidth, mColumn, mSpacing;
+    private Consumer<ImageThumbnail> callback;
 
-    public ImageThumbnailAdapter(Context context) {
+    public ImageThumbnailAdapter(Context context, int realWidth, int column, int spacing) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull ImageThumbnail oldItem, @NonNull ImageThumbnail newItem) {
@@ -38,12 +41,26 @@ public class ImageThumbnailAdapter extends
             }
         });
         mContext = context;
+        mRealWidth = realWidth;
+        mColumn = column;
+        mSpacing = spacing;
+    }
+
+    public void setOnItemClick(Consumer<ImageThumbnail> callback) {
+        this.callback = callback;
     }
 
     @NonNull
     @Override
     public ImageThumbnailViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        var thumbnailWidth = (mRealWidth - (mColumn - 1) * mSpacing) / mColumn;
+        var thumbnailHeight = thumbnailWidth;
+
         var view = LayoutInflater.from(mContext).inflate(R.layout.item_profile_image_thumbnail, parent, false);
+        var viewHolder = new ImageThumbnailViewHolder(view);
+
+        viewHolder.mBinding.imageThumbnail.getLayoutParams().width = thumbnailWidth;
+        viewHolder.mBinding.imageThumbnail.getLayoutParams().height = thumbnailHeight;
         return new ImageThumbnailViewHolder(view);
     }
 
@@ -51,10 +68,15 @@ public class ImageThumbnailAdapter extends
     public void onBindViewHolder(@NonNull ImageThumbnailViewHolder holder, int position) {
         var item = getItem(position);
         holder.bind(item, mContext);
+        holder.itemView.setOnClickListener(v -> {
+            if (callback != null){
+                callback.accept(item);
+            }
+        });
     }
 
     public static class ImageThumbnailViewHolder extends RecyclerView.ViewHolder {
-        ItemProfileImageThumbnailBinding mBinding;
+        public ItemProfileImageThumbnailBinding mBinding;
 
         public ImageThumbnailViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -62,29 +84,9 @@ public class ImageThumbnailAdapter extends
         }
 
         public void bind(ImageThumbnail item, Context context) {
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//                try {
-////                    var thumbnail = context.getContentResolver().loadThumbnail(
-////                            item.getContentUri(),
-////                            new Size(480, 480),
-////                            null);
-//
-//                    Glide.with(context)
-//                            .asBitmap()
-//                            .override(IMAGE_WIDTH, IMAGE_HEIGHT)
-//                            .load(thumbnail)
-//                            .centerCrop()
-//                            .transition(BitmapTransitionOptions.withCrossFade())
-//                            .error(AppCompatResources.getDrawable(context, R.drawable.ic_round_account))
-//                            .into(mBinding.imageThumbnail);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-
-            if (item.getThumbnail() != null){
+            if (item.getThumbnail() != null) {
                 mBinding.imageThumbnail.setImageBitmap(item.getThumbnail());
-            }else{
+            } else {
                 mBinding.imageThumbnail.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.ic_image_not_supported));
             }
         }

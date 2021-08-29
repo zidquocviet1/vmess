@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants"
     android:fitsSystemWindows="true"
     tools:context=".activity.EditProfileActivity">
 
@@ -95,7 +96,7 @@
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/image_cover"
                 android:layout_width="0dp"
-                android:layout_height="200dp"
+                android:layout_height="@dimen/image_cover_photo_height"
                 android:layout_marginTop="@dimen/all_margin"
                 android:background="@color/purple_500"
                 android:scaleType="centerCrop"

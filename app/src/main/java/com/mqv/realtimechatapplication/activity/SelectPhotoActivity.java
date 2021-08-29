@@ -1,12 +1,17 @@
 package com.mqv.realtimechatapplication.activity;
 
+import static com.mqv.realtimechatapplication.activity.EditProfileActivity.*;
+
 import android.content.ContentUris;
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.View;
 
@@ -18,6 +23,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ActivitySelectPhotoBinding;
 import com.mqv.realtimechatapplication.ui.adapter.ImageThumbnailAdapter;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -29,6 +35,10 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, ActivitySelectPhotoBinding> {
+    private static final int NUM_THUMBNAIL_PORTRAIT_COLUMN = 3;
+    private static final int NUM_THUMBNAIL_LANDSCAPE_COLUMN = 9;
+    private static final int NUM_SPACING = 9; // px
+
     @Override
     public void binding() {
         mBinding = ActivitySelectPhotoBinding.inflate(getLayoutInflater());
@@ -47,18 +57,32 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
 
         updateActionBarTitle(R.string.label_select_photo);
 
-        String extra = getIntent().getStringExtra(EditProfileActivity.EXTRA_CHANGE_PHOTO);
+        var dimension = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
+        int width = dimension.widthPixels;
+
+        String extra = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
 
         var images = getAllPhotoFromExternal();
 
         if (images != null) {
-            var adapter = new ImageThumbnailAdapter(this);
+            var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
+                    ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns
+            var adapter = new ImageThumbnailAdapter(this, width, spanCount, NUM_SPACING);
             adapter.submitList(images);
+            adapter.setOnItemClick(imageThumbnail -> {
+                Logging.show("Thumbnail is clicked, Uri = " + imageThumbnail.getContentUri());
+                if (imageThumbnail.getSize() != 0 && imageThumbnail.getContentUri() != null) {
+                    var intent = new Intent(this, PreviewEditPhotoActivity.class);
+                    intent.putExtra(EXTRA_CHANGE_PHOTO, extra);
+                    intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+                    startActivity(intent);
+                }
+            });
 
-            var spanCount = 3;
             mBinding.recyclerViewPhotos.setAdapter(adapter);
             mBinding.recyclerViewPhotos.setLayoutManager(new GridLayoutManager(this, spanCount));
-            mBinding.recyclerViewPhotos.addItemDecoration(new GridSpacingItemDecoration(spanCount, 10, false));
+            mBinding.recyclerViewPhotos.addItemDecoration(new GridSpacingItemDecoration(spanCount, NUM_SPACING, false));
         }
     }
 
@@ -124,6 +148,11 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                                 null);
                     } catch (IOException ignored) {
 
+                    }
+                } else {
+                    try {
+                        thumbnail = MediaStore.Images.Media.getBitmap(getContentResolver(), contentUri);
+                    } catch (IOException ignored) {
                     }
                 }
 

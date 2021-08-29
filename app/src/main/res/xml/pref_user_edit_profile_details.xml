@@ -5,7 +5,7 @@
         android:layout="@layout/item_preference_content"
         android:title="@string/author_app_full_name" />
     <Preference
-        android:icon="@drawable/ic_transgender"
+        android:icon="@drawable/ic_gender_male"
         android:layout="@layout/item_preference_content"
         android:title="Male" />
     <Preference
