@@ -10,6 +10,8 @@ public final class Const {
     public static final String PASSWORD_REGEX_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$";
     public static final String AUTHORIZATION = "Authorization";
     public static final String AUTHORIZER = "Authorizer";
+    public static final String MULTIPART_TYPE = "multipart/form-data";
+    public static final String PREFIX_TOKEN = "Bearer ";
 
     // DATABASE
     public static final String DATABASE_NAME = "tac_database";

@@ -65,7 +65,7 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
                 Glide.with(getApplicationContext())
                         .load(url)
                         .centerCrop()
-                        .error(R.drawable.ic_round_account)
+                        .error(R.drawable.ic_preferences_image_user_not_found)
                         .signature(new ObjectKey(url))
                         .into(mBinding.imageAvatar);
             }

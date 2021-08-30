@@ -7,14 +7,11 @@ import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA
 
 import android.annotation.SuppressLint;
 import android.graphics.Matrix;
-import android.graphics.PointF;
 import android.os.Bundle;
-import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
-
-import androidx.lifecycle.AndroidViewModel;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
@@ -25,6 +22,8 @@ import com.mqv.realtimechatapplication.databinding.ActivityPreviewEditPhotoBindi
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.ExifUtils;
+import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
 
@@ -32,8 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoViewModel, ActivityPreviewEditPhotoBinding> {
-
-    private float mx, my;
+    private float my;
 
     @Override
     public void binding() {
@@ -64,6 +62,9 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
             mBinding.imageProfilePhoto.setImageBitmap(bitmap);
             mBinding.imageProfilePhotoReal.setImageBitmap(bitmap);
+
+            // TODO: crop the image here
+            mBinding.buttonCrop.setOnClickListener(null);
         } else if (from.equals(EXTRA_COVER_PHOTO)) {
             updateActionBarTitle(R.string.label_preview_cover_photo);
 
@@ -88,171 +89,97 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
             mBinding.textDisplayName.setText(user.getDisplayName());
 
-            //TODO: problem here
-            mBinding.imageCoverPhoto.setOnTouchListener(new Touch(mBinding.imageCoverPhoto));
-
-//            mBinding.imageCoverPhoto.setOnTouchListener(new View.OnTouchListener() {
-//                @Override
-//                public boolean onTouch(View v, MotionEvent event) {
-//                    var imageView = (ImageView) v;
-//                    var matrix = imageView.getImageMatrix();
-//                    var maxWidth = imageView.getMaxWidth();
-//                    var maxHeight = imageView.getMaxHeight();
-//
-//                    float curX, curY;
-//
-//                    switch (event.getAction()) {
-//                        case MotionEvent.ACTION_DOWN:
-//                            mx = event.getX();
-//                            my = event.getY();
-//                            break;
-//                        case MotionEvent.ACTION_MOVE:
-//                            curX = event.getX();
-//                            curY = event.getY();
-//
-//                            mBinding.imageCoverPhoto.scrollBy((int) (mx - curX), (int) (my - curY));
-//                            mx = curX;
-//                            my = curY;
-//                            break;
-//                        case MotionEvent.ACTION_UP:
-//                            curX = event.getX();
-//                            curY = event.getY();
-//
-//                            mBinding.imageCoverPhoto.scrollBy((int) (mx - curX), (int) (my - curY));
-//                            break;
-//                    }
-//                    return true;
-//                }
-//            });
+            // TODO: not complete here
+            mBinding.imageCoverPhoto.setOnTouchListener(imageCoverListener());
         }
 
         mBinding.buttonSave.setOnClickListener(v -> {
-            // TODO: upload image to the spring server
+            mViewModel.updateProfilePicture(image.getRealPath());
         });
     }
 
     @Override
     public void setupObserver() {
+        mViewModel.getUploadPhotoResult().observe(this, uploadPhotoResult -> {
+            if (uploadPhotoResult == null)
+                return;
 
+            if (uploadPhotoResult.getStatus() == NetworkStatus.SUCCESS){
+                Toast.makeText(getApplicationContext(), uploadPhotoResult.getSuccess(), Toast.LENGTH_SHORT).show();
+
+                getCurrentUser().reload().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()){
+                        Logging.show("Reload the user successfully");
+                    }
+                });
+            } else if (uploadPhotoResult.getStatus() == NetworkStatus.ERROR) {
+                Toast.makeText(getApplicationContext(), uploadPhotoResult.getError(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    public class Touch implements View.OnTouchListener {
-        private static final int NONE = 0;
-        private static final int DRAG = 1;
-        private static final int ZOOM = 2;
+    private View.OnTouchListener imageCoverListener(){
+        return new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                var imageView = (ImageView) v;
+                var f = new float[9];
+                var matrix = imageView.getImageMatrix();
+                matrix.getValues(f);
 
-        private static final float MIN_ZOOM = 1f;
-        private static final float MAX_ZOOM = 5f;
+                var maxHeight = imageView.getDrawable().getIntrinsicHeight();
+                float curX, curY, dy;
 
-        private Matrix matrix = new Matrix();
-        private Matrix savedMatrix = new Matrix();
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN: // the action to start event
+                        my = event.getY(); // interval (0.0, view.getHeight())
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        var scaleY = f[Matrix.MSCALE_Y];
 
-        private PointF start = new PointF();
-        private PointF mid = new PointF();
+                        var originalHeight = imageView.getDrawable().getIntrinsicHeight();
+                        var actualHeight = Math.round(scaleY * originalHeight);
 
-        private int mode = NONE;
-        private float oldDistance = 1f;
+                        var matrixY = f[Matrix.MTRANS_Y];
+                        var matrixX = f[Matrix.MTRANS_X];
 
-        private float dx; // postTranslate X distance
-        private float dy; // postTranslate Y distance
-        private float[] matrixValues = new float[9];
-        float matrixX = 0; // X coordinate of matrix inside the ImageView
-        float matrixY = 0; // Y coordinate of matrix inside the ImageView
-        float width = 0; // width of drawable
-        float height = 0; // height of drawable
+                        dy = event.getY() - my;
 
-        private ImageView imageView;
-
-        public Touch(ImageView imageView) {
-            this.imageView = imageView;
-        }
-
-        @Override
-        public boolean onTouch(View view, MotionEvent event) {
-            ImageView imageView = (ImageView) view;
-
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_DOWN:
-                    savedMatrix.set(matrix);
-                    start.set(event.getX(), event.getY());
-                    mode = DRAG;
-                    break;
-
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    oldDistance = spacing(event);
-                    if (oldDistance > 10f) {
-                        savedMatrix.set(matrix);
-                        midPoint(mid, event);
-                        mode = ZOOM;
-                    }
-                    break;
-
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_POINTER_UP:
-                    mode = NONE;
-                    break;
-
-                case MotionEvent.ACTION_MOVE:
-                    if (mode == DRAG) {
-                        matrix.set(savedMatrix);
-
-                        matrix.getValues(matrixValues);
-                        matrixX = matrixValues[2];
-                        matrixY = matrixValues[5];
-                        width = matrixValues[0] * (((ImageView) view).getDrawable()
-                                .getIntrinsicWidth());
-                        height = matrixValues[4] * (((ImageView) view).getDrawable()
-                                .getIntrinsicHeight());
-
-                        dx = event.getX() - start.x;
-                        dy = event.getY() - start.y;
-
-                        //if image will go outside left bound
-                        if (matrixX + dx < 0) {
-                            dx = -matrixX;
-                        }
-                        //if image will go outside right bound
-                        if (matrixX + dx + width > view.getWidth()) {
-                            dx = view.getWidth() - matrixX - width;
-                        }
-                        //if image will go oustside top bound
+                        //if image will go outside top bound
                         if (matrixY + dy < 0) {
                             dy = -matrixY;
                         }
+
                         //if image will go outside bottom bound
-                        if (matrixY + dy + height > view.getHeight()) {
-                            dy = view.getHeight() - matrixY - height;
+                        if (matrixY + dy + actualHeight > v.getHeight()) {
+                            dy = v.getHeight() - matrixY - actualHeight;
                         }
-                        matrix.postTranslate(dx, dy);
-                    } else if (mode == ZOOM) {
-                        float newDistance = spacing(event);
-                        if (newDistance > 10f) {
-                            matrix.set(savedMatrix);
-                            float scale = newDistance / oldDistance;
-                            float[] values = new float[9];
-                            matrix.getValues(values);
-                            float currentScale = values[Matrix.MSCALE_X];
-                            if (scale * currentScale > MAX_ZOOM)
-                                scale = MAX_ZOOM / currentScale;
-                            else if (scale * currentScale < MIN_ZOOM)
-                                scale = MIN_ZOOM / currentScale;
-                            matrix.postScale(scale, scale, mid.x, mid.y);
-                        }
-                    }
-                    break;
+                        matrix.postTranslate(matrixX, dy);
+
+//                            curY = event.getY();
+//                            Logging.show(String.format("Start Y = %.2f, Current Y = %.2f", my, curY));
+//                            dy = curY;
+//
+////                            if (curY - maxHeight > 0){
+////                                dy = maxHeight;
+////                            }
+//
+//                            if (curY < 0){
+//                                dy = 0;
+//                            }
+//
+//                            if (curY > maxHeight){
+//                                dy = maxHeight;
+//                            }
+//
+//                            mBinding.imageCoverPhoto.scrollBy(0, (int) (my - dy)); // x equals to 0, that mean disable horizontal drag
+                        break;
+                    case MotionEvent.ACTION_UP: // the action to finish event
+                        break;
+                }
+                mBinding.imageCoverPhoto.setImageMatrix(matrix);
+                return true;
             }
-            this.imageView.setImageMatrix(matrix);
-            return true;
-        }
-
-        private float spacing(MotionEvent event) {
-            float x = event.getX(0) - event.getX(1);
-            float y = event.getY(0) - event.getY(1);
-            return (float) Math.sqrt(x * x + y * y);
-        }
-
-        private void midPoint(PointF point, MotionEvent event) {
-            point.set((event.getX(0) + event.getX(1)) / 2, (event.getY(0) + event.getY(1)) / 2);
-        }
+        };
     }
 }

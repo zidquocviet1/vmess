@@ -32,7 +32,6 @@
         android:id="@+id/layout_profile_photo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
         app:layout_constraintHeight_percent="0.5"
         app:layout_constraintTop_toBottomOf="@id/included_appbar"
         app:layout_constraintVertical_bias="0">
@@ -69,12 +68,25 @@
             app:layout_constraintStart_toStartOf="@id/image_profile_photo"
             app:layout_constraintTop_toTopOf="@id/image_profile_photo"
             app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_crop"
+            style="@style/MaterialIconButton"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="@dimen/all_margin"
+            android:layout_marginBottom="@dimen/all_margin"
+            app:cornerRadius="4dp"
+            app:icon="@drawable/ic_crop"
+            app:layout_constraintBottom_toBottomOf="@+id/image_profile_photo_real"
+            app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_cover_photo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/included_appbar">
 
@@ -82,9 +94,9 @@
             android:id="@+id/image_cover_photo"
             android:layout_width="match_parent"
             android:layout_height="@dimen/image_cover_photo_height"
-            android:background="@color/purple_500"
+            android:background="@drawable/ic_image_not_supported"
             android:contentDescription="@null"
-            android:scaleType="centerCrop"
+            android:scaleType="matrix"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.imageview.ShapeableImageView

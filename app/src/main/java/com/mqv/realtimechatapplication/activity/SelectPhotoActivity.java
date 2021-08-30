@@ -1,13 +1,13 @@
 package com.mqv.realtimechatapplication.activity;
 
-import static com.mqv.realtimechatapplication.activity.EditProfileActivity.*;
+import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA_CHANGE_PHOTO;
+import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA_IMAGE_THUMBNAIL;
 
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.View;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -91,28 +92,22 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         // default implementation method
     }
 
-    private List<ImageThumbnail> getAllPhotoFromExternal() {
+    @RequiresApi(29)
+    private List<ImageThumbnail> getImagesShownInApi29() {
         List<ImageThumbnail> images = null;
-        Uri uri;
-        String[] projection = {
+        var uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        var projection = new String[]{
                 MediaStore.MediaColumns._ID,
                 MediaStore.MediaColumns.DISPLAY_NAME,
                 MediaStore.MediaColumns.SIZE,
-                MediaStore.Images.Media.DATE_TAKEN
+                MediaStore.MediaColumns.DATE_TAKEN,
+                MediaStore.MediaColumns.MIME_TYPE,
+                MediaStore.MediaColumns.RELATIVE_PATH,
+                MediaStore.MediaColumns.DATA
         };
-        String imageDateSort = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+        String imageDateSort = MediaStore.MediaColumns.DATE_TAKEN + " DESC";
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
-        } else {
-            uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        }
-
-        var cursor = getContentResolver().query(uri,
-                projection,
-                null,
-                null,
-                imageDateSort);
+        var cursor = getContentResolver().query(uri, projection, null, null, imageDateSort);
 
         if (cursor != null && cursor.getCount() > 0) {
             images = new ArrayList<>();
@@ -120,15 +115,27 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
             var idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
             var nameIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
             var sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
-            var dateIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN);
+            var dateIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN);
+            var typeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
+            var pathIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH);
+            var dataIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
 
             while (cursor.moveToNext()) {
                 var id = cursor.getLong(idIndex);
                 var name = cursor.getString(nameIndex);
                 var size = cursor.getString(sizeIndex);
                 var date = cursor.getString(dateIndex);
+                var type = cursor.getString(typeIndex);
+                var relativePath = cursor.getString(pathIndex);
+                var realPath = cursor.getString(dataIndex);
 
                 var contentUri = ContentUris.withAppendedId(uri, id);
+                Bitmap thumbnail = null;
+                try {
+                    thumbnail = getContentResolver().loadThumbnail(contentUri, new Size(480, 480), null);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 LocalDateTime timestamp;
 
@@ -138,39 +145,85 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                     timestamp = LocalDateTime.MIN;
                 }
 
-                Bitmap thumbnail = null;
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    try {
-                        thumbnail = getContentResolver().loadThumbnail(
-                                contentUri,
-                                new Size(480, 480),
-                                null);
-                    } catch (IOException ignored) {
-
-                    }
-                } else {
-                    try {
-                        thumbnail = MediaStore.Images.Media.getBitmap(getContentResolver(), contentUri);
-                    } catch (IOException ignored) {
-                    }
-                }
-
-                var imageThumbnail = new ImageThumbnail(
+                images.add(new ImageThumbnail(
                         id,
                         name,
                         Long.parseLong(size),
                         timestamp,
                         contentUri,
-                        thumbnail);
-
-                images.add(imageThumbnail);
+                        thumbnail,
+                        type,
+                        relativePath,
+                        realPath
+                ));
             }
 
             cursor.close();
         }
-
         return images;
+    }
+
+    private List<ImageThumbnail> getImagesShownInApiLower29() {
+        List<ImageThumbnail> images = null;
+        var uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        var projection = new String[]{
+                MediaStore.MediaColumns._ID,
+                MediaStore.MediaColumns.DISPLAY_NAME,
+                MediaStore.MediaColumns.SIZE,
+                MediaStore.MediaColumns.MIME_TYPE,
+                MediaStore.MediaColumns.DATA
+        };
+
+        var cursor = getContentResolver().query(uri, projection, null, null, null);
+
+        if (cursor != null && cursor.getCount() > 0) {
+            images = new ArrayList<>();
+
+            var idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
+            var nameIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+            var sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
+            var typeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
+            var dataIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+
+            while (cursor.moveToNext()) {
+                var id = cursor.getLong(idIndex);
+                var name = cursor.getString(nameIndex);
+                var size = cursor.getString(sizeIndex);
+                var type = cursor.getString(typeIndex);
+                var realPath = cursor.getString(dataIndex);
+
+                var contentUri = ContentUris.withAppendedId(uri, id);
+                Bitmap thumbnail = null;
+                try {
+                    thumbnail = MediaStore.Images.Media.getBitmap(getContentResolver(), contentUri);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                images.add(new ImageThumbnail(
+                        id,
+                        name,
+                        Long.parseLong(size),
+                        null,
+                        contentUri,
+                        thumbnail,
+                        type,
+                        "",
+                        realPath
+                ));
+            }
+
+            cursor.close();
+        }
+        return images;
+    }
+
+    private List<ImageThumbnail> getAllPhotoFromExternal() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return getImagesShownInApi29();
+        } else {
+            return getImagesShownInApiLower29();
+        }
     }
 
     public static class GridSpacingItemDecoration extends RecyclerView.ItemDecoration {

@@ -14,14 +14,22 @@ public class ImageThumbnail implements Parcelable{
     private final LocalDateTime timestamp;
     private final Uri contentUri;
     private Bitmap thumbnail;
+    private final String mimeType;
+    private final String relativePath;
+    private final String realPath;
 
-    public ImageThumbnail(Long id, String displayName, Long size, LocalDateTime timestamp, Uri contentUri, Bitmap thumbnail) {
+    public ImageThumbnail(Long id, String displayName, Long size, LocalDateTime timestamp,
+                          Uri contentUri, Bitmap thumbnail, String mimeType,
+                          String relativePath, String realPath) {
         this.id = id;
         this.displayName = displayName;
         this.size = size;
         this.timestamp = timestamp;
         this.contentUri = contentUri;
         this.thumbnail = thumbnail;
+        this.mimeType = mimeType;
+        this.relativePath = relativePath;
+        this.realPath = realPath;
     }
 
     protected ImageThumbnail(Parcel in) {
@@ -39,6 +47,9 @@ public class ImageThumbnail implements Parcelable{
         contentUri = in.readParcelable(Uri.class.getClassLoader());
 //        thumbnail = in.readParcelable(Bitmap.class.getClassLoader());
         timestamp = (LocalDateTime) in.readSerializable();
+        mimeType = in.readString();
+        relativePath = in.readString();
+        realPath = in.readString();
     }
 
     public static final Creator<ImageThumbnail> CREATOR = new Creator<ImageThumbnail>() {
@@ -77,6 +88,18 @@ public class ImageThumbnail implements Parcelable{
         return thumbnail;
     }
 
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public String getRelativePath() {
+        return relativePath;
+    }
+
+    public String getRealPath() {
+        return realPath;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -100,5 +123,8 @@ public class ImageThumbnail implements Parcelable{
         dest.writeParcelable(contentUri, flags);
 //        dest.writeParcelable(thumbnail, flags);
         dest.writeSerializable(timestamp);
+        dest.writeString(mimeType);
+        dest.writeString(relativePath);
+        dest.writeString(realPath);
     }
 }

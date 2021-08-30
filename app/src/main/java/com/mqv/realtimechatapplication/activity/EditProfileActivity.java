@@ -64,14 +64,6 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         mBinding.buttonEditDetails.setOnClickListener(this);
         mBinding.buttonEditLinks.setOnClickListener(this);
 
-        // TODO: call upload photo to the Spring server if success then call reload user
-//            user.reload().addOnCompleteListener(new OnCompleteListener<Void>() {
-//                @Override
-//                public void onComplete(@NonNull Task<Void> task) {
-//                    Toast.makeText(getApplicationContext(), "Reload User", Toast.LENGTH_SHORT).show();
-//                }
-//            });
-
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout_preferences_details, new UserDetailsPreferenceFragment())
                 .commit();
