@@ -21,6 +21,10 @@ public class UploadPhotoResult {
         return new UploadPhotoResult(NetworkStatus.SUCCESS, msg, null);
     }
 
+    public static UploadPhotoResult Loading(){
+        return new UploadPhotoResult(NetworkStatus.LOADING, null, null);
+    }
+
     public NetworkStatus getStatus() {
         return status;
     }

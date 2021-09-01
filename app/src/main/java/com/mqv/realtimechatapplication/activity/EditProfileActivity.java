@@ -9,12 +9,14 @@ import android.provider.Settings;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditProfileViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityEditProfileBinding;
@@ -67,6 +69,8 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout_preferences_details, new UserDetailsPreferenceFragment())
                 .commit();
+
+        registerFirebaseUserChange(this::showUserUi);
     }
 
     @Override
@@ -82,31 +86,7 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
 
     @Override
     public void setupObserver() {
-        mViewModel.getFirebaseUser().observe(this, user -> {
-            if (user != null) {
-                //TODO: reformat the url in the develop mode
-                var uri = user.getPhotoUrl();
-                if (uri != null) {
-                    var url = uri.toString().replace("localhost", Const.BASE_IP);
-
-                    Glide.with(getApplicationContext())
-                            .load(url)
-                            .centerCrop()
-                            .error(R.drawable.ic_round_account)
-                            .signature(new ObjectKey(url))
-                            .into(mBinding.imageAvatar);
-                }
-
-                var links = Arrays.asList("mqviet12", "github.com/zidquocviet1");
-                var adapter = new UserLinkAdapter(this);
-                adapter.submitList(links);
-
-                mBinding.recyclerViewLinks.setAdapter(adapter);
-                mBinding.recyclerViewLinks.setNestedScrollingEnabled(false);
-                mBinding.recyclerViewLinks.setHasFixedSize(false);
-                mBinding.recyclerViewLinks.setLayoutManager(new LinearLayoutManager(this));
-            }
-        });
+        mViewModel.getFirebaseUser().observe(this, this::showUserUi);
     }
 
     @Override
@@ -128,6 +108,35 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         } else if (id == mBinding.buttonEditLinks.getId()) {
 
         }
+    }
+
+    @UiThread
+    private void showUserUi(FirebaseUser user){
+        runOnUiThread(() -> {
+            if (user == null) return;
+
+            //TODO: reformat the url in the develop mode
+            var uri = user.getPhotoUrl();
+            if (uri != null) {
+                var url = uri.toString().replace("localhost", Const.BASE_IP);
+
+                Glide.with(getApplicationContext())
+                        .load(url)
+                        .centerCrop()
+                        .error(R.drawable.ic_round_account)
+                        .signature(new ObjectKey(url))
+                        .into(mBinding.imageAvatar);
+            }
+
+            var links = Arrays.asList("mqviet12", "github.com/zidquocviet1");
+            var adapter = new UserLinkAdapter(this);
+            adapter.submitList(links);
+
+            mBinding.recyclerViewLinks.setAdapter(adapter);
+            mBinding.recyclerViewLinks.setNestedScrollingEnabled(false);
+            mBinding.recyclerViewLinks.setHasFixedSize(false);
+            mBinding.recyclerViewLinks.setLayoutManager(new LinearLayoutManager(this));
+        });
     }
 
     private void startActivity(Class<?> target) {

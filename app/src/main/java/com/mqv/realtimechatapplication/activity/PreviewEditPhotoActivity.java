@@ -22,7 +22,6 @@ import com.mqv.realtimechatapplication.databinding.ActivityPreviewEditPhotoBindi
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.ExifUtils;
-import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
@@ -82,6 +81,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
                 Glide.with(getApplicationContext())
                         .load(url)
                         .centerCrop()
+                        .override(160, 160)
                         .error(R.drawable.ic_round_account)
                         .signature(new ObjectKey(url))
                         .into(mBinding.imageProfileInCover);
@@ -104,21 +104,34 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             if (uploadPhotoResult == null)
                 return;
 
-            if (uploadPhotoResult.getStatus() == NetworkStatus.SUCCESS){
-                Toast.makeText(getApplicationContext(), uploadPhotoResult.getSuccess(), Toast.LENGTH_SHORT).show();
+            if (uploadPhotoResult.getStatus() == NetworkStatus.LOADING) {
+                showLoadingUi(true);
+            } else if (uploadPhotoResult.getStatus() == NetworkStatus.SUCCESS) {
+                showLoadingUi(false);
 
-                getCurrentUser().reload().addOnCompleteListener(task -> {
-                    if (task.isSuccessful()){
-                        Logging.show("Reload the user successfully");
-                    }
-                });
+                Toast.makeText(this, uploadPhotoResult.getSuccess(), Toast.LENGTH_SHORT).show();
+
+                reloadFirebaseUser();
+
+                setResult(RESULT_OK);
+                finish();
             } else if (uploadPhotoResult.getStatus() == NetworkStatus.ERROR) {
-                Toast.makeText(getApplicationContext(), uploadPhotoResult.getError(), Toast.LENGTH_SHORT).show();
+                showLoadingUi(false);
+
+                Toast.makeText(this, uploadPhotoResult.getError(), Toast.LENGTH_SHORT).show();
+
+                setResult(RESULT_CANCELED);
+                finish();
             }
         });
     }
 
-    private View.OnTouchListener imageCoverListener(){
+    private void showLoadingUi(boolean isLoading) {
+        mBinding.buttonSave.setEnabled(!isLoading);
+        mBinding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+    }
+
+    private View.OnTouchListener imageCoverListener() {
         return new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

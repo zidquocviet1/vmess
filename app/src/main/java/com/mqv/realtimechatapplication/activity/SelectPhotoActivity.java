@@ -77,7 +77,12 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                     var intent = new Intent(this, PreviewEditPhotoActivity.class);
                     intent.putExtra(EXTRA_CHANGE_PHOTO, extra);
                     intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
-                    startActivity(intent);
+
+                    activityResultLauncher.launch(intent, result -> {
+                        if (result.getResultCode() == RESULT_OK) {
+                            this.finish();
+                        }
+                    });
                 }
             });
 

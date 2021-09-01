@@ -116,6 +116,7 @@
     <string name="invalid_phone_format">The phone number is invalid</string>
     <string name="invalid_file_not_found">Could not load the file. Try again</string>
     <string name="invalid_update_user_photo">Some error occurs when updating the user photo!</string>
+    <string name="invalid_authentication_fail">User Authentication fail. Try later</string>
 
     <string name="key_pref_category_accounts">key_pref_category_accounts</string>
     <string name="key_pref_manage_accounts">key_pref_manage_accounts</string>

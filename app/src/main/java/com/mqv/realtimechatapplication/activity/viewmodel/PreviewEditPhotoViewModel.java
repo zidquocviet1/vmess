@@ -4,17 +4,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GetTokenResult;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.data.result.UploadPhotoResult;
-import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.util.Const;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
 import java.util.Objects;
@@ -23,14 +18,8 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.observers.DisposableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 
 @HiltViewModel
 public class PreviewEditPhotoViewModel extends ViewModel {
@@ -48,6 +37,8 @@ public class PreviewEditPhotoViewModel extends ViewModel {
     }
 
     public void updateProfilePicture(String realFilePath) {
+        uploadPhotoResult.setValue(UploadPhotoResult.Loading());
+
         var user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
 
         user.getIdToken(true).addOnCompleteListener(task -> {
@@ -70,10 +61,10 @@ public class PreviewEditPhotoViewModel extends ViewModel {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_update_user_photo));
                             }
                         }));
+            }else{
+                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_authentication_fail));
             }
         });
-
-
     }
 
     public void updateCoverPhoto() {

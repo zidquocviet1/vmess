@@ -3,9 +3,11 @@ package com.mqv.realtimechatapplication.activity;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.UiThread;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
@@ -35,28 +37,24 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
 
         updateActionBarTitle(R.string.label_user_information);
 
-//        findViewById(R.id.button_log_out).setOnClickListener(v -> {
-//            // TODO: Loi cho nay can phai check lai ben Android Studio Arctic Fox
-////            auth.signOut();
-//
-////            finishAffinity();
-//
-//            var loginIntent = new Intent(UserActivity.this, LoginActivity.class);
-////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-////            loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//
-//            startActivity(loginIntent);
-//        });
-
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout_preferences, new UserPreferencesFragment())
                 .commit();
+
+        registerFirebaseUserChange(this::showUserUi);
     }
 
     @Override
     public void setupObserver() {
-        mViewModel.getFirebaseUser().observe(this, user -> {
+        mViewModel.getFirebaseUser().observe(this, this::showUserUi);
+    }
+
+    @UiThread
+    private void showUserUi(FirebaseUser user){
+        runOnUiThread(() -> {
+            if (user == null)
+                return;
+
             //TODO: reformat the url in the develop mode
             var uri = user.getPhotoUrl();
             if (uri != null) {
@@ -65,7 +63,7 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
                 Glide.with(getApplicationContext())
                         .load(url)
                         .centerCrop()
-                        .error(R.drawable.ic_preferences_image_user_not_found)
+                        .error(R.drawable.ic_round_account)
                         .signature(new ObjectKey(url))
                         .into(mBinding.imageAvatar);
             }

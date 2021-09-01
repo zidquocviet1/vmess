@@ -10,6 +10,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
@@ -18,6 +19,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.signature.ObjectKey;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
@@ -65,25 +67,13 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         // TODO: using request network callback instead
         var intentFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(receiver, intentFilter);
+
+        registerFirebaseUserChange(this::showUserUi);
     }
 
     @Override
     public void setupObserver() {
-        mViewModel.getFirebaseUser().observe(this, user -> {
-            if (user != null){
-                // TODO: reformat the photoURL in the dev mode
-                if (user.getPhotoUrl() != null){
-                    var reformatPhotoUrl = user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
-                    Glide.with(this)
-                            .load(reformatPhotoUrl)
-                            .error(R.drawable.ic_round_account)
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .centerCrop()
-                            .signature(new ObjectKey(reformatPhotoUrl))
-                            .into(mBinding.imageAvatar);
-                }
-            }
-        });
+        mViewModel.getFirebaseUser().observe(this, this::showUserUi);
     }
 
     @Override
@@ -114,6 +104,23 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
             mBinding.buttonAllPeople.setVisibility(View.GONE);
             mBinding.buttonAddConversation.setVisibility(View.VISIBLE);
             mBinding.buttonQrScanner.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @UiThread
+    private void showUserUi(FirebaseUser user){
+        if (user == null) return;
+
+        // TODO: reformat the photoURL in the dev mode
+        if (user.getPhotoUrl() != null){
+            var reformatPhotoUrl = user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
+            Glide.with(this)
+                    .load(reformatPhotoUrl)
+                    .error(R.drawable.ic_round_account)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .centerCrop()
+                    .signature(new ObjectKey(reformatPhotoUrl))
+                    .into(mBinding.imageAvatar);
         }
     }
 }

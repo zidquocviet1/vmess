@@ -19,7 +19,7 @@
         android:layout_marginTop="@dimen/all_margin"
         android:layout_marginEnd="@dimen/all_margin"
         android:layout_marginBottom="@dimen/all_margin"
-        android:backgroundTint="@color/purple_500"
+        android:backgroundTint="@drawable/background_button_color_selector"
         android:text="@string/action_save"
         android:textAllCaps="true"
         android:textColor="@color/white"
@@ -29,122 +29,141 @@
         app:layout_constraintTop_toTopOf="@+id/included_appbar" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_profile_photo"
+        android:id="@+id/layout_photo"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintHeight_percent="0.5"
-        app:layout_constraintTop_toBottomOf="@id/included_appbar"
-        app:layout_constraintVertical_bias="0">
-
-        <ImageView
-            android:id="@+id/image_profile_photo"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_round_account" />
-
-        <ImageView
-            android:id="@+id/filter_profile_photo"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:alpha="0.7"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@color/black"
-            app:layout_constraintBottom_toBottomOf="@id/image_profile_photo"
-            app:layout_constraintEnd_toEndOf="@id/image_profile_photo"
-            app:layout_constraintStart_toStartOf="@id/image_profile_photo"
-            app:layout_constraintTop_toTopOf="@id/image_profile_photo" />
-
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/image_profile_photo_real"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="@id/image_profile_photo"
-            app:layout_constraintEnd_toEndOf="@id/image_profile_photo"
-            app:layout_constraintStart_toStartOf="@id/image_profile_photo"
-            app:layout_constraintTop_toTopOf="@id/image_profile_photo"
-            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_crop"
-            style="@style/MaterialIconButton"
-            android:layout_width="50dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="@dimen/all_margin"
-            android:layout_marginBottom="@dimen/all_margin"
-            app:cornerRadius="4dp"
-            app:icon="@drawable/ic_crop"
-            app:layout_constraintBottom_toBottomOf="@+id/image_profile_photo_real"
-            app:layout_constraintStart_toStartOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layout_cover_photo"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/included_appbar">
 
-        <ImageView
-            android:id="@+id/image_cover_photo"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_profile_photo"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/image_cover_photo_height"
-            android:background="@drawable/ic_image_not_supported"
-            android:contentDescription="@null"
-            android:scaleType="matrix"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_height="400dp"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/filter"
-            android:layout_width="170dp"
-            android:layout_height="170dp"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@color/white"
-            app:layout_constraintBottom_toBottomOf="@id/image_cover_photo"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_cover_photo"
-            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+            <ImageView
+                android:id="@+id/image_profile_photo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_round_account" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/image_profile_in_cover"
-            android:layout_width="160dp"
-            android:layout_height="160dp"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_round_account"
-            app:layout_constraintBottom_toBottomOf="@id/image_cover_photo"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/image_cover_photo"
-            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+            <ImageView
+                android:id="@+id/filter_profile_photo"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:alpha="0.7"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@color/black"
+                app:layout_constraintBottom_toBottomOf="@id/image_profile_photo"
+                app:layout_constraintEnd_toEndOf="@id/image_profile_photo"
+                app:layout_constraintStart_toStartOf="@id/image_profile_photo"
+                app:layout_constraintTop_toTopOf="@id/image_profile_photo" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/text_display_name"
-            style="@style/TitleTextAppearance"
-            android:layout_width="wrap_content"
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_profile_photo_real"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                app:layout_constraintBottom_toBottomOf="@id/image_profile_photo"
+                app:layout_constraintEnd_toEndOf="@id/image_profile_photo"
+                app:layout_constraintStart_toStartOf="@id/image_profile_photo"
+                app:layout_constraintTop_toTopOf="@id/image_profile_photo"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_crop"
+                style="@style/MaterialIconButton"
+                android:layout_width="50dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="@dimen/all_margin"
+                android:layout_marginBottom="@dimen/all_margin"
+                app:cornerRadius="4dp"
+                app:icon="@drawable/ic_crop"
+                app:layout_constraintBottom_toBottomOf="@+id/image_profile_photo_real"
+                app:layout_constraintStart_toStartOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_cover_photo"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/all_margin"
-            android:text="@string/author_app_full_name"
-            app:layout_constraintEnd_toEndOf="@id/image_profile_in_cover"
-            app:layout_constraintStart_toStartOf="@id/image_profile_in_cover"
-            app:layout_constraintTop_toBottomOf="@id/image_profile_in_cover" />
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/text_bio"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/all_margin"
-            android:text="XII \nMQV Twelve"
-            android:textAlignment="center"
-            app:layout_constraintEnd_toEndOf="@id/text_display_name"
-            app:layout_constraintStart_toStartOf="@id/text_display_name"
-            app:layout_constraintTop_toBottomOf="@id/text_display_name" />
+            <ImageView
+                android:id="@+id/image_cover_photo"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/image_cover_photo_height"
+                android:background="@drawable/ic_image_not_supported"
+                android:contentDescription="@null"
+                android:scaleType="matrix"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/filter"
+                android:layout_width="170dp"
+                android:layout_height="170dp"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@color/white"
+                app:layout_constraintBottom_toBottomOf="@id/image_cover_photo"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/image_cover_photo"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_profile_in_cover"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_round_account"
+                app:layout_constraintBottom_toBottomOf="@id/image_cover_photo"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/image_cover_photo"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/text_display_name"
+                style="@style/TitleTextAppearance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/author_app_full_name"
+                app:layout_constraintEnd_toEndOf="@id/image_profile_in_cover"
+                app:layout_constraintStart_toStartOf="@id/image_profile_in_cover"
+                app:layout_constraintTop_toBottomOf="@id/image_profile_in_cover" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/text_bio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="XII \nMQV Twelve"
+                android:textAlignment="center"
+                app:layout_constraintEnd_toEndOf="@id/text_display_name"
+                app:layout_constraintStart_toStartOf="@id/text_display_name"
+                app:layout_constraintTop_toBottomOf="@id/text_display_name" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:theme="@style/ProgressbarLoadingColor"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_photo" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -15,7 +15,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
+import com.mqv.realtimechatapplication.network.firebase.FirebaseUserManager;
+import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.MyActivityForResult;
+
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
@@ -28,11 +33,22 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     AppPreferences mPreferences;
     private boolean themeChangePending;
     private boolean paused;
+    private Consumer<FirebaseUser> firebaseUserConsumer;
+    private FirebaseUserManager firebaseUserManager;
 
     private final AppPreferences.Listener onPreferenceChanged = new AppPreferences.Listener() {
         @Override
         public void onDarkThemeModeChanged(DarkMode mode) {
             onThemeSettingsModeChange();
+        }
+    };
+
+    private final FirebaseUserManager.Listener onFirebaseUserChanged = new FirebaseUserManager.Listener() {
+        @Override
+        public void onUserChanged() {
+            if (firebaseUserConsumer != null){
+                firebaseUserConsumer.accept(getCurrentUser());
+            }
         }
     };
 
@@ -58,12 +74,15 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         setContentView(mBinding.getRoot());
 
         setupObserver();
+
+        firebaseUserManager = FirebaseUserManager.getInstance();
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         mPreferences.addListener(onPreferenceChanged);
+        firebaseUserManager.addListener(onFirebaseUserChanged);
     }
 
     @Override
@@ -87,12 +106,28 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         super.onDestroy();
         if (mBinding != null) mBinding = null;
         mPreferences.removeListener(onPreferenceChanged);
+        firebaseUserManager.removeListener(onFirebaseUserChanged);
     }
 
     public abstract void setupObserver();
 
     public FirebaseUser getCurrentUser() {
         return FirebaseAuth.getInstance().getCurrentUser();
+    }
+
+    public void reloadFirebaseUser() {
+        var executorService = Executors.newSingleThreadExecutor();
+
+        getCurrentUser().reload().addOnCompleteListener(executorService, task -> {
+            if (task.isSuccessful()) {
+                Logging.show("Reload firebase user successfully");
+                firebaseUserManager.emitListener();
+            }
+        });
+    }
+
+    public void registerFirebaseUserChange(Consumer<FirebaseUser> callback) {
+        this.firebaseUserConsumer = callback;
     }
 
     private void onThemeSettingsModeChange() {
