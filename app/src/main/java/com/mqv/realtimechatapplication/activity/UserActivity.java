@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
@@ -11,6 +12,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
+import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.fragment.preference.UserPreferencesFragment;
 import com.mqv.realtimechatapplication.util.Const;
 
@@ -60,9 +62,16 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
             if (uri != null) {
                 var url = uri.toString().replace("localhost", Const.BASE_IP);
 
-                Glide.with(getApplicationContext())
+                var placeHolder = new CircularProgressDrawable(this);
+                placeHolder.setStrokeWidth(5f);
+                placeHolder.setCenterRadius(30f);
+                placeHolder.start();
+
+                GlideApp.with(getApplicationContext())
                         .load(url)
                         .centerCrop()
+                        .placeholder(placeHolder)
+                        .fallback(R.drawable.ic_round_account)
                         .error(R.drawable.ic_round_account)
                         .signature(new ObjectKey(url))
                         .into(mBinding.imageAvatar);

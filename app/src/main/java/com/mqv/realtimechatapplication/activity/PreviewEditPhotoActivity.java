@@ -13,12 +13,14 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
+
 import com.bumptech.glide.signature.ObjectKey;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.PreviewEditPhotoViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityPreviewEditPhotoBinding;
+import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.ExifUtils;
@@ -78,10 +80,15 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             if (uri != null) {
                 var url = uri.toString().replace("localhost", Const.BASE_IP);
 
-                Glide.with(getApplicationContext())
+                var placeHolder = new CircularProgressDrawable(this);
+                placeHolder.setStrokeWidth(5f);
+                placeHolder.setCenterRadius(30f);
+                placeHolder.start();
+
+                GlideApp.with(this)
                         .load(url)
                         .centerCrop()
-                        .override(160, 160)
+                        .placeholder(placeHolder)
                         .error(R.drawable.ic_round_account)
                         .signature(new ObjectKey(url))
                         .into(mBinding.imageProfileInCover);
@@ -94,7 +101,11 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
         }
 
         mBinding.buttonSave.setOnClickListener(v -> {
-            mViewModel.updateProfilePicture(image.getRealPath());
+            if (from.equals(EXTRA_PROFILE_PICTURE)) {
+                mViewModel.updateProfilePicture(image.getRealPath());
+            }else{
+                mViewModel.updateCoverPhoto();
+            }
         });
     }
 

@@ -93,4 +93,5 @@ dependencies {
     implementation 'com.github.bumptech.glide:okhttp3-integration:4.4.0'
 
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'commons-codec:commons-codec:1.10'
 }

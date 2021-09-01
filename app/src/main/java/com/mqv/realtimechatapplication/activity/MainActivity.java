@@ -15,6 +15,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
@@ -23,6 +24,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
+import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
@@ -109,18 +111,27 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
     @UiThread
     private void showUserUi(FirebaseUser user){
-        if (user == null) return;
+        runOnUiThread(() -> {
+            if (user == null) return;
 
-        // TODO: reformat the photoURL in the dev mode
-        if (user.getPhotoUrl() != null){
-            var reformatPhotoUrl = user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
-            Glide.with(this)
-                    .load(reformatPhotoUrl)
-                    .error(R.drawable.ic_round_account)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
-                    .signature(new ObjectKey(reformatPhotoUrl))
-                    .into(mBinding.imageAvatar);
-        }
+            // TODO: reformat the photoURL in the dev mode
+            if (user.getPhotoUrl() != null){
+                var reformatPhotoUrl = user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
+
+                var placeHolder = new CircularProgressDrawable(this);
+                placeHolder.setStrokeWidth(5f);
+                placeHolder.setCenterRadius(30f);
+                placeHolder.start();
+
+                GlideApp.with(this)
+                        .load(reformatPhotoUrl)
+                        .error(R.drawable.ic_round_account)
+                        .placeholder(placeHolder)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .centerCrop()
+                        .signature(new ObjectKey(reformatPhotoUrl))
+                        .into(mBinding.imageAvatar);
+            }
+        });
     }
 }

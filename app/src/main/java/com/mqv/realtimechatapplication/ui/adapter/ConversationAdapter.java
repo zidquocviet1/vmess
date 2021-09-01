@@ -10,12 +10,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemConversationBinding;
+import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.MessageStatus;
@@ -85,8 +87,14 @@ public class ConversationAdapter extends ListAdapter<Conversation, ConversationA
             mBinding.textTitleConversation.setText(item.getTitle());
             mBinding.textContentConversation.setText(item.getLastMessage());
 
-            Glide.with(context)
+            var placeHolder = new CircularProgressDrawable(context);
+            placeHolder.setStrokeWidth(5f);
+            placeHolder.setCenterRadius(30f);
+            placeHolder.start();
+
+            GlideApp.with(context)
                     .load(Const.DUMMIES_IMAGES_URL[randomIndex])
+                    .placeholder(placeHolder)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .signature(new ObjectKey(Const.DUMMIES_IMAGES_URL[randomIndex]))
