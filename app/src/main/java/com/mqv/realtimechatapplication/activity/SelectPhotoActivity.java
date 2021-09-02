@@ -3,23 +3,30 @@ package com.mqv.realtimechatapplication.activity;
 import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA_CHANGE_PHOTO;
 import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA_IMAGE_THUMBNAIL;
 
+import android.Manifest;
 import android.content.ContentUris;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.View;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ActivitySelectPhotoBinding;
 import com.mqv.realtimechatapplication.ui.adapter.ImageThumbnailAdapter;
@@ -31,14 +38,18 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, ActivitySelectPhotoBinding> {
+    private String from;
     private static final int NUM_THUMBNAIL_PORTRAIT_COLUMN = 3;
     private static final int NUM_THUMBNAIL_LANDSCAPE_COLUMN = 9;
     private static final int NUM_SPACING = 9; // px
+    private boolean isPendingStartCamera;
+    private int actualDeviceWidth;
 
     @Override
     public void binding() {
@@ -58,33 +69,51 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
 
         updateActionBarTitle(R.string.label_select_photo);
 
+        /*
+         * Get actual device width and height. Also known as Dimension
+         * */
         var dimension = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
-        int width = dimension.widthPixels;
+        actualDeviceWidth = dimension.widthPixels;
 
-        String extra = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
+        /*
+         * The query to request change photo from is. [Change profile picture, Change cover photo]
+         * */
+        from = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
 
+        setupRecyclerView();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if (isPendingStartCamera && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            startCameraIntent();
+        }else
+            isPendingStartCamera = false;
+    }
+
+    @Override
+    public void setupObserver() {
+        // default implementation method
+    }
+
+    private void setupRecyclerView() {
         var images = getAllPhotoFromExternal();
 
         if (images != null) {
+            /*
+             * add the first empty item, because i want to create a texture view in the recycler view at position 0
+             * */
+            images.add(0, new ImageThumbnail());
+
             var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
                     ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns
-            var adapter = new ImageThumbnailAdapter(this, width, spanCount, NUM_SPACING);
+            var adapter = new ImageThumbnailAdapter(this, actualDeviceWidth, spanCount, NUM_SPACING);
             adapter.submitList(images);
-            adapter.setOnItemClick(imageThumbnail -> {
-                Logging.show("Thumbnail is clicked, Uri = " + imageThumbnail.getContentUri());
-                if (imageThumbnail.getSize() != 0 && imageThumbnail.getContentUri() != null) {
-                    var intent = new Intent(this, PreviewEditPhotoActivity.class);
-                    intent.putExtra(EXTRA_CHANGE_PHOTO, extra);
-                    intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
-
-                    activityResultLauncher.launch(intent, result -> {
-                        if (result.getResultCode() == RESULT_OK) {
-                            this.finish();
-                        }
-                    });
-                }
-            });
+            adapter.setOnThumbnailClick(onThumbnailClick());
+            adapter.setOnCameraPreviewClick(onCameraPreviewClick());
 
             mBinding.recyclerViewPhotos.setAdapter(adapter);
             mBinding.recyclerViewPhotos.setLayoutManager(new GridLayoutManager(this, spanCount));
@@ -92,9 +121,84 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         }
     }
 
-    @Override
-    public void setupObserver() {
-        // default implementation method
+    private Consumer<ImageThumbnail> onThumbnailClick() {
+        return imageThumbnail -> {
+            Logging.show("Thumbnail is clicked, Uri = " + imageThumbnail.getContentUri());
+
+            if (imageThumbnail.getSize() != 0 && imageThumbnail.getContentUri() != null) {
+                var intent = new Intent(this, PreviewEditPhotoActivity.class);
+                intent.putExtra(EXTRA_CHANGE_PHOTO, from);
+                intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+
+                activityResultLauncher.launch(intent, result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        this.finish();
+                    }
+                });
+            }
+        };
+    }
+
+    private Consumer<Void> onCameraPreviewClick() {
+        return unused -> {
+            if (ContextCompat.checkSelfPermission(SelectPhotoActivity.this, Manifest.permission.CAMERA)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startCameraIntent();
+            } else {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    createDialog("Request Permission",
+                            "The app will run perfectly when have a camera permission. Do you want to grant it.",
+                            "Continue",
+                            "Not now",
+                            (dialog, which) -> {
+                                permissionLauncher.launch(Manifest.permission.CAMERA, isGranted -> {
+                                    if (isGranted) startCameraIntent();
+                                });
+                            });
+                } else {
+                    createDialog("Request Camera Permission",
+                            "The app will run perfectly when have a camera permission. Go to Settings?",
+                            "Go to Settings",
+                            "Cancel",
+                            (dialog, which) -> {
+                                isPendingStartCamera = true;
+                                var settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                settingsIntent.setData(Uri.parse("package:" + getPackageName()));
+                                startActivity(settingsIntent);
+                            });
+                }
+            }
+        };
+    }
+
+    private void startCameraIntent() {
+        /*
+         * The flow according to Android Development Guide
+         * link{https://developer.android.com/training/camera/photobasics}
+         * */
+        var takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        activityResultLauncher.launch(takePhotoIntent, result -> {
+            if (result.getResultCode() == RESULT_OK) {
+                var data = result.getData();
+                if (data != null) {
+                    var extras = data.getExtras();
+                    var bitmap = (Bitmap) extras.get("data");
+                }
+            }
+        });
+        isPendingStartCamera = false;
+    }
+
+    private void createDialog(String title, String message, String positive, String negative,
+                              DialogInterface.OnClickListener positiveCallback) {
+        new MaterialAlertDialogBuilder(SelectPhotoActivity.this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(positive, positiveCallback)
+                .setNegativeButton(negative, null)
+                .create()
+                .show();
     }
 
     @RequiresApi(29)

@@ -12,6 +12,7 @@ import com.mqv.realtimechatapplication.util.Const;
 
 import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -57,7 +58,9 @@ public class PreviewEditPhotoViewModel extends ViewModel {
                         }, t -> {
                             if (t instanceof FileNotFoundException){
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_file_not_found));
-                            }else{
+                            }else if (t instanceof SocketTimeoutException){
+                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_connection_timeout));
+                            } else{
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_update_user_photo));
                             }
                         }));

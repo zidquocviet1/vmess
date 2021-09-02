@@ -8,15 +8,17 @@ import android.os.Parcelable;
 import java.time.LocalDateTime;
 
 public class ImageThumbnail implements Parcelable{
-    private final Long id;
-    private final String displayName;
-    private final Long size;
-    private final LocalDateTime timestamp;
-    private final Uri contentUri;
+    private Long id;
+    private String displayName;
+    private Long size;
+    private LocalDateTime timestamp;
+    private Uri contentUri;
     private Bitmap thumbnail;
-    private final String mimeType;
-    private final String relativePath;
-    private final String realPath;
+    private String mimeType;
+    private String relativePath;
+    private String realPath;
+
+    public ImageThumbnail(){}
 
     public ImageThumbnail(Long id, String displayName, Long size, LocalDateTime timestamp,
                           Uri contentUri, Bitmap thumbnail, String mimeType,

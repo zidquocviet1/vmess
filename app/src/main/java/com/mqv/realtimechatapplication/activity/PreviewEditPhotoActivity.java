@@ -118,11 +118,11 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             if (uploadPhotoResult.getStatus() == NetworkStatus.LOADING) {
                 showLoadingUi(true);
             } else if (uploadPhotoResult.getStatus() == NetworkStatus.SUCCESS) {
+                reloadFirebaseUser();
+
                 showLoadingUi(false);
 
                 Toast.makeText(this, uploadPhotoResult.getSuccess(), Toast.LENGTH_SHORT).show();
-
-                reloadFirebaseUser();
 
                 setResult(RESULT_OK);
                 finish();

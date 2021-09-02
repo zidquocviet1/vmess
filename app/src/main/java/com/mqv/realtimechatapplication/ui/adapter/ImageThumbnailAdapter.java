@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.ui.adapter;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,17 +13,18 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.databinding.ItemCameraPreviewBinding;
 import com.mqv.realtimechatapplication.databinding.ItemProfileImageThumbnailBinding;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
-import com.mqv.realtimechatapplication.util.Logging;
 
 import java.util.function.Consumer;
 
 public class ImageThumbnailAdapter extends
-        ListAdapter<ImageThumbnail, ImageThumbnailAdapter.ImageThumbnailViewHolder> {
+        ListAdapter<ImageThumbnail, RecyclerView.ViewHolder> {
     private final Context mContext;
     private final int mRealWidth, mColumn, mSpacing;
-    private Consumer<ImageThumbnail> callback;
+    private Consumer<ImageThumbnail> thumbnailConsumer;
+    private Consumer<Void> cameraConsumer;
 
     public ImageThumbnailAdapter(Context context, int realWidth, int column, int spacing) {
         super(new DiffUtil.ItemCallback<>() {
@@ -46,36 +48,65 @@ public class ImageThumbnailAdapter extends
         mSpacing = spacing;
     }
 
-    public void setOnItemClick(Consumer<ImageThumbnail> callback) {
-        this.callback = callback;
+    public void setOnThumbnailClick(Consumer<ImageThumbnail> callback) {
+        this.thumbnailConsumer = callback;
+    }
+
+    public void setOnCameraPreviewClick(Consumer<Void> cameraConsumer) {
+        this.cameraConsumer = cameraConsumer;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
     }
 
     @NonNull
     @Override
-    public ImageThumbnailViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         var thumbnailWidth = (mRealWidth - (mColumn - 1) * mSpacing) / mColumn;
         var thumbnailHeight = thumbnailWidth;
 
-        var view = LayoutInflater.from(mContext).inflate(R.layout.item_profile_image_thumbnail, parent, false);
-        var viewHolder = new ImageThumbnailViewHolder(view);
+        if (viewType == 0) {
+            var view = LayoutInflater.from(mContext).inflate(R.layout.item_camera_preview, parent, false);
+            var viewHolder = new CameraPreviewViewHolder(view);
 
-        viewHolder.mBinding.imageThumbnail.getLayoutParams().width = thumbnailWidth;
-        viewHolder.mBinding.imageThumbnail.getLayoutParams().height = thumbnailHeight;
-        return new ImageThumbnailViewHolder(view);
+            viewHolder.mBinding.layoutMain.getLayoutParams().width = thumbnailWidth;
+            viewHolder.mBinding.layoutMain.getLayoutParams().height = thumbnailHeight;
+            return viewHolder;
+        } else {
+            var view = LayoutInflater.from(mContext).inflate(R.layout.item_profile_image_thumbnail, parent, false);
+            var viewHolder = new ImageThumbnailViewHolder(view);
+
+            viewHolder.mBinding.imageThumbnail.getLayoutParams().width = thumbnailWidth;
+            viewHolder.mBinding.imageThumbnail.getLayoutParams().height = thumbnailHeight;
+            return viewHolder;
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ImageThumbnailViewHolder holder, int position) {
-        var item = getItem(position);
-        holder.bind(item, mContext);
-        holder.itemView.setOnClickListener(v -> {
-            if (callback != null){
-                callback.accept(item);
-            }
-        });
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder.getItemViewType() == 0) {
+            var cameraHolder = (CameraPreviewViewHolder) holder;
+            if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY))
+                return;
+
+            cameraHolder.bindCameraPreview(mContext);
+            cameraHolder.itemView.setOnClickListener(v -> {
+                if (cameraConsumer != null) cameraConsumer.accept(null);
+            });
+        } else {
+            var item = getItem(position);
+            var thumbnailHolder = (ImageThumbnailViewHolder) holder;
+
+            thumbnailHolder.bind(item, mContext);
+            thumbnailHolder.itemView.setOnClickListener(v -> {
+                if (thumbnailConsumer != null) thumbnailConsumer.accept(item);
+            });
+        }
     }
 
-    public static class ImageThumbnailViewHolder extends RecyclerView.ViewHolder {
+    static class ImageThumbnailViewHolder extends RecyclerView.ViewHolder {
         public ItemProfileImageThumbnailBinding mBinding;
 
         public ImageThumbnailViewHolder(@NonNull View itemView) {
@@ -89,6 +120,19 @@ public class ImageThumbnailAdapter extends
             } else {
                 mBinding.imageThumbnail.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.ic_image_not_supported));
             }
+        }
+    }
+
+    static class CameraPreviewViewHolder extends RecyclerView.ViewHolder{
+        public ItemCameraPreviewBinding mBinding;
+
+        public CameraPreviewViewHolder(@NonNull View itemView) {
+            super(itemView);
+            mBinding = ItemCameraPreviewBinding.bind(itemView);
+        }
+
+        public void bindCameraPreview(Context context) {
+            mBinding.imageAddPhoto.setImageDrawable(AppCompatResources.getDrawable(context, R.drawable.ic_add_a_photo));
         }
     }
 }
