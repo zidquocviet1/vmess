@@ -5,6 +5,7 @@ import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA
 
 import android.Manifest;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,6 +20,7 @@ import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
@@ -33,8 +35,10 @@ import com.mqv.realtimechatapplication.ui.adapter.ImageThumbnailAdapter;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Logging;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +54,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     private static final int NUM_SPACING = 9; // px
     private boolean isPendingStartCamera;
     private int actualDeviceWidth;
+    private ImageThumbnailAdapter adapter;
 
     @Override
     public void binding() {
@@ -90,7 +95,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         if (isPendingStartCamera && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
             startCameraIntent();
-        }else
+        } else
             isPendingStartCamera = false;
     }
 
@@ -110,7 +115,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
 
             var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
                     ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns
-            var adapter = new ImageThumbnailAdapter(this, actualDeviceWidth, spanCount, NUM_SPACING);
+            adapter = new ImageThumbnailAdapter(this, actualDeviceWidth, spanCount, NUM_SPACING);
             adapter.submitList(images);
             adapter.setOnThumbnailClick(onThumbnailClick());
             adapter.setOnCameraPreviewClick(onCameraPreviewClick());
@@ -178,16 +183,127 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
          * link{https://developer.android.com/training/camera/photobasics}
          * */
         var takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
         activityResultLauncher.launch(takePhotoIntent, result -> {
             if (result.getResultCode() == RESULT_OK) {
                 var data = result.getData();
                 if (data != null) {
                     var extras = data.getExtras();
                     var bitmap = (Bitmap) extras.get("data");
+                    var contentUri = saveBitmapToExternalStorage(bitmap);
+                    if (contentUri != null) {
+                        startPreviewPhoto(contentUri);
+                    }
                 }
             }
         });
         isPendingStartCamera = false;
+    }
+
+    private void startPreviewPhoto(Uri uri) {
+        var projection = new String[]{
+                MediaStore.MediaColumns._ID,
+                MediaStore.MediaColumns.DISPLAY_NAME,
+                MediaStore.MediaColumns.SIZE,
+                MediaStore.MediaColumns.DATE_TAKEN,
+                MediaStore.MediaColumns.MIME_TYPE,
+                MediaStore.MediaColumns.RELATIVE_PATH,
+                MediaStore.MediaColumns.DATA
+        };
+
+        var cursor = getContentResolver().query(uri, projection, null, null, null);
+        ImageThumbnail imageThumbnail = null;
+
+        if (cursor != null && cursor.getCount() > 0) {
+            var idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
+            var nameIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+            var sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
+            var dateIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN);
+            var typeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
+            var pathIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH);
+            var dataIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+
+            while (cursor.moveToNext()) {
+                var id = cursor.getLong(idIndex);
+                var name = cursor.getString(nameIndex);
+                var size = cursor.getString(sizeIndex);
+                var date = cursor.getString(dateIndex);
+                var type = cursor.getString(typeIndex);
+                var relativePath = cursor.getString(pathIndex);
+                var realPath = cursor.getString(dataIndex);
+
+                LocalDateTime timestamp;
+
+                try {
+                    timestamp = LocalDateTime.parse(date);
+                } catch (DateTimeParseException e) {
+                    timestamp = LocalDateTime.MIN;
+                }
+
+                imageThumbnail = new ImageThumbnail(
+                        id,
+                        name,
+                        Long.parseLong(size),
+                        timestamp,
+                        uri,
+                        null,
+                        type,
+                        relativePath,
+                        realPath
+                );
+            }
+
+            cursor.close();
+
+            var intent = new Intent(this, PreviewEditPhotoActivity.class);
+            intent.putExtra(EXTRA_CHANGE_PHOTO, from);
+            intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+
+            activityResultLauncher.launch(intent, result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    this.finish();
+                }
+            });
+        }
+    }
+
+    private Uri saveBitmapToExternalStorage(Bitmap bitmap) {
+        Uri uri;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        } else {
+            uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+
+        var formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        var suffix = LocalDateTime.now().format(formatter);
+        var fileName = "TAC_IMG_" + suffix;
+
+        var cv = new ContentValues();
+        cv.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        cv.put(MediaStore.MediaColumns.HEIGHT, bitmap.getHeight());
+        cv.put(MediaStore.MediaColumns.SIZE, bitmap.getByteCount());
+        cv.put(MediaStore.MediaColumns.WIDTH, bitmap.getWidth());
+        cv.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            cv.put(MediaStore.MediaColumns.DATE_TAKEN, String.valueOf(System.currentTimeMillis()));
+
+        var contentUri = getContentResolver().insert(uri, cv);
+
+        if (contentUri != null) {
+            try {
+                var os = getContentResolver().openOutputStream(contentUri);
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 100, os)) {
+                    Toast.makeText(SelectPhotoActivity.this, "Couldn't save the image", Toast.LENGTH_SHORT).show();
+                    return null;
+                } else
+                    return contentUri;
+            } catch (FileNotFoundException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private void createDialog(String title, String message, String positive, String negative,
