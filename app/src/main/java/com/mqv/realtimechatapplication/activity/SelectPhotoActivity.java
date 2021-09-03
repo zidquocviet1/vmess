@@ -22,6 +22,8 @@ import android.util.Size;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.AndroidViewModel;
@@ -92,9 +94,9 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
             isPendingStartCamera = false;
 
         /*
-        * Reload the list images in external storage when new image is captured
-        * */
-        var images = getAllPhotoFromExternal();
+         * Reload the list images in external storage when new image is captured
+         * */
+        var images = getAllPhotoFromExternal(null);
         if (images != null) {
             images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
             adapter.submitList(images);
@@ -107,7 +109,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     }
 
     private void setupRecyclerView() {
-        var images = getAllPhotoFromExternal();
+        var images = getAllPhotoFromExternal(null);
 
         if (images != null) {
             /*
@@ -164,11 +166,9 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                             "The app will run perfectly when have a camera permission. Do you want to grant it.",
                             "Continue",
                             "Not now",
-                            (dialog, which) -> {
-                                permissionLauncher.launch(Manifest.permission.CAMERA, isGranted -> {
-                                    if (isGranted) startCameraIntent();
-                                });
-                            });
+                            (dialog, which) -> permissionLauncher.launch(Manifest.permission.CAMERA, isGranted -> {
+                                if (isGranted) startCameraIntent();
+                            }));
                 } else {
                     createDialog("Request Camera Permission",
                             "The app will run perfectly when have a camera permission. Go to Settings?",
@@ -210,63 +210,12 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     }
 
     private void startPreviewPhoto(Uri uri) {
-        var projection = new String[]{
-                MediaStore.MediaColumns._ID,
-                MediaStore.MediaColumns.DISPLAY_NAME,
-                MediaStore.MediaColumns.SIZE,
-                MediaStore.MediaColumns.DATE_TAKEN,
-                MediaStore.MediaColumns.MIME_TYPE,
-                MediaStore.MediaColumns.RELATIVE_PATH,
-                MediaStore.MediaColumns.DATA
-        };
+        var images = getAllPhotoFromExternal(uri);
 
-        var cursor = getContentResolver().query(uri, projection, null, null, null);
-        ImageThumbnail imageThumbnail = null;
-
-        if (cursor != null && cursor.getCount() > 0) {
-            var idIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
-            var nameIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
-            var sizeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE);
-            var dateIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN);
-            var typeIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE);
-            var pathIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.RELATIVE_PATH);
-            var dataIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-
-            while (cursor.moveToNext()) {
-                var id = cursor.getLong(idIndex);
-                var name = cursor.getString(nameIndex);
-                var size = cursor.getString(sizeIndex);
-                var date = cursor.getString(dateIndex);
-                var type = cursor.getString(typeIndex);
-                var relativePath = cursor.getString(pathIndex);
-                var realPath = cursor.getString(dataIndex);
-
-                LocalDateTime timestamp;
-
-                try {
-                    timestamp = LocalDateTime.parse(date);
-                } catch (DateTimeParseException e) {
-                    timestamp = LocalDateTime.MIN;
-                }
-
-                imageThumbnail = new ImageThumbnail(
-                        id,
-                        name,
-                        Long.parseLong(size),
-                        timestamp,
-                        uri,
-                        null,
-                        type,
-                        relativePath,
-                        realPath
-                );
-            }
-
-            cursor.close();
-
+        if (images != null && images.size() > 0) {
             var intent = new Intent(this, PreviewEditPhotoActivity.class);
             intent.putExtra(EXTRA_CHANGE_PHOTO, from);
-            intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+            intent.putExtra(EXTRA_IMAGE_THUMBNAIL, images.get(0));
 
             activityResultLauncher.launch(intent, result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -327,9 +276,11 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     }
 
     @RequiresApi(29)
-    private List<ImageThumbnail> getImagesShownInApi29() {
+    private List<ImageThumbnail> getImagesShownInApi29(@Nullable Uri specificUri) {
         List<ImageThumbnail> images = null;
+
         var uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+
         var projection = new String[]{
                 MediaStore.MediaColumns._ID,
                 MediaStore.MediaColumns.DISPLAY_NAME,
@@ -339,9 +290,13 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                 MediaStore.MediaColumns.RELATIVE_PATH,
                 MediaStore.MediaColumns.DATA
         };
-        String imageDateSort = MediaStore.MediaColumns.DATE_TAKEN + " DESC";
+        var imageDateSort = MediaStore.MediaColumns.DATE_TAKEN + " DESC";
 
-        var cursor = getContentResolver().query(uri, projection, null, null, imageDateSort);
+        var cursor = getContentResolver().query(specificUri == null ? uri : specificUri,
+                projection,
+                null,
+                null,
+                imageDateSort);
 
         if (cursor != null && cursor.getCount() > 0) {
             images = new ArrayList<>();
@@ -397,9 +352,11 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         return images;
     }
 
-    private List<ImageThumbnail> getImagesShownInApiLower29() {
+    private List<ImageThumbnail> getImagesShownInApiLower29(@Nullable Uri specificUri) {
         List<ImageThumbnail> images = null;
+
         var uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
         var projection = new String[]{
                 MediaStore.MediaColumns._ID,
                 MediaStore.MediaColumns.DISPLAY_NAME,
@@ -408,7 +365,11 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                 MediaStore.MediaColumns.DATA
         };
 
-        var cursor = getContentResolver().query(uri, projection, null, null, null);
+        var cursor = getContentResolver().query(specificUri == null ? uri : specificUri,
+                projection,
+                null,
+                null,
+                null);
 
         if (cursor != null && cursor.getCount() > 0) {
             images = new ArrayList<>();
@@ -452,11 +413,11 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         return images;
     }
 
-    private List<ImageThumbnail> getAllPhotoFromExternal() {
+    private List<ImageThumbnail> getAllPhotoFromExternal(@Nullable Uri specificUri) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return getImagesShownInApi29();
+            return getImagesShownInApi29(specificUri);
         } else {
-            return getImagesShownInApiLower29();
+            return getImagesShownInApiLower29(specificUri);
         }
     }
 
@@ -472,7 +433,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         }
 
         @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+        public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, RecyclerView parent, @NonNull RecyclerView.State state) {
             int position = parent.getChildAdapterPosition(view); // item position
             int column = position % spanCount; // item column
 
