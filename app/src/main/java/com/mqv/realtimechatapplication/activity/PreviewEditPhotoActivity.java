@@ -6,16 +6,19 @@ import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA
 import static com.mqv.realtimechatapplication.activity.EditProfileActivity.EXTRA_PROFILE_PICTURE;
 
 import android.annotation.SuppressLint;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.signature.ObjectKey;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.PreviewEditPhotoViewModel;
@@ -33,6 +36,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoViewModel, ActivityPreviewEditPhotoBinding> {
     private float my;
+    private AlertDialog uploadingDialog;
 
     @Override
     public void binding() {
@@ -139,71 +143,74 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
     private void showLoadingUi(boolean isLoading) {
         mBinding.buttonSave.setEnabled(!isLoading);
-        mBinding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (isLoading) {
+            startUploadingDialog();
+        }else{
+            finishUploading();
+        }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private View.OnTouchListener imageCoverListener() {
-        return new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                var imageView = (ImageView) v;
-                var f = new float[9];
-                var matrix = imageView.getImageMatrix();
-                matrix.getValues(f);
+        return (v, event) -> {
+            var imageView = (ImageView) v;
+            var f = new float[9];
+            var matrix = imageView.getImageMatrix();
+            matrix.getValues(f);
 
-                var maxHeight = imageView.getDrawable().getIntrinsicHeight();
-                float curX, curY, dy;
+            var maxHeight = imageView.getDrawable().getIntrinsicHeight();
+            float curY, dy;
 
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN: // the action to start event
-                        my = event.getY(); // interval (0.0, view.getHeight())
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        var scaleY = f[Matrix.MSCALE_Y];
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN: // the action to start event
+                    my = event.getY(); // interval (0.0, view.getHeight())
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                        curY = event.getY();
+                        dy = curY;
 
-                        var originalHeight = imageView.getDrawable().getIntrinsicHeight();
-                        var actualHeight = Math.round(scaleY * originalHeight);
-
-                        var matrixY = f[Matrix.MTRANS_Y];
-                        var matrixX = f[Matrix.MTRANS_X];
-
-                        dy = event.getY() - my;
-
-                        //if image will go outside top bound
-                        if (matrixY + dy < 0) {
-                            dy = -matrixY;
-                        }
-
-                        //if image will go outside bottom bound
-                        if (matrixY + dy + actualHeight > v.getHeight()) {
-                            dy = v.getHeight() - matrixY - actualHeight;
-                        }
-                        matrix.postTranslate(matrixX, dy);
-
-//                            curY = event.getY();
-//                            Logging.show(String.format("Start Y = %.2f, Current Y = %.2f", my, curY));
-//                            dy = curY;
-//
-////                            if (curY - maxHeight > 0){
-////                                dy = maxHeight;
-////                            }
-//
-//                            if (curY < 0){
-//                                dy = 0;
-//                            }
-//
-//                            if (curY > maxHeight){
+//                            if (curY - maxHeight > 0){
 //                                dy = maxHeight;
 //                            }
-//
-//                            mBinding.imageCoverPhoto.scrollBy(0, (int) (my - dy)); // x equals to 0, that mean disable horizontal drag
-                        break;
-                    case MotionEvent.ACTION_UP: // the action to finish event
-                        break;
-                }
-                mBinding.imageCoverPhoto.setImageMatrix(matrix);
-                return true;
+
+                        if (curY < 0){
+                            dy = 0;
+                        }
+
+                        if (curY > maxHeight){
+                            dy = maxHeight;
+                        }
+
+                        mBinding.imageCoverPhoto.scrollBy(0, (int) (my - dy)); // x equals to 0, that mean disable horizontal drag
+                    break;
+                case MotionEvent.ACTION_UP: // the action to finish event
+                    break;
             }
+            mBinding.imageCoverPhoto.setImageMatrix(matrix);
+            return true;
         };
+    }
+
+    private void startUploadingDialog(){
+        var builder = new MaterialAlertDialogBuilder(this);
+        var view = getLayoutInflater().inflate(R.layout.dialog_change_user_photo, null, false);
+        var textUploading = (TextView) view.findViewById(R.id.text_uploading);
+        var animBlink = AnimationUtils.loadAnimation(this, R.anim.blink);
+        textUploading.startAnimation(animBlink);
+        builder.setView(view);
+        uploadingDialog = builder.create();
+        uploadingDialog.setCancelable(true);
+        uploadingDialog.setCanceledOnTouchOutside(true);
+        uploadingDialog.setOnCancelListener(dialog -> {
+            Toast.makeText(this, R.string.msg_cancel_uploading_photo, Toast.LENGTH_SHORT).show();
+            setResult(RESULT_CANCELED);
+            finish();
+        });
+        uploadingDialog.show();
+    }
+
+    private void finishUploading(){
+        if (uploadingDialog != null)
+            uploadingDialog.dismiss();
     }
 }
