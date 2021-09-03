@@ -6,6 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class ImageThumbnail implements Parcelable{
     private Long id;
@@ -18,7 +19,9 @@ public class ImageThumbnail implements Parcelable{
     private String relativePath;
     private String realPath;
 
-    public ImageThumbnail(){}
+    public ImageThumbnail(Long id){
+        this.id = id;
+    }
 
     public ImageThumbnail(Long id, String displayName, Long size, LocalDateTime timestamp,
                           Uri contentUri, Bitmap thumbnail, String mimeType,
@@ -128,5 +131,26 @@ public class ImageThumbnail implements Parcelable{
         dest.writeString(mimeType);
         dest.writeString(relativePath);
         dest.writeString(realPath);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ImageThumbnail that = (ImageThumbnail) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(displayName, that.displayName) &&
+                Objects.equals(size, that.size) &&
+                Objects.equals(timestamp, that.timestamp) &&
+                Objects.equals(contentUri, that.contentUri) &&
+                Objects.equals(thumbnail, that.thumbnail) &&
+                Objects.equals(mimeType, that.mimeType) &&
+                Objects.equals(relativePath, that.relativePath) &&
+                Objects.equals(realPath, that.realPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, displayName, size, timestamp, contentUri, thumbnail, mimeType, relativePath, realPath);
     }
 }

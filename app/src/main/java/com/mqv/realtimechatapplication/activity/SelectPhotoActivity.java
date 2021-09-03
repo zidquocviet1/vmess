@@ -52,8 +52,8 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     private static final int NUM_THUMBNAIL_PORTRAIT_COLUMN = 3;
     private static final int NUM_THUMBNAIL_LANDSCAPE_COLUMN = 9;
     private static final int NUM_SPACING = 9; // px
+    private static final int CAMERA_POSITION = 0;
     private boolean isPendingStartCamera;
-    private int actualDeviceWidth;
     private ImageThumbnailAdapter adapter;
 
     @Override
@@ -75,13 +75,6 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         updateActionBarTitle(R.string.label_select_photo);
 
         /*
-         * Get actual device width and height. Also known as Dimension
-         * */
-        var dimension = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
-        actualDeviceWidth = dimension.widthPixels;
-
-        /*
          * The query to request change photo from is. [Change profile picture, Change cover photo]
          * */
         from = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
@@ -97,6 +90,15 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
             startCameraIntent();
         } else
             isPendingStartCamera = false;
+
+        /*
+        * Reload the list images in external storage when new image is captured
+        * */
+        var images = getAllPhotoFromExternal();
+        if (images != null) {
+            images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
+            adapter.submitList(images);
+        }
     }
 
     @Override
@@ -111,7 +113,14 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
             /*
              * add the first empty item, because i want to create a texture view in the recycler view at position 0
              * */
-            images.add(0, new ImageThumbnail());
+            images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
+
+            /*
+             * Get actual device width and height. Also known as Dimension
+             * */
+            var dimension = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
+            var actualDeviceWidth = dimension.widthPixels;
 
             var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
                     ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns

@@ -35,11 +35,7 @@ public class ImageThumbnailAdapter extends
 
             @Override
             public boolean areContentsTheSame(@NonNull ImageThumbnail oldItem, @NonNull ImageThumbnail newItem) {
-                return oldItem.getId().equals(newItem.getId()) &&
-                        oldItem.getDisplayName().equals(newItem.getDisplayName()) &&
-                        oldItem.getSize().equals(newItem.getSize()) &&
-                        oldItem.getTimestamp().equals(newItem.getTimestamp()) &&
-                        oldItem.getContentUri().equals(newItem.getContentUri());
+                return oldItem.equals(newItem);
             }
         });
         mContext = context;
