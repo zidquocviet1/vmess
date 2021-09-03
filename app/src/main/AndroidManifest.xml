@@ -117,4 +117,9 @@
             android:resource="@color/purple_200" />
     </application>
 
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE"/>
+        </intent>
+    </queries>
 </manifest>

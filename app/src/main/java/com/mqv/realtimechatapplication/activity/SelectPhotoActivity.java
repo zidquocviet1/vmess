@@ -35,7 +35,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ActivitySelectPhotoBinding;
 import com.mqv.realtimechatapplication.ui.adapter.ImageThumbnailAdapter;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
-import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,6 +57,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     private static final int CAMERA_POSITION = 0;
     private boolean isPendingStartCamera;
     private ImageThumbnailAdapter adapter;
+    private List<ImageThumbnail> images;
 
     @Override
     public void binding() {
@@ -81,6 +82,8 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
          * */
         from = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
 
+        images = getAllPhotoFromExternal(null);
+
         setupRecyclerView();
     }
 
@@ -89,18 +92,9 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         super.onRestart();
         if (isPendingStartCamera && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            startCameraIntent();
+            dispatchTakePhotoIntent();
         } else
             isPendingStartCamera = false;
-
-        /*
-         * Reload the list images in external storage when new image is captured
-         * */
-        var images = getAllPhotoFromExternal(null);
-        if (images != null) {
-            images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
-            adapter.submitList(images);
-        }
     }
 
     @Override
@@ -109,49 +103,35 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     }
 
     private void setupRecyclerView() {
-        var images = getAllPhotoFromExternal(null);
+        if (images == null) images = new ArrayList<>();
+        /*
+         * add the first empty item, because i want to create a texture view in the recycler view at position 0
+         * */
+        images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
 
-        if (images != null) {
-            /*
-             * add the first empty item, because i want to create a texture view in the recycler view at position 0
-             * */
-            images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
+        /*
+         * Get actual device width and height. Also known as Dimension
+         * */
+        var dimension = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
+        var actualDeviceWidth = dimension.widthPixels;
 
-            /*
-             * Get actual device width and height. Also known as Dimension
-             * */
-            var dimension = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getRealMetrics(dimension);
-            var actualDeviceWidth = dimension.widthPixels;
+        var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
+                ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns
+        adapter = new ImageThumbnailAdapter(this, actualDeviceWidth, spanCount, NUM_SPACING);
+        adapter.submitList(images);
+        adapter.setOnThumbnailClick(onThumbnailClick());
+        adapter.setOnCameraPreviewClick(onCameraPreviewClick());
 
-            var spanCount = getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT
-                    ? NUM_THUMBNAIL_PORTRAIT_COLUMN : NUM_THUMBNAIL_LANDSCAPE_COLUMN; // columns
-            adapter = new ImageThumbnailAdapter(this, actualDeviceWidth, spanCount, NUM_SPACING);
-            adapter.submitList(images);
-            adapter.setOnThumbnailClick(onThumbnailClick());
-            adapter.setOnCameraPreviewClick(onCameraPreviewClick());
-
-            mBinding.recyclerViewPhotos.setAdapter(adapter);
-            mBinding.recyclerViewPhotos.setLayoutManager(new GridLayoutManager(this, spanCount));
-            mBinding.recyclerViewPhotos.addItemDecoration(new GridSpacingItemDecoration(spanCount, NUM_SPACING, false));
-        }
+        mBinding.recyclerViewPhotos.setAdapter(adapter);
+        mBinding.recyclerViewPhotos.setLayoutManager(new GridLayoutManager(this, spanCount));
+        mBinding.recyclerViewPhotos.addItemDecoration(new GridSpacingItemDecoration(spanCount, NUM_SPACING, false));
     }
 
     private Consumer<ImageThumbnail> onThumbnailClick() {
         return imageThumbnail -> {
-            Logging.show("Thumbnail is clicked, Uri = " + imageThumbnail.getContentUri());
-
-            if (imageThumbnail.getSize() != 0 && imageThumbnail.getContentUri() != null) {
-                var intent = new Intent(this, PreviewEditPhotoActivity.class);
-                intent.putExtra(EXTRA_CHANGE_PHOTO, from);
-                intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
-
-                activityResultLauncher.launch(intent, result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        this.finish();
-                    }
-                });
-            }
+            if (imageThumbnail.getSize() != 0 && imageThumbnail.getContentUri() != null)
+                startPreviewPhoto(imageThumbnail);
         };
     }
 
@@ -159,7 +139,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         return unused -> {
             if (ContextCompat.checkSelfPermission(SelectPhotoActivity.this, Manifest.permission.CAMERA)
                     == PackageManager.PERMISSION_GRANTED) {
-                startCameraIntent();
+                dispatchTakePhotoIntent();
             } else {
                 if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
                     createDialog("Request Permission",
@@ -167,7 +147,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                             "Continue",
                             "Not now",
                             (dialog, which) -> permissionLauncher.launch(Manifest.permission.CAMERA, isGranted -> {
-                                if (isGranted) startCameraIntent();
+                                if (isGranted) dispatchTakePhotoIntent();
                             }));
                 } else {
                     createDialog("Request Camera Permission",
@@ -186,46 +166,77 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
         };
     }
 
-    private void startCameraIntent() {
+    private void dispatchTakePhotoIntent() {
         /*
          * The flow according to Android Development Guide
          * link{https://developer.android.com/training/camera/photobasics}
+         * This method to get the original bitmap size from camera intent
          * */
         var takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        activityResultLauncher.launch(takePhotoIntent, result -> {
-            if (result.getResultCode() == RESULT_OK) {
-                var data = result.getData();
-                if (data != null) {
-                    var extras = data.getExtras();
-                    var bitmap = (Bitmap) extras.get("data");
-                    var contentUri = saveBitmapToExternalStorage(bitmap);
-                    if (contentUri != null) {
-                        startPreviewPhoto(contentUri);
-                    }
-                }
-            }
-        });
-        isPendingStartCamera = false;
-    }
+        if (takePhotoIntent.resolveActivity(getPackageManager()) != null) {
+            var contentUri = createOutputImage();
 
-    private void startPreviewPhoto(Uri uri) {
-        var images = getAllPhotoFromExternal(uri);
-
-        if (images != null && images.size() > 0) {
-            var intent = new Intent(this, PreviewEditPhotoActivity.class);
-            intent.putExtra(EXTRA_CHANGE_PHOTO, from);
-            intent.putExtra(EXTRA_IMAGE_THUMBNAIL, images.get(0));
-
-            activityResultLauncher.launch(intent, result -> {
+            // Set the output uri that the image is handled
+            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
+            activityResultLauncher.launch(takePhotoIntent, result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    this.finish();
+                    var images = getAllPhotoFromExternal(contentUri);
+                    if (images != null && images.size() > 0) {
+                        var imageThumbnail = images.get(0);
+
+                        this.images.add(CAMERA_POSITION + 1, imageThumbnail);
+                        this.adapter.submitList(this.images, () -> startPreviewPhoto(imageThumbnail));
+                        this.adapter.notifyItemInserted(CAMERA_POSITION + 1);
+                    }
+                } else {
+                    getContentResolver().delete(contentUri, null, null);
                 }
             });
         }
+        isPendingStartCamera = false;
     }
 
+    private Uri createOutputImage() {
+        Uri uri;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+        } else {
+            uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        }
+
+        var formatter = DateTimeFormatter.ofPattern(Const.IMAGE_FILE_NAME_PATTERN);
+        var suffix = LocalDateTime.now().format(formatter);
+        var fileName = "TAC_IMG_" + suffix;
+
+        var cv = new ContentValues();
+        cv.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        cv.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            cv.put(MediaStore.MediaColumns.DATE_TAKEN, String.valueOf(System.currentTimeMillis()));
+
+        return getContentResolver().insert(uri, cv);
+    }
+
+    private void startPreviewPhoto(ImageThumbnail imageThumbnail) {
+        var intent = new Intent(this, PreviewEditPhotoActivity.class);
+        intent.putExtra(EXTRA_CHANGE_PHOTO, from);
+        intent.putExtra(EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+
+        activityResultLauncher.launch(intent, result -> {
+            if (result.getResultCode() == RESULT_OK) {
+                this.finish();
+            }
+        });
+    }
+
+    @Deprecated
     private Uri saveBitmapToExternalStorage(Bitmap bitmap) {
+        /*
+         * This method is used to save the thumbnail bitmap from the result of camera action image capture
+         * According to Android Developer blog. This is good for the icon but not the solution a lot more.
+         * */
         Uri uri;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -337,7 +348,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                 images.add(new ImageThumbnail(
                         id,
                         name,
-                        Long.parseLong(size),
+                        size == null ? 0L : Long.parseLong(size),
                         timestamp,
                         contentUri,
                         thumbnail,
@@ -398,7 +409,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
                 images.add(new ImageThumbnail(
                         id,
                         name,
-                        Long.parseLong(size),
+                        size == null ? 0 : Long.parseLong(size),
                         null,
                         contentUri,
                         thumbnail,
