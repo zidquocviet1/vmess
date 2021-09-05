@@ -8,6 +8,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -32,10 +33,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.br.FileObserverBroadcastReceiver;
+import com.mqv.realtimechatapplication.activity.service.FileObserverService;
 import com.mqv.realtimechatapplication.databinding.ActivitySelectPhotoBinding;
 import com.mqv.realtimechatapplication.ui.adapter.ImageThumbnailAdapter;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -58,6 +62,8 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     private boolean isPendingStartCamera;
     private ImageThumbnailAdapter adapter;
     private List<ImageThumbnail> images;
+    private FileObserverBroadcastReceiver br;
+    private Intent mFileObserverServiceIntent;
 
     @Override
     public void binding() {
@@ -82,9 +88,41 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
          * */
         from = getIntent().getStringExtra(EXTRA_CHANGE_PHOTO);
 
-        images = getAllPhotoFromExternal(null);
-
         setupRecyclerView();
+
+        //Start service to monitor file changes in the external storage
+        mFileObserverServiceIntent = new Intent(this, FileObserverService.class);
+        startService(mFileObserverServiceIntent);
+
+        //Register FileObserver Broadcast Receiver
+        var intentFilter = new IntentFilter(FileObserverBroadcastReceiver.ACTION_FILE_OBSERVER);
+        br = new FileObserverBroadcastReceiver(new FileObserverBroadcastReceiver.onImagesChangeListener() {
+            @Override
+            public void onImageCreated(String path) {
+                Logging.show("Image Created " + path);
+            }
+
+            @Override
+            public void onImageDeleted(String path) {
+                Logging.show("Image Deleted " + path);
+            }
+
+            @Override
+            public void onImageMoved() {
+
+            }
+        });
+        registerReceiver(br, intentFilter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        var images = getAllPhotoFromExternal(null);
+        images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
+
+        adapter.submitList(images);
+        adapter.notifyItemRangeChanged(0, images.size());
     }
 
     @Override
@@ -95,6 +133,13 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
             dispatchTakePhotoIntent();
         } else
             isPendingStartCamera = false;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(br);
+        stopService(mFileObserverServiceIntent);
     }
 
     @Override
