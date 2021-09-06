@@ -90,7 +90,11 @@
         <Preference
             android:icon="@drawable/ic_preferences_account_settings"
             android:key="@string/key_pref_account_settings"
-            android:title="@string/title_preference_item_account_settings" />
+            android:title="@string/title_preference_item_account_settings" >
+            <intent
+                android:action="@string/action_pref_account_settings"
+                android:targetClass=".activity.preferences.PreferenceAccountSettingsActivity" />
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_report_problem"

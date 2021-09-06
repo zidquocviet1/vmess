@@ -12,6 +12,12 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
@@ -22,13 +28,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.preferences.PreferenceAccountSettingsActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.tac.open.account.settings" />
+
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.PreviewEditPhotoActivity"
             android:configChanges="orientation|keyboardHidden"
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity
             android:name=".activity.EditDetailsActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.SelectPhotoActivity"
             android:exported="true" />
@@ -100,7 +116,8 @@
             android:permission="android.permission.READ_EXTERNAL_STORAGE">
             <intent-filter>
                 <action android:name="com.mqv.tac.action.FILE_CHANGE" />
-                <data android:mimeType="image/*"/>
+
+                <data android:mimeType="image/*" />
             </intent-filter>
         </receiver>
 
@@ -108,7 +125,6 @@
             android:name=".activity.service.FileObserverService"
             android:enabled="true"
             android:exported="true" />
-
         <service
             android:name=".network.firebase.MessagingService"
             android:exported="false">
@@ -132,9 +148,4 @@
             android:resource="@color/purple_200" />
     </application>
 
-    <queries>
-        <intent>
-            <action android:name="android.media.action.IMAGE_CAPTURE" />
-        </intent>
-    </queries>
 </manifest>
