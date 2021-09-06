@@ -67,7 +67,7 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/text_color"
+                android:background="?colorControlHighlight"
                 app:layout_constraintTop_toBottomOf="@id/image_avatar" />
 
             <TextView
@@ -112,7 +112,7 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/text_color"
+                android:background="?colorControlHighlight"
                 app:layout_constraintTop_toBottomOf="@id/image_cover" />
 
             <TextView
@@ -155,7 +155,7 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="?android:attr/textColorSecondary"
+                android:background="?colorControlHighlight"
                 app:layout_constraintTop_toBottomOf="@id/text_bio" />
 
             <TextView
@@ -196,7 +196,7 @@
                 android:layout_marginStart="@dimen/all_padding_common"
                 android:layout_marginTop="@dimen/all_margin"
                 android:layout_marginEnd="@dimen/all_padding_common"
-                android:background="@color/text_color"
+                android:background="?colorControlHighlight"
                 app:layout_constraintTop_toBottomOf="@id/frame_layout_preferences_details" />
 
             <TextView
@@ -232,80 +232,4 @@
                 tools:listitem="@layout/item_preference_content" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!--    <com.google.android.material.textfield.TextInputLayout-->
-    <!--        android:id="@+id/text_layout_display_name"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginStart="@dimen/all_margin"-->
-    <!--        android:layout_marginTop="@dimen/all_margin"-->
-    <!--        android:layout_marginEnd="@dimen/all_margin"-->
-    <!--        android:hint="@string/title_display_name"-->
-    <!--        app:boxBackgroundColor="@color/white"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toBottomOf="@id/image_avatar">-->
-
-    <!--        <com.google.android.material.textfield.TextInputEditText-->
-    <!--            android:id="@+id/edit_text_display_name"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="match_parent"-->
-    <!--            android:inputType="text"-->
-    <!--            android:maxLength="50"-->
-    <!--            android:maxLines="1" />-->
-    <!--    </com.google.android.material.textfield.TextInputLayout>-->
-
-    <!--    <com.google.android.material.textfield.TextInputLayout-->
-    <!--        android:id="@+id/text_layout_bio"-->
-    <!--        android:layout_width="0dp"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginTop="20dp"-->
-    <!--        android:hint="@string/title_biography"-->
-    <!--        app:boxBackgroundColor="@color/white"-->
-    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_display_name"-->
-    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_display_name"-->
-    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_display_name">-->
-
-    <!--        <com.google.android.material.textfield.TextInputEditText-->
-    <!--            android:id="@+id/edit_text_bio"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="match_parent"-->
-    <!--            android:inputType="text" />-->
-    <!--    </com.google.android.material.textfield.TextInputLayout>-->
-
-    <!--    <com.google.android.material.textfield.TextInputLayout-->
-    <!--        android:id="@+id/text_layout_birthday"-->
-    <!--        android:layout_width="0dp"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginTop="20dp"-->
-    <!--        android:focusable="false"-->
-    <!--        android:hint="@string/title_birthday"-->
-    <!--        app:boxBackgroundColor="@color/white"-->
-    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_bio"-->
-    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_bio"-->
-    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_bio">-->
-
-    <!--        <com.google.android.material.textfield.TextInputEditText-->
-    <!--            android:id="@+id/edit_text_birthday"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="match_parent"-->
-    <!--            android:focusable="false" />-->
-    <!--    </com.google.android.material.textfield.TextInputLayout>-->
-
-    <!--    <com.google.android.material.textfield.TextInputLayout-->
-    <!--        android:id="@+id/text_layout_address"-->
-    <!--        android:layout_width="0dp"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginTop="20dp"-->
-    <!--        android:hint="@string/title_address"-->
-    <!--        app:boxBackgroundColor="@color/white"-->
-    <!--        app:layout_constraintEnd_toEndOf="@id/text_layout_birthday"-->
-    <!--        app:layout_constraintStart_toStartOf="@id/text_layout_birthday"-->
-    <!--        app:layout_constraintTop_toBottomOf="@id/text_layout_birthday">-->
-
-    <!--        <com.google.android.material.textfield.TextInputEditText-->
-    <!--            android:id="@+id/edit_text_address"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:inputType="text" />-->
-    <!--    </com.google.android.material.textfield.TextInputLayout>-->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

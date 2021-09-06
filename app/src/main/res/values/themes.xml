@@ -124,4 +124,12 @@
         <item name="android:layout_marginEnd">@dimen/all_padding_common</item>
         <item name="background">@color/text_color</item>
     </style>
+    
+    <style name="EditTextCustom.EditDetails" parent="">
+        <item name="boxBackgroundColor">@color/navigation_background</item>
+        <item name="boxStrokeColor">@null</item>
+        <item name="hintTextColor">@null</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="boxStrokeWidth">1dp</item>
+    </style>
 </resources>

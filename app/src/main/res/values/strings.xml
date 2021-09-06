@@ -19,6 +19,7 @@
     <string name="label_select_photo">Select Photo</string>
     <string name="label_preview_profile_picture">Preview Profile Picture</string>
     <string name="label_preview_cover_photo">Preview Cover Photo</string>
+    <string name="label_edit_details">Edit Details</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
@@ -33,9 +34,16 @@
     <string name="title_login_with_facebook">Login with facebook</string>
     <string name="title_login_with_google">Login with google</string>
     <string name="title_display_name">Display Name</string>
+    <string name="title_gender">Gender</string>
     <string name="title_biography">Biography</string>
+    <string name="title_relationship">Relationship</string>
     <string name="title_birthday">Birthday</string>
+    <string name="title_current_address">Current Address</string>
+    <string name="title_come_from">Come From</string>
     <string name="title_address">Address</string>
+    <string name="title_customize_your_intro">Customize Your Intro</string>
+    <string name="title_explain_details">Details you select will be public and won\'t post to News Feed.</string>
+    <string name="title_email_address">E-mail Address</string>
 
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
@@ -68,6 +76,7 @@
     <string name="action_create">Create</string>
     <string name="action_register">Register</string>
     <string name="action_log_in">Log in</string>
+    <string name="action_log_out">Log out</string>
     <string name="action_send">Send</string>
     <string name="action_resend">Resend</string>
     <string name="action_verify">Verify</string>
@@ -86,6 +95,7 @@
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
     <string name="action_pref_edit_profile">com.tac.open.edit.profile</string>
+    <string name="action_pref_account_settings">com.tac.open.account.settings</string>
 
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
