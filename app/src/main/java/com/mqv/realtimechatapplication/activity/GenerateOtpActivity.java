@@ -28,6 +28,9 @@ import com.mqv.realtimechatapplication.util.Logging;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class GenerateOtpActivity extends AppCompatActivity {
     private ActivityGenerateOtpBinding mBinding;
     private FirebaseAuth mAuth;

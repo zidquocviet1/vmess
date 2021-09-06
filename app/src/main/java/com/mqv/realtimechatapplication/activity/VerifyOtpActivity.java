@@ -35,6 +35,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, ActivityVerifyOtpBinding> implements View.OnClickListener {
     private InputMethodManager mIMM;
     private String mVerificationId;
