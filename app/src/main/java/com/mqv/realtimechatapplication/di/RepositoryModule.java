@@ -7,6 +7,8 @@ import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.RegisterRepository;
 import com.mqv.realtimechatapplication.data.repository.RegisterRepositoryImpl;
+import com.mqv.realtimechatapplication.data.repository.UserRepository;
+import com.mqv.realtimechatapplication.data.repository.UserRepositoryImpl;
 import com.mqv.realtimechatapplication.network.service.UserService;
 
 import javax.inject.Singleton;
@@ -35,5 +37,11 @@ public class RepositoryModule {
     @Singleton
     public EditUserPhotoRepository provideEditUserPhotoRes(UserService service){
         return new EditUserPhotoRepositoryImpl(service);
+    }
+
+    @Provides
+    @Singleton
+    public UserRepository provideUserRepository(UserService service){
+        return new UserRepositoryImpl(service);
     }
 }

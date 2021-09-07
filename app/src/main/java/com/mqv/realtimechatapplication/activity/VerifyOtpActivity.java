@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -21,7 +22,6 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
 import com.google.firebase.auth.PhoneAuthProvider;
@@ -30,6 +30,7 @@ import com.mqv.realtimechatapplication.activity.viewmodel.VerifyOtpViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityVerifyOtpBinding;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -104,6 +105,22 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
                 }
             }
         });
+
+        mViewModel.getAddUserStatus().observe(this, result -> {
+            if (result == null) return;
+
+            if (result.getStatus() == NetworkStatus.SUCCESS){
+                // Update UI
+                var intent = new Intent(VerifyOtpActivity.this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            }else if (result.getStatus() == NetworkStatus.ERROR){
+                FirebaseAuth.getInstance().signOut();
+
+                Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -157,17 +174,13 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // TODO: check the snippet code again
-                        // Sign in success, update UI with the signed-in user's information
-                        Logging.show("signInWithCredential:success");
+                        var result = task.getResult();
 
-                        FirebaseUser user = task.getResult().getUser();
-
-                        // Update UI
-                        var intent = new Intent(VerifyOtpActivity.this, MainActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-                        finish();
+                        if (result != null){
+                            var user = result.getUser();
+                            if (user != null)
+                                mViewModel.addUser(user.getUid());
+                        }
                     } else {
                         new Handler(Looper.getMainLooper()).postDelayed(() -> {
                             mBinding.progressBarLoading.setVisibility(View.GONE);

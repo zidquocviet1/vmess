@@ -8,6 +8,7 @@ import com.mqv.realtimechatapplication.util.Const;
 import io.reactivex.rxjava3.core.Observable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Response;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -22,6 +23,10 @@ public interface UserService {
     @POST(value = "/login")
     Observable<ApiResponse<LoggedInUser>> login(@Field("username") String username,
                                                 @Field("password") String password);
+
+    @FormUrlEncoded
+    @POST(value = "user/add")
+    Observable<Response<String>> addUser(@Field("uid") String uid);
 
     @GET(value = "user/info")
     Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(@Header(Const.AUTHORIZATION) String token,
