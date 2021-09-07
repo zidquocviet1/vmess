@@ -53,19 +53,19 @@ public class PreviewEditPhotoViewModel extends ViewModel {
                             if (response.getStatusCode() == HttpURLConnection.HTTP_OK){
                                 uploadPhotoResult.setValue(UploadPhotoResult.Success(response.getSuccess()));
                             }else if (response.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST){
-                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_update_user_photo));
+                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_update_user_photo));
                             }
                         }, t -> {
                             if (t instanceof FileNotFoundException){
-                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_file_not_found));
+                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_file_not_found));
                             }else if (t instanceof SocketTimeoutException){
-                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_connection_timeout));
+                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_connection_timeout));
                             } else{
-                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_update_user_photo));
+                                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_update_user_photo));
                             }
                         }));
             }else{
-                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.invalid_authentication_fail));
+                uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_authentication_fail));
             }
         });
     }

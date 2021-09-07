@@ -193,7 +193,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
     private void startUploadingDialog(){
         var builder = new MaterialAlertDialogBuilder(this);
-        var view = getLayoutInflater().inflate(R.layout.dialog_change_user_photo, null, false);
+        var view = getLayoutInflater().inflate(R.layout.dialog_loading_with_text, null, false);
         var textUploading = (TextView) view.findViewById(R.id.text_uploading);
         var animBlink = AnimationUtils.loadAnimation(this, R.anim.blink);
         textUploading.startAnimation(animBlink);
