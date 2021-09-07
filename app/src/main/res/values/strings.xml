@@ -91,6 +91,7 @@
         <item>@string/action_choose_photo</item>
     </array>
     <string name="action_uploading_photo">Uploading photo…</string>
+    <string name="action_creating">Creating account</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
@@ -110,9 +111,16 @@
     <string name="msg_verify_otp_not_receiver">If you didn\'t receive a code!</string>
     <string name="msg_verification_code_not_available">Your verification code is not available right now.</string>
     <string name="msg_cancel_uploading_photo">Cancel uploading a new photo successfully</string>
+    <string name="msg_cancel_creating_account">Cancel creating a new account</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
+    <string name="error_file_not_found">Could not load the file. Try again</string>
+    <string name="error_update_user_photo">Some error occurs when updating the user photo!</string>
+    <string name="error_authentication_fail">User Authentication fail. Try later</string>
+    <string name="error_connection_timeout">Connect to the server fail. Timeout after 10 seconds</string>
+    <string name="error_connect_server_fail">Can\'t connect to the server. Please try again</string>
+    <string name="error_create_user_not_complete">Create a new account not completed</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -126,10 +134,6 @@
     <string name="invalid_re_password">Password doesn\'t match</string>
     <string name="invalid_display_name">Display name doesn\'t allowed empty</string>
     <string name="invalid_phone_format">The phone number is invalid</string>
-    <string name="invalid_file_not_found">Could not load the file. Try again</string>
-    <string name="invalid_update_user_photo">Some error occurs when updating the user photo!</string>
-    <string name="invalid_authentication_fail">User Authentication fail. Try later</string>
-    <string name="invalid_connection_timeout">Connect to the server fail. Timeout after 10 seconds</string>
 
     <string name="key_pref_category_accounts">key_pref_category_accounts</string>
     <string name="key_pref_manage_accounts">key_pref_manage_accounts</string>
