@@ -59,48 +59,45 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
             signedInItem.setSummary(getString(R.string.title_preference_item_manage_accounts_summary));
 
             var uri = user.getPhotoUrl();
-            if (uri != null) {
-                //TODO: reformat the url in the develop mode
-                var url = uri.toString().replace("localhost", Const.BASE_IP);
+            var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
 
-                Glide.with(this)
-                        .asBitmap()
-                        .load(url)
-                        .centerCrop()
-                        .override(88, 88)
-                        .signature(new ObjectKey(url))
-                        .listener(new RequestListener<>() {
-                            @Override
-                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                                signedInItem.setIcon(R.drawable.ic_preferences_image_user_not_found);
-                                category.addPreference(signedInItem);
-                                category.addPreference(manageAccountsItem);
-                                return false;
-                            }
+            Glide.with(this)
+                    .asBitmap()
+                    .load(url)
+                    .centerCrop()
+                    .override(88, 88)
+                    .signature(new ObjectKey(url))
+                    .listener(new RequestListener<>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
+                            signedInItem.setIcon(R.drawable.ic_preferences_image_user_not_found);
+                            category.addPreference(signedInItem);
+                            category.addPreference(manageAccountsItem);
+                            return false;
+                        }
 
-                            @Override
-                            public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                                RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(getResources(), resource);
-                                rbd.setCornerRadius(Math.max(resource.getHeight(), resource.getWidth()) / 2.0f);
+                        @Override
+                        public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                            RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(getResources(), resource);
+                            rbd.setCornerRadius(Math.max(resource.getHeight(), resource.getWidth()) / 2.0f);
 
-                                signedInItem.setIcon(rbd);
-                                category.addPreference(signedInItem);
-                                category.addPreference(manageAccountsItem);
-                                return false;
-                            }
-                        })
-                        .into(new CustomTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                            signedInItem.setIcon(rbd);
+                            category.addPreference(signedInItem);
+                            category.addPreference(manageAccountsItem);
+                            return false;
+                        }
+                    })
+                    .into(new CustomTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
 
-                            }
+                        }
 
-                            @Override
-                            public void onLoadCleared(@Nullable Drawable placeholder) {
+                        @Override
+                        public void onLoadCleared(@Nullable Drawable placeholder) {
 
-                            }
-                        });
-            }
+                        }
+                    });
         }
 
         setPreferenceScreen(screen);
