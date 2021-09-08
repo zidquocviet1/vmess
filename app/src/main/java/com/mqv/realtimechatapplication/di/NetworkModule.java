@@ -5,6 +5,7 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.network.adapter.LocalDateTimeAdapter;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -17,6 +18,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -43,7 +45,10 @@ public class NetworkModule {
     @Singleton
     @Provides
     public Gson provideGson(){
-        return new GsonBuilder().create();
+        var builder = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
+        return builder.create();
     }
 
     @Singleton
