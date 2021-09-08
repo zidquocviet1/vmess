@@ -14,6 +14,7 @@ public final class Const {
     public static final String PASSWORD_REGEX_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
     public static final String AUTHORIZATION = "Authorization";
     public static final String AUTHORIZER = "Authorizer";
+    public static final String DEFAULT_AUTHORIZER = "firebase";
     public static final String MULTIPART_TYPE = "multipart/form-data";
     public static final String PREFIX_TOKEN = "Bearer ";
     public static final String IMAGE_FILE_NAME_PATTERN = "yyyyMMdd_HHmmss"; // example: 09/02/2021 13:01:30 -> 20210902_130130
