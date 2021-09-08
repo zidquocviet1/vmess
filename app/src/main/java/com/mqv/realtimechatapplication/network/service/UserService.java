@@ -2,7 +2,7 @@ package com.mqv.realtimechatapplication.network.service;
 
 import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
-import com.mqv.realtimechatapplication.network.model.CustomUser;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.util.Const;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -28,9 +28,15 @@ public interface UserService {
     @POST(value = "user/add")
     Observable<Response<String>> addUser(@Field("uid") String uid);
 
+    @GET
+    @FormUrlEncoded
+    Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
+                                                      @Header(Const.AUTHORIZER) String authorizer,
+                                                      @Field("uid") String uid);
+
     @GET(value = "user/info")
-    Observable<ApiResponse<CustomUser>> fetchCustomUserInfo(@Header(Const.AUTHORIZATION) String token,
-                                                            @Header(Const.AUTHORIZER) String authorizer);
+    Observable<ApiResponse<User>> fetchCustomUserInfo(@Header(Const.AUTHORIZATION) String token,
+                                                      @Header(Const.AUTHORIZER) String authorizer);
 
     @PUT(value = "user/upload-photo")
     @Multipart
