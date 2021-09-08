@@ -90,7 +90,7 @@
             android:layout_height="match_parent"
             app:defaultNavHost="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            app:navGraph="@navigation/main_activity_nav" />
+            app:navGraph="@navigation/nav_main_activity" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
