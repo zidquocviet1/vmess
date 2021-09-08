@@ -17,6 +17,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import retrofit2.http.Query;
 
 public interface UserService {
     @FormUrlEncoded
@@ -28,11 +29,10 @@ public interface UserService {
     @POST(value = "user/add")
     Observable<Response<String>> addUser(@Field("uid") String uid);
 
-    @GET
-    @FormUrlEncoded
+    @GET(value = "/user/info")
     Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
                                                       @Header(Const.AUTHORIZER) String authorizer,
-                                                      @Field("uid") String uid);
+                                                      @Query("uid") String uid);
 
     @GET(value = "user/info")
     Observable<ApiResponse<User>> fetchCustomUserInfo(@Header(Const.AUTHORIZATION) String token,
