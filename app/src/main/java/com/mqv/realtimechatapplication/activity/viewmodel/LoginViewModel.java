@@ -1,5 +1,8 @@
 package com.mqv.realtimechatapplication.activity.viewmodel;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -60,7 +63,8 @@ public class LoginViewModel extends ViewModel {
                             addUser(user.getUid());
                         }
                     } else {
-                        loginResult.setValue(Result.Fail(R.string.msg_login_failed));
+                        new Handler(Looper.getMainLooper()).postDelayed(() ->
+                                loginResult.setValue(Result.Fail(R.string.msg_login_failed)), 1500);
                     }
                 });
     }
