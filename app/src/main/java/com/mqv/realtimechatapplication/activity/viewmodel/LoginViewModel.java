@@ -4,18 +4,18 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.mqv.realtimechatapplication.data.repository.LoginRepository;
-import com.mqv.realtimechatapplication.data.model.LoggedInUser;
+import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.ui.data.LoggedInUserView;
-import com.mqv.realtimechatapplication.data.result.LoginResult;
+import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.UserRepository;
+import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.ui.validator.LoginForm;
 import com.mqv.realtimechatapplication.ui.validator.LoginFormValidator;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
 import com.mqv.realtimechatapplication.util.Logging;
-import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.net.HttpURLConnection;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -27,33 +27,61 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 @HiltViewModel
 public class LoginViewModel extends ViewModel {
     private final MutableLiveData<LoginRegisterValidationResult> loginValidationResult = new MutableLiveData<>();
-    private final MutableLiveData<LoginResult> loginResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<Boolean>> loginResult = new MutableLiveData<>();
     private final CompositeDisposable cd = new CompositeDisposable();
     private final LoginRepository loginRepository;
+    private final UserRepository userRepository;
 
     @Inject
-    public LoginViewModel(LoginRepository loginRepository) {
+    public LoginViewModel(LoginRepository loginRepository, UserRepository repository) {
         this.loginRepository = loginRepository;
+        this.userRepository = repository;
     }
 
     public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
         return loginValidationResult;
     }
 
-    public LiveData<LoginResult> getLoginResult() {
+    public LiveData<Result<Boolean>> getLoginResult() {
         return loginResult;
     }
 
-    public void login(String username, String password) {
-        // can be launched in a separate asynchronous job
-        var result = loginRepository.login(username, password);
+    public void loginWithEmailAndPassword(String email, String password) {
+        loginResult.setValue(Result.Loading());
 
-        if (result.getStatus() == NetworkStatus.SUCCESS) {
-            LoggedInUser data = result.getData();
-            loginResult.setValue(new LoginResult(new LoggedInUserView(data.getDisplayName())));
-        } else {
-            loginResult.setValue(new LoginResult(R.string.msg_login_failed));
-        }
+        FirebaseAuth.getInstance()
+                .signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var result = task.getResult();
+
+                        if (result != null) {
+                            var user = Objects.requireNonNull(result.getUser());
+                            addUser(user.getUid());
+                        }
+                    } else {
+                        loginResult.setValue(Result.Fail(R.string.msg_login_failed));
+                    }
+                });
+    }
+
+    private void addUser(String uid) {
+        cd.add(userRepository.addUser(uid)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(response -> {
+                    var code = response.code();
+
+                    if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_NO_CONTENT){
+                        loginResult.setValue(Result.Success(true));
+                    }else if (code == HttpURLConnection.HTTP_UNAUTHORIZED){
+                        FirebaseAuth.getInstance().signOut();
+                        loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                    }
+                }, t -> {
+                    FirebaseAuth.getInstance().signOut();
+                    loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
+                }));
     }
 
     public void loginDataChanged(String username, String password) {

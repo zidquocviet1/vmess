@@ -1,6 +1,8 @@
 package com.mqv.realtimechatapplication.activity;
 
-import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.*;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.EMAIL_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.PASSWORD_ERROR;
+import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult.SUCCESS;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,18 +10,16 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.StringRes;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.GetTokenResult;
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.LoginViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityLoginBinding;
-import com.mqv.realtimechatapplication.ui.data.LoggedInUserView;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
 
@@ -28,6 +28,9 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBinding> implements View.OnClickListener {
     private FirebaseAuth mAuth;
+    private static final String STATE_EMAIL = "email";
+    private static final String STATE_PASSWORD = "password";
+    private EditText edtEmail, edtPassword;
 
     @Override
     public void binding() {
@@ -40,10 +43,27 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         return LoginViewModel.class;
     }
 
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(Bundle inState) {
+        super.onCreate(inState);
+
+        edtEmail = Objects.requireNonNull(mBinding.textLayoutEmail.getEditText());
+        edtPassword = Objects.requireNonNull(mBinding.textLayoutPassword.getEditText());
+
         setupEvent();
+
         mAuth = FirebaseAuth.getInstance();
+
+        if (inState != null){
+            edtEmail.setText(inState.getString(STATE_EMAIL));
+            edtPassword.setText(inState.getString(STATE_PASSWORD));
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putString(STATE_EMAIL, edtEmail.getText().toString().trim());
+        outState.putString(STATE_PASSWORD, edtPassword.getText().toString().trim());
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -64,33 +84,36 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         });
 
         mViewModel.getLoginResult().observe(this, loginResult -> {
-            if (loginResult == null) {
-                return;
+            if (loginResult == null) return;
+
+            if (loginResult.getStatus() == NetworkStatus.LOADING) {
+                setLoadingUi(true);
+            } else if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
+                setLoadingUi(false);
+
+                Toast.makeText(this, R.string.msg_login_successfully, Toast.LENGTH_SHORT).show();
+
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            } else {
+                setLoadingUi(false);
+
+                Toast.makeText(this, loginResult.getError(), Toast.LENGTH_SHORT).show();
             }
-            mBinding.loading.setVisibility(View.GONE);
-            if (loginResult.getError() != null) {
-                showLoginFailed(loginResult.getError());
-            }
-            if (loginResult.getSuccess() != null) {
-                updateUiWithUser(loginResult.getSuccess());
-            }
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
         });
     }
 
-    private void updateUiWithUser(LoggedInUserView model) {
-        Toast.makeText(getApplicationContext(), "Login Successfully", Toast.LENGTH_LONG).show();
-    }
-
-    private void showLoginFailed(@StringRes Integer errorString) {
-        Toast.makeText(getApplicationContext(), errorString, Toast.LENGTH_SHORT).show();
+    private void setLoadingUi(boolean isLoading) {
+        mBinding.loading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        mBinding.buttonLogin.setEnabled(!isLoading);
+        mBinding.buttonCreateAccount.setEnabled(!isLoading);
+        mBinding.imageLoginPhone.setEnabled(!isLoading);
+        mBinding.imageLoginFacebook.setEnabled(!isLoading);
+        mBinding.imageLoginGoogle.setEnabled(!isLoading);
+        mBinding.textForgotPassword.setClickable(!isLoading);
     }
 
     private void setupEvent() {
-        var edtEmail = Objects.requireNonNull(mBinding.textLayoutEmail.getEditText());
-        var edtPassword = Objects.requireNonNull(mBinding.textLayoutPassword.getEditText());
-
         TextWatcher afterTextChangedListener = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -113,8 +136,8 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         edtPassword.addTextChangedListener(afterTextChangedListener);
         edtPassword.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                mViewModel.login(edtEmail.getText().toString(),
-                        edtPassword.getText().toString());
+                mViewModel.loginWithEmailAndPassword(edtEmail.getText().toString().trim(),
+                        edtPassword.getText().toString().trim());
             }
             return false;
         });
@@ -134,11 +157,8 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         if (id == mBinding.buttonLogin.getId()) {
             mBinding.loading.setVisibility(View.VISIBLE);
 
-            var edtEmail = Objects.requireNonNull(mBinding.textLayoutEmail.getEditText());
-            var edtPassword = Objects.requireNonNull(mBinding.textLayoutPassword.getEditText());
-
-            mViewModel.login(edtEmail.getText().toString(),
-                    edtPassword.getText().toString());
+            mViewModel.loginWithEmailAndPassword(edtEmail.getText().toString().trim(),
+                    edtPassword.getText().toString().trim());
         } else if (id == mBinding.buttonCreateAccount.getId()) {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         } else if (id == mBinding.textForgotPassword.getId()) {
@@ -152,14 +172,11 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
             if (firebaseUser != null) {
                 firebaseUser.getIdToken(true)
-                        .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<GetTokenResult> task) {
-                                if (task.isSuccessful()) {
-                                    var result = task.getResult();
-                                    if (result != null) {
-                                        mViewModel.fetchCustomUserInfo("Bearer " + result.getToken());
-                                    }
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                var result = task.getResult();
+                                if (result != null) {
+                                    mViewModel.fetchCustomUserInfo("Bearer " + result.getToken());
                                 }
                             }
                         });
