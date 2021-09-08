@@ -8,7 +8,7 @@ public final class Const {
     private static final int PORT = 443; // 443 for Https and 8080 or 80 for Http
     public static final String BASE_IP = "192.168.100.15";
     public static final String BASE_URL = "https://" + BASE_IP + ":" + PORT + "/api/v1/";
-    public static final Long NETWORK_TIME_OUT = 10000L;
+    public static final Long NETWORK_TIME_OUT = 7000L;
     public static final String CONTENT_TYPE = "application/json";
     public static final String PHONE_REGEX_PATTERN = "(84|0[3|5|7|8|9])+([0-9]{8})\\b";
     public static final String PASSWORD_REGEX_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
