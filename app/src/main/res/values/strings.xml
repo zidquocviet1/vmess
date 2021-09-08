@@ -44,6 +44,7 @@
     <string name="title_customize_your_intro">Customize Your Intro</string>
     <string name="title_explain_details">Details you select will be public and won\'t post to News Feed.</string>
     <string name="title_email_address">E-mail Address</string>
+    <string name="title_registration">Registration</string>
 
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
@@ -100,7 +101,7 @@
 
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
-    <string name="msg_login_failed">"Login failed"</string>
+    <string name="msg_login_failed">Login failed. Your email or password is incorrect</string>
     <string name="msg_login_successfully">Login successfully</string>
     <string name="msg_register_failed">Register failed</string>
     <string name="msg_register_successfully">Register successfully</string>
@@ -121,6 +122,7 @@
     <string name="error_connection_timeout">Connect to the server fail. Timeout after 10 seconds</string>
     <string name="error_connect_server_fail">Can\'t connect to the server. Please try again</string>
     <string name="error_create_user_not_complete">Create a new account not completed</string>
+    <string name="error_auth_email_in_use">The email address already in use by another account</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -130,6 +132,7 @@
     <string name="prompt_re_password">Re-password</string>
 
     <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_email_exists">This email has exist</string>
     <string name="invalid_password">Password must be >8 characters. Example: Abcdef!1</string>
     <string name="invalid_re_password">Password doesn\'t match</string>
     <string name="invalid_display_name">Display name doesn\'t allowed empty</string>
