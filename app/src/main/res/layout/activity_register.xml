@@ -70,7 +70,6 @@
         app:layout_constraintTop_toBottomOf="@+id/text_layout_display_name">
 
         <com.google.android.material.textfield.TextInputEditText
-            style="@style/CustomTextInput"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/prompt_password"

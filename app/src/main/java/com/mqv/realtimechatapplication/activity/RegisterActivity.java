@@ -9,23 +9,33 @@ import static com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidati
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.RegisterViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityRegisterBinding;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRegisterBinding> {
-    private EditText usernameEdit, displayNameEdit, passwordEdit, rePasswordEdit;
+    private EditText emailEdit, displayNameEdit, passwordEdit, rePasswordEdit;
+    private AlertDialog loadingDialog;
+    private static final String STATE_EMAIL = "email";
+    private static final String STATE_DISPLAY_NAME = "display_name";
+    private static final String STATE_PASSWORD = "password";
+    private static final String STATE_RE_PASSWORD = "re-password";
 
     @Override
     public void binding() {
@@ -39,15 +49,37 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle outState) {
+        super.onCreate(outState);
 
-        usernameEdit = Objects.requireNonNull(mBinding.textLayoutUsername.getEditText());
+        emailEdit = Objects.requireNonNull(mBinding.textLayoutUsername.getEditText());
         displayNameEdit = Objects.requireNonNull(mBinding.textLayoutDisplayName.getEditText());
         passwordEdit = Objects.requireNonNull(mBinding.textLayoutPassword.getEditText());
         rePasswordEdit = Objects.requireNonNull(mBinding.textLayoutRePassword.getEditText());
 
         setupEvent();
+
+        if (outState != null) {
+            emailEdit.setText(outState.getString(STATE_EMAIL));
+            displayNameEdit.setText(outState.getString(STATE_DISPLAY_NAME));
+            passwordEdit.setText(outState.getString(STATE_PASSWORD));
+            rePasswordEdit.setText(outState.getString(STATE_RE_PASSWORD));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        finishLoadingDialog();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putString(STATE_EMAIL, emailEdit.getText().toString().trim());
+        outState.putString(STATE_DISPLAY_NAME, displayNameEdit.getText().toString().trim());
+        outState.putString(STATE_PASSWORD, passwordEdit.getText().toString().trim());
+        outState.putString(STATE_RE_PASSWORD, rePasswordEdit.getText().toString().trim());
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -82,6 +114,31 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
                 mBinding.textLayoutRePassword.setErrorEnabled(false);
             }
         });
+
+        mViewModel.getRegisterResult().observe(this, result -> {
+            if (result == null) return;
+
+            if (result.getStatus() == NetworkStatus.LOADING) {
+                startLoadingDialog();
+            } else if (result.getStatus() == NetworkStatus.SUCCESS) {
+
+                FirebaseAuth.getInstance().signOut();
+
+                finishLoadingDialog();
+
+                Toast.makeText(this, result.getSuccess(), Toast.LENGTH_SHORT).show();
+
+                finish();
+            } else {
+                finishLoadingDialog();
+
+                Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
+
+                emailEdit.requestFocus();
+                if (mBinding != null)
+                    mBinding.textLayoutUsername.setError(getString(R.string.invalid_email_exists));
+            }
+        });
     }
 
     private void setupEvent() {
@@ -99,7 +156,7 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
             @Override
             public void afterTextChanged(Editable s) {
                 mViewModel.registerDataChanged(
-                        usernameEdit.getText().toString().trim(),
+                        emailEdit.getText().toString().trim(),
                         displayNameEdit.getText().toString().trim(),
                         passwordEdit.getText().toString().trim(),
                         rePasswordEdit.getText().toString().trim()
@@ -107,17 +164,38 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
             }
         };
 
-        usernameEdit.addTextChangedListener(textChanged);
+        emailEdit.addTextChangedListener(textChanged);
         displayNameEdit.addTextChangedListener(textChanged);
         passwordEdit.addTextChangedListener(textChanged);
         rePasswordEdit.addTextChangedListener(textChanged);
 
         mBinding.buttonRegister.setOnClickListener((v) -> {
-            Map<String, Object> user = new HashMap<>();
-            user.put(Const.KEY_USER_NAME, usernameEdit.getText().toString().trim());
-            user.put(Const.KEY_DISPLAY_NAME, displayNameEdit.getText().toString().trim());
-            user.put(Const.KEY_PASSWORD, passwordEdit.getText().toString().trim());
-            mViewModel.register(user);
+            var email = emailEdit.getText().toString().trim();
+            var password = passwordEdit.getText().toString().trim();
+            var displayName = displayNameEdit.getText().toString().trim();
+
+            mViewModel.createUserWithEmailAndPassword(email, password, displayName);
         });
+    }
+
+    private void startLoadingDialog() {
+        var builder = new MaterialAlertDialogBuilder(this);
+        var view = getLayoutInflater().inflate(R.layout.dialog_loading_with_text, null, false);
+        var textUploading = (TextView) view.findViewById(R.id.text_uploading);
+        var animBlink = AnimationUtils.loadAnimation(this, R.anim.blink);
+
+        textUploading.setText(R.string.action_creating);
+        textUploading.startAnimation(animBlink);
+        builder.setView(view);
+
+        loadingDialog = builder.create();
+        loadingDialog.setCancelable(false);
+        loadingDialog.setCanceledOnTouchOutside(false);
+        loadingDialog.show();
+    }
+
+    private void finishLoadingDialog() {
+        if (loadingDialog != null && loadingDialog.isShowing())
+            loadingDialog.dismiss();
     }
 }
