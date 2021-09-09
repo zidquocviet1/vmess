@@ -29,7 +29,7 @@ public interface UserService {
     @POST(value = "user/add")
     Observable<Response<String>> addUser(@Field("uid") String uid);
 
-    @GET(value = "/user/info")
+    @GET(value = "user/info")
     Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
                                                       @Header(Const.AUTHORIZER) String authorizer,
                                                       @Query("uid") String uid);
