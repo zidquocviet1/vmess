@@ -4,15 +4,25 @@ import com.google.gson.annotations.SerializedName;
 
 public enum Gender {
     @SerializedName("male")
-    MALE,
+    MALE("Male"),
     @SerializedName("female")
-    FEMALE,
+    FEMALE("Female"),
     @SerializedName("nonBinary")
-    NON_BINARY,
+    NON_BINARY("Non-binary"),
     @SerializedName("transgender")
-    TRANSGENDER,
+    TRANSGENDER("Transgender"),
     @SerializedName("intersex")
-    INTERSEX,
+    INTERSEX("Intersex"),
     @SerializedName("preferNotToSay")
-    PREFER_NOT_TO_SAY
+    PREFER_NOT_TO_SAY("Prefer not to say");
+
+    private final String value;
+
+    Gender(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }
