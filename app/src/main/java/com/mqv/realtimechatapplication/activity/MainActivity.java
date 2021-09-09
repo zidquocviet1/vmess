@@ -17,7 +17,6 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.bumptech.glide.signature.ObjectKey;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,8 +24,10 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
 
@@ -76,6 +77,15 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
     @Override
     public void setupObserver() {
         mViewModel.getFirebaseUser().observe(this, this::showUserUi);
+        mViewModel.getRemoteUser().observe(this, userResult -> {
+            if (userResult == null) return;
+
+            if (userResult.getStatus() == NetworkStatus.SUCCESS){
+                LoggedInUserManager.getInstance().setLoggedInUser(userResult.getSuccess());
+            }else if (userResult.getStatus() == NetworkStatus.ERROR){
+                LoggedInUserManager.getInstance().setLoggedInUser(null);
+            }
+        });
     }
 
     @Override

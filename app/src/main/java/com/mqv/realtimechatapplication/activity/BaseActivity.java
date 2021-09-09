@@ -15,7 +15,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.firebase.FirebaseUserManager;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.MyActivityForResult;
 
@@ -34,7 +36,9 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     private boolean themeChangePending;
     private boolean paused;
     private Consumer<FirebaseUser> firebaseUserConsumer;
+    private Consumer<User> loggedInUserConsumer;
     private FirebaseUserManager firebaseUserManager;
+    private LoggedInUserManager loggedInUserManager;
 
     private final AppPreferences.Listener onPreferenceChanged = new AppPreferences.Listener() {
         @Override
@@ -46,10 +50,15 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     private final FirebaseUserManager.Listener onFirebaseUserChanged = new FirebaseUserManager.Listener() {
         @Override
         public void onUserChanged() {
-            if (firebaseUserConsumer != null){
+            if (firebaseUserConsumer != null) {
                 firebaseUserConsumer.accept(getCurrentUser());
             }
         }
+    };
+
+    private final LoggedInUserManager.LoggedInUserUpdatedListener onLoggedInUserUpdated = user -> {
+        if (loggedInUserConsumer != null)
+            loggedInUserConsumer.accept(user);
     };
 
     public MyActivityForResult<Intent, ActivityResult> activityResultLauncher =
@@ -76,6 +85,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         setupObserver();
 
         firebaseUserManager = FirebaseUserManager.getInstance();
+        loggedInUserManager = LoggedInUserManager.getInstance();
     }
 
     @Override
@@ -83,6 +93,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         super.onPostCreate(savedInstanceState);
         mPreferences.addListener(onPreferenceChanged);
         firebaseUserManager.addListener(onFirebaseUserChanged);
+        loggedInUserManager.addListener(onLoggedInUserUpdated);
     }
 
     @Override
@@ -107,6 +118,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         if (mBinding != null) mBinding = null;
         mPreferences.removeListener(onPreferenceChanged);
         firebaseUserManager.removeListener(onFirebaseUserChanged);
+        loggedInUserManager.removeListener(onLoggedInUserUpdated);
     }
 
     public abstract void setupObserver();
@@ -126,8 +138,16 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         });
     }
 
+    public void updateLoggedInUser(User user) {
+        loggedInUserManager.notifyUserUpdated(user);
+    }
+
     public void registerFirebaseUserChange(Consumer<FirebaseUser> callback) {
         this.firebaseUserConsumer = callback;
+    }
+
+    public void registerLoggedInUserUpdated(Consumer<User> callback) {
+        this.loggedInUserConsumer = callback;
     }
 
     private void onThemeSettingsModeChange() {
