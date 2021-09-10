@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.di;
 
+import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.datasource.LoginDataSource;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepositoryImpl;
@@ -41,7 +42,7 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public UserRepository provideUserRepository(UserService service){
-        return new UserRepositoryImpl(service);
+    public UserRepository provideUserRepository(UserService service, UserDao userDao){
+        return new UserRepositoryImpl(service, userDao);
     }
 }
