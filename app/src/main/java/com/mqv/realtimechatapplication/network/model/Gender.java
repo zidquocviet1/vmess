@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.network.model;
 
+import android.util.SparseArray;
+
 import com.google.gson.annotations.SerializedName;
 
 public enum Gender {
@@ -18,6 +20,15 @@ public enum Gender {
 
     private final String value;
     private final int key;
+    private static final SparseArray<Gender> array = new SparseArray<>();
+    static {
+        array.put(1, MALE);
+        array.put(2, FEMALE);
+        array.put(3, NON_BINARY);
+        array.put(4, TRANSGENDER);
+        array.put(5, INTERSEX);
+        array.put(6, PREFER_NOT_TO_SAY);
+    }
 
     Gender(String value, int key) {
         this.value = value;
@@ -30,5 +41,9 @@ public enum Gender {
 
     public int getKey(){
         return key;
+    }
+
+    public static Gender getGenderByKey(int key){
+        return array.get(key);
     }
 }
