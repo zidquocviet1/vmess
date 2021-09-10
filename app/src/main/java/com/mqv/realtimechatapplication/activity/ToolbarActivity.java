@@ -11,8 +11,6 @@ import androidx.viewbinding.ViewBinding;
 import com.google.android.material.button.MaterialButton;
 import com.mqv.realtimechatapplication.R;
 
-import dagger.hilt.android.AndroidEntryPoint;
-
 public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding> extends BaseActivity<V, B> {
 
     @Override
@@ -21,7 +19,10 @@ public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding
     }
 
     /*
-     * Must call in implementation onCreate after setContentView*/
+     * Must call in implementation onCreate after setContentView
+     * This class has a child is that BaseUserActivity class. If the child of BaseUserActivity not has a appbar in the layout.
+     * So we don't need to call all of these methods in current class
+     * */
     public void setupToolbar() {
         var toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
