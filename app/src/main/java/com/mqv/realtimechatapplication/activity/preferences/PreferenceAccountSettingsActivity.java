@@ -10,6 +10,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.LoginActivity;
 import com.mqv.realtimechatapplication.activity.ToolbarActivity;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceAccountSettingsBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -37,6 +38,7 @@ public class PreferenceAccountSettingsActivity extends ToolbarActivity<AndroidVi
         mBinding.buttonLogOut.setOnClickListener(v -> {
             var user = getCurrentUser();
             if (user != null) {
+                LoggedInUserManager.getInstance().signOut();
                 FirebaseAuth.getInstance().signOut();
 
                 var loginIntent = new Intent(PreferenceAccountSettingsActivity.this, LoginActivity.class);
