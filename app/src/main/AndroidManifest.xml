@@ -43,8 +43,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activity.EditDetailsActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustPan" />
+            android:exported="true"/>
         <activity
             android:name=".activity.SelectPhotoActivity"
             android:exported="true" />
