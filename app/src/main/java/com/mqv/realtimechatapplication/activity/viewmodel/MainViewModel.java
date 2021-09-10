@@ -16,7 +16,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
-public class MainViewModel extends FirebaseUserViewModel {
+public class MainViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<Result<User>> remoteUser = new MutableLiveData<>();
 
