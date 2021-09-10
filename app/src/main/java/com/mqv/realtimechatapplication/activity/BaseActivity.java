@@ -56,7 +56,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         }
     };
 
-    private final LoggedInUserManager.LoggedInUserUpdatedListener onLoggedInUserUpdated = user -> {
+    private final LoggedInUserManager.LoggedInUserListener onLoggedInUserChanged = user -> {
         if (loggedInUserConsumer != null)
             loggedInUserConsumer.accept(user);
     };
@@ -93,7 +93,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         super.onPostCreate(savedInstanceState);
         mPreferences.addListener(onPreferenceChanged);
         firebaseUserManager.addListener(onFirebaseUserChanged);
-        loggedInUserManager.addListener(onLoggedInUserUpdated);
+        loggedInUserManager.addListener(onLoggedInUserChanged);
     }
 
     @Override
@@ -118,7 +118,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         if (mBinding != null) mBinding = null;
         mPreferences.removeListener(onPreferenceChanged);
         firebaseUserManager.removeListener(onFirebaseUserChanged);
-        loggedInUserManager.removeListener(onLoggedInUserUpdated);
+        loggedInUserManager.removeListener(onLoggedInUserChanged);
     }
 
     public abstract void setupObserver();
@@ -139,14 +139,14 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     }
 
     public void updateLoggedInUser(User user) {
-        loggedInUserManager.notifyUserUpdated(user);
+        loggedInUserManager.setLoggedInUser(user);
     }
 
     public void registerFirebaseUserChange(Consumer<FirebaseUser> callback) {
         this.firebaseUserConsumer = callback;
     }
 
-    public void registerLoggedInUserUpdated(Consumer<User> callback) {
+    public void registerLoggedInUserChanged(Consumer<User> callback) {
         this.loggedInUserConsumer = callback;
     }
 

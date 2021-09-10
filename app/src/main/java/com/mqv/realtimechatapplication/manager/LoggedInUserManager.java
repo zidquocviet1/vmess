@@ -12,7 +12,7 @@ public class LoggedInUserManager {
     private static LoggedInUserManager instance;
     @Nullable
     private User user;
-    private final List<LoggedInUserUpdatedListener> loggedInUserUpdatedListeners;
+    private final List<LoggedInUserListener> loggedInUserUpdatedListeners;
 
     public static LoggedInUserManager getInstance() {
         synchronized (LOCK) {
@@ -27,29 +27,35 @@ public class LoggedInUserManager {
         loggedInUserUpdatedListeners = new CopyOnWriteArrayList<>();
     }
 
-    public interface LoggedInUserUpdatedListener {
-        void onLoggedInUserUpdated(User user);
+    public interface LoggedInUserListener {
+        void onLoggedInUserChanged(User user);
     }
 
-    public void addListener(LoggedInUserUpdatedListener listener) {
+    public void addListener(LoggedInUserListener listener) {
         loggedInUserUpdatedListeners.add(listener);
     }
 
-    public void removeListener(LoggedInUserUpdatedListener listener) {
+    public void removeListener(LoggedInUserListener listener) {
         loggedInUserUpdatedListeners.remove(listener);
     }
 
-    public void notifyUserUpdated(User user) {
-        for (var listener : loggedInUserUpdatedListeners){
-            listener.onLoggedInUserUpdated(user);
+    public void notifyUserChanged(User user) {
+        for (var listener : loggedInUserUpdatedListeners) {
+            listener.onLoggedInUserChanged(user);
         }
     }
 
-    public void setLoggedInUser(@Nullable User user){
+    public void setLoggedInUser(@Nullable User user) {
         this.user = user;
+
+        notifyUserChanged(user);
     }
 
-    public User getLoggedInUser(){
+    public User getLoggedInUser() {
         return user;
+    }
+
+    public void signOut() {
+        this.user = null;
     }
 }
