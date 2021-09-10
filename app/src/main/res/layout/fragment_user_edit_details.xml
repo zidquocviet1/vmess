@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.UserEditDetailsFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/all_padding_common"
+        android:paddingEnd="@dimen/all_padding_common">
+
+        <TextView
+            android:id="@+id/text1"
+            style="@style/TitleTextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/title_customize_your_intro"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_explain_details"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="@id/text1"
+            app:layout_constraintTop_toBottomOf="@id/text1" />
+
+        <View
+            android:id="@+id/view1"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/all_margin"
+            android:background="?colorControlHighlight"
+            app:layout_constraintTop_toBottomOf="@id/text2" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_display_name"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_display_name"
+            app:layout_constraintStart_toStartOf="@+id/view1"
+            app:layout_constraintTop_toBottomOf="@+id/view1">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_display_name"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="false"
+                android:inputType="text"
+                android:maxLength="50"
+                android:maxLines="1"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_gender"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_gender"
+            app:layout_constraintStart_toStartOf="@+id/text_layout_display_name"
+            app:layout_constraintTop_toBottomOf="@+id/text_layout_display_name">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_gender"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:inputType="text"
+                android:maxLength="50"
+                android:maxLines="1"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_birthday"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="@string/title_birthday"
+            app:layout_constraintEnd_toEndOf="@id/text_layout_gender"
+            app:layout_constraintStart_toStartOf="@id/text_layout_gender"
+            app:layout_constraintTop_toBottomOf="@id/text_layout_gender">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_birthday"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="false"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_current_address"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_current_address"
+            app:layout_constraintEnd_toEndOf="@id/text_layout_birthday"
+            app:layout_constraintStart_toStartOf="@id/text_layout_birthday"
+            app:layout_constraintTop_toBottomOf="@id/text_layout_birthday">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_current_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_come_from"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_come_from"
+            app:layout_constraintEnd_toEndOf="@id/text_layout_current_address"
+            app:layout_constraintStart_toStartOf="@id/text_layout_current_address"
+            app:layout_constraintTop_toBottomOf="@id/text_layout_current_address">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_come_from"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_relationship"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_relationship"
+            app:layout_constraintEnd_toEndOf="@id/text_layout_come_from"
+            app:layout_constraintStart_toStartOf="@id/text_layout_come_from"
+            app:layout_constraintTop_toBottomOf="@id/text_layout_come_from">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_relationship"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/text_layout_email"
+            style="@style/EditTextCustom.EditDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin"
+            android:hint="@string/title_email_address"
+            app:layout_constraintEnd_toEndOf="@id/text_layout_come_from"
+            app:layout_constraintStart_toStartOf="@id/text_layout_come_from"
+            app:layout_constraintTop_toBottomOf="@id/text_layout_come_from">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_text_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp" />
+        </com.google.android.material.textfield.TextInputLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
