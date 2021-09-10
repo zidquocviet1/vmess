@@ -9,8 +9,6 @@ import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.User;
 
-import java.net.HttpURLConnection;
-
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -27,32 +25,28 @@ public class MainViewModel extends FirebaseUserViewModel {
         this.userRepository = userRepository;
 
         loadFirebaseUser();
-        loadRemoteUser(null);
+        loadRemoteUserUsingNBR(null);
     }
 
     public LiveData<Result<User>> getRemoteUser() {
         return remoteUser;
     }
 
-    private void loadRemoteUser(@Nullable User remoteUser) {
+    public void loadRemoteUserUsingNBR(@Nullable User remoteUser) {
         var user = firebaseUser.getValue();
-
         if (user != null) {
-            userRepository.fetchUserFromRemote(remoteUser, user, observable -> {
-                if (observable != null) {
-                    cd.add(observable.subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(response -> {
-                                if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                    this.remoteUser.setValue(Result.Success(response.getSuccess()));
-                                } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                    this.remoteUser.setValue(Result.Fail(R.string.error_authentication_fail));
-                                }
-                            }, t -> this.remoteUser.setValue(Result.Fail(R.string.error_connect_server_fail))));
-                } else {
-                    this.remoteUser.setValue(Result.Fail(R.string.error_authentication_fail));
-                }
-            });
+            var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();
+
+            cd.add(userRepository.fetchUserUsingNBS(remoteUser, user)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(listUser -> {
+                        var targetUser = listUser.stream()
+                                .filter(u -> u.getUid().equals(uid))
+                                .findAny()
+                                .orElse(null);
+                        this.remoteUser.setValue(Result.Success(targetUser));
+                    }, t -> this.remoteUser.setValue(Result.Fail(R.string.error_connect_server_fail))));
         }
     }
 }
