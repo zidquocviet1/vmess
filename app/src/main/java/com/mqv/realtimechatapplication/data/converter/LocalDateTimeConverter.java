@@ -1,4 +1,4 @@
-package com.mqv.realtimechatapplication.data;
+package com.mqv.realtimechatapplication.data.converter;
 
 import androidx.room.TypeConverter;
 
