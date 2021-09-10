@@ -4,11 +4,9 @@ package com.mqv.realtimechatapplication.di;
 import android.content.Context;
 
 import androidx.room.Room;
-import androidx.room.RoomDatabase;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.mqv.realtimechatapplication.data.MyDatabase;
+import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.util.Const;
 
 import javax.inject.Singleton;
@@ -28,5 +26,11 @@ public class DatabaseModule {
         return Room.databaseBuilder(context, MyDatabase.class, Const.DATABASE_NAME)
                 .fallbackToDestructiveMigration()
                 .build();
+    }
+
+    @Provides
+    @Singleton
+    public UserDao provideUserDao(MyDatabase db){
+        return db.getUserDao();
     }
 }
