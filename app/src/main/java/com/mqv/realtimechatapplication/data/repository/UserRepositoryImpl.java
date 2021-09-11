@@ -73,6 +73,26 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void editUser(@NonNull User updateUser,
+                         @NonNull FirebaseUser user,
+                         Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                         Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.editRemoteUser(
+                                Const.PREFIX_TOKEN + token,
+                                Const.DEFAULT_AUTHORIZER,
+                                updateUser));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
     public Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                                     @NonNull FirebaseUser user) {
         var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();
@@ -159,7 +179,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Completable insertUser(User user) {
+    public Completable addUserToDb(User user) {
         return userDao.save(user);
     }
 }

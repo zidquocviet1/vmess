@@ -9,6 +9,7 @@ import io.reactivex.rxjava3.core.Observable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Response;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -44,4 +45,9 @@ public interface UserService {
                                                          @Header(Const.AUTHORIZER) String authorizer,
                                                          @Part("type") RequestBody type,
                                                          @Part MultipartBody.Part part);
+
+    @PUT(value = "user/edit")
+    Observable<ApiResponse<User>> editRemoteUser(@Header(Const.AUTHORIZATION) String token,
+                                                 @Header(Const.AUTHORIZER) String authorizer,
+                                                 @Body User updateUser);
 }
