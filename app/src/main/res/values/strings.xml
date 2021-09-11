@@ -16,6 +16,7 @@
     <string name="label_dark_mode">Dark Mode</string>
     <string name="label_user_information">Me</string>
     <string name="label_edit_profile">Edit Profile</string>
+    <string name="label_edit_bio">Edit Bio</string>
     <string name="label_select_photo">Select Photo</string>
     <string name="label_preview_profile_picture">Preview Profile Picture</string>
     <string name="label_preview_cover_photo">Preview Cover Photo</string>
@@ -113,6 +114,7 @@
     <string name="msg_verification_code_not_available">Your verification code is not available right now.</string>
     <string name="msg_cancel_uploading_photo">Cancel uploading a new photo successfully</string>
     <string name="msg_cancel_creating_account">Cancel creating a new account</string>
+    <string name="msg_update_user_info_successfully">Update the user information successfully</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -123,6 +125,7 @@
     <string name="error_connect_server_fail">Can\'t connect to the server. Please try again</string>
     <string name="error_create_user_not_complete">Create a new account not completed</string>
     <string name="error_auth_email_in_use">The email address already in use by another account</string>
+    <string name="error_user_id_not_found">The current user is not exists</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -130,6 +133,7 @@
     <string name="prompt_password">Password</string>
     <string name="prompt_display_name">Display Name</string>
     <string name="prompt_re_password">Re-password</string>
+    <string name="prompt_bio_length">%1$d / %2$d</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_email_exists">This email has exist</string>
