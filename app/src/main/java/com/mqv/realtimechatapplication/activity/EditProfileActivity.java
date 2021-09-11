@@ -9,12 +9,10 @@ import android.provider.Settings;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.UiThread;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.Glide;
 import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseUser;
@@ -22,6 +20,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditProfileViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityEditProfileBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.adapter.UserLinkAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.preference.UserDetailsPreferenceFragment;
 import com.mqv.realtimechatapplication.util.Const;
@@ -31,7 +30,7 @@ import java.util.Arrays;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, ActivityEditProfileBinding>
+public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, ActivityEditProfileBinding>
         implements View.OnClickListener {
     public static final String EXTRA_PROFILE_PICTURE = "profile_picture";
     public static final String EXTRA_COVER_PHOTO = "cover_photo";
@@ -71,8 +70,6 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.frame_layout_preferences_details, new UserDetailsPreferenceFragment())
                 .commit();
-
-        registerFirebaseUserChange(this::showUserUi);
     }
 
     @Override
@@ -88,7 +85,19 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
 
     @Override
     public void setupObserver() {
-        mViewModel.getFirebaseUser().observe(this, this::showUserUi);
+        mViewModel.getFirebaseUser().observe(this, this::refreshFirebaseUserUi);
+
+        mViewModel.getLoggedInUser().observe(this, this::showLoggedInUserUi);
+    }
+
+    @Override
+    public void refreshFirebaseUserUi(FirebaseUser user) {
+        runOnUiThread(() -> showFirebaseUserUi(user));
+    }
+
+    @Override
+    public void refreshLoggedInUserUi(User user) {
+        runOnUiThread(() -> showLoggedInUserUi(user));
     }
 
     @Override
@@ -104,7 +113,7 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
             extraSelected = EXTRA_COVER_PHOTO;
             checkPermission();
         } else if (id == mBinding.buttonEditBio.getId()) {
-
+            startActivity(EditProfileBioActivity.class);
         } else if (id == mBinding.buttonEditDetails.getId()) {
             startActivity(EditDetailsActivity.class);
         } else if (id == mBinding.buttonEditLinks.getId()) {
@@ -112,45 +121,46 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
         }
     }
 
-    @UiThread
-    private void showUserUi(FirebaseUser user){
-        runOnUiThread(() -> {
-            if (user == null) return;
+    private void showLoggedInUserUi(User user) {
+        if (user == null) return;
 
-            //TODO: reformat the url in the develop mode
-            var uri = user.getPhotoUrl();
-            if (uri != null) {
-                var url = uri.toString().replace("localhost", Const.BASE_IP);
+        mBinding.textBio.setText(user.getBiographic());
 
-                var placeHolder = new CircularProgressDrawable(this);
-                placeHolder.setStrokeWidth(5f);
-                placeHolder.setCenterRadius(30f);
-                placeHolder.start();
+        var links = Arrays.asList("mqviet12", "github.com/zidquocviet1");
+        var adapter = new UserLinkAdapter(this);
+        adapter.submitList(links);
 
-                GlideApp.with(getApplicationContext())
-                        .load(url)
-                        .centerCrop()
-                        .placeholder(placeHolder)
-                        .error(R.drawable.ic_round_account)
-                        .signature(new ObjectKey(url))
-                        .into(mBinding.imageAvatar);
-            }
+        mBinding.recyclerViewLinks.setAdapter(adapter);
+        mBinding.recyclerViewLinks.setNestedScrollingEnabled(false);
+        mBinding.recyclerViewLinks.setHasFixedSize(false);
+        mBinding.recyclerViewLinks.setLayoutManager(new LinearLayoutManager(this));
+    }
 
-            var links = Arrays.asList("mqviet12", "github.com/zidquocviet1");
-            var adapter = new UserLinkAdapter(this);
-            adapter.submitList(links);
+    private void showFirebaseUserUi(FirebaseUser user) {
+        if (user == null) return;
 
-            mBinding.recyclerViewLinks.setAdapter(adapter);
-            mBinding.recyclerViewLinks.setNestedScrollingEnabled(false);
-            mBinding.recyclerViewLinks.setHasFixedSize(false);
-            mBinding.recyclerViewLinks.setLayoutManager(new LinearLayoutManager(this));
-        });
+        //TODO: reformat the url in the develop mode
+        var uri = user.getPhotoUrl();
+        var url= uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+
+        var placeHolder = new CircularProgressDrawable(this);
+        placeHolder.setStrokeWidth(5f);
+        placeHolder.setCenterRadius(30f);
+        placeHolder.start();
+
+        GlideApp.with(getApplicationContext())
+                .load(url)
+                .centerCrop()
+                .placeholder(placeHolder)
+                .error(R.drawable.ic_round_account)
+                .signature(new ObjectKey(url))
+                .into(mBinding.imageAvatar);
     }
 
     private void startActivity(Class<?> target) {
         var intent = new Intent(getApplicationContext(), target);
 
-        if (target == SelectPhotoActivity.class){
+        if (target == SelectPhotoActivity.class) {
             intent.putExtra(EXTRA_CHANGE_PHOTO, extraSelected);
         }
 
@@ -175,14 +185,13 @@ public class EditProfileActivity extends ToolbarActivity<EditProfileViewModel, A
                     .setTitle("Request Permission")
                     .setMessage("Grant a permission to allow this app access a gallery")
                     .setNegativeButton("Not now", null)
-                    .setPositiveButton("Continue", (dialog, which) -> {
-                        permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
-                            if (result) {
-                                startActivity(SelectPhotoActivity.class);
-                                isOpenSelectPhotoPending = false;
-                            }
-                        });
-                    })
+                    .setPositiveButton("Continue", (dialog, which) ->
+                            permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
+                        if (result) {
+                            startActivity(SelectPhotoActivity.class);
+                            isOpenSelectPhotoPending = false;
+                        }
+                    }))
                     .create().show();
         } else {
             /*
