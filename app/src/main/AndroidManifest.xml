@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.mqv.realtimechatapplication">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -28,22 +29,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.EditProfileBioActivity"
+            android:exported="true"
+            android:screenOrientation="sensorPortrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".activity.preferences.PreferenceAccountSettingsActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.account.settings" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <activity
             android:name=".activity.PreviewEditPhotoActivity"
             android:configChanges="orientation|keyboardHidden"
             android:exported="true"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activity.EditDetailsActivity"
-            android:exported="true"/>
+            android:exported="true" />
         <activity
             android:name=".activity.SelectPhotoActivity"
             android:exported="true" />
