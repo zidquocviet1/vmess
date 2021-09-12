@@ -23,21 +23,4 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/included_appbar"
         app:navGraph="@navigation/nav_user_edit_details" />
-
-    <!--    <View-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="1dp"-->
-    <!--        android:layout_marginBottom="@dimen/all_margin_top_soft"-->
-    <!--        android:background="?colorControlHighlight"-->
-    <!--        app:layout_constraintBottom_toTopOf="@id/button_save" />-->
-
-    <!--    <com.google.android.material.button.MaterialButton-->
-    <!--        android:id="@+id/button_save"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginStart="@dimen/all_margin"-->
-    <!--        android:layout_marginEnd="@dimen/all_margin"-->
-    <!--        android:layout_marginBottom="@dimen/all_margin_top_soft"-->
-    <!--        android:text="@string/action_save"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent" />-->
 </androidx.constraintlayout.widget.ConstraintLayout>
