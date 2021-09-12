@@ -5,6 +5,8 @@
     <dimen name="all_padding_default">8dp</dimen>
     <dimen name="all_padding_common">16dp</dimen>
 
+    <integer name="normal_anim_duration">350</integer>
+
     <dimen name="text_input_corner_radius">24dp</dimen>
     <dimen name="text_title_size">24sp</dimen>
     <dimen name="text_appearance_margin">10dp</dimen>
