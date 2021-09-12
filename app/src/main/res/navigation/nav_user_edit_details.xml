@@ -25,6 +25,7 @@
 
         <action
             android:id="@+id/action_editGender"
+            app:popUpTo="@id/userEditDetailsFragment"
             app:destination="@id/editGenderFragment">
             <argument
                 android:name="genderKey"
