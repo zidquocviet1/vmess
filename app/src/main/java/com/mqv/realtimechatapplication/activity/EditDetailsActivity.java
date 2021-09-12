@@ -39,6 +39,10 @@ public class EditDetailsActivity extends ToolbarActivity<EditDetailsViewModel, A
         var navController = Objects.requireNonNull(navHostFragment).getNavController();
         var toolbar = (Toolbar) findViewById(R.id.toolbar);
         NavigationUI.setupWithNavController(toolbar, navController);
+
+        navController.addOnDestinationChangedListener((navController1, navDestination, bundle) -> {
+            toolbar.setNavigationIcon(null);
+        });
     }
 
     @Override
