@@ -1,66 +1,118 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.NavOptions;
+import androidx.navigation.Navigation;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.EditDetailsActivity;
+import com.mqv.realtimechatapplication.databinding.FragmentEditDisplayNameBinding;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link EditDisplayNameFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.Objects;
+
 public class EditDisplayNameFragment extends Fragment {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private FragmentEditDisplayNameBinding mBinding;
+    private NavController navController;
+    private static final int MAX_NAME_LENGTH = 30;
 
     public EditDisplayNameFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment EditDisplayNameFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static EditDisplayNameFragment newInstance(String param1, String param2) {
-        EditDisplayNameFragment fragment = new EditDisplayNameFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_edit_display_name, container, false);
+        mBinding = FragmentEditDisplayNameBinding.inflate(inflater, container, false);
+        return mBinding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        navController = Navigation.findNavController(view);
+
+        var editDisplayName = Objects.requireNonNull(mBinding.textLayoutDisplayName.getEditText());
+        var currentName = EditDisplayNameFragmentArgs.fromBundle(getArguments()).getDisplayName();
+        editDisplayName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                mBinding.includedBottom.buttonBottom.setEnabled(s.length() != 0);
+                mBinding.textLayoutDisplayName.setHelperText(getString(R.string.prompt_bio_length, s.length(), MAX_NAME_LENGTH));
+                if (s.length() == 0){
+                    mBinding.textLayoutDisplayName.setError(getString(R.string.invalid_display_name));
+                }
+            }
+        });
+        editDisplayName.setText(currentName);
+
+        mBinding.includedBottom.buttonBottom.setOnClickListener(v -> {
+            var newName = editDisplayName.getText().toString().trim();
+
+            // Return to EditProfile screen when new name are the same with old name
+            if (currentName.equals(newName)) {
+                navigateToEditProfile();
+                return;
+            }
+
+            var firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (firebaseUser != null) {
+                showLoadingUi(true);
+
+                var request = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(newName).build();
+
+                firebaseUser.updateProfile(request)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                showLoadingUi(false);
+
+                                Toast.makeText(requireContext(), "Update display name successfully", Toast.LENGTH_SHORT).show();
+
+                                ((EditDetailsActivity) requireActivity()).reloadFirebaseUser();
+
+                                navigateToEditProfile();
+                            } else {
+                                showLoadingUi(false);
+
+                                Toast.makeText(requireContext(), "Update display name failure", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        });
+    }
+
+    private void navigateToEditProfile() {
+        var navOptions = new NavOptions.Builder().setPopUpTo(R.id.userEditDetailsFragment, true).build();
+        navController.navigate(R.id.editDisplayNameFragment, null, navOptions);
+        ((EditDetailsActivity) requireActivity()).onBackPressed();
+    }
+
+    private void showLoadingUi(boolean isLoading) {
+        mBinding.loading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        mBinding.includedBottom.buttonBottom.setEnabled(!isLoading);
     }
 }
