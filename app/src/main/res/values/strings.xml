@@ -36,6 +36,12 @@
     <string name="title_login_with_google">Login with google</string>
     <string name="title_display_name">Display Name</string>
     <string name="title_gender">Gender</string>
+    <string name="title_male">Male</string>
+    <string name="title_female">Female</string>
+    <string name="title_non_binary">Non-binary</string>
+    <string name="title_transgender">Transgender</string>
+    <string name="title_intersex">Intersex</string>
+    <string name="title_prefer_not_to_say">Prefer not to say</string>
     <string name="title_biography">Biography</string>
     <string name="title_relationship">Relationship</string>
     <string name="title_birthday">Birthday</string>
@@ -115,6 +121,7 @@
     <string name="msg_cancel_uploading_photo">Cancel uploading a new photo successfully</string>
     <string name="msg_cancel_creating_account">Cancel creating a new account</string>
     <string name="msg_update_user_info_successfully">Update the user information successfully</string>
+    <string name="msg_gender_field_policy">Check here to public this field to everyone</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
