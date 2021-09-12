@@ -140,12 +140,16 @@
 
             <TextView
                 android:id="@+id/text_bio"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="XII \nCS Student"
-                android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_margin"
+                android:textAlignment="center"
+                android:text="XII \nMQV Twelve"
+                android:maxLength="255"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@id/button_edit_bio"
+                app:layout_constraintStart_toStartOf="@id/text_title_bio"
                 app:layout_constraintTop_toBottomOf="@id/text_title_bio" />
 
             <View
