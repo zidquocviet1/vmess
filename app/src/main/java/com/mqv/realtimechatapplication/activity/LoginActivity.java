@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.LoginViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityLoginBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
@@ -91,7 +92,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
             } else if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
                 setLoadingUi(false);
 
-                Toast.makeText(this, R.string.msg_login_successfully, Toast.LENGTH_SHORT).show();
+                LoggedInUserManager.getInstance().setLoggedInUser(loginResult.getSuccess());
 
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
@@ -168,19 +169,6 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         } else if (id == mBinding.imageLoginFacebook.getId()) {
 
         } else if (id == mBinding.imageLoginGoogle.getId()) {
-            var firebaseUser = mAuth.getCurrentUser();
-
-            if (firebaseUser != null) {
-                firebaseUser.getIdToken(true)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                var result = task.getResult();
-                                if (result != null) {
-                                    mViewModel.fetchCustomUserInfo("Bearer " + result.getToken());
-                                }
-                            }
-                        });
-            }
         }
     }
 }

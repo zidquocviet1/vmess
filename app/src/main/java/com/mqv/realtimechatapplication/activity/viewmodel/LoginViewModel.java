@@ -3,19 +3,22 @@ package com.mqv.realtimechatapplication.activity.viewmodel;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
-import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.validator.LoginForm;
 import com.mqv.realtimechatapplication.ui.validator.LoginFormValidator;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
-import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.Objects;
@@ -30,22 +33,20 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 @HiltViewModel
 public class LoginViewModel extends ViewModel {
     private final MutableLiveData<LoginRegisterValidationResult> loginValidationResult = new MutableLiveData<>();
-    private final MutableLiveData<Result<Boolean>> loginResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
     private final CompositeDisposable cd = new CompositeDisposable();
     private final LoginRepository loginRepository;
-    private final UserRepository userRepository;
 
     @Inject
-    public LoginViewModel(LoginRepository loginRepository, UserRepository repository) {
+    public LoginViewModel(LoginRepository loginRepository) {
         this.loginRepository = loginRepository;
-        this.userRepository = repository;
     }
 
     public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
         return loginValidationResult;
     }
 
-    public LiveData<Result<Boolean>> getLoginResult() {
+    public LiveData<Result<User>> getLoginResult() {
         return loginResult;
     }
 
@@ -60,32 +61,42 @@ public class LoginViewModel extends ViewModel {
 
                         if (result != null) {
                             var user = Objects.requireNonNull(result.getUser());
-                            addUser(user.getUid());
+                            loginWithUidAndToken(user);
                         }
                     } else {
-                        new Handler(Looper.getMainLooper()).postDelayed(() ->
-                                loginResult.setValue(Result.Fail(R.string.msg_login_failed)), 1500);
+                        var e = task.getException();
+
+                        if (e instanceof FirebaseNetworkException){
+                            new Handler(Looper.getMainLooper()).postDelayed(() ->
+                                    loginResult.setValue(Result.Fail(R.string.error_network_connection)), 1500);
+                        }else if (e instanceof FirebaseAuthInvalidCredentialsException){
+                            new Handler(Looper.getMainLooper()).postDelayed(() ->
+                                    loginResult.setValue(Result.Fail(R.string.msg_login_failed)), 1500);
+                        }
                     }
                 });
     }
 
-    private void addUser(String uid) {
-        cd.add(userRepository.addUser(uid)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> {
-                    var code = response.code();
+    private void loginWithUidAndToken(@NonNull FirebaseUser user) {
+        loginRepository.loginWithUidAndToken(user, observable ->
+                cd.add(observable.observeOn(AndroidSchedulers.mainThread())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(response -> {
+                            var code = response.getStatusCode();
 
-                    if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_NO_CONTENT){
-                        loginResult.setValue(Result.Success(true));
-                    }else if (code == HttpURLConnection.HTTP_UNAUTHORIZED){
-                        FirebaseAuth.getInstance().signOut();
-                        loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
-                    }
-                }, t -> {
-                    FirebaseAuth.getInstance().signOut();
-                    loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
-                }));
+                            if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
+                                loginResult.setValue(Result.Success(response.getSuccess()));
+                            } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                FirebaseAuth.getInstance().signOut();
+                                loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                            }
+                        }, t -> {
+                            FirebaseAuth.getInstance().signOut();
+                            loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
+                        })), e -> {
+            FirebaseAuth.getInstance().signOut();
+            loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
+        });
     }
 
     public void loginDataChanged(String username, String password) {
@@ -96,19 +107,6 @@ public class LoginViewModel extends ViewModel {
                 .apply(form);
 
         loginValidationResult.setValue(result);
-    }
-
-    public void fetchCustomUserInfo(String token) {
-        cd.add(loginRepository.fetchCustomUserInfo(token)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(response -> {
-                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                        var user = response.getSuccess();
-
-                        Logging.show("Hello from Spring Boot");
-                    }
-                }, Throwable::printStackTrace));
     }
 
     @Override
