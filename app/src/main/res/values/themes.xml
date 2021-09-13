@@ -132,4 +132,12 @@
         <item name="boxStrokeWidthFocused">1dp</item>
         <item name="boxStrokeWidth">1dp</item>
     </style>
+
+    <style name="CustomMaterialRadioButton" parent="">
+        <item name="android:button">@null</item>
+        <item name="android:drawableEnd">@drawable/background_radio_button_selector</item>
+        <item name="android:paddingStart">@dimen/all_padding_common</item>
+        <item name="android:paddingEnd">@dimen/all_padding_common</item>
+        <item name="android:background">?selectableItemBackground</item>
+    </style>
 </resources>
