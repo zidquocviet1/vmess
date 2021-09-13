@@ -7,11 +7,11 @@ import com.mqv.realtimechatapplication.network.model.Gender;
 public class GenderConverter {
     @TypeConverter
     public int fromGender(Gender gender){
-        return gender.getKey();
+        return gender == null ? -1 : gender.getKey();
     }
 
     @TypeConverter
     public Gender toGender(int key){
-        return Gender.getGenderByKey(key);
+        return key == -1 ? null : Gender.getGenderByKey(key);
     }
 }
