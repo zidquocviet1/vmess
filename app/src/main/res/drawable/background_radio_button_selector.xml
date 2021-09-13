@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="@color/purple_500"
+        android:drawable="@drawable/ic_radio_button_checked"
+        android:state_checked="true" >
+        <color android:color="@color/purple_500"/>
+    </item>
+    <item android:alpha="0.38" android:color="@color/purple_500" android:drawable="@drawable/ic_radio_button_unchecked" android:state_enabled="false" />
+    <item android:color="@color/purple_500"
+        android:drawable="@drawable/ic_radio_button_unchecked">
+        <color android:color="@color/purple_500"/>
+    </item>
+</selector>
