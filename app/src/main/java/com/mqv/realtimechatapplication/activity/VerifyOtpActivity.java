@@ -9,7 +9,6 @@ import android.text.Editable;
 import android.text.Html;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -28,6 +27,7 @@ import com.google.firebase.auth.PhoneAuthProvider;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.VerifyOtpViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityVerifyOtpBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
@@ -50,6 +50,7 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
     private Timer timer;
     private Snackbar mSnackbar;
     private static final int PERIOD = 1000;
+    private boolean isTimeOut;
 
     @Override
     public void binding() {
@@ -86,15 +87,18 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
         mViewModel.getOtpCodeFormState().observe(this, state -> mBinding.buttonVerify.setEnabled(state.isValid()));
 
         mViewModel.getTimeOut().observe(this, value -> {
-            if (value >= 0){
+            if (value >= 0) {
+                isTimeOut = false;
                 timeOut = value;
 
                 mBinding.textTitle.setText(Html.fromHtml(getString(R.string.msg_verify_otp_title_dummy,
                         value / PERIOD),
-                                Html.FROM_HTML_MODE_COMPACT));
+                        Html.FROM_HTML_MODE_COMPACT));
 
-                if (value == 0){
-                    var snackBarDuration = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE?
+                if (value == 0) {
+                    isTimeOut = true;
+
+                    var snackBarDuration = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE ?
                             Snackbar.LENGTH_SHORT : Snackbar.LENGTH_INDEFINITE;
 
                     mSnackbar = Snackbar.make(mBinding.constraintLayoutMain,
@@ -106,19 +110,22 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
             }
         });
 
-        mViewModel.getAddUserStatus().observe(this, result -> {
+        mViewModel.getLoginResult().observe(this, result -> {
             if (result == null) return;
 
-            if (result.getStatus() == NetworkStatus.SUCCESS){
-                // Update UI
+            showLoadingUi(result.getStatus() == NetworkStatus.LOADING);
+
+            if (result.getStatus() == NetworkStatus.SUCCESS) {
+                LoggedInUserManager.getInstance().setLoggedInUser(result.getSuccess());
+
                 var intent = new Intent(VerifyOtpActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
                 finish();
-            }else if (result.getStatus() == NetworkStatus.ERROR){
+            } else if (result.getStatus() == NetworkStatus.ERROR) {
                 FirebaseAuth.getInstance().signOut();
 
-                Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -126,7 +133,12 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
     @Override
     public void onClick(View v) {
         var id = v.getId();
-        if (id == mBinding.buttonVerify.getId()){
+        if (id == mBinding.buttonVerify.getId()) {
+            if (isTimeOut) {
+                Toast.makeText(this, R.string.msg_verification_code_not_available, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             var code = editText1.getText().toString()
                     + editText2.getText().toString()
                     + editText3.getText().toString()
@@ -140,13 +152,18 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
             mBinding.buttonVerify.setEnabled(false);
             mBinding.textErrorVerifyCode.setVisibility(View.GONE);
 
-            signInWithPhoneAuthCredential(credential);
-        }else if (id == mBinding.textResend.getId()){
+            mViewModel.loginWithPhoneAuthCredential(this, credential);
+        } else if (id == mBinding.textResend.getId()) {
             resendCode();
         }
     }
 
-    private void countDownTimeOut(){
+    private void showLoadingUi(boolean isLoading) {
+        mBinding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        mBinding.buttonVerify.setEnabled(!isLoading);
+    }
+
+    private void countDownTimeOut() {
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -164,41 +181,13 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
         }, 0, PERIOD);
     }
 
-    private void restartCountDown(){
+    private void restartCountDown() {
         mViewModel.timeOutChanged(Const.PHONE_AUTH_TIME_OUT * 1000);
         timer.cancel();
         countDownTimeOut();
     }
 
-    private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        var result = task.getResult();
-
-                        if (result != null){
-                            var user = result.getUser();
-                            if (user != null)
-                                mViewModel.addUser(user.getUid());
-                        }
-                    } else {
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            mBinding.progressBarLoading.setVisibility(View.GONE);
-                            mBinding.buttonVerify.setEnabled(true);
-
-                            // Sign in failed, display a message and update the UI
-                            Log.w("TAC", "signInWithCredential:failure", task.getException());
-
-                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                                // The verification code entered was invalid
-                                mBinding.textErrorVerifyCode.setVisibility(View.VISIBLE);
-                            }
-                        }, 1500);
-                    }
-                });
-    }
-
-    private void resendCode(){
+    private void resendCode() {
         if (mSnackbar != null) mSnackbar.dismiss();
         mBinding.progressBarLoading.setVisibility(View.VISIBLE);
 
@@ -209,7 +198,7 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
                 .setCallbacks(new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(@NonNull PhoneAuthCredential phoneAuthCredential) {
-                        signInWithPhoneAuthCredential(phoneAuthCredential);
+                        mViewModel.loginWithPhoneAuthCredential(VerifyOtpActivity.this, phoneAuthCredential);
                     }
 
                     @Override
@@ -266,10 +255,10 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
         mBinding.buttonVerify.setOnClickListener(this);
     }
 
-    private class GenericTextWatcher implements TextWatcher{
+    private class GenericTextWatcher implements TextWatcher {
         private final EditText prev, current, next;
 
-        public GenericTextWatcher(EditText prev, EditText current, EditText next){
+        public GenericTextWatcher(EditText prev, EditText current, EditText next) {
             this.prev = prev;
             this.current = current;
             this.next = next;
@@ -292,12 +281,12 @@ public class VerifyOtpActivity extends BaseActivity<VerifyOtpViewModel, Activity
                     editText5.getText().toString(),
                     editText6.getText().toString());
 
-            if (TextUtils.isEmpty(s) && prev != null){
+            if (TextUtils.isEmpty(s) && prev != null) {
                 prev.requestFocus();
 
                 mIMM.showSoftInput(prev, InputMethodManager.SHOW_IMPLICIT);
                 return;
-            }else if (TextUtils.isEmpty(s) && prev == null)
+            } else if (TextUtils.isEmpty(s) && prev == null)
                 return;
 
             if (next != null)
