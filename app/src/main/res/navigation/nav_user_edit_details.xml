@@ -13,10 +13,10 @@
         <action
             android:id="@+id/action_editDisplayNameFragment"
             app:destination="@id/editDisplayNameFragment"
-            app:enterAnim="@anim/nav_default_enter_anim"
-            app:exitAnim="@anim/nav_default_exit_anim"
-            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
-            app:popExitAnim="@anim/nav_default_pop_exit_anim">
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right">
             <argument
                 android:name="displayName"
                 android:defaultValue='""'
@@ -25,13 +25,24 @@
 
         <action
             android:id="@+id/action_editGender"
-            app:popUpTo="@id/userEditDetailsFragment"
-            app:destination="@id/editGenderFragment">
+            app:destination="@id/editGenderFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right"
+            app:popUpTo="@id/userEditDetailsFragment">
             <argument
                 android:name="genderKey"
                 android:defaultValue="-1"
                 app:argType="integer" />
         </action>
+        <action
+            android:id="@+id/action_editBirthday"
+            app:destination="@id/editBirthdayFragment"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right" />
     </fragment>
 
     <fragment
@@ -55,4 +66,9 @@
             android:defaultValue="-1"
             app:argType="integer" />
     </fragment>
+    <fragment
+        android:id="@+id/editBirthdayFragment"
+        android:name="com.mqv.realtimechatapplication.ui.fragment.EditBirthdayFragment"
+        android:label="@string/title_change_birthday"
+        tools:layout="@layout/fragment_edit_birthday" />
 </navigation>
