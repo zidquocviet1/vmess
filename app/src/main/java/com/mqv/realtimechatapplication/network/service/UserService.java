@@ -1,6 +1,5 @@
 package com.mqv.realtimechatapplication.network.service;
 
-import com.mqv.realtimechatapplication.data.model.LoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.util.Const;
@@ -22,13 +21,12 @@ import retrofit2.http.Query;
 
 public interface UserService {
     @FormUrlEncoded
-    @POST(value = "/login")
-    Observable<ApiResponse<LoggedInUser>> login(@Field("username") String username,
-                                                @Field("password") String password);
-
-    @FormUrlEncoded
     @POST(value = "user/add")
     Observable<Response<String>> addUser(@Field("uid") String uid);
+
+    @POST(value = "user/login")
+    Observable<ApiResponse<User>> loginWithToken(@Header(Const.AUTHORIZATION) String token,
+                                                 @Header(Const.AUTHORIZER) String authorizer);
 
     @GET(value = "user/info")
     Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
