@@ -41,11 +41,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Observable<Response<String>> addUser(String uid) {
-        return userService.addUser(uid);
-    }
-
-    @Override
     public void fetchUserFromRemote(User remoteUser,
                                     @NonNull FirebaseUser user,
                                     @NonNull Consumer<Observable<ApiResponse<User>>> callback) {

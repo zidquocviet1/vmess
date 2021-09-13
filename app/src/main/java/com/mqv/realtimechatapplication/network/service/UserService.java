@@ -20,10 +20,6 @@ import retrofit2.http.Part;
 import retrofit2.http.Query;
 
 public interface UserService {
-    @FormUrlEncoded
-    @POST(value = "user/add")
-    Observable<Response<String>> addUser(@Field("uid") String uid);
-
     @POST(value = "user/login")
     Observable<ApiResponse<User>> loginWithToken(@Header(Const.AUTHORIZATION) String token,
                                                  @Header(Const.AUTHORIZER) String authorizer);
