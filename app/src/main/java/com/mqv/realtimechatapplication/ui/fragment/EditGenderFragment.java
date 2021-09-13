@@ -111,6 +111,8 @@ public class EditGenderFragment extends BaseFragment<EditDetailsViewModel, Fragm
 
                 navigateToEditProfile();
 
+                mViewModel.resetUpdateResult();
+
                 Toast.makeText(requireContext(), R.string.msg_update_user_info_successfully, Toast.LENGTH_SHORT).show();
             } else if (status == NetworkStatus.ERROR) {
                 Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
