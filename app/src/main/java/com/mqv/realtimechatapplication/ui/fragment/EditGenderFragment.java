@@ -74,12 +74,16 @@ public class EditGenderFragment extends BaseFragment<EditDetailsViewModel, Fragm
 
         mBinding.includedButton.buttonBottom.setOnClickListener(v -> {
             var checkedId = mBinding.radioGroupGender.getCheckedRadioButtonId();
+
+            if (checkedId == -1){
+                navigateToEditProfile();
+                return;
+            }
+
             var newGenderKey = radioToKey.get(checkedId);
 
             if (currentKey == newGenderKey) {
-                var navOptions = new NavOptions.Builder().setPopUpTo(R.id.userEditDetailsFragment, true).build();
-                navController.navigate(R.id.editGenderFragment, null, navOptions);
-                requireActivity().onBackPressed();
+                navigateToEditProfile();
             } else {
                 mViewModel.updateUserGender(Gender.getGenderByKey(newGenderKey));
             }
@@ -105,9 +109,7 @@ public class EditGenderFragment extends BaseFragment<EditDetailsViewModel, Fragm
             if (status == NetworkStatus.SUCCESS) {
                 ((EditDetailsActivity) requireActivity()).updateLoggedInUser(result.getSuccess());
 
-                var navOptions = new NavOptions.Builder().setPopUpTo(R.id.userEditDetailsFragment, true).build();
-                navController.navigate(R.id.editGenderFragment, null, navOptions);
-                requireActivity().onBackPressed();
+                navigateToEditProfile();
 
                 Toast.makeText(requireContext(), R.string.msg_update_user_info_successfully, Toast.LENGTH_SHORT).show();
             } else if (status == NetworkStatus.ERROR) {
@@ -120,5 +122,11 @@ public class EditGenderFragment extends BaseFragment<EditDetailsViewModel, Fragm
     public void onDestroy() {
         super.onDestroy();
         mViewModel.resetUpdateResult();
+    }
+
+    private void navigateToEditProfile() {
+        var navOptions = new NavOptions.Builder().setPopUpTo(R.id.userEditDetailsFragment, true).build();
+        navController.navigate(R.id.editGenderFragment, null, navOptions);
+        requireActivity().onBackPressed();
     }
 }
