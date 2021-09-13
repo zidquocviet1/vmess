@@ -1,7 +1,6 @@
 package com.mqv.realtimechatapplication.di;
 
 import com.mqv.realtimechatapplication.data.dao.UserDao;
-import com.mqv.realtimechatapplication.data.datasource.LoginDataSource;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
@@ -24,8 +23,8 @@ import dagger.hilt.components.SingletonComponent;
 public class RepositoryModule {
     @Provides
     @Singleton
-    public LoginRepository provideLoginRes(LoginDataSource dataSource){
-        return new LoginRepositoryImpl(dataSource);
+    public LoginRepository provideLoginRes(UserService service){
+        return new LoginRepositoryImpl(service);
     }
 
     @Provides
