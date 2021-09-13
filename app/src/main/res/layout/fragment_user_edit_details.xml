@@ -76,8 +76,7 @@
                 android:id="@+id/edit_text_gender"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:inputType="text"
-                android:maxLength="50"
+                android:focusable="false"
                 android:maxLines="1"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp" />
@@ -120,6 +119,7 @@
                 android:id="@+id/edit_text_current_address"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="false"
                 android:inputType="text"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp" />
@@ -140,6 +140,7 @@
                 android:id="@+id/edit_text_come_from"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="false"
                 android:inputType="text"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp" />
@@ -180,6 +181,7 @@
                 android:id="@+id/edit_text_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="false"
                 android:inputType="text"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp" />
