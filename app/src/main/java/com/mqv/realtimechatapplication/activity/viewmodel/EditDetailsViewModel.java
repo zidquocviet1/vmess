@@ -54,6 +54,14 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
         });
     }
 
+    public LiveData<LocalDateTime> getBirthday() {
+        return Transformations.map(getLoggedInUser(), user -> {
+            if (user == null || user.getBirthday() == null)
+                return null;
+            return user.getBirthday();
+        });
+    }
+
     public LiveData<Result<User>> getUpdateResult() {
         return updateResult;
     }
