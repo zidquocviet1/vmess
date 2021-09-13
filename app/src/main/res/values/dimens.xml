@@ -4,6 +4,7 @@
     <dimen name="all_margin_top_soft">6dp</dimen>
     <dimen name="all_padding_default">8dp</dimen>
     <dimen name="all_padding_common">16dp</dimen>
+    <dimen name="all_padding_common_negative">-16dp</dimen>
 
     <integer name="normal_anim_duration">350</integer>
 
