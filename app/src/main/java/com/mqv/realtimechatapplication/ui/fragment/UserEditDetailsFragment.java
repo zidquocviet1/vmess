@@ -12,7 +12,6 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditDetailsViewModel;
 import com.mqv.realtimechatapplication.databinding.FragmentUserEditDetailsBinding;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -20,10 +19,15 @@ import com.mqv.realtimechatapplication.network.model.User;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
-public class UserEditDetailsFragment extends BaseFragment<EditDetailsViewModel, FragmentUserEditDetailsBinding> implements View.OnClickListener {
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class UserEditDetailsFragment extends BaseFragment<EditDetailsViewModel, FragmentUserEditDetailsBinding>
+        implements View.OnClickListener {
     private EditText edtName, edtGender, edtBirthday, edtCurrentAddress, edtFrom;
     private NavController navController;
-    private static final DateTimeFormatter NORMAL_FORMATTER = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+    private String currentDisplayName;
+    public static final DateTimeFormatter NORMAL_FORMATTER = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
 
     public UserEditDetailsFragment() {
         // Required empty public constructor
@@ -70,6 +74,8 @@ public class UserEditDetailsFragment extends BaseFragment<EditDetailsViewModel, 
         mViewModel.getFirebaseUser().observe(requireActivity(), this::showFirebaseUserUi);
 
         mViewModel.getLoggedInUser().observe(requireActivity(), this::showLoggedInUserUi);
+
+        mViewModel.getDisplayName().observe(requireActivity(), name -> currentDisplayName = name);
     }
 
     private void showFirebaseUserUi(FirebaseUser user){
@@ -84,14 +90,28 @@ public class UserEditDetailsFragment extends BaseFragment<EditDetailsViewModel, 
         edtGender.setText(user.getGender() != null ? user.getGender().getValue() : "");
         edtCurrentAddress.setText("Not yet handled");
         edtFrom.setText("Not yet handled");
-        edtBirthday.setText(user.getGender() != null ? user.getBirthday().format(NORMAL_FORMATTER) : "");
+        edtBirthday.setText(user.getBirthday() != null ? user.getBirthday().format(NORMAL_FORMATTER) : "");
     }
 
     @Override
     public void onClick(View v) {
         var id = v.getId();
         if (id == edtName.getId()){
-            navController.navigate(R.id.action_userEditDetailsFragment_to_editDisplayNameFragment);
+            var editDisplayNameAction =
+                    UserEditDetailsFragmentDirections.actionEditDisplayNameFragment();
+            editDisplayNameAction.setDisplayName(currentDisplayName);
+            navController.navigate(editDisplayNameAction);
+        }else if (id == edtGender.getId()){
+            var editGenderAction = UserEditDetailsFragmentDirections.actionEditGender();
+            /*
+            * Why we do not use the Enum Safe Args?
+            * Because the Nav Component does not allow the null Enum value. So we must change it to Integer and get it by key itself
+            * */
+//            editGenderAction.setGenderKey(1);
+            navController.navigate(editGenderAction);
+        }else if (id == edtBirthday.getId()){
+            var editBirthdayAction = UserEditDetailsFragmentDirections.actionEditBirthday();
+            navController.navigate(editBirthdayAction);
         }
     }
 }
