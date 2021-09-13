@@ -52,6 +52,7 @@
     <string name="title_explain_details">Details you select will be public and won\'t post to News Feed.</string>
     <string name="title_email_address">E-mail Address</string>
     <string name="title_registration">Registration</string>
+    <string name="title_change_birthday">Change Birthday</string>
 
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
@@ -133,6 +134,8 @@
     <string name="error_create_user_not_complete">Create a new account not completed</string>
     <string name="error_auth_email_in_use">The email address already in use by another account</string>
     <string name="error_user_id_not_found">The current user is not exists</string>
+    <string name="error_network_connection">A network error (such as timeout, interrupted connection or unreachable host) has occurred.</string>
+    <string name="error_unknown">Unknown error</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
