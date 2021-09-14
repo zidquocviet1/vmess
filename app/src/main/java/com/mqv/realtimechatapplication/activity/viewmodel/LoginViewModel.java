@@ -66,10 +66,10 @@ public class LoginViewModel extends ViewModel {
                     } else {
                         var e = task.getException();
 
-                        if (e instanceof FirebaseNetworkException){
+                        if (e instanceof FirebaseNetworkException) {
                             new Handler(Looper.getMainLooper()).postDelayed(() ->
                                     loginResult.setValue(Result.Fail(R.string.error_network_connection)), 1500);
-                        }else if (e instanceof FirebaseAuthInvalidCredentialsException){
+                        } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
                             new Handler(Looper.getMainLooper()).postDelayed(() ->
                                     loginResult.setValue(Result.Fail(R.string.msg_login_failed)), 1500);
                         }
@@ -85,18 +85,21 @@ public class LoginViewModel extends ViewModel {
                             var code = response.getStatusCode();
 
                             if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
-                                loginResult.setValue(Result.Success(response.getSuccess()));
+                                saveLoggedInUser(response.getSuccess());
                             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                FirebaseAuth.getInstance().signOut();
                                 loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
                             }
-                        }, t -> {
-                            FirebaseAuth.getInstance().signOut();
-                            loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
-                        })), e -> {
-            FirebaseAuth.getInstance().signOut();
-            loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
-        });
+                        }, t -> loginResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                e -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)));
+    }
+
+    private void saveLoggedInUser(User user) {
+        cd.add(loginRepository.saveLoggedInUser(user)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> loginResult.setValue(Result.Success(user)),
+                        t -> loginResult.setValue(null))
+        );
     }
 
     public void loginDataChanged(String username, String password) {

@@ -16,7 +16,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.LoginViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityLoginBinding;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
@@ -28,7 +27,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBinding> implements View.OnClickListener {
-    private FirebaseAuth mAuth;
     private static final String STATE_EMAIL = "email";
     private static final String STATE_PASSWORD = "password";
     private EditText edtEmail, edtPassword;
@@ -52,9 +50,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
         setupEvent();
 
-        mAuth = FirebaseAuth.getInstance();
-
-        if (inState != null){
+        if (inState != null) {
             edtEmail.setText(inState.getString(STATE_EMAIL));
             edtPassword.setText(inState.getString(STATE_PASSWORD));
         }
@@ -87,18 +83,15 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         mViewModel.getLoginResult().observe(this, loginResult -> {
             if (loginResult == null) return;
 
-            if (loginResult.getStatus() == NetworkStatus.LOADING) {
-                setLoadingUi(true);
-            } else if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
-                setLoadingUi(false);
+            setLoadingUi(loginResult.getStatus() == NetworkStatus.LOADING);
 
+            if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
                 LoggedInUserManager.getInstance().setLoggedInUser(loginResult.getSuccess());
 
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
-            } else {
-                setLoadingUi(false);
-
+            } else if (loginResult.getStatus() == NetworkStatus.ERROR) {
+                FirebaseAuth.getInstance().signOut();
                 Toast.makeText(this, loginResult.getError(), Toast.LENGTH_SHORT).show();
             }
         });

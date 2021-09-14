@@ -3,6 +3,7 @@ package com.mqv.realtimechatapplication.data.repository;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.service.UserService;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 
 /**
@@ -23,10 +25,12 @@ public class LoginRepositoryImpl implements LoginRepository {
     // If user credentials will be cached in local storage, it is recommended it be encrypted
     // @see https://developer.android.com/training/articles/keystore
     private final UserService service;
+    private final UserDao userDao;
 
     @Inject
-    public LoginRepositoryImpl(UserService service) {
+    public LoginRepositoryImpl(UserService service, UserDao userDao) {
         this.service = service;
+        this.userDao = userDao;
     }
 
     @Override
@@ -46,5 +50,10 @@ public class LoginRepositoryImpl implements LoginRepository {
                         onAuthError.accept(task.getException());
                     }
                 });
+    }
+
+    @Override
+    public Completable saveLoggedInUser(User user) {
+        return userDao.save(user);
     }
 }
