@@ -13,6 +13,7 @@ import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -26,7 +27,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import retrofit2.Response;
 
 public class UserRepositoryImpl implements UserRepository {
     private final UserService userService;
@@ -100,12 +100,15 @@ public class UserRepositoryImpl implements UserRepository {
 
             @Override
             protected Boolean shouldFetch(@Nullable List<User> data) {
-                return data == null ||
-                        data.isEmpty() ||
-                        (data.stream()
-                                .filter(u -> u.getUid().equals(uid))
-                                .findFirst()
-                                .orElse(null) == null);
+                if (data == null || data.isEmpty())
+                    return true;
+
+                var user = data.stream()
+                        .filter(u -> u.getUid().equals(uid))
+                        .findFirst()
+                        .orElse(null);
+
+                return (user == null) || (user.getAccessedDate().plusMinutes(10L).compareTo(LocalDateTime.now()) <= 0);
             }
 
             @Override
