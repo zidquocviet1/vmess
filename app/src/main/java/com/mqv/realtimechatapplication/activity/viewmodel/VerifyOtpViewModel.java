@@ -20,6 +20,7 @@ import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.validator.OtpCodeFormState;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
 
@@ -100,9 +101,9 @@ public class VerifyOtpViewModel extends ViewModel {
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 // The verification code entered was invalid
                                 loginResult.setValue(Result.Fail(R.string.error_verification_code_incorrect));
-                            }else if (task.getException() instanceof FirebaseNetworkException){
+                            } else if (task.getException() instanceof FirebaseNetworkException) {
                                 loginResult.setValue(Result.Fail(R.string.error_network_connection));
-                            }else{
+                            } else {
                                 loginResult.setValue(Result.Fail(R.string.error_unknown));
                             }
                         }, 1500);
@@ -123,7 +124,7 @@ public class VerifyOtpViewModel extends ViewModel {
         var code = response.getStatusCode();
 
         if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
-            loginResult.setValue(Result.Success(response.getSuccess()));
+            saveLoggedInUser(response.getSuccess());
         } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
             loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
         }
@@ -131,6 +132,18 @@ public class VerifyOtpViewModel extends ViewModel {
 
     private void handleLoginError(Throwable e) {
         loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
+    }
+
+    private void saveLoggedInUser(User user) {
+        cd.add(loginRepository.saveLoggedInUser(user)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
+                            Logging.show("Save logged in user successfully");
+                            loginResult.setValue(Result.Success(user));
+                        },
+                        t -> loginResult.setValue(null))
+        );
     }
 
     @Override
