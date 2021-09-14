@@ -21,6 +21,7 @@
     <string name="label_preview_profile_picture">Preview Profile Picture</string>
     <string name="label_preview_cover_photo">Preview Cover Photo</string>
     <string name="label_edit_details">Edit Details</string>
+    <string name="label_edit_links">Edit Links</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
@@ -101,6 +102,7 @@
     </array>
     <string name="action_uploading_photo">Uploading photo…</string>
     <string name="action_creating">Creating account</string>
+    <string name="action_add_social_link">Add Social Link</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
