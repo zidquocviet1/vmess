@@ -23,8 +23,8 @@ import dagger.hilt.components.SingletonComponent;
 public class RepositoryModule {
     @Provides
     @Singleton
-    public LoginRepository provideLoginRes(UserService service){
-        return new LoginRepositoryImpl(service);
+    public LoginRepository provideLoginRes(UserService service, UserDao userDao){
+        return new LoginRepositoryImpl(service, userDao);
     }
 
     @Provides
