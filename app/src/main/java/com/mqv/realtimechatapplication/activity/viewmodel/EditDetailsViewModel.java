@@ -74,7 +74,11 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
                     user.getUid(),
                     user.getBiographic(),
                     newGender,
-                    user.getBirthday());
+                    user.getBirthday(),
+                    user.getCreatedDate(),
+                    user.getModifiedDate(),
+                    user.getAccessedDate(),
+                    user.getSocialLinks());
 
             updateRemoteUser(updateUserRequest);
         }
@@ -96,7 +100,11 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
                     user.getUid(),
                     user.getBiographic(),
                     user.getGender(),
-                    newBirthday);
+                    newBirthday,
+                    user.getCreatedDate(),
+                    user.getModifiedDate(),
+                    user.getAccessedDate(),
+                    user.getSocialLinks());
 
             updateRemoteUser(updateUserRequest);
         }
