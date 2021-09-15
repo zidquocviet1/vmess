@@ -29,6 +29,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.EditProfileLinkActivity"
+            android:exported="true"
+            android:screenOrientation="sensorPortrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".activity.EditProfileBioActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
