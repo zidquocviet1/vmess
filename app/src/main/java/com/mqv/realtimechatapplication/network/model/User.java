@@ -2,9 +2,13 @@ package com.mqv.realtimechatapplication.network.model;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity(tableName = "user")
 public class User {
@@ -14,7 +18,29 @@ public class User {
     private String biographic;
     private Gender gender;
     private LocalDateTime birthday;
+    @SerializedName("created_date")
+    private LocalDateTime createdDate;
+    @SerializedName("modified_date")
+    private LocalDateTime modifiedDate;
+    @SerializedName("accessed_date")
+    private LocalDateTime accessedDate;
+    @SerializedName("social_links")
+    private List<UserSocialLink> socialLinks;
 
+    public User(@NonNull String uid, String biographic, Gender gender,
+                LocalDateTime birthday, LocalDateTime createdDate,
+                LocalDateTime modifiedDate, LocalDateTime accessedDate, List<UserSocialLink> socialLinks) {
+        this.uid = uid;
+        this.biographic = biographic;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.createdDate = createdDate;
+        this.modifiedDate = modifiedDate;
+        this.accessedDate = accessedDate;
+        this.socialLinks = socialLinks;
+    }
+
+    @Ignore
     public User(@NonNull String uid, String biographic, Gender gender, LocalDateTime birthday) {
         this.uid = uid;
         this.biographic = biographic;
@@ -53,5 +79,37 @@ public class User {
 
     public void setBirthday(LocalDateTime birthday) {
         this.birthday = birthday;
+    }
+
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public LocalDateTime getModifiedDate() {
+        return modifiedDate;
+    }
+
+    public void setModifiedDate(LocalDateTime modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
+
+    public LocalDateTime getAccessedDate() {
+        return accessedDate;
+    }
+
+    public void setAccessedDate(LocalDateTime accessedDate) {
+        this.accessedDate = accessedDate;
+    }
+
+    public List<UserSocialLink> getSocialLinks() {
+        return socialLinks;
+    }
+
+    public void setSocialLinks(List<UserSocialLink> socialLinks) {
+        this.socialLinks = socialLinks;
     }
 }
