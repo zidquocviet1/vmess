@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.EditProfileLinkActivity;
 import com.mqv.realtimechatapplication.databinding.FragmentSocialLinkListDialogBinding;
 import com.mqv.realtimechatapplication.databinding.ItemFragmentSocialLinkListDialogBinding;
 
@@ -21,13 +22,16 @@ import java.util.Locale;
 
 public class SocialLinkListDialogFragment extends BottomSheetDialogFragment {
     private static final String ARG_LIST_LINK = "item_count";
+    private static final String ARG_CALLER = "caller";
     private FragmentSocialLinkListDialogBinding binding;
     private OnSocialPlatformSelected mCallback;
+    private String mCaller;
 
-    public static SocialLinkListDialogFragment newInstance(ArrayList<String> socialTypeString) {
+    public static SocialLinkListDialogFragment newInstance(ArrayList<String> socialTypeString, String caller) {
         final SocialLinkListDialogFragment fragment = new SocialLinkListDialogFragment();
         final Bundle args = new Bundle();
         args.putStringArrayList(ARG_LIST_LINK, socialTypeString);
+        args.putString(ARG_CALLER, caller);
         fragment.setArguments(args);
         return fragment;
     }
@@ -35,15 +39,15 @@ public class SocialLinkListDialogFragment extends BottomSheetDialogFragment {
     public interface OnSocialPlatformSelected {
         void onPlatformSelected(int position);
 
-        void onDialogFinish();
+        void onPlatformSelectedFromAdapter(int position);
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if (context instanceof OnSocialPlatformSelected){
+        if (context instanceof OnSocialPlatformSelected) {
             mCallback = (OnSocialPlatformSelected) context;
-        }else{
+        } else {
             throw new RuntimeException(context + "must implement OnSocialPlatformSelected");
         }
     }
@@ -58,8 +62,13 @@ public class SocialLinkListDialogFragment extends BottomSheetDialogFragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        binding.list.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.list.setAdapter(new UserSocialLinkAdapter(getArguments().getStringArrayList(ARG_LIST_LINK)));
+        if (getArguments() != null) {
+            mCaller = getArguments().getString(ARG_CALLER);
+            binding.list.setLayoutManager(new LinearLayoutManager(getContext()));
+            binding.list.setAdapter(new UserSocialLinkAdapter(getArguments().getStringArrayList(ARG_LIST_LINK)));
+        } else {
+            throw new RuntimeException("Can't open the modal bottom sheet dialog without the arguments. User newInstance() instead");
+        }
     }
 
     @Override
@@ -113,10 +122,12 @@ public class SocialLinkListDialogFragment extends BottomSheetDialogFragment {
             holder.bindTo(links.get(position));
             holder.itemView.setOnClickListener(v -> {
                 if (mCallback != null) {
-                    mCallback.onPlatformSelected(position);
-
+                    if (mCaller.equals(EditProfileLinkActivity.ARG_ACTIVITY_CALLER)) {
+                        mCallback.onPlatformSelected(position);
+                    } else if (mCaller.equals(EditProfileLinkActivity.ARG_ADAPTER_CALLER)) {
+                        mCallback.onPlatformSelectedFromAdapter(position);
+                    }
                     dismiss();
-                    mCallback.onDialogFinish();
                 }
             });
         }
