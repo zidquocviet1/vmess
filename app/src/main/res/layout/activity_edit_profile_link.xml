@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/all_margin_top_soft"
                 android:backgroundTint="@drawable/background_base_button_color_selector"
-                android:text="@string/action_select_a_service"
+                android:text="@string/action_select_platform"
                 android:textAllCaps="false"
                 android:textColor="@color/text_color"
                 android:visibility="gone"
@@ -96,6 +96,7 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:enabled="false"
                 android:layout_below="@id/button_select_service"
                 android:hint="@string/prompt_account_name"
                 android:visibility="gone">
