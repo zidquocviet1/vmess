@@ -7,7 +7,7 @@ import com.mqv.realtimechatapplication.network.model.SocialType;
 public class SocialTypeConverter {
     @TypeConverter
     public SocialType toSocialType(int key) {
-        return key == -1 ? null : SocialType.getGenderByKey(key);
+        return key == -1 ? null : SocialType.getSocialTypeByKey(key);
     }
 
     @TypeConverter
