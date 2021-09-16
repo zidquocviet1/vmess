@@ -21,11 +21,10 @@ import com.mqv.realtimechatapplication.activity.viewmodel.EditProfileViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityEditProfileBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.network.model.User;
+import com.mqv.realtimechatapplication.network.model.UserSocialLink;
 import com.mqv.realtimechatapplication.ui.adapter.UserLinkAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.preference.UserDetailsPreferenceFragment;
 import com.mqv.realtimechatapplication.util.Const;
-
-import java.util.Arrays;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -117,7 +116,7 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
         } else if (id == mBinding.buttonEditDetails.getId()) {
             startActivity(EditDetailsActivity.class);
         } else if (id == mBinding.buttonEditLinks.getId()) {
-
+            startActivity(EditProfileLinkActivity.class);
         }
     }
 
@@ -126,9 +125,9 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
 
         mBinding.textBio.setText(user.getBiographic());
 
-        var links = Arrays.asList("mqviet12", "github.com/zidquocviet1");
-        var adapter = new UserLinkAdapter(this);
-        adapter.submitList(links);
+        var adapter = new UserLinkAdapter(this, user.getSocialLinks(), R.layout.item_preference_content, UserLinkAdapter.ACTION.VIEW);
+        adapter.submitList(user.getSocialLinks());
+        adapter.setOnSocialLinkViewClickListener(this::handleSocialLinkClicked);
 
         mBinding.recyclerViewLinks.setAdapter(adapter);
         mBinding.recyclerViewLinks.setNestedScrollingEnabled(false);
@@ -141,7 +140,7 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
 
         //TODO: reformat the url in the develop mode
         var uri = user.getPhotoUrl();
-        var url= uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
 
         var placeHolder = new CircularProgressDrawable(this);
         placeHolder.setStrokeWidth(5f);
@@ -155,6 +154,24 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
                 .error(R.drawable.ic_round_account)
                 .signature(new ObjectKey(url))
                 .into(mBinding.imageAvatar);
+    }
+
+    private void handleSocialLinkClicked(UserSocialLink socialLink) {
+        var type = socialLink.getType();
+
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
+
+        try {
+            if (getPackageManager().getPackageInfo(type.getPackageName(), 0) != null) {
+                // http://stackoverflow.com/questions/21505941/intent-to-open-instagram-user-profile-on-android
+                intent.setData(Uri.parse(type.getUrl() + socialLink.getAccountName()));
+                intent.setPackage(type.getPackageName());
+                startActivity(intent);
+            }
+        } catch (PackageManager.NameNotFoundException ignored) {
+            intent.setData(Uri.parse(type.getUrl() + socialLink.getAccountName()));
+            startActivity(intent);
+        }
     }
 
     private void startActivity(Class<?> target) {
@@ -187,11 +204,11 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
                     .setNegativeButton("Not now", null)
                     .setPositiveButton("Continue", (dialog, which) ->
                             permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
-                        if (result) {
-                            startActivity(SelectPhotoActivity.class);
-                            isOpenSelectPhotoPending = false;
-                        }
-                    }))
+                                if (result) {
+                                    startActivity(SelectPhotoActivity.class);
+                                    isOpenSelectPhotoPending = false;
+                                }
+                            }))
                     .create().show();
         } else {
             /*
