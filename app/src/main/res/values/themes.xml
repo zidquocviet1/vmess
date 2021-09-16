@@ -140,4 +140,9 @@
         <item name="android:paddingEnd">@dimen/all_padding_common</item>
         <item name="android:background">?selectableItemBackground</item>
     </style>
+
+    <style name="UserSocialLinkListDialogFragment" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+        <item name="cornerSizeTopLeft">@dimen/button_corner_radius_soft</item>
+        <item name="cornerSizeTopRight">@dimen/button_corner_radius_soft</item>
+    </style>
 </resources>
