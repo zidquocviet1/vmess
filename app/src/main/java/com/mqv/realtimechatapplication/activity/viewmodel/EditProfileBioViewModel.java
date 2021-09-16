@@ -2,7 +2,6 @@ package com.mqv.realtimechatapplication.activity.viewmodel;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
@@ -49,7 +48,14 @@ public class EditProfileBioViewModel extends CurrentUserViewModel {
         var firebaseUser = getFirebaseUser().getValue();
 
         if (user != null && firebaseUser != null) {
-            var updateUserRequest = new User(user.getUid(), bio, user.getGender(), user.getBirthday());
+            var updateUserRequest = new User(user.getUid(),
+                    bio,
+                    user.getGender(),
+                    user.getBirthday(),
+                    user.getCreatedDate(),
+                    user.getModifiedDate(),
+                    user.getAccessedDate(),
+                    user.getSocialLinks());
             updateResult.setValue(Result.Loading());
             userRepository.editUser(updateUserRequest,
                     firebaseUser,
