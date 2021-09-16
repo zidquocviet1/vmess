@@ -14,6 +14,7 @@ import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -30,13 +31,17 @@ public class EditProfileLinkViewModel extends CurrentUserViewModel {
     public EditProfileLinkViewModel(UserRepository userRepository) {
         this.userRepository = userRepository;
         loadLoggedInUser();
+        loadFirebaseUser();
     }
 
     public LiveData<List<UserSocialLink>> getUserSocialLinkList() {
         return Transformations.map(getLoggedInUser(), user -> {
             if (user == null || user.getSocialLinks() == null)
                 return null;
-            return user.getSocialLinks();
+            return user.getSocialLinks()
+                    .stream()
+                    .map(u -> new UserSocialLink(u.getId(), u.getType(), u.getAccountName()))
+                    .collect(Collectors.toList());
         });
     }
 
