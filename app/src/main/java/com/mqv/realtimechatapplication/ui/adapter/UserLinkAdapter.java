@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
@@ -94,11 +95,13 @@ public class UserLinkAdapter extends ListAdapter<UserSocialLink, RecyclerView.Vi
         notifyItemRangeChanged(position, mMutableList.size());
     }
 
-    public void editItem(int position, SocialType newType, String newAccountName) {
+    public void editItem(int position, @Nullable SocialType newType, String newAccountName) {
         var editItem = mMutableList.get(position);
         editItem.setId(System.currentTimeMillis());
         editItem.setAccountName(newAccountName);
-        editItem.setType(newType);
+
+        if (newType != null)
+            editItem.setType(newType);
 
         notifyItemChanged(position);
     }
@@ -173,7 +176,7 @@ public class UserLinkAdapter extends ListAdapter<UserSocialLink, RecyclerView.Vi
 
                     var accountName = v.getText().toString().trim();
 
-                    if (!TextUtils.isEmpty(accountName) && mEditSocialType != null) {
+                    if (!TextUtils.isEmpty(accountName)) {
                         editItem(position, mEditSocialType, accountName);
                     }
                     return true;
