@@ -141,6 +141,7 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
         mAdapter = new UserLinkAdapter(this, mNewLinkList, R.layout.item_individual_social_link, UserLinkAdapter.ACTION.EDIT);
         mBinding.recyclerEditLink.setAdapter(mAdapter);
         mBinding.recyclerEditLink.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mBinding.recyclerEditLink.setHasFixedSize(false);
     }
 
     @Override

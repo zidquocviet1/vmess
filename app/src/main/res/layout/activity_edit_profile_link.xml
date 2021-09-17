@@ -96,8 +96,8 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false"
                 android:layout_below="@id/button_select_service"
+                android:enabled="false"
                 android:hint="@string/prompt_account_name"
                 android:visibility="gone">
 
@@ -119,9 +119,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_edit_link"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="@dimen/all_padding_common_negative"
             android:layout_marginEnd="@dimen/all_padding_common_negative"
-            android:fadingEdge="none" />
+            android:overScrollMode="never" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
