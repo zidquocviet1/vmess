@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -95,6 +96,7 @@ public class ConversationAdapter extends ListAdapter<Conversation, ConversationA
             GlideApp.with(context)
                     .load(Const.DUMMIES_IMAGES_URL[randomIndex])
                     .placeholder(placeHolder)
+                    .error(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .signature(new ObjectKey(Const.DUMMIES_IMAGES_URL[randomIndex]))

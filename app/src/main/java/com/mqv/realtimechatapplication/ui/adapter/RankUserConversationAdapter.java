@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
@@ -67,9 +69,17 @@ public class RankUserConversationAdapter extends ListAdapter<RemoteUser, RankUse
 
             var randomIndex = new Random().nextInt(Const.DUMMIES_IMAGES_URL.length);
 
+            var placeHolder = new CircularProgressDrawable(context);
+            placeHolder.setStrokeWidth(5f);
+            placeHolder.setCenterRadius(30f);
+            placeHolder.start();
+
+
             Glide.with(context)
                     .load(Const.DUMMIES_IMAGES_URL[randomIndex])
                     .centerCrop()
+                    .placeholder(placeHolder)
+                    .error(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .signature(new ObjectKey(Const.DUMMIES_IMAGES_URL[randomIndex]))
                     .into(mRankBinding.imageAvatar);
