@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
-import retrofit2.Response;
 
 public interface UserRepository {
     Completable addUserToDb(User user);
@@ -32,4 +31,6 @@ public interface UserRepository {
                                              FirebaseUser user);
 
     Completable updateHistoryUserDisplayName(String uid, String newName);
+
+    Completable signOutHistoryUser(String uid);
 }

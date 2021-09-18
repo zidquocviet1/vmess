@@ -189,4 +189,9 @@ public class UserRepositoryImpl implements UserRepository {
     public Completable updateHistoryUserDisplayName(String uid, String newName) {
         return historyUserDao.updateDisplayName(uid, newName);
     }
+
+    @Override
+    public Completable signOutHistoryUser(String uid) {
+        return historyUserDao.signOut(uid);
+    }
 }
