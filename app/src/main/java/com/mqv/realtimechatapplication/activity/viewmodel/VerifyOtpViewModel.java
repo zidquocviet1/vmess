@@ -15,14 +15,17 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.validator.OtpCodeFormState;
-import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.net.HttpURLConnection;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -116,15 +119,15 @@ public class VerifyOtpViewModel extends ViewModel {
                         cd.add(observable
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(this::handleLoginSuccess, this::handleLoginError)),
+                                .subscribe(response -> handleLoginSuccess(response, user), this::handleLoginError)),
                 e -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)));
     }
 
-    private void handleLoginSuccess(ApiResponse<User> response) {
+    private void handleLoginSuccess(ApiResponse<User> response, FirebaseUser user) {
         var code = response.getStatusCode();
 
         if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
-            saveLoggedInUser(response.getSuccess());
+            saveLoggedInUser(response.getSuccess(), fetchHistoryUser(user));
         } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
             loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
         }
@@ -134,15 +137,48 @@ public class VerifyOtpViewModel extends ViewModel {
         loginResult.setValue(Result.Fail(R.string.error_connect_server_fail));
     }
 
-    private void saveLoggedInUser(User user) {
-        cd.add(loginRepository.saveLoggedInUser(user)
+    private HistoryLoggedInUser fetchHistoryUser(FirebaseUser user) {
+        var uri = user.getPhotoUrl();
+        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+
+        var signInProvider = user.getProviderData()
+                .stream()
+                .map(userInfo -> {
+                    // TODO: need to check the other sign in methods
+                    var provider = SignInProvider.getSignInProvider(userInfo.getProviderId());
+                    if (provider == SignInProvider.EMAIL) {
+                        provider.setUsername(userInfo.getEmail());
+                    } else if (provider == SignInProvider.PHONE) {
+                        provider.setUsername(user.getPhoneNumber());
+                    }
+                    return provider;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        var historyUserBuilder = new HistoryLoggedInUser.Builder()
+                .setUid(user.getUid())
+                .setDisplayName(user.getDisplayName())
+                .setLogin(true)
+                .setPhotoUrl(url)
+                .setProvider(signInProvider);
+
+        if (signInProvider == SignInProvider.EMAIL) {
+            historyUserBuilder.setEmail(signInProvider.getUsername());
+        } else if (signInProvider == SignInProvider.PHONE) {
+            historyUserBuilder.setPhoneNumber(signInProvider.getUsername());
+        }
+
+        return historyUserBuilder.build();
+    }
+
+    private void saveLoggedInUser(User user, HistoryLoggedInUser historyUser) {
+        cd.add(loginRepository.saveLoggedInUser(user, historyUser)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> {
-                            Logging.show("Save logged in user successfully");
-                            loginResult.setValue(Result.Success(user));
-                        },
-                        t -> loginResult.setValue(null))
+                .subscribe(() -> loginResult.setValue(Result.Success(user)),
+                        t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
     }
 

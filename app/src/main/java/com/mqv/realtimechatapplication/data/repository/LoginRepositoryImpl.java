@@ -3,7 +3,9 @@ package com.mqv.realtimechatapplication.data.repository;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
+import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.service.UserService;
@@ -26,11 +28,13 @@ public class LoginRepositoryImpl implements LoginRepository {
     // @see https://developer.android.com/training/articles/keystore
     private final UserService service;
     private final UserDao userDao;
+    private final HistoryLoggedInUserDao historyUserDao;
 
     @Inject
-    public LoginRepositoryImpl(UserService service, UserDao userDao) {
+    public LoginRepositoryImpl(UserService service, UserDao userDao, HistoryLoggedInUserDao historyUserDao) {
         this.service = service;
         this.userDao = userDao;
+        this.historyUserDao = historyUserDao;
     }
 
     @Override
@@ -53,7 +57,12 @@ public class LoginRepositoryImpl implements LoginRepository {
     }
 
     @Override
-    public Completable saveLoggedInUser(User user) {
-        return userDao.save(user);
+    public Completable saveLoggedInUser(User user, HistoryLoggedInUser historyUser) {
+        return userDao.save(user).andThen(historyUserDao.save(historyUser));
+    }
+
+    @Override
+    public Completable signOutHistoryUser(String uid) {
+        return historyUserDao.signOut(uid);
     }
 }

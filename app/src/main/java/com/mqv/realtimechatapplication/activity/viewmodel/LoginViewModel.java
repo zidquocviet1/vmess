@@ -13,12 +13,15 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.validator.LoginForm;
 import com.mqv.realtimechatapplication.ui.validator.LoginFormValidator;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.net.HttpURLConnection;
 import java.util.Objects;
@@ -79,26 +82,63 @@ public class LoginViewModel extends ViewModel {
 
     private void loginWithUidAndToken(@NonNull FirebaseUser user) {
         loginRepository.loginWithUidAndToken(user, observable ->
-                cd.add(observable.observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(response -> {
-                            var code = response.getStatusCode();
+                        cd.add(observable.observeOn(AndroidSchedulers.mainThread())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(response -> {
+                                    var code = response.getStatusCode();
 
-                            if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
-                                saveLoggedInUser(response.getSuccess());
-                            } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
-                            }
-                        }, t -> loginResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                                    if (code == HttpURLConnection.HTTP_CREATED || code == HttpURLConnection.HTTP_OK) {
+
+                                        saveLoggedInUser(response.getSuccess(), fetchHistoryUser(user));
+                                    } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                        loginResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                    }
+                                }, t -> loginResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
                 e -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)));
     }
 
-    private void saveLoggedInUser(User user) {
-        cd.add(loginRepository.saveLoggedInUser(user)
+    private HistoryLoggedInUser fetchHistoryUser(FirebaseUser user) {
+        var uri = user.getPhotoUrl();
+        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+
+        var signInProvider = user.getProviderData()
+                .stream()
+                .map(userInfo -> {
+                    // TODO: need to check the other sign in methods
+                    var provider = SignInProvider.getSignInProvider(userInfo.getProviderId());
+                    if (provider == SignInProvider.EMAIL) {
+                        provider.setUsername(userInfo.getEmail());
+                    } else if (provider == SignInProvider.PHONE) {
+                        provider.setUsername(user.getPhoneNumber());
+                    }
+                    return provider;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+
+        var historyUserBuilder = new HistoryLoggedInUser.Builder()
+                .setUid(user.getUid())
+                .setDisplayName(user.getDisplayName())
+                .setLogin(true)
+                .setPhotoUrl(url)
+                .setProvider(signInProvider);
+
+        if (signInProvider == SignInProvider.EMAIL) {
+            historyUserBuilder.setEmail(signInProvider.getUsername());
+        } else if (signInProvider == SignInProvider.PHONE) {
+            historyUserBuilder.setPhoneNumber(signInProvider.getUsername());
+        }
+
+        return historyUserBuilder.build();
+    }
+
+    private void saveLoggedInUser(User user, HistoryLoggedInUser historyUser) {
+        cd.add(loginRepository.saveLoggedInUser(user, historyUser)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> loginResult.setValue(Result.Success(user)),
-                        t -> loginResult.setValue(null))
+                        t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
     }
 

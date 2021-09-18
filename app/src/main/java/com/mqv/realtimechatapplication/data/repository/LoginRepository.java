@@ -3,6 +3,7 @@ package com.mqv.realtimechatapplication.data.repository;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 
@@ -16,5 +17,7 @@ public interface LoginRepository {
                               Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
                               Consumer<Exception> onAuthError);
 
-    Completable saveLoggedInUser(User user);
+    Completable saveLoggedInUser(User user, HistoryLoggedInUser historyUser);
+
+    Completable signOutHistoryUser(String uid);
 }
