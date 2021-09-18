@@ -16,7 +16,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.data.repository.RegisterRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
 import com.mqv.realtimechatapplication.ui.validator.RegisterForm;
@@ -24,21 +23,13 @@ import com.mqv.realtimechatapplication.ui.validator.RegisterForm;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.inject.Inject;
-
-import dagger.hilt.android.lifecycle.HiltViewModel;
-
-@HiltViewModel
 public class RegisterViewModel extends ViewModel {
     private final MutableLiveData<LoginRegisterValidationResult> registerValidationResult = new MutableLiveData<>();
     private final MutableLiveData<Result<Integer>> registerResult = new MutableLiveData<>();
-    private final RegisterRepository repository;
     private final ExecutorService registerExecutor = Executors.newSingleThreadExecutor();
     private static final int SIMULATION_LOADING_TIME = 2000;
 
-    @Inject
-    public RegisterViewModel(RegisterRepository registerRepository) {
-        this.repository = registerRepository;
+    public RegisterViewModel() {
     }
 
     public LiveData<LoginRegisterValidationResult> getRegisterValidationResult() {
