@@ -42,7 +42,7 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public UserRepository provideUserRepository(UserService service, UserDao userDao){
-        return new UserRepositoryImpl(service, userDao);
+    public UserRepository provideUserRepository(UserService service, UserDao userDao, HistoryLoggedInUserDao historyLoggedInUserDao){
+        return new UserRepositoryImpl(service, userDao, historyLoggedInUserDao);
     }
 }
