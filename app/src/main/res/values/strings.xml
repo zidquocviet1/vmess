@@ -106,6 +106,7 @@
     <string name="action_add_social_link">Add Social Link</string>
     <string name="action_select_platform">Platform</string>
     <string name="action_remove">Remove</string>
+    <string name="action_create_new_account">Create new account</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
