@@ -36,8 +36,8 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public EditUserPhotoRepository provideEditUserPhotoRes(UserService service){
-        return new EditUserPhotoRepositoryImpl(service);
+    public EditUserPhotoRepository provideEditUserPhotoRes(UserService service, HistoryLoggedInUserDao historyUserDao){
+        return new EditUserPhotoRepositoryImpl(service, historyUserDao);
     }
 
     @Provides
