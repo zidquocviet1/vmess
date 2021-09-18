@@ -6,6 +6,7 @@ import android.content.Context;
 import androidx.room.Room;
 
 import com.mqv.realtimechatapplication.data.MyDatabase;
+import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.util.Const;
 
@@ -32,5 +33,11 @@ public class DatabaseModule {
     @Singleton
     public UserDao provideUserDao(MyDatabase db){
         return db.getUserDao();
+    }
+
+    @Provides
+    @Singleton
+    public HistoryLoggedInUserDao provideHistoryUserDao(MyDatabase db){
+        return db.getHistoryUserDao();
     }
 }
