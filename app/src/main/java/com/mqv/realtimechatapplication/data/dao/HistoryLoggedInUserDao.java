@@ -22,4 +22,10 @@ public interface HistoryLoggedInUserDao {
 
     @Query("UPDATE history_logged_in_user SET is_login = 0 WHERE uid = :uid")
     Completable signOut(String uid);
+
+    @Query("UPDATE history_logged_in_user SET display_name = :newName WHERE uid = :uid")
+    Completable updateDisplayName(String uid, String newName);
+
+    @Query("UPDATE history_logged_in_user SET photo_url = :newUrl WHERE uid = :uid")
+    Completable updatePhotoUrl(String uid, String newUrl);
 }
