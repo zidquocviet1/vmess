@@ -19,10 +19,12 @@
         style="@style/MaterialIconButton"
         android:layout_gravity="center_vertical"
         android:layout_marginStart="@dimen/all_padding_common"
+        android:clickable="false"
         app:icon="@drawable/ic_round_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:rippleColor="@null" />
 
     <TextView
         android:id="@android:id/title"
