@@ -146,4 +146,11 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
                         t -> Logging.show("Insert user fail with id = " + user.getUid()))
         );
     }
+
+    public void updateHistoryUserDisplayName(String uid, String newName) {
+        cd.add(userRepository.updateHistoryUserDisplayName(uid, newName)
+                .subscribeOn(Schedulers.io())
+                .subscribe(() -> Logging.show("Update history user display name successfully"),
+                        Throwable::printStackTrace));
+    }
 }

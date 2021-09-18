@@ -10,7 +10,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
@@ -19,12 +18,15 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.EditDetailsActivity;
+import com.mqv.realtimechatapplication.activity.viewmodel.EditDetailsViewModel;
 import com.mqv.realtimechatapplication.databinding.FragmentEditDisplayNameBinding;
 
 import java.util.Objects;
 
-public class EditDisplayNameFragment extends Fragment {
-    private FragmentEditDisplayNameBinding mBinding;
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
+public class EditDisplayNameFragment extends BaseFragment<EditDetailsViewModel, FragmentEditDisplayNameBinding> {
     private NavController navController;
     private static final int MAX_NAME_LENGTH = 30;
 
@@ -33,10 +35,20 @@ public class EditDisplayNameFragment extends Fragment {
     }
 
     @Override
+    public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
+        mBinding = FragmentEditDisplayNameBinding.inflate(inflater, container, false);
+    }
+
+    @NonNull
+    @Override
+    public Class<EditDetailsViewModel> getViewModelClass() {
+        return EditDetailsViewModel.class;
+    }
+
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mBinding = FragmentEditDisplayNameBinding.inflate(inflater, container, false);
-        return mBinding.getRoot();
+        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
     @Override
@@ -92,6 +104,8 @@ public class EditDisplayNameFragment extends Fragment {
 
                                 Toast.makeText(requireContext(), "Update display name successfully", Toast.LENGTH_SHORT).show();
 
+                                mViewModel.updateHistoryUserDisplayName(firebaseUser.getUid(), newName);
+
                                 ((EditDetailsActivity) requireActivity()).reloadFirebaseUser();
 
                                 navigateToEditProfile();
@@ -103,6 +117,11 @@ public class EditDisplayNameFragment extends Fragment {
                         });
             }
         });
+    }
+
+    @Override
+    public void setupObserver() {
+
     }
 
     private void navigateToEditProfile() {
