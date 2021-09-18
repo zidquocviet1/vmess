@@ -1,14 +1,18 @@
 package com.mqv.realtimechatapplication.activity.viewmodel;
 
+import android.net.Uri;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.data.result.UploadPhotoResult;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
@@ -43,28 +47,28 @@ public class PreviewEditPhotoViewModel extends ViewModel {
         var user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
 
         user.getIdToken(true).addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null){
+            if (task.isSuccessful() && task.getResult() != null) {
                 var token = task.getResult().getToken();
 
                 cd.add(repository.updateProfilePicture(Const.PREFIX_TOKEN + token, "firebase", realFilePath)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(response -> {
-                            if (response.getStatusCode() == HttpURLConnection.HTTP_OK){
+                            if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Success(response.getSuccess()));
-                            }else if (response.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST){
+                            } else if (response.getStatusCode() == HttpURLConnection.HTTP_BAD_REQUEST) {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_update_user_photo));
                             }
                         }, t -> {
-                            if (t instanceof FileNotFoundException){
+                            if (t instanceof FileNotFoundException) {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_file_not_found));
-                            }else if (t instanceof SocketTimeoutException){
+                            } else if (t instanceof SocketTimeoutException) {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_connection_timeout));
-                            } else{
+                            } else {
                                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_update_user_photo));
                             }
                         }));
-            }else{
+            } else {
                 uploadPhotoResult.setValue(UploadPhotoResult.Fail(R.string.error_authentication_fail));
             }
         });
@@ -72,6 +76,16 @@ public class PreviewEditPhotoViewModel extends ViewModel {
 
     public void updateCoverPhoto() {
 
+    }
+
+    public void updateHistoryUserPhotoUrl(FirebaseUser user) {
+        var photoUrl = user.getPhotoUrl() == null ? "" : user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
+
+        cd.add(repository.updateHistoryUserPhotoUrl(user.getUid(), photoUrl)
+                .subscribeOn(Schedulers.io())
+                .subscribe(() -> {
+                    Logging.show("update history logged in user photo url successfully");
+                }, Throwable::printStackTrace));
     }
 
     @Override

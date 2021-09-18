@@ -111,6 +111,9 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
                 mViewModel.updateCoverPhoto();
             }
         });
+
+        registerFirebaseUserChange(firebaseUser ->
+                mViewModel.updateHistoryUserPhotoUrl(firebaseUser));
     }
 
     @Override
