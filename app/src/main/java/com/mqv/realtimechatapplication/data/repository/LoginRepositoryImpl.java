@@ -60,9 +60,4 @@ public class LoginRepositoryImpl implements LoginRepository {
     public Completable saveLoggedInUser(User user, HistoryLoggedInUser historyUser) {
         return userDao.save(user).andThen(historyUserDao.save(historyUser));
     }
-
-    @Override
-    public Completable signOutHistoryUser(String uid) {
-        return historyUserDao.signOut(uid);
-    }
 }

@@ -18,6 +18,4 @@ public interface LoginRepository {
                               Consumer<Exception> onAuthError);
 
     Completable saveLoggedInUser(User user, HistoryLoggedInUser historyUser);
-
-    Completable signOutHistoryUser(String uid);
 }
