@@ -3,7 +3,7 @@ package com.mqv.realtimechatapplication.activity.viewmodel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.UserRepository;
 
 import javax.inject.Inject;
 
@@ -13,12 +13,12 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class AccountSettingViewModel extends CurrentUserViewModel {
-    private final LoginRepository loginRepository;
+    private final UserRepository userRepository;
     private final MutableLiveData<Boolean> signOutStatus = new MutableLiveData<>();
 
     @Inject
-    public AccountSettingViewModel(LoginRepository loginRepository) {
-        this.loginRepository = loginRepository;
+    public AccountSettingViewModel(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public LiveData<Boolean> getSignOutStatus() {
@@ -26,7 +26,7 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
     }
 
     public void signOut(String uid) {
-        cd.add(loginRepository.signOutHistoryUser(uid)
+        cd.add(userRepository.signOutHistoryUser(uid)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> signOutStatus.setValue(true),
