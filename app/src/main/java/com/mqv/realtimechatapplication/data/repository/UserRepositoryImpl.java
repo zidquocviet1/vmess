@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.NetworkBoundResource;
@@ -32,16 +31,12 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class UserRepositoryImpl implements UserRepository {
     private final UserService userService;
     private final UserDao userDao;
-    private final HistoryLoggedInUserDao historyUserDao;
     private final CompositeDisposable cd = new CompositeDisposable();
 
     @Inject
-    public UserRepositoryImpl(UserService userService,
-                              UserDao userDao,
-                              HistoryLoggedInUserDao historyUserDao) {
+    public UserRepositoryImpl(UserService userService, UserDao userDao) {
         this.userService = userService;
         this.userDao = userDao;
-        this.historyUserDao = historyUserDao;
     }
 
     @Override
@@ -183,15 +178,5 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Completable addUserToDb(User user) {
         return userDao.save(user);
-    }
-
-    @Override
-    public Completable updateHistoryUserDisplayName(String uid, String newName) {
-        return historyUserDao.updateDisplayName(uid, newName);
-    }
-
-    @Override
-    public Completable signOutHistoryUser(String uid) {
-        return historyUserDao.signOut(uid);
     }
 }

@@ -29,8 +29,4 @@ public interface UserRepository {
 
     Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                              FirebaseUser user);
-
-    Completable updateHistoryUserDisplayName(String uid, String newName);
-
-    Completable signOutHistoryUser(String uid);
 }
