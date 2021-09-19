@@ -4,6 +4,8 @@ import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepositoryImpl;
+import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
+import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
@@ -34,7 +36,13 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public UserRepository provideUserRepository(UserService service, UserDao userDao, HistoryLoggedInUserDao historyLoggedInUserDao){
-        return new UserRepositoryImpl(service, userDao, historyLoggedInUserDao);
+    public UserRepository provideUserRepository(UserService service, UserDao userDao){
+        return new UserRepositoryImpl(service, userDao);
+    }
+
+    @Provides
+    @Singleton
+    public HistoryLoggedInUserRepository provideHistoryUserRepo(HistoryLoggedInUserDao historyLoggedInUserDao){
+        return new HistoryLoggedInUserRepositoryImpl(historyLoggedInUserDao);
     }
 }
