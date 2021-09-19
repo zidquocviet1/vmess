@@ -7,6 +7,7 @@ import androidx.lifecycle.Transformations;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.Gender;
@@ -25,11 +26,14 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 @HiltViewModel
 public class EditDetailsViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
+    private final HistoryLoggedInUserRepository historyUserRepository;
     private final MutableLiveData<Result<User>> updateResult = new MutableLiveData<>();
 
     @Inject
-    public EditDetailsViewModel(UserRepository userRepository) {
+    public EditDetailsViewModel(UserRepository userRepository, HistoryLoggedInUserRepository historyUserRepository) {
         this.userRepository = userRepository;
+        this.historyUserRepository = historyUserRepository;
+
         loadFirebaseUser();
         loadLoggedInUser();
     }
@@ -148,7 +152,7 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
     }
 
     public void updateHistoryUserDisplayName(String uid, String newName) {
-        cd.add(userRepository.updateHistoryUserDisplayName(uid, newName)
+        cd.add(historyUserRepository.updateDisplayName(uid, newName)
                 .subscribeOn(Schedulers.io())
                 .subscribe(() -> Logging.show("Update history user display name successfully"),
                         Throwable::printStackTrace));
