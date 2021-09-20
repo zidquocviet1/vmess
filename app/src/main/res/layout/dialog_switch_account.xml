@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/all_padding_common">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_input"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/text_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_continue_as"
+            android:textAppearance="?textAppearanceHeadline6"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:text="@string/title_enter_password"
+            android:textAppearance="?textAppearanceBody2"
+            app:layout_constraintStart_toStartOf="@id/text_title"
+            app:layout_constraintTop_toBottomOf="@id/text_title" />
+
+        <EditText
+            android:id="@+id/edit_text_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:autofillHints="password"
+            android:hint="@null"
+            android:inputType="textPassword"
+            app:layout_constraintStart_toStartOf="@id/text_subtitle"
+            app:layout_constraintTop_toBottomOf="@id/text_subtitle" />
+
+        <TextView
+            android:id="@+id/text_forgot_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:background="?selectableItemBackground"
+            android:clickable="true"
+            android:text="@string/msg_forgot_password"
+            android:textAppearance="?textAppearanceOverline"
+            android:textColor="@color/purple_500"
+            app:layout_constraintStart_toStartOf="@id/edit_text_password"
+            app:layout_constraintTop_toBottomOf="@id/edit_text_password" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_done"
+            style="?android:buttonBarPositiveButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:text="@string/action_done"
+            app:layout_constraintEnd_toEndOf="@id/edit_text_password"
+            app:layout_constraintTop_toBottomOf="@id/text_forgot_password" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_cancel"
+            style="?android:buttonBarPositiveButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:text="@string/action_cancel"
+            app:layout_constraintEnd_toStartOf="@id/button_done"
+            app:layout_constraintTop_toBottomOf="@id/text_forgot_password" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
