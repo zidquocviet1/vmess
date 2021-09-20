@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_continue_as"
+        android:textAppearance="?textAppearanceHeadline6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:text="@string/prompt_enter_otp"
+        android:textAppearance="?textAppearanceBody2"
+        app:layout_constraintStart_toStartOf="@id/text_title"
+        app:layout_constraintTop_toBottomOf="@id/text_title" />
+
+    <EditText
+        android:id="@+id/edit_text_otp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:autofillHints="@null"
+        android:hint="@null"
+        android:inputType="number"
+        android:maxLength="6"
+        app:layout_constraintStart_toStartOf="@id/text_subtitle"
+        app:layout_constraintTop_toBottomOf="@id/text_subtitle" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_done"
+        style="?android:buttonBarPositiveButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:text="@string/action_done"
+        app:layout_constraintEnd_toEndOf="@id/edit_text_otp"
+        app:layout_constraintTop_toBottomOf="@id/edit_text_otp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_cancel"
+        style="?android:buttonBarPositiveButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:text="@string/action_cancel"
+        app:layout_constraintEnd_toStartOf="@id/button_done"
+        app:layout_constraintTop_toBottomOf="@id/edit_text_otp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
