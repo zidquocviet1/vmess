@@ -2,9 +2,12 @@ package com.mqv.realtimechatapplication.activity.preferences;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -22,6 +25,7 @@ import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceManageAccountsBinding;
 import com.mqv.realtimechatapplication.databinding.DialogSwitchAccountBinding;
 import com.mqv.realtimechatapplication.ui.adapter.LoggedInUserAdapter;
+import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.ArrayList;
@@ -31,11 +35,13 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class PreferenceManageAccountsActivity extends
-        ToolbarActivity<ManageAccountViewModel, ActivityPreferenceManageAccountsBinding> implements View.OnClickListener {
+        ToolbarActivity<ManageAccountViewModel, ActivityPreferenceManageAccountsBinding> implements View.OnClickListener, TextView.OnEditorActionListener {
     private LoggedInUserAdapter mAdapter;
     private final List<HistoryLoggedInUser> mHistoryUserList = new ArrayList<>();
     private AlertDialog mAlertDialog;
     private DialogSwitchAccountBinding mDialogBinding;
+    private static final int DEFAULT_REQUEST_EMAIL = 1;
+    private static final int DEFAULT_REQUEST_PHONE = 2;
 
     @Override
     public void binding() {
@@ -93,6 +99,9 @@ public class PreferenceManageAccountsActivity extends
                 Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
             }
         });
+
+        mViewModel.getVerifyResult().observe(this, historyLoggedInUser ->
+                showCustomDialog(historyLoggedInUser, DEFAULT_REQUEST_PHONE));
     }
 
     private void showLoadingUi(boolean isLoading) {
@@ -100,6 +109,7 @@ public class PreferenceManageAccountsActivity extends
             if (isLoading) {
                 mDialogBinding.progressBarLoading.setVisibility(View.VISIBLE);
                 mDialogBinding.layoutInput.setVisibility(View.GONE);
+                mDialogBinding.layoutEnterOtp.getRoot().setVisibility(View.GONE);
             } else {
                 mAlertDialog.cancel();
             }
@@ -120,6 +130,10 @@ public class PreferenceManageAccountsActivity extends
 
         if (id == mBinding.includedButton.buttonBottom.getId()) {
             startActivity(RegisterActivity.class);
+        } else if (id == mDialogBinding.textForgotPassword.getId()) {
+            Logging.show("Text forgot on click");
+        } else if (id == mDialogBinding.buttonCancel.getId() || id == mDialogBinding.layoutEnterOtp.buttonCancel.getId()) {
+            mAlertDialog.cancel();
         }
     }
 
@@ -134,14 +148,14 @@ public class PreferenceManageAccountsActivity extends
             var signInProvider = historyUser.getProvider();
 
             if (signInProvider == SignInProvider.EMAIL) {
-                showCustomDialog(historyUser);
+                showCustomDialog(historyUser, DEFAULT_REQUEST_EMAIL);
             } else if (signInProvider == SignInProvider.PHONE) {
-
+                mViewModel.requestVerifyPhoneAuth(this, historyUser);
             }
         }
     }
 
-    private void showCustomDialog(HistoryLoggedInUser historyUser) {
+    private void showCustomDialog(HistoryLoggedInUser historyUser, int request) {
         var view = getLayoutInflater().inflate(R.layout.dialog_switch_account, null, false);
         mDialogBinding = DialogSwitchAccountBinding.bind(view);
 
@@ -150,20 +164,14 @@ public class PreferenceManageAccountsActivity extends
                 .setCancelable(false)
                 .create();
 
-        mDialogBinding.editTextPassword.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_DONE){
-                var imm = getSystemService(InputMethodManager.class);
-                imm.hideSoftInputFromWindow(mDialogBinding.editTextPassword.getWindowToken(), 0);
-                return true;
-            }
-            return false;
-        });
-        mDialogBinding.layoutInput.setVisibility(View.VISIBLE);
-        mDialogBinding.progressBarLoading.setVisibility(View.GONE);
+        /*
+         * Session switch account using email and password
+         * Register all of the event to handle the necessary input
+         * */
+        mDialogBinding.editTextPassword.setOnEditorActionListener(this);
+        mDialogBinding.textForgotPassword.setOnClickListener(this);
+        mDialogBinding.buttonCancel.setOnClickListener(this);
         mDialogBinding.textTitle.setText(getString(R.string.title_continue_as, historyUser.getDisplayName()));
-        mDialogBinding.textForgotPassword.setOnClickListener(v -> {
-
-        });
         mDialogBinding.buttonDone.setOnClickListener(v -> {
             var imm = getSystemService(InputMethodManager.class);
             imm.hideSoftInputFromWindow(mDialogBinding.editTextPassword.getWindowToken(), 0);
@@ -178,7 +186,35 @@ public class PreferenceManageAccountsActivity extends
                 mAlertDialog.cancel();
             }
         });
-        mDialogBinding.buttonCancel.setOnClickListener(v -> mAlertDialog.cancel());
+
+        /*
+         * Register event in the verification phone number session
+         * */
+        mDialogBinding.layoutEnterOtp.editTextOtp.setOnEditorActionListener(this);
+        mDialogBinding.layoutEnterOtp.buttonCancel.setOnClickListener(this);
+        mDialogBinding.layoutEnterOtp.textTitle.setText(getString(R.string.title_continue_as, historyUser.getDisplayName()));
+        mDialogBinding.layoutEnterOtp.buttonDone.setOnClickListener(v -> {
+            var imm = getSystemService(InputMethodManager.class);
+            imm.hideSoftInputFromWindow(mDialogBinding.layoutEnterOtp.editTextOtp.getWindowToken(), 0);
+
+            var verifyCode = mDialogBinding.layoutEnterOtp.editTextOtp.getText().toString().trim();
+            if (!verifyCode.equals("")) {
+                mViewModel.switchAccountWithPhoneNumber(verifyCode);
+            } else {
+                mAlertDialog.cancel();
+            }
+        });
+        /*
+         * Detect which layout should show for user in order to input
+         * */
+        if (request == DEFAULT_REQUEST_EMAIL) {
+            mDialogBinding.layoutInput.setVisibility(View.VISIBLE);
+            mDialogBinding.layoutEnterOtp.getRoot().setVisibility(View.GONE);
+        } else if (request == DEFAULT_REQUEST_PHONE) {
+            mDialogBinding.layoutInput.setVisibility(View.GONE);
+            mDialogBinding.layoutEnterOtp.getRoot().setVisibility(View.VISIBLE);
+        }
+        mDialogBinding.progressBarLoading.setVisibility(View.GONE);
 
         mAlertDialog.show();
     }
@@ -191,5 +227,23 @@ public class PreferenceManageAccountsActivity extends
             mAlertDialog = null;
         }
         mDialogBinding = null;
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        EditText editText;
+
+        if (v.getId() == mDialogBinding.editTextPassword.getId()) {
+            editText = mDialogBinding.editTextPassword;
+        } else {
+            editText = mDialogBinding.layoutEnterOtp.editTextOtp;
+        }
+
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            var imm = getSystemService(InputMethodManager.class);
+            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
+            return true;
+        }
+        return false;
     }
 }
