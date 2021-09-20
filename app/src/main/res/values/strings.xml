@@ -54,6 +54,8 @@
     <string name="title_email_address">E-mail Address</string>
     <string name="title_registration">Registration</string>
     <string name="title_change_birthday">Change Birthday</string>
+    <string name="title_continue_as">Continue as %1$s</string>
+    <string name="title_enter_password">Enter your password to sign into this account</string>
 
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
@@ -102,6 +104,7 @@
     </array>
     <string name="action_uploading_photo">Uploading photo…</string>
     <string name="action_loading">Loading…</string>
+    <string name="action_switching_account">Switching account…</string>
     <string name="action_creating">Creating account</string>
     <string name="action_add_social_link">Add Social Link</string>
     <string name="action_select_platform">Platform</string>
@@ -129,6 +132,7 @@
     <string name="msg_cancel_creating_account">Cancel creating a new account</string>
     <string name="msg_update_user_info_successfully">Update the user information successfully</string>
     <string name="msg_gender_field_policy">Check here to public this field to everyone</string>
+    <string name="msg_current_login_user">The current user is login right now</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -142,6 +146,7 @@
     <string name="error_user_id_not_found">The current user is not exists</string>
     <string name="error_network_connection">A network error (such as timeout, interrupted connection or unreachable host) has occurred.</string>
     <string name="error_unknown">Unknown error</string>
+    <string name="error_too_many_request">Too many requests at the same time. Try again later</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
