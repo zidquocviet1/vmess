@@ -81,7 +81,9 @@
         </activity>
         <activity
             android:name=".activity.preferences.PreferenceManageAccountsActivity"
-            android:exported="true">
+            android:screenOrientation="portrait"
+            android:exported="true"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="com.tac.open.manage.accounts" />
 
