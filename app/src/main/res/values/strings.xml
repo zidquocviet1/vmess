@@ -55,6 +55,7 @@
     <string name="title_registration">Registration</string>
     <string name="title_change_birthday">Change Birthday</string>
     <string name="title_continue_as">Continue as %1$s</string>
+    <string name="title_remove_account">Remove this account?</string>
     <string name="title_enter_password">Enter your password to sign into this account</string>
 
     <string name="title_preference_profile">Profile</string>
@@ -133,6 +134,7 @@
     <string name="msg_update_user_info_successfully">Update the user information successfully</string>
     <string name="msg_gender_field_policy">Check here to public this field to everyone</string>
     <string name="msg_current_login_user">The current user is login right now</string>
+    <string name="msg_remove_history_account">%1$s will need to log in again to use from this device.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
