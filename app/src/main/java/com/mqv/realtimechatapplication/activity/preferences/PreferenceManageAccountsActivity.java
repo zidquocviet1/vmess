@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity.preferences;
 
+import static androidx.recyclerview.widget.ItemTouchHelper.LEFT;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
@@ -10,8 +12,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mqv.realtimechatapplication.R;
@@ -23,6 +28,7 @@ import com.mqv.realtimechatapplication.activity.viewmodel.ManageAccountViewModel
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceManageAccountsBinding;
+import com.mqv.realtimechatapplication.databinding.DialogRemoveItemBinding;
 import com.mqv.realtimechatapplication.databinding.DialogSwitchAccountBinding;
 import com.mqv.realtimechatapplication.ui.adapter.LoggedInUserAdapter;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -35,7 +41,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class PreferenceManageAccountsActivity extends
-        ToolbarActivity<ManageAccountViewModel, ActivityPreferenceManageAccountsBinding> implements View.OnClickListener, TextView.OnEditorActionListener {
+        ToolbarActivity<ManageAccountViewModel, ActivityPreferenceManageAccountsBinding>
+        implements View.OnClickListener, TextView.OnEditorActionListener {
     private LoggedInUserAdapter mAdapter;
     private final List<HistoryLoggedInUser> mHistoryUserList = new ArrayList<>();
     private AlertDialog mAlertDialog;
@@ -120,8 +127,70 @@ public class PreferenceManageAccountsActivity extends
         mAdapter = new LoggedInUserAdapter(this, mHistoryUserList);
         mAdapter.setOnAddAccountClick(v -> startActivity(LoginActivity.class));
         mAdapter.setOnChangeAccountClick(this::handleChangeLoginUser);
+        mAdapter.setOnRemoveUser(user -> mViewModel.deleteHistoryUser(user));
         mBinding.recyclerLoggedInUser.setAdapter(mAdapter);
         mBinding.recyclerLoggedInUser.setLayoutManager(new LinearLayoutManager(this));
+        // add item touch listener here
+        var itemTouchCallback = new ItemTouchHelper.Callback() {
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                var position = viewHolder.getAdapterPosition();
+
+                // check if this is an add account layout or not
+                if ((position + 1) == mHistoryUserList.size())
+                    return 0;
+
+                // if current user is login, disable swipe to remove
+                var item = mHistoryUserList.get(position);
+                if (item.getLogin())
+                    return 0;
+
+                return makeMovementFlags(0, LEFT);
+            }
+
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                var view = getLayoutInflater().inflate(R.layout.dialog_remove_item, null, false);
+                var dialog = new MaterialAlertDialogBuilder(PreferenceManageAccountsActivity.this)
+                        .setView(view)
+                        .setCancelable(false)
+                        .create();
+
+                var binding = DialogRemoveItemBinding.bind(view);
+                var position = viewHolder.getAdapterPosition();
+                var item = mHistoryUserList.get(position);
+
+                binding.textSubtitle.setText(getString(R.string.msg_remove_history_account, item.getDisplayName()));
+                binding.buttonDone.setOnClickListener(v -> {
+                    dialog.cancel();
+                    mAdapter.removeItem(position);
+                    /*
+                     * Force the Recyclerview don't cached any ViewHolder.
+                     * Because we use different ViewTypes. So we need to create a new ViewHolder infinitely
+                     * */
+                    mBinding.recyclerLoggedInUser.getRecycledViewPool().clear();
+                });
+                binding.buttonCancel.setOnClickListener(v -> {
+                    dialog.cancel();
+                    mAdapter.notifyItemChanged(position);
+                });
+
+                dialog.show();
+            }
+
+            @Override
+            public int convertToAbsoluteDirection(int flags, int layoutDirection) {
+                return super.convertToAbsoluteDirection(flags, layoutDirection);
+            }
+        };
+        var itemTouchHelper = new ItemTouchHelper(itemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(mBinding.recyclerLoggedInUser);
     }
 
     @Override
