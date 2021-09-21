@@ -42,4 +42,9 @@ public class HistoryLoggedInUserRepositoryImpl implements HistoryLoggedInUserRep
     public Completable updatePhotoUrl(String uid, String newPhotoUrl) {
         return historyUserDao.updatePhotoUrl(uid, newPhotoUrl);
     }
+
+    @Override
+    public Completable deleteHistoryUser(HistoryLoggedInUser historyUser) {
+        return historyUserDao.delete(historyUser);
+    }
 }

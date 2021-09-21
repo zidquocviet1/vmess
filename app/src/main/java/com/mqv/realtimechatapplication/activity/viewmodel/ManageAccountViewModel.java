@@ -41,6 +41,8 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.CompletableObserver;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -86,6 +88,26 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                     t.printStackTrace();
                     historyUserList.setValue(null);
                 }));
+    }
+
+    public void deleteHistoryUser(HistoryLoggedInUser user) {
+        historyUserRepository.deleteHistoryUser(user)
+                .subscribeOn(Schedulers.newThread())
+                .subscribe(new CompletableObserver() {
+                    @Override
+                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Logging.show("Delete history logged in user with id = " + user.getUid());
+                    }
+
+                    @Override
+                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
+                        Logging.show("Fail to delete history logged in user with id = " + user.getUid());
+                    }
+                });
     }
 
     public void requestVerifyPhoneAuth(Activity activity, HistoryLoggedInUser historyUser) {

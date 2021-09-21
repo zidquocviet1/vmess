@@ -17,4 +17,6 @@ public interface HistoryLoggedInUserRepository {
     Completable updateDisplayName(String uid, String newName);
 
     Completable updatePhotoUrl(String uid, String newPhotoUrl);
+
+    Completable deleteHistoryUser(HistoryLoggedInUser historyUser);
 }

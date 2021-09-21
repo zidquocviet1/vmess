@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.data.dao;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -28,4 +29,7 @@ public interface HistoryLoggedInUserDao {
 
     @Query("UPDATE history_logged_in_user SET photo_url = :newUrl WHERE uid = :uid")
     Completable updatePhotoUrl(String uid, String newUrl);
+
+    @Delete
+    Completable delete(HistoryLoggedInUser user);
 }
