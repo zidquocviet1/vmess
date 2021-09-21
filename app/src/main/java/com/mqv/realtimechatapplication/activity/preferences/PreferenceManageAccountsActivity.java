@@ -125,7 +125,11 @@ public class PreferenceManageAccountsActivity extends
 
     private void setupRecyclerView() {
         mAdapter = new LoggedInUserAdapter(this, mHistoryUserList);
-        mAdapter.setOnAddAccountClick(v -> startActivity(LoginActivity.class));
+        mAdapter.setOnAddAccountClick(v -> {
+            var addAccountIntent = new Intent(PreferenceManageAccountsActivity.this, LoginActivity.class);
+            addAccountIntent.putExtra(LoginActivity.EXTRA_ACTION, LoginActivity.EXTRA_ADD_ACCOUNT);
+            startActivity(addAccountIntent);
+        });
         mAdapter.setOnChangeAccountClick(this::handleChangeLoginUser);
         mAdapter.setOnRemoveUser(user -> mViewModel.deleteHistoryUser(user));
         mBinding.recyclerLoggedInUser.setAdapter(mAdapter);
