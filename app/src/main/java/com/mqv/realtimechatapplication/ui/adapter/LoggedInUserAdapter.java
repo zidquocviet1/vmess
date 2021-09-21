@@ -28,6 +28,7 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
     private final Context mContext;
     private Consumer<Void> onAddAccountClick;
     private Consumer<HistoryLoggedInUser> onChangeAccountClick;
+    private Consumer<HistoryLoggedInUser> onRemoveUser;
 
     public LoggedInUserAdapter(Context context, @NonNull List<HistoryLoggedInUser> listLoggedInUser) {
         super(new DiffUtil.ItemCallback<>() {
@@ -52,6 +53,21 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
 
     public void setOnChangeAccountClick(Consumer<HistoryLoggedInUser> onChangeAccountClick) {
         this.onChangeAccountClick = onChangeAccountClick;
+    }
+
+    public void setOnRemoveUser(Consumer<HistoryLoggedInUser> onRemoveUser) {
+        this.onRemoveUser = onRemoveUser;
+    }
+
+    public void removeItem(int position) {
+        var user = mMutableListUser.get(position);
+
+        mMutableListUser.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, mMutableListUser.size());
+
+        if (onRemoveUser != null)
+            onRemoveUser.accept(user);
     }
 
     @Override
@@ -115,7 +131,7 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
 
             binding.title.setText(user.getDisplayName());
             binding.iconCheck.setVisibility(user.getLogin() ? View.VISIBLE : View.GONE);
-            binding.summary.setVisibility(user.getLogin() ? View.VISIBLE: View.GONE);
+            binding.summary.setVisibility(user.getLogin() ? View.VISIBLE : View.GONE);
         }
     }
 
