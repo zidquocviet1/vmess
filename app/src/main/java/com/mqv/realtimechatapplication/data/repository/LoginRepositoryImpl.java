@@ -2,6 +2,8 @@ package com.mqv.realtimechatapplication.data.repository;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
@@ -12,6 +14,7 @@ import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
@@ -59,5 +62,37 @@ public class LoginRepositoryImpl implements LoginRepository {
     @Override
     public Completable saveLoggedInUser(User user, HistoryLoggedInUser historyUser) {
         return userDao.save(user).andThen(historyUserDao.save(historyUser));
+    }
+
+    @Override
+    public void login(AuthCredential credential,
+                      Consumer<Exception> onFirebaseLoginFail,
+                      BiConsumer<Observable<ApiResponse<User>>, FirebaseUser> onAuthTokenSuccess,
+                      Consumer<Exception> onAuthTokenFail) {
+        FirebaseAuth.getInstance()
+                .signInWithCredential(credential)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var result = task.getResult();
+                        if (result != null) {
+                            var user = result.getUser();
+                            if (user != null) {
+                                // Required Firebase User token to make sure clients are using the app to make a call
+                                user.getIdToken(true)
+                                        .addOnCompleteListener(task2 -> {
+                                            if (task2.isSuccessful()) {
+                                                var token = Objects.requireNonNull(task2.getResult()).getToken();
+
+                                                onAuthTokenSuccess.accept(service.loginWithToken(
+                                                        Const.PREFIX_TOKEN + token,
+                                                        Const.DEFAULT_AUTHORIZER), user);
+                                            } else
+                                                onAuthTokenFail.accept(task.getException());
+                                        });
+                            }
+                        }
+                    } else
+                        onFirebaseLoginFail.accept(task.getException());
+                });
     }
 }
