@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.activity.viewmodel.LoginViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityLoginBinding;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
@@ -30,6 +31,11 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
     private static final String STATE_EMAIL = "email";
     private static final String STATE_PASSWORD = "password";
     private EditText edtEmail, edtPassword;
+    public static final String EXTRA_ACTION = "action";
+    public static final int EXTRA_ADD_ACCOUNT = -1;
+    private int mAction;
+    private boolean isPendingLogin;
+    private FirebaseUser shouldSignInAgainUser;
 
     @Override
     public void binding() {
@@ -44,6 +50,8 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
     public void onCreate(Bundle inState) {
         super.onCreate(inState);
+
+        mAction = getIntent().getIntExtra(EXTRA_ACTION, 0);
 
         edtEmail = Objects.requireNonNull(mBinding.textLayoutEmail.getEditText());
         edtPassword = Objects.requireNonNull(mBinding.textLayoutPassword.getEditText());
@@ -61,6 +69,32 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         outState.putString(STATE_EMAIL, edtEmail.getText().toString().trim());
         outState.putString(STATE_PASSWORD, edtPassword.getText().toString().trim());
         super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isPendingLogin) {
+            if (mAction == EXTRA_ADD_ACCOUNT){
+                shouldSignInAgainUser = mViewModel.getPreviousFirebaseUser();
+            }else FirebaseAuth.getInstance().signOut();
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if (isPendingLogin) {
+            var user = mViewModel.getCurrentLoginFirebaseUser();
+            mViewModel.signInAgainFirebaseUser(user);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isPendingLogin)
+            mViewModel.signInAgainFirebaseUser(shouldSignInAgainUser);
     }
 
     @Override
@@ -84,14 +118,29 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
             if (loginResult == null) return;
 
             setLoadingUi(loginResult.getStatus() == NetworkStatus.LOADING);
+            isPendingLogin = loginResult.getStatus() == NetworkStatus.LOADING;
 
             if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
+                isPendingLogin = false;
+
                 LoggedInUserManager.getInstance().setLoggedInUser(loginResult.getSuccess());
 
-                startActivity(new Intent(this, MainActivity.class));
+                var mainIntent = new Intent(this, MainActivity.class);
+                /*
+                 * In here, the customer login new account from ManageAccountActivity.
+                 * So we need to clear all of the activities in back stack
+                 * */
+                if (mAction == EXTRA_ADD_ACCOUNT) {
+                    mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                }
+                startActivity(mainIntent);
                 finish();
             } else if (loginResult.getStatus() == NetworkStatus.ERROR) {
-                FirebaseAuth.getInstance().signOut();
+                isPendingLogin = false;
+
+                if (mAction != EXTRA_ADD_ACCOUNT)
+                    FirebaseAuth.getInstance().signOut();
+
                 Toast.makeText(this, loginResult.getError(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -130,8 +179,14 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         edtPassword.addTextChangedListener(afterTextChangedListener);
         edtPassword.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                mViewModel.loginWithEmailAndPassword(edtEmail.getText().toString().trim(),
-                        edtPassword.getText().toString().trim());
+                var email = edtEmail.getText().toString().trim();
+                var password = edtPassword.getText().toString().trim();
+
+                if (mAction == EXTRA_ADD_ACCOUNT) {
+                    mViewModel.switchAccountWithEmailAndPassword(email, password);
+                } else {
+                    mViewModel.loginWithEmailAndPassword(email, password);
+                }
             }
             return false;
         });
@@ -151,8 +206,14 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         if (id == mBinding.buttonLogin.getId()) {
             mBinding.loading.setVisibility(View.VISIBLE);
 
-            mViewModel.loginWithEmailAndPassword(edtEmail.getText().toString().trim(),
-                    edtPassword.getText().toString().trim());
+            var email = edtEmail.getText().toString().trim();
+            var password = edtPassword.getText().toString().trim();
+
+            if (mAction == EXTRA_ADD_ACCOUNT) {
+                mViewModel.switchAccountWithEmailAndPassword(email, password);
+            } else {
+                mViewModel.loginWithEmailAndPassword(email, password);
+            }
         } else if (id == mBinding.buttonCreateAccount.getId()) {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));
         } else if (id == mBinding.textForgotPassword.getId()) {
