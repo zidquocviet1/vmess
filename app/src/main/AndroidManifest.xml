@@ -30,16 +30,21 @@
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
             android:name=".activity.preferences.PreferenceQrCodeActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="com.tac.open.qr.code" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".activity.preferences.PreferenceUsernameActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="com.tac.open.username" />
 
