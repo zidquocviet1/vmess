@@ -53,15 +53,8 @@ public class EditProfileLinkViewModel extends CurrentUserViewModel {
         var user = getLoggedInUser().getValue();
 
         if (user != null) {
-            var updateUserRequest = new User(
-                    user.getUid(),
-                    user.getBiographic(),
-                    user.getGender(),
-                    user.getBirthday(),
-                    user.getCreatedDate(),
-                    user.getModifiedDate(),
-                    user.getAccessedDate(),
-                    links);
+            var updateUserRequest = new User(user);
+            updateUserRequest.setSocialLinks(links);
 
             updateRemoteUser(updateUserRequest);
         }

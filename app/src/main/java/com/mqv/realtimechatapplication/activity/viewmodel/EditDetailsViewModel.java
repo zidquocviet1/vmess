@@ -74,15 +74,8 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
         var user = getLoggedInUser().getValue();
 
         if (user != null) {
-            var updateUserRequest = new User(
-                    user.getUid(),
-                    user.getBiographic(),
-                    newGender,
-                    user.getBirthday(),
-                    user.getCreatedDate(),
-                    user.getModifiedDate(),
-                    user.getAccessedDate(),
-                    user.getSocialLinks());
+            var updateUserRequest = new User(user);
+            updateUserRequest.setGender(newGender);
 
             updateRemoteUser(updateUserRequest);
         }
@@ -100,15 +93,8 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
         var user = getLoggedInUser().getValue();
 
         if (user != null) {
-            var updateUserRequest = new User(
-                    user.getUid(),
-                    user.getBiographic(),
-                    user.getGender(),
-                    newBirthday,
-                    user.getCreatedDate(),
-                    user.getModifiedDate(),
-                    user.getAccessedDate(),
-                    user.getSocialLinks());
+            var updateUserRequest = new User(user);
+            updateUserRequest.setBirthday(newBirthday);
 
             updateRemoteUser(updateUserRequest);
         }
