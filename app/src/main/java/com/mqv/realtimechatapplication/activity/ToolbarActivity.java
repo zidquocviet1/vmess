@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.activity;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -37,5 +38,12 @@ public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding
         if (actionBar != null) {
             actionBar.setTitle(resId);
         }
+    }
+
+    //Make the save button visible and handle onClick method
+    public void enableSaveButton(View.OnClickListener callback) {
+        var button = (MaterialButton) findViewById(R.id.button_save);
+        button.setVisibility(View.VISIBLE);
+        button.setOnClickListener(callback);
     }
 }
