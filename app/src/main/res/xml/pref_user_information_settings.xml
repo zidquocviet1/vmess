@@ -42,12 +42,20 @@
         <Preference
             android:icon="@drawable/ic_preferences_at"
             android:key="@string/key_pref_username"
-            android:title="@string/title_preference_item_username" />
+            android:title="@string/title_preference_item_username">
+            <intent
+                android:action="com.tac.open.username"
+                android:targetClass=".activity.preferences.PreferenceUsernameActivity" />
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_qr_code"
             android:key="@string/key_pref_qr_code"
-            android:title="@string/title_preference_item_qr_code" />
+            android:title="@string/title_preference_item_qr_code">
+            <intent
+                android:action="com.tac.open.qr.code"
+                android:targetClass=".activity.preferences.PreferenceQrCodeActivity" />
+        </Preference>
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -90,7 +98,7 @@
         <Preference
             android:icon="@drawable/ic_preferences_account_settings"
             android:key="@string/key_pref_account_settings"
-            android:title="@string/title_preference_item_account_settings" >
+            android:title="@string/title_preference_item_account_settings">
             <intent
                 android:action="@string/action_pref_account_settings"
                 android:targetClass=".activity.preferences.PreferenceAccountSettingsActivity" />
