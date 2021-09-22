@@ -48,6 +48,19 @@ public class User {
         this.birthday = birthday;
     }
 
+    // This constructor will create a new instance with the same value for update user request body
+    @Ignore
+    public User(User another){
+        this.uid = another.getUid();
+        this.biographic = another.getBiographic();
+        this.gender = another.getGender();
+        this.birthday = another.getBirthday();
+        this.createdDate = another.getCreatedDate();
+        this.modifiedDate = another.getModifiedDate();
+        this.accessedDate = another.getAccessedDate();
+        this.socialLinks = another.getSocialLinks();
+    }
+
     @NonNull
     public String getUid() {
         return uid;
