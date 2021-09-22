@@ -12,21 +12,6 @@
         layout="@layout/custom_appbar"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_save"
-        style="@style/MaterialIconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_gravity="end"
-        android:layout_marginEnd="@dimen/all_margin"
-        android:backgroundTint="@color/navigation_background"
-        android:text="@string/action_save"
-        android:textAllCaps="false"
-        android:textColor="@color/black"
-        app:layout_constraintBottom_toBottomOf="@id/included_appbar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/included_appbar" />
-
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
