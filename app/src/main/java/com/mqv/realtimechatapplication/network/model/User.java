@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.network.model;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
@@ -26,10 +27,13 @@ public class User {
     private LocalDateTime accessedDate;
     @SerializedName("social_links")
     private List<UserSocialLink> socialLinks;
+    @ColumnInfo(defaultValue = "")
+    private String username;
 
     public User(@NonNull String uid, String biographic, Gender gender,
                 LocalDateTime birthday, LocalDateTime createdDate,
-                LocalDateTime modifiedDate, LocalDateTime accessedDate, List<UserSocialLink> socialLinks) {
+                LocalDateTime modifiedDate, LocalDateTime accessedDate,
+                List<UserSocialLink> socialLinks, String username) {
         this.uid = uid;
         this.biographic = biographic;
         this.gender = gender;
@@ -38,14 +42,7 @@ public class User {
         this.modifiedDate = modifiedDate;
         this.accessedDate = accessedDate;
         this.socialLinks = socialLinks;
-    }
-
-    @Ignore
-    public User(@NonNull String uid, String biographic, Gender gender, LocalDateTime birthday) {
-        this.uid = uid;
-        this.biographic = biographic;
-        this.gender = gender;
-        this.birthday = birthday;
+        this.username = username;
     }
 
     // This constructor will create a new instance with the same value for update user request body
@@ -59,6 +56,7 @@ public class User {
         this.modifiedDate = another.getModifiedDate();
         this.accessedDate = another.getAccessedDate();
         this.socialLinks = another.getSocialLinks();
+        this.username = another.getUsername();
     }
 
     @NonNull
@@ -124,5 +122,13 @@ public class User {
 
     public void setSocialLinks(List<UserSocialLink> socialLinks) {
         this.socialLinks = socialLinks;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
