@@ -1,5 +1,8 @@
 package com.mqv.realtimechatapplication.data.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
@@ -7,7 +10,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "history_logged_in_user")
-public class HistoryLoggedInUser {
+public class HistoryLoggedInUser implements Parcelable {
     @PrimaryKey
     @NonNull
     private String uid;
@@ -40,6 +43,29 @@ public class HistoryLoggedInUser {
         this.phoneNumber = phoneNumber;
         this.isLogin = isLogin;
     }
+
+    protected HistoryLoggedInUser(Parcel in) {
+        uid = in.readString();
+        displayName = in.readString();
+        photoUrl = in.readString();
+        provider = (SignInProvider) in.readSerializable();
+        email = in.readString();
+        phoneNumber = in.readString();
+        byte tmpIsLogin = in.readByte();
+        isLogin = tmpIsLogin == 0 ? null : tmpIsLogin == 1;
+    }
+
+    public static final Creator<HistoryLoggedInUser> CREATOR = new Creator<HistoryLoggedInUser>() {
+        @Override
+        public HistoryLoggedInUser createFromParcel(Parcel in) {
+            return new HistoryLoggedInUser(in);
+        }
+
+        @Override
+        public HistoryLoggedInUser[] newArray(int size) {
+            return new HistoryLoggedInUser[size];
+        }
+    };
 
     @NonNull
     public String getUid() {
@@ -98,6 +124,22 @@ public class HistoryLoggedInUser {
 
     public void setPhoneNumber(@Nullable String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(uid);
+        dest.writeString(displayName);
+        dest.writeString(photoUrl);
+        dest.writeSerializable(provider);
+        dest.writeString(email);
+        dest.writeString(phoneNumber);
+        dest.writeByte((byte) (isLogin == null ? 0 : isLogin ? 1 : 2));
     }
 
     public static class Builder{
