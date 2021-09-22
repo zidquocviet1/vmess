@@ -48,14 +48,9 @@ public class EditProfileBioViewModel extends CurrentUserViewModel {
         var firebaseUser = getFirebaseUser().getValue();
 
         if (user != null && firebaseUser != null) {
-            var updateUserRequest = new User(user.getUid(),
-                    bio,
-                    user.getGender(),
-                    user.getBirthday(),
-                    user.getCreatedDate(),
-                    user.getModifiedDate(),
-                    user.getAccessedDate(),
-                    user.getSocialLinks());
+            var updateUserRequest = new User(user);
+            updateUserRequest.setBiographic(bio);
+
             updateResult.setValue(Result.Loading());
             userRepository.editUser(updateUserRequest,
                     firebaseUser,
