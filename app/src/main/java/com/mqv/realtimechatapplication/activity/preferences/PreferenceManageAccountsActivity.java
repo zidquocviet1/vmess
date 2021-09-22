@@ -19,6 +19,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.LoginActivity;
 import com.mqv.realtimechatapplication.activity.MainActivity;
@@ -49,6 +51,10 @@ public class PreferenceManageAccountsActivity extends
     private DialogSwitchAccountBinding mDialogBinding;
     private static final int DEFAULT_REQUEST_EMAIL = 1;
     private static final int DEFAULT_REQUEST_PHONE = 2;
+    private boolean isPendingLogin;
+    private boolean isLoginSuccess;
+    private FirebaseUser shouldSignInAgainUser;
+    private FirebaseUser currentLoginUser;
 
     @Override
     public void binding() {
@@ -79,6 +85,44 @@ public class PreferenceManageAccountsActivity extends
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        if (isPendingLogin) {
+            shouldSignInAgainUser = mViewModel.getPreviousFirebaseUser();
+
+            currentLoginUser = FirebaseAuth.getInstance().getCurrentUser();
+            mViewModel.setLoginUserOnStop(currentLoginUser);
+            FirebaseAuth.getInstance().signOut();
+
+            mViewModel.signInAgainFirebaseUser(shouldSignInAgainUser);
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        if (isPendingLogin) {
+            mViewModel.signInAgainFirebaseUser(currentLoginUser);
+        } else {
+            if (isLoginSuccess) {
+                mViewModel.signInAgainFirebaseUser(currentLoginUser);
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mAlertDialog != null && mAlertDialog.isShowing()) {
+            mAlertDialog.cancel();
+            mAlertDialog = null;
+        }
+        mDialogBinding = null;
+        if (isPendingLogin)
+            mViewModel.signInAgainFirebaseUser(shouldSignInAgainUser);
+    }
+
+    @Override
     public void setupObserver() {
         mViewModel.getHistoryUserList().observe(this, userList -> {
             if (userList == null || userList.isEmpty()) {
@@ -96,8 +140,11 @@ public class PreferenceManageAccountsActivity extends
 
             var status = result.getStatus();
             showLoadingUi(status == NetworkStatus.LOADING);
+            isPendingLogin = status == NetworkStatus.LOADING;
 
             if (status == NetworkStatus.SUCCESS) {
+                isLoginSuccess = true;
+
                 var mainIntent = new Intent(PreferenceManageAccountsActivity.this, MainActivity.class);
                 mainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(mainIntent);
@@ -290,16 +337,6 @@ public class PreferenceManageAccountsActivity extends
         mDialogBinding.progressBarLoading.setVisibility(View.GONE);
 
         mAlertDialog.show();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mAlertDialog != null && mAlertDialog.isShowing()) {
-            mAlertDialog.cancel();
-            mAlertDialog = null;
-        }
-        mDialogBinding = null;
     }
 
     @Override

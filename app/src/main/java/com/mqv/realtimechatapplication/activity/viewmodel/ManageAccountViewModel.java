@@ -57,6 +57,8 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     private static final int DEFAULT_REQUEST_PHONE = 2;
     private String mVerifyCodeId;
     private boolean isTimeOut;
+    private FirebaseUser previousFirebaseUser;
+    private FirebaseUser loginUserOnStop;
 
     @Inject
     public ManageAccountViewModel(HistoryLoggedInUserRepository historyUserRepository,
@@ -78,6 +80,14 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
     public LiveData<HistoryLoggedInUser> getVerifyResult() {
         return verifyResult;
+    }
+
+    public FirebaseUser getPreviousFirebaseUser() {
+        return previousFirebaseUser;
+    }
+
+    public void setLoginUserOnStop(FirebaseUser user) {
+        this.loginUserOnStop = user;
     }
 
     private void getAllHistoryUser() {
@@ -168,7 +178,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     }
 
     private void signInWithAuthCredential(AuthCredential phoneAuthCredential, int signInMethod) {
-        var previousFirebaseUser = Objects.requireNonNull(getFirebaseUser().getValue());
+        previousFirebaseUser = Objects.requireNonNull(getFirebaseUser().getValue());
         FirebaseAuth.getInstance().signOut();
 
         loginResult.setValue(Result.Loading());
@@ -247,7 +257,13 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                 .andThen(historyUserRepository.signOut(previousUser.getUid()))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(() -> loginResult.setValue(Result.Success(user)),
+                .subscribe(() -> {
+                            if (loginUserOnStop != null) {
+                                signInAgainFirebaseUser(loginUserOnStop);
+                                loginUserOnStop = null;
+                            }
+                            loginResult.setValue(Result.Success(user));
+                        },
                         t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
     }
@@ -288,7 +304,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
         return historyUserBuilder.build();
     }
 
-    private void signInAgainFirebaseUser(FirebaseUser previousUser) {
+    public void signInAgainFirebaseUser(FirebaseUser previousUser) {
         FirebaseAuth.getInstance().updateCurrentUser(previousUser);
     }
 }
