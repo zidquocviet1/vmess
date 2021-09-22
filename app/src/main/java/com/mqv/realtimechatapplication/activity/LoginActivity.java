@@ -35,7 +35,9 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
     public static final int EXTRA_ADD_ACCOUNT = -1;
     private int mAction;
     private boolean isPendingLogin;
+    private boolean isLoginSuccess;
     private FirebaseUser shouldSignInAgainUser;
+    private FirebaseUser currentLoginUser;
 
     @Override
     public void binding() {
@@ -75,9 +77,16 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
     protected void onStop() {
         super.onStop();
         if (isPendingLogin) {
-            if (mAction == EXTRA_ADD_ACCOUNT){
+            if (mAction == EXTRA_ADD_ACCOUNT) {
                 shouldSignInAgainUser = mViewModel.getPreviousFirebaseUser();
-            }else FirebaseAuth.getInstance().signOut();
+
+                currentLoginUser = FirebaseAuth.getInstance().getCurrentUser();
+                mViewModel.setLoginUserOnStop(currentLoginUser);
+                FirebaseAuth.getInstance().signOut();
+
+                mViewModel.signInAgainFirebaseUser(shouldSignInAgainUser);
+            } else
+                FirebaseAuth.getInstance().signOut();
         }
     }
 
@@ -85,16 +94,25 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
     protected void onRestart() {
         super.onRestart();
         if (isPendingLogin) {
-            var user = mViewModel.getCurrentLoginFirebaseUser();
-            mViewModel.signInAgainFirebaseUser(user);
+            if (mAction == EXTRA_ADD_ACCOUNT) {
+                mViewModel.signInAgainFirebaseUser(currentLoginUser);
+            } else {
+                mViewModel.signInAgainFirebaseUser(mViewModel.getCurrentLoginFirebaseUser());
+            }
+        } else {
+            if (isLoginSuccess && mAction == EXTRA_ADD_ACCOUNT) {
+                mViewModel.signInAgainFirebaseUser(currentLoginUser);
+            }
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (isPendingLogin)
+        // Check when the user press back button
+        if (isPendingLogin && mAction == EXTRA_ADD_ACCOUNT) {
             mViewModel.signInAgainFirebaseUser(shouldSignInAgainUser);
+        }
     }
 
     @Override
@@ -121,7 +139,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
             isPendingLogin = loginResult.getStatus() == NetworkStatus.LOADING;
 
             if (loginResult.getStatus() == NetworkStatus.SUCCESS) {
-                isPendingLogin = false;
+                isLoginSuccess = true;
 
                 LoggedInUserManager.getInstance().setLoggedInUser(loginResult.getSuccess());
 
@@ -136,8 +154,6 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
                 startActivity(mainIntent);
                 finish();
             } else if (loginResult.getStatus() == NetworkStatus.ERROR) {
-                isPendingLogin = false;
-
                 if (mAction != EXTRA_ADD_ACCOUNT)
                     FirebaseAuth.getInstance().signOut();
 
