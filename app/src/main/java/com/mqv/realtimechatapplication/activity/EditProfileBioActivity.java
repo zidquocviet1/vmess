@@ -41,10 +41,7 @@ public class EditProfileBioActivity extends ToolbarActivity<EditProfileBioViewMo
 
         updateActionBarTitle(R.string.label_edit_bio);
 
-        editBio = Objects.requireNonNull(mBinding.textLayoutBio.getEditText());
-        editBio.addTextChangedListener(this);
-
-        mBinding.buttonSave.setOnClickListener(v -> {
+        enableSaveButton(v -> {
             var bio = editBio.getText().toString().trim();
             if (bio.equals(originalBio)){
                 Toast.makeText(this, R.string.msg_update_user_info_successfully, Toast.LENGTH_SHORT).show();
@@ -53,6 +50,9 @@ public class EditProfileBioActivity extends ToolbarActivity<EditProfileBioViewMo
             }else
                 mViewModel.updateRemoteUser(bio);
         });
+
+        editBio = Objects.requireNonNull(mBinding.textLayoutBio.getEditText());
+        editBio.addTextChangedListener(this);
     }
 
     @Override
@@ -68,7 +68,7 @@ public class EditProfileBioActivity extends ToolbarActivity<EditProfileBioViewMo
 
             var status = result.getStatus();
 
-            mBinding.buttonSave.setEnabled(status != NetworkStatus.LOADING);
+            mBinding.includedAppbar.buttonSave.setEnabled(status != NetworkStatus.LOADING);
             mBinding.loading.setVisibility(status == NetworkStatus.LOADING ? View.VISIBLE : View.GONE);
 
             if (status == NetworkStatus.SUCCESS) {
