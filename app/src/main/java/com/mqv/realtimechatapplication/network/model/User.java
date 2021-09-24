@@ -17,6 +17,14 @@ public class User {
     @NonNull
     private String uid;
     private String biographic;
+
+    @SerializedName(value = "display_name")
+    @ColumnInfo(name = "display_name")
+    private String displayName;
+
+    @SerializedName(value = "photo_url")
+    @ColumnInfo(name = "photo_url")
+    private String photoUrl;
     private Gender gender;
     private LocalDateTime birthday;
     @SerializedName("created_date")
@@ -27,15 +35,18 @@ public class User {
     private LocalDateTime accessedDate;
     @SerializedName("social_links")
     private List<UserSocialLink> socialLinks;
-    @ColumnInfo(defaultValue = "")
+    @ColumnInfo(name = "user_connect_name", defaultValue = "")
+    @SerializedName(value = "user_connect_name")
     private String username;
 
-    public User(@NonNull String uid, String biographic, Gender gender,
+    public User(@NonNull String uid, String biographic, String displayName, String photoUrl, Gender gender,
                 LocalDateTime birthday, LocalDateTime createdDate,
                 LocalDateTime modifiedDate, LocalDateTime accessedDate,
                 List<UserSocialLink> socialLinks, String username) {
         this.uid = uid;
         this.biographic = biographic;
+        this.displayName = displayName;
+        this.photoUrl = photoUrl;
         this.gender = gender;
         this.birthday = birthday;
         this.createdDate = createdDate;
@@ -50,6 +61,8 @@ public class User {
     public User(User another){
         this.uid = another.getUid();
         this.biographic = another.getBiographic();
+        this.displayName = another.getDisplayName();
+        this.photoUrl = another.getPhotoUrl();
         this.gender = another.getGender();
         this.birthday = another.getBirthday();
         this.createdDate = another.getCreatedDate();
@@ -74,6 +87,22 @@ public class User {
 
     public void setBiographic(String biographic) {
         this.biographic = biographic;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
     }
 
     public Gender getGender() {
