@@ -29,6 +29,16 @@
         android:maxLength="20"
         app:layout_constraintTop_toBottomOf="@id/included_appbar" />
 
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/edit_user_name"
+        app:layout_constraintEnd_toEndOf="@id/edit_user_name"
+        app:layout_constraintTop_toTopOf="@id/edit_user_name" />
+
     <TextView
         android:id="@+id/text_prompt_length"
         android:layout_width="wrap_content"
