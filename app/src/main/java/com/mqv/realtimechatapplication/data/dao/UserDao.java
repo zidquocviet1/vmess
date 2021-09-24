@@ -11,12 +11,14 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable save(User user);
+
+    @Query("update user set photo_url = :photoUrl where uid = :uid")
+    Completable updateUserPhotoUrl(String uid, String photoUrl);
 
     @Query("select * from user")
     Flowable<List<User>> findByUid();
