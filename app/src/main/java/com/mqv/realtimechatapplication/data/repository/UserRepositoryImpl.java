@@ -107,6 +107,46 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void editUserConnectName(@NonNull User updateUser,
+                                    @NonNull FirebaseUser user,
+                                    Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                    Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.editUserConnectName(
+                                Const.PREFIX_TOKEN + token,
+                                Const.DEFAULT_AUTHORIZER,
+                                updateUser));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
+    public void checkUserConnectName(@NonNull String username,
+                                     @NonNull FirebaseUser user,
+                                     Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
+                                     Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.checkUserConnectName(
+                                Const.PREFIX_TOKEN + token,
+                                Const.DEFAULT_AUTHORIZER,
+                                username));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
     public Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                                     @NonNull FirebaseUser user) {
         var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();

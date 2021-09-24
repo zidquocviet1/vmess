@@ -22,6 +22,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class UsernameViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<Result<User>> updateResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<String>> usernameStatus = new MutableLiveData<>();
 
     @Inject
     public UsernameViewModel(UserRepository userRepository) {
@@ -43,6 +44,10 @@ public class UsernameViewModel extends CurrentUserViewModel {
         return updateResult;
     }
 
+    public LiveData<Result<String>> getUsernameStatus() {
+        return usernameStatus;
+    }
+
     public void editUsername(String username) {
         var user = getLoggedInUser().getValue();
         var firebaseUser = getFirebaseUser().getValue();
@@ -53,7 +58,7 @@ public class UsernameViewModel extends CurrentUserViewModel {
 
             updateResult.setValue(Result.Loading());
 
-            userRepository.editUser(updatedUser,
+            userRepository.editUserConnectName(updatedUser,
                     firebaseUser,
                     observable -> cd.add(observable
                             .subscribeOn(Schedulers.io())
@@ -67,6 +72,8 @@ public class UsernameViewModel extends CurrentUserViewModel {
                                     updateResult.setValue(Result.Fail(R.string.error_authentication_fail));
                                 } else if (code == HttpURLConnection.HTTP_NOT_FOUND) {
                                     updateResult.setValue(Result.Fail(R.string.error_user_id_not_found));
+                                } else if (code == HttpURLConnection.HTTP_CONFLICT) {
+                                    updateResult.setValue(Result.Fail(R.string.error_user_connect_name_conflict));
                                 }
                             }, t -> updateResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
                     e -> updateResult.setValue(Result.Fail(R.string.error_authentication_fail)));
@@ -81,5 +88,34 @@ public class UsernameViewModel extends CurrentUserViewModel {
                 .subscribe(() -> updateResult.setValue(Result.Success(user)),
                         t -> Logging.show("Insert user fail with id = " + user.getUid()))
         );
+    }
+
+    public void checkUserConnectName(String username) {
+        var firebaseUser = getFirebaseUser().getValue();
+
+        if (firebaseUser != null) {
+            usernameStatus.setValue(Result.Loading());
+
+            userRepository.checkUserConnectName(username,
+                    firebaseUser,
+                    observable -> cd.add(observable.subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(response -> {
+                                var code = response.getStatusCode();
+
+                                if (code == HttpURLConnection.HTTP_OK) {
+                                    var isExists = response.getSuccess();
+                                    if (isExists) {
+                                        usernameStatus.setValue(Result.Fail(R.string.error_user_connect_name_conflict));
+                                    } else {
+                                        usernameStatus.setValue(Result.Success(null));
+                                    }
+                                } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                    updateResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                }
+                            }, t -> updateResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                    e -> updateResult.setValue(Result.Fail(R.string.error_authentication_fail))
+            );
+        }
     }
 }

@@ -7,10 +7,7 @@ import com.mqv.realtimechatapplication.util.Const;
 import io.reactivex.rxjava3.core.Observable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import retrofit2.Response;
 import retrofit2.http.Body;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -49,4 +46,14 @@ public interface UserService {
     Observable<ApiResponse<String>> editUserDisplayName(@Header(Const.AUTHORIZATION) String token,
                                                         @Header(Const.AUTHORIZER) String authorizer,
                                                         @Query("name") String newName);
+
+    @PUT(value = "user/edit/user-connect-name")
+    Observable<ApiResponse<User>> editUserConnectName(@Header(Const.AUTHORIZATION) String token,
+                                                      @Header(Const.AUTHORIZER) String authorizer,
+                                                      @Body User updateUser);
+
+    @GET(value = "user/check-user-connect-name")
+    Observable<ApiResponse<Boolean>> checkUserConnectName(@Header(Const.AUTHORIZATION) String token,
+                                                          @Header(Const.AUTHORIZER) String authorizer,
+                                                          @Query("username") String username);
 }

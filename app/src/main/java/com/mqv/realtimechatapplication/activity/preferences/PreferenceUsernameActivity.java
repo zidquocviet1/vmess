@@ -41,7 +41,6 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
 
         enableSaveButton(handleButtonSaveClicked());
 
-        mBinding.editUserName.addTextChangedListener(this);
     }
 
     @Override
@@ -49,6 +48,8 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
         mViewModel.getUsername().observe(this, username -> {
             currentUsername = username;
             mBinding.editUserName.setText(username);
+            mBinding.editUserName.addTextChangedListener(this);
+
         });
 
         mViewModel.getUpdateResult().observe(this, result -> {
@@ -66,6 +67,25 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
                 Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
             }
         });
+
+        mViewModel.getUsernameStatus().observe(this, result -> {
+            if (result == null) return;
+
+            var status = result.getStatus();
+
+            mBinding.progressBarLoading.setVisibility(status == NetworkStatus.LOADING ? View.VISIBLE : View.GONE);
+            makeButtonEnable(status == NetworkStatus.SUCCESS);
+
+            switch (status) {
+                case ERROR:
+                    mBinding.editUserName.setError(getString(result.getError()));
+                    mBinding.editUserName.requestFocus();
+                    break;
+                case SUCCESS:
+                    mBinding.editUserName.setError(null);
+                    break;
+            }
+        });
     }
 
     @Override
@@ -81,6 +101,8 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
     @Override
     public void afterTextChanged(Editable s) {
         mBinding.textPromptLength.setText(getString(R.string.prompt_bio_length, s.length(), MAX_USERNAME_LENGTH));
+        if (!s.toString().equals(currentUsername))
+            mViewModel.checkUserConnectName(s.toString());
     }
 
     private void showLoadingUi(boolean isLoading) {

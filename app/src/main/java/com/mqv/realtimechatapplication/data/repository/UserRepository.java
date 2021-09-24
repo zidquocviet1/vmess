@@ -32,6 +32,16 @@ public interface UserRepository {
                              Consumer<Observable<ApiResponse<String>>> onAuthSuccess,
                              Consumer<Exception> onAuthError);
 
+    void editUserConnectName(@NonNull User updateUser,
+                             @NonNull FirebaseUser user,
+                             Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                             Consumer<Exception> onAuthError);
+
+    void checkUserConnectName(@NonNull String username,
+                              @NonNull FirebaseUser user,
+                              Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
+                              Consumer<Exception> onAuthError);
+
     Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                              FirebaseUser user);
 }
