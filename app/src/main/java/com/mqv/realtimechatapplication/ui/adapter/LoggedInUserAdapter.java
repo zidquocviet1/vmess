@@ -19,6 +19,7 @@ import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.databinding.ItemAddLoggedInUserBinding;
 import com.mqv.realtimechatapplication.databinding.ItemLoggedInUserBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -115,18 +116,20 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
         }
 
         public void bindTo(HistoryLoggedInUser user, Context context) {
+            var photoUrl = user.getPhotoUrl() == null ? "" : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
+
             var placeHolder = new CircularProgressDrawable(context);
             placeHolder.setStrokeWidth(5f);
             placeHolder.setCenterRadius(30f);
             placeHolder.start();
 
             GlideApp.with(context)
-                    .load(user.getPhotoUrl())
+                    .load(photoUrl)
                     .placeholder(placeHolder)
                     .error(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
-                    .signature(new ObjectKey(user.getPhotoUrl()))
+                    .signature(new ObjectKey(photoUrl))
                     .into(binding.imageAvatar);
 
             binding.title.setText(user.getDisplayName());
