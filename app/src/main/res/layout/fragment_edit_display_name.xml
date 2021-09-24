@@ -29,7 +29,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <include
-        android:id="@+id/included_bottom"
+        android:id="@+id/included_button"
         layout="@layout/custom_bottom_button" />
 
     <TextView
