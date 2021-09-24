@@ -29,6 +29,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.preferences.PreferenceFriendRequestActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="com.tac.open.friend.request" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.ConnectPeopleActivity"
             android:exported="true" />
         <activity
