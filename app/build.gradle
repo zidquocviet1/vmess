@@ -95,4 +95,6 @@ dependencies {
 
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'commons-codec:commons-codec:1.10'
+    // ZXing
+    implementation 'com.journeyapps:zxing-android-embedded:4.2.0'
 }
