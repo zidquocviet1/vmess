@@ -1,7 +1,5 @@
 package com.mqv.realtimechatapplication.activity.viewmodel;
 
-import android.net.Uri;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -78,10 +76,9 @@ public class PreviewEditPhotoViewModel extends ViewModel {
 
     }
 
-    public void updateHistoryUserPhotoUrl(FirebaseUser user) {
-        var photoUrl = user.getPhotoUrl() == null ? "" : user.getPhotoUrl().toString().replace("localhost", Const.BASE_IP);
-
-        cd.add(repository.updateHistoryUserPhotoUrl(user.getUid(), photoUrl)
+    public void updateHistoryUserPhotoUrl(FirebaseUser user, String photoUrl) {
+        cd.add(repository.updateCurrentUserPhotoUrl(user.getUid(), photoUrl)
+                .andThen(repository.updateHistoryUserPhotoUrl(user.getUid(), photoUrl))
                 .subscribeOn(Schedulers.io())
                 .subscribe(() -> {
                     Logging.show("update history logged in user photo url successfully");

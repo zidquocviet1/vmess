@@ -24,6 +24,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.PreviewEditPhotoViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityPreviewEditPhotoBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.ui.data.ImageThumbnail;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.ExifUtils;
@@ -104,16 +105,24 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             mBinding.imageCoverPhoto.setOnTouchListener(imageCoverListener());
         }
 
-        mBinding.buttonSave.setOnClickListener(v -> {
+        enableSaveButton(v -> {
             if (from.equals(EXTRA_PROFILE_PICTURE)) {
                 mViewModel.updateProfilePicture(image.getRealPath());
-            }else{
+            } else {
                 mViewModel.updateCoverPhoto();
             }
         });
 
-        registerFirebaseUserChange(firebaseUser ->
-                mViewModel.updateHistoryUserPhotoUrl(firebaseUser));
+        registerFirebaseUserChange(firebaseUser -> {
+            var photoUrl = firebaseUser.getPhotoUrl() == null ? "" : firebaseUser.getPhotoUrl().toString();
+            var loggedInUser = LoggedInUserManager.getInstance().getLoggedInUser();
+
+            if (loggedInUser != null){
+                loggedInUser.setPhotoUrl(photoUrl);
+                updateLoggedInUser(loggedInUser);
+            }
+            mViewModel.updateHistoryUserPhotoUrl(firebaseUser, photoUrl);
+        });
     }
 
     @Override
@@ -145,10 +154,10 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
     }
 
     private void showLoadingUi(boolean isLoading) {
-        mBinding.buttonSave.setEnabled(!isLoading);
+        makeButtonEnable(!isLoading);
         if (isLoading) {
             startUploadingDialog();
-        }else{
+        } else {
             finishUploading();
         }
     }
@@ -169,22 +178,22 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
                     my = event.getY(); // interval (0.0, view.getHeight())
                     break;
                 case MotionEvent.ACTION_MOVE:
-                        curY = event.getY();
-                        dy = curY;
+                    curY = event.getY();
+                    dy = curY;
 
 //                            if (curY - maxHeight > 0){
 //                                dy = maxHeight;
 //                            }
 
-                        if (curY < 0){
-                            dy = 0;
-                        }
+                    if (curY < 0) {
+                        dy = 0;
+                    }
 
-                        if (curY > maxHeight){
-                            dy = maxHeight;
-                        }
+                    if (curY > maxHeight) {
+                        dy = maxHeight;
+                    }
 
-                        mBinding.imageCoverPhoto.scrollBy(0, (int) (my - dy)); // x equals to 0, that mean disable horizontal drag
+                    mBinding.imageCoverPhoto.scrollBy(0, (int) (my - dy)); // x equals to 0, that mean disable horizontal drag
                     break;
                 case MotionEvent.ACTION_UP: // the action to finish event
                     break;
@@ -194,7 +203,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
         };
     }
 
-    private void startUploadingDialog(){
+    private void startUploadingDialog() {
         var builder = new MaterialAlertDialogBuilder(this);
         var view = getLayoutInflater().inflate(R.layout.dialog_loading_with_text, null, false);
         var textUploading = (TextView) view.findViewById(R.id.text_uploading);
@@ -212,7 +221,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
         uploadingDialog.show();
     }
 
-    private void finishUploading(){
+    private void finishUploading() {
         if (uploadingDialog != null)
             uploadingDialog.dismiss();
     }
