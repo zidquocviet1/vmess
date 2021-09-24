@@ -29,6 +29,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.ConnectPeopleActivity"
+            android:exported="true" />
+        <activity
             android:name=".activity.preferences.PreferenceQrCodeActivity"
             android:exported="true"
             android:screenOrientation="portrait"
@@ -39,7 +42,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activity.preferences.PreferenceUsernameActivity"
             android:exported="true"
