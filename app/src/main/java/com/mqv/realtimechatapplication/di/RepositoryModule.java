@@ -30,8 +30,10 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public EditUserPhotoRepository provideEditUserPhotoRes(UserService service, HistoryLoggedInUserDao historyUserDao){
-        return new EditUserPhotoRepositoryImpl(service, historyUserDao);
+    public EditUserPhotoRepository provideEditUserPhotoRes(UserService service,
+                                                           HistoryLoggedInUserDao historyUserDao,
+                                                           UserDao userDao){
+        return new EditUserPhotoRepositoryImpl(service, historyUserDao, userDao);
     }
 
     @Provides

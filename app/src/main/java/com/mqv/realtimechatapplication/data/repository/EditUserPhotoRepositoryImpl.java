@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.data.repository;
 
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
+import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
@@ -18,11 +19,15 @@ import okhttp3.RequestBody;
 public class EditUserPhotoRepositoryImpl implements EditUserPhotoRepository{
     private final UserService service;
     private final HistoryLoggedInUserDao historyUserDao;
+    private final UserDao userDao;
 
     @Inject
-    public EditUserPhotoRepositoryImpl(UserService service, HistoryLoggedInUserDao historyUserDao) {
+    public EditUserPhotoRepositoryImpl(UserService service,
+                                       HistoryLoggedInUserDao historyUserDao,
+                                       UserDao userDao) {
         this.service = service;
         this.historyUserDao = historyUserDao;
+        this.userDao = userDao;
     }
 
     @Override
@@ -42,5 +47,10 @@ public class EditUserPhotoRepositoryImpl implements EditUserPhotoRepository{
     @Override
     public Completable updateHistoryUserPhotoUrl(String uid, String photoUrl) {
         return historyUserDao.updatePhotoUrl(uid, photoUrl);
+    }
+
+    @Override
+    public Completable updateCurrentUserPhotoUrl(String uid, String photoUrl) {
+        return userDao.updateUserPhotoUrl(uid, photoUrl);
     }
 }

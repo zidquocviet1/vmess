@@ -11,4 +11,6 @@ public interface EditUserPhotoRepository {
     Observable<ApiResponse<String>> updateCoverPhoto(String token, String authorizer, String filePath);
 
     Completable updateHistoryUserPhotoUrl(String uid, String photoUrl);
+
+    Completable updateCurrentUserPhotoUrl(String uid, String photoUrl);
 }
