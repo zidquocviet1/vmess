@@ -30,6 +30,16 @@
         </Preference>
 
         <Preference
+            android:icon="@drawable/ic_add_friend"
+            android:key="@string/key_pref_friend_request"
+            android:title="@string/title_preference_item_friend_request">
+
+            <intent
+                android:action="@string/action_pref_friend_request"
+                android:targetClass=".activity.preferences.PreferenceFriendRequestActivity" />
+        </Preference>
+
+        <Preference
             android:icon="@drawable/ic_preferences_messages_requests"
             android:key="@string/key_pref_messages_requests"
             android:title="@string/title_preference_item_messages_requests" />
