@@ -48,8 +48,8 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
         mViewModel.getUsername().observe(this, username -> {
             currentUsername = username;
             mBinding.editUserName.setText(username);
+            mBinding.textPromptLength.setText(getString(R.string.prompt_bio_length, username.length(), MAX_USERNAME_LENGTH));
             mBinding.editUserName.addTextChangedListener(this);
-
         });
 
         mViewModel.getUpdateResult().observe(this, result -> {
