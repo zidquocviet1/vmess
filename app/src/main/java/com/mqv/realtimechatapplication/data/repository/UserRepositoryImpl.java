@@ -87,6 +87,26 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void editUserDisplayName(@NonNull User updateUser,
+                                    @NonNull FirebaseUser user,
+                                    Consumer<Observable<ApiResponse<String>>> onAuthSuccess,
+                                    Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.editUserDisplayName(
+                                Const.PREFIX_TOKEN + token,
+                                Const.DEFAULT_AUTHORIZER,
+                                updateUser.getDisplayName()));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
     public Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                                     @NonNull FirebaseUser user) {
         var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();

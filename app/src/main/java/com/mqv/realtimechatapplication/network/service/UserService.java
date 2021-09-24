@@ -44,4 +44,9 @@ public interface UserService {
     Observable<ApiResponse<User>> editRemoteUser(@Header(Const.AUTHORIZATION) String token,
                                                  @Header(Const.AUTHORIZER) String authorizer,
                                                  @Body User updateUser);
+
+    @PUT(value = "user/edit/display-name")
+    Observable<ApiResponse<String>> editUserDisplayName(@Header(Const.AUTHORIZATION) String token,
+                                                        @Header(Const.AUTHORIZER) String authorizer,
+                                                        @Query("name") String newName);
 }

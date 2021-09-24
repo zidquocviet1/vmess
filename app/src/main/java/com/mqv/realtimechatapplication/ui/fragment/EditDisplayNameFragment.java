@@ -14,12 +14,11 @@ import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.EditDetailsActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditDetailsViewModel;
 import com.mqv.realtimechatapplication.databinding.FragmentEditDisplayNameBinding;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.Objects;
 
@@ -72,16 +71,16 @@ public class EditDisplayNameFragment extends BaseFragment<EditDetailsViewModel, 
 
             @Override
             public void afterTextChanged(Editable s) {
-                mBinding.includedBottom.buttonBottom.setEnabled(s.length() != 0);
+                mBinding.includedButton.buttonBottom.setEnabled(s.length() != 0);
                 mBinding.textLayoutDisplayName.setHelperText(getString(R.string.prompt_bio_length, s.length(), MAX_NAME_LENGTH));
-                if (s.length() == 0){
+                if (s.length() == 0) {
                     mBinding.textLayoutDisplayName.setError(getString(R.string.invalid_display_name));
                 }
             }
         });
         editDisplayName.setText(currentName);
 
-        mBinding.includedBottom.buttonBottom.setOnClickListener(v -> {
+        mBinding.includedButton.buttonBottom.setOnClickListener(v -> {
             var newName = editDisplayName.getText().toString().trim();
 
             // Return to EditProfile screen when new name are the same with old name
@@ -90,38 +89,35 @@ public class EditDisplayNameFragment extends BaseFragment<EditDetailsViewModel, 
                 return;
             }
 
-            var firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-            if (firebaseUser != null) {
-                showLoadingUi(true);
-
-                var request = new UserProfileChangeRequest.Builder()
-                        .setDisplayName(newName).build();
-
-                firebaseUser.updateProfile(request)
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                showLoadingUi(false);
-
-                                Toast.makeText(requireContext(), "Update display name successfully", Toast.LENGTH_SHORT).show();
-
-                                mViewModel.updateHistoryUserDisplayName(firebaseUser.getUid(), newName);
-
-                                ((EditDetailsActivity) requireActivity()).reloadFirebaseUser();
-
-                                navigateToEditProfile();
-                            } else {
-                                showLoadingUi(false);
-
-                                Toast.makeText(requireContext(), "Update display name failure", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-            }
+            mViewModel.updateUserDisplayName(newName);
         });
     }
 
     @Override
     public void setupObserver() {
+        mViewModel.getUpdateResult().observe(getViewLifecycleOwner(), result -> {
+            if (result == null) return;
 
+            var status = result.getStatus();
+
+            showLoadingUi(status == NetworkStatus.LOADING);
+
+            if (status == NetworkStatus.SUCCESS) {
+                var user = result.getSuccess();
+
+                Toast.makeText(requireContext(), R.string.msg_update_user_info_successfully, Toast.LENGTH_SHORT).show();
+
+                mViewModel.updateHistoryUserDisplayName(user.getUid(), user.getDisplayName());
+
+                mViewModel.resetUpdateResult();
+
+                ((EditDetailsActivity) requireActivity()).reloadFirebaseUser();
+
+                navigateToEditProfile();
+            } else if (status == NetworkStatus.ERROR) {
+                Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void navigateToEditProfile() {
@@ -132,6 +128,6 @@ public class EditDisplayNameFragment extends BaseFragment<EditDetailsViewModel, 
 
     private void showLoadingUi(boolean isLoading) {
         mBinding.loading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        mBinding.includedBottom.buttonBottom.setEnabled(!isLoading);
+        mBinding.includedButton.buttonBottom.setEnabled(!isLoading);
     }
 }

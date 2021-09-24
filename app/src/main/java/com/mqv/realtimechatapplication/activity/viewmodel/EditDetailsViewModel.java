@@ -81,6 +81,17 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
         }
     }
 
+    public void updateUserDisplayName(String newName) {
+        var user = getLoggedInUser().getValue();
+
+        if (user != null) {
+            var updateUserRequest = new User(user);
+            updateUserRequest.setDisplayName(newName);
+
+            updateUserDisplayName(updateUserRequest);
+        }
+    }
+
     public void updateUserCurrentAddress(LocalDateTime newBirthday) {
         // TODO: not yet handled
     }
@@ -116,6 +127,34 @@ public class EditDetailsViewModel extends CurrentUserViewModel {
 
                                 if (code == HttpURLConnection.HTTP_OK) {
                                     saveCallResult(response.getSuccess());
+                                } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                    updateResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                } else if (code == HttpURLConnection.HTTP_NOT_FOUND) {
+                                    updateResult.setValue(Result.Fail(R.string.error_user_id_not_found));
+                                }
+                            }, t -> updateResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                    e -> updateResult.setValue(Result.Fail(R.string.error_authentication_fail)));
+        } else {
+            updateResult.setValue(Result.Fail(R.string.error_user_id_not_found));
+        }
+    }
+
+    private void updateUserDisplayName(@NonNull User updateUserRequest) {
+        var firebaseUser = getFirebaseUser().getValue();
+
+        if (firebaseUser != null) {
+            updateResult.setValue(Result.Loading());
+
+            userRepository.editUserDisplayName(updateUserRequest,
+                    firebaseUser,
+                    observable -> cd.add(observable
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(response -> {
+                                var code = response.getStatusCode();
+
+                                if (code == HttpURLConnection.HTTP_OK) {
+                                    saveCallResult(updateUserRequest);
                                 } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                                     updateResult.setValue(Result.Fail(R.string.error_authentication_fail));
                                 } else if (code == HttpURLConnection.HTTP_NOT_FOUND) {
