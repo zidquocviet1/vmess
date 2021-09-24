@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.activity;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
@@ -13,6 +14,7 @@ import com.google.android.material.button.MaterialButton;
 import com.mqv.realtimechatapplication.R;
 
 public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding> extends BaseActivity<V, B> {
+    private Button mButtonSave;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,8 +44,12 @@ public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding
 
     //Make the save button visible and handle onClick method
     public void enableSaveButton(View.OnClickListener callback) {
-        var button = (MaterialButton) findViewById(R.id.button_save);
-        button.setVisibility(View.VISIBLE);
-        button.setOnClickListener(callback);
+        mButtonSave = (MaterialButton) findViewById(R.id.button_save);
+        mButtonSave.setVisibility(View.VISIBLE);
+        mButtonSave.setOnClickListener(callback);
+    }
+
+    public void makeButtonEnable(boolean isEnable){
+        mButtonSave.setEnabled(isEnable);
     }
 }
