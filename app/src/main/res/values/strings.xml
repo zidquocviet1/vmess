@@ -57,12 +57,10 @@
     <string name="title_continue_as">Continue as %1$s</string>
     <string name="title_remove_account">Remove this account?</string>
     <string name="title_enter_password">Enter your password to sign into this account</string>
-
     <string name="title_preference_profile">Profile</string>
     <string name="title_preference_preferences">Preferences</string>
     <string name="title_preference_system">System</string>
     <string name="title_preference_manage_accounts">Accounts</string>
-
     <string name="title_preference_item_manage_accounts">Manage Accounts</string>
     <string name="title_preference_item_manage_accounts_summary">Signed in</string>
     <string name="title_preference_item_dark_mode">Dark Mode</string>
@@ -76,6 +74,7 @@
     <string name="title_preference_item_report_problem">Report Problem</string>
     <string name="title_preference_item_help">Help</string>
     <string name="title_preference_item_legal_policies">Legal &amp; Policies</string>
+    <string name="title_preference_item_friend_request">Friends Requests</string>
     <string name="title_profile_picture">Profile Picture</string>
     <string name="title_cover_photo">Cover Photo</string>
     <string name="title_bio">Bio</string>
@@ -116,6 +115,7 @@
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
     <string name="action_pref_edit_profile">com.tac.open.edit.profile</string>
     <string name="action_pref_account_settings">com.tac.open.account.settings</string>
+    <string name="action_pref_friend_request">com.tac.open.friend.request</string>
 
     <string name="msg_conversation_content_dummy">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
@@ -135,6 +135,8 @@
     <string name="msg_gender_field_policy">Check here to public this field to everyone</string>
     <string name="msg_current_login_user">The current user is login right now</string>
     <string name="msg_remove_history_account">%1$s will need to log in again to use from this device.</string>
+    <string name="msg_username_explain">Your username becomes part of your custom links that let people connect with you on TAC.</string>
+    <string name="msg_qr_code">Your <b>QR Code</b> here. Using this code to let people connect with you to make a conversation with each other.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -149,6 +151,7 @@
     <string name="error_network_connection">A network error (such as timeout, interrupted connection or unreachable host) has occurred.</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_too_many_request">Too many requests at the same time. Try again later</string>
+    <string name="error_user_connect_name_conflict">Your username is not available. Try another one.</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -159,6 +162,7 @@
     <string name="prompt_bio_length">%1$d / %2$d</string>
     <string name="prompt_account_name">Account Name</string>
     <string name="prompt_enter_otp">Enter your verification code here.</string>
+    <string name="prompt_new_username">New username</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_email_exists">This email has exist</string>
@@ -185,4 +189,5 @@
     <string name="key_pref_help">key_pref_help</string>
     <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
     <string name="key_pref_edit_profile">key_pref_edit_profile</string>
+    <string name="key_pref_friend_request">key_pref_friend_request</string>
 </resources>
