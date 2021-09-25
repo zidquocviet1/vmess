@@ -56,4 +56,14 @@ public interface UserService {
     Observable<ApiResponse<Boolean>> checkUserConnectName(@Header(Const.AUTHORIZATION) String token,
                                                           @Header(Const.AUTHORIZER) String authorizer,
                                                           @Query("username") String username);
+
+    @GET(value = "user/connect-by-qr-code")
+    Observable<ApiResponse<User>> getConnectUserByQrCode(@Header(Const.AUTHORIZATION) String token,
+                                                         @Header(Const.AUTHORIZER) String authorizer,
+                                                         @Query("code") String code);
+
+    @GET(value = "user/connect-by-username")
+    Observable<ApiResponse<User>> getConnectUserByUsername(@Header(Const.AUTHORIZATION) String token,
+                                                           @Header(Const.AUTHORIZER) String authorizer,
+                                                           @Query("username") String username);
 }

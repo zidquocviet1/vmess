@@ -147,6 +147,42 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void getConnectUserByQrCode(@NonNull String code,
+                                       @NonNull FirebaseUser user,
+                                       Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                       Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.getConnectUserByQrCode(
+                                Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, code));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
+    public void getConnectUserByUsername(@NonNull String username,
+                                         @NonNull FirebaseUser user,
+                                         Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                         Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.getConnectUserByUsername(
+                                Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, username));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
     public Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                                     @NonNull FirebaseUser user) {
         var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();

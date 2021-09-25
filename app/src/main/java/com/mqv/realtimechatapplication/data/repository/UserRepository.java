@@ -42,6 +42,16 @@ public interface UserRepository {
                               Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
                               Consumer<Exception> onAuthError);
 
+    void getConnectUserByQrCode(@NonNull String code,
+                                @NonNull FirebaseUser user,
+                                Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                Consumer<Exception> onAuthError);
+
+    void getConnectUserByUsername(@NonNull String username,
+                                  @NonNull FirebaseUser user,
+                                  Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                  Consumer<Exception> onAuthError);
+
     Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                              FirebaseUser user);
 }
