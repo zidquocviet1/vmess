@@ -6,6 +6,30 @@
     android:layout_height="match_parent"
     tools:context=".activity.preferences.PreferenceQrCodeActivity">
 
-    <include layout="@layout/custom_appbar"/>
+    <include
+        android:id="@+id/included_appbar"
+        layout="@layout/custom_appbar" />
 
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginTop="@dimen/all_padding_common"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:text="@string/msg_qr_code"
+        app:layout_constraintTop_toBottomOf="@id/included_appbar" />
+
+    <ImageView
+        android:id="@+id/image_qr_code"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.5"
+        app:layout_constraintVertical_bias="0.2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text"
+        app:layout_constraintWidth_percent="0.75" />
 </androidx.constraintlayout.widget.ConstraintLayout>
