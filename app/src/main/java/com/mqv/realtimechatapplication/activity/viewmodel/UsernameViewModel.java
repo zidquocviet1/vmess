@@ -111,10 +111,10 @@ public class UsernameViewModel extends CurrentUserViewModel {
                                         usernameStatus.setValue(Result.Success(null));
                                     }
                                 } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                    updateResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                    usernameStatus.setValue(Result.Fail(R.string.error_authentication_fail));
                                 }
-                            }, t -> updateResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
-                    e -> updateResult.setValue(Result.Fail(R.string.error_authentication_fail))
+                            }, t -> usernameStatus.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                    e -> usernameStatus.setValue(Result.Fail(R.string.error_authentication_fail))
             );
         }
     }
