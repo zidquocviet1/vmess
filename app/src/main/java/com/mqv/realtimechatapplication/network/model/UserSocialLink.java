@@ -6,6 +6,7 @@ import android.os.Parcelable;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.mqv.realtimechatapplication.network.model.type.SocialType;
 
 public class UserSocialLink implements Parcelable {
     private Long id;

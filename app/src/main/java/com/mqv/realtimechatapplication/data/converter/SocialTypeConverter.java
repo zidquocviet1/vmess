@@ -2,7 +2,7 @@ package com.mqv.realtimechatapplication.data.converter;
 
 import androidx.room.TypeConverter;
 
-import com.mqv.realtimechatapplication.network.model.SocialType;
+import com.mqv.realtimechatapplication.network.model.type.SocialType;
 
 public class SocialTypeConverter {
     @TypeConverter

@@ -7,6 +7,7 @@ import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
+import com.mqv.realtimechatapplication.network.model.type.Gender;
 
 import java.time.LocalDateTime;
 import java.util.List;

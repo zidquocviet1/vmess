@@ -19,7 +19,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.EditDetailsActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditDetailsViewModel;
 import com.mqv.realtimechatapplication.databinding.FragmentEditGenderBinding;
-import com.mqv.realtimechatapplication.network.model.Gender;
+import com.mqv.realtimechatapplication.network.model.type.Gender;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import dagger.hilt.android.AndroidEntryPoint;

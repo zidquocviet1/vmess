@@ -2,7 +2,7 @@ package com.mqv.realtimechatapplication.data.converter;
 
 import androidx.room.TypeConverter;
 
-import com.mqv.realtimechatapplication.network.model.Gender;
+import com.mqv.realtimechatapplication.network.model.type.Gender;
 
 public class GenderConverter {
     @TypeConverter

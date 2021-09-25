@@ -19,7 +19,7 @@ import com.mqv.realtimechatapplication.activity.EditDetailsActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditProfileViewModel;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.firebase.FirebaseUserManager;
-import com.mqv.realtimechatapplication.network.model.Gender;
+import com.mqv.realtimechatapplication.network.model.type.Gender;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

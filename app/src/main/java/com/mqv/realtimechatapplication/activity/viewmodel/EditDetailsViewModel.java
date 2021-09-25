@@ -10,7 +10,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
-import com.mqv.realtimechatapplication.network.model.Gender;
+import com.mqv.realtimechatapplication.network.model.type.Gender;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.util.Logging;
 

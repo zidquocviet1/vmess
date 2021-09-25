@@ -1,4 +1,4 @@
-package com.mqv.realtimechatapplication.network.model;
+package com.mqv.realtimechatapplication.network.model.type;
 
 import android.util.SparseArray;
 

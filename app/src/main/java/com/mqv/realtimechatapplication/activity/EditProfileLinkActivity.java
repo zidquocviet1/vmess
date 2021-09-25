@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.EditProfileLinkViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityEditProfileLinkBinding;
-import com.mqv.realtimechatapplication.network.model.SocialType;
+import com.mqv.realtimechatapplication.network.model.type.SocialType;
 import com.mqv.realtimechatapplication.network.model.UserSocialLink;
 import com.mqv.realtimechatapplication.ui.adapter.UserLinkAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.SocialLinkListDialogFragment;

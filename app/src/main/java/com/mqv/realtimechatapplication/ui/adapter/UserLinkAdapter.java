@@ -22,7 +22,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.EditProfileLinkActivity;
 import com.mqv.realtimechatapplication.databinding.ItemIndividualSocialLinkBinding;
 import com.mqv.realtimechatapplication.databinding.ItemPreferenceContentBinding;
-import com.mqv.realtimechatapplication.network.model.SocialType;
+import com.mqv.realtimechatapplication.network.model.type.SocialType;
 import com.mqv.realtimechatapplication.network.model.UserSocialLink;
 
 import java.util.List;
