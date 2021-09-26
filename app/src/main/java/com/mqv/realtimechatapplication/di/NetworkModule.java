@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.network.adapter.LocalDateTimeAdapter;
+import com.mqv.realtimechatapplication.network.service.FriendRequestService;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -44,7 +45,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class NetworkModule {
     @Singleton
     @Provides
-    public Gson provideGson(){
+    public Gson provideGson() {
         var builder = new GsonBuilder()
                 .setPrettyPrinting()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
@@ -53,7 +54,7 @@ public class NetworkModule {
 
     @Singleton
     @Provides
-    public OkHttpClient provideOkHttpClient(@ApplicationContext Context context){
+    public OkHttpClient provideOkHttpClient(@ApplicationContext Context context) {
         var loggingInterceptor = new HttpLoggingInterceptor();
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -76,7 +77,7 @@ public class NetworkModule {
             var fis = context.getResources().openRawResource(R.raw.tac);
             var bis = new BufferedInputStream(fis);
             var certificateFactory = CertificateFactory.getInstance("X.509");
-            while (bis.available() > 0){
+            while (bis.available() > 0) {
                 var cert = certificateFactory.generateCertificate(bis);
                 keyStore.setCertificateEntry(Const.BASE_IP, cert);
             }
@@ -85,7 +86,7 @@ public class NetworkModule {
                     TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             trustManagerFactory.init(keyStore);
             var trustManagers = trustManagerFactory.getTrustManagers();
-            if (!(trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager))){
+            if (!(trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager))) {
                 Logging.show("Unexpected default trust manager " + Arrays.toString(trustManagers));
             }
 
@@ -116,7 +117,7 @@ public class NetworkModule {
 
     @Singleton
     @Provides
-    public Retrofit provideRetrofit(Gson gson, OkHttpClient httpClient){
+    public Retrofit provideRetrofit(Gson gson, OkHttpClient httpClient) {
         return new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
@@ -127,7 +128,13 @@ public class NetworkModule {
 
     @Singleton
     @Provides
-    public UserService provideUserService(Retrofit retrofit){
+    public UserService provideUserService(Retrofit retrofit) {
         return retrofit.create(UserService.class);
+    }
+
+    @Singleton
+    @Provides
+    public FriendRequestService provideFriendRequestService(Retrofit retrofit) {
+        return retrofit.create(FriendRequestService.class);
     }
 }
