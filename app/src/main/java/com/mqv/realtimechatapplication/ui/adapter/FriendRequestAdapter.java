@@ -16,6 +16,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemFriendRequestBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.network.model.FriendRequest;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -89,14 +90,16 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequest, FriendReque
         }
 
         public void bindTo(FriendRequest item, Context mContext) {
+            var photoUrl = item.getPhotoUrl() == null ? "" : item.getPhotoUrl().replace("localhost", Const.BASE_IP);
+
             GlideApp.with(mContext)
-                    .load(item.getPhotoUrl())
+                    .load(photoUrl)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
-                    .signature(new ObjectKey(item.getPhotoUrl()))
+                    .signature(new ObjectKey(photoUrl))
                     .error(R.drawable.ic_round_account)
                     .into(binding.imageAvatar);
-            binding.title.setText(item.getDisplayName());
+            binding.title.setText(item.getDisplayName() == null ? "Test" : item.getDisplayName());
             binding.textTimestamp.setText(specificTimeStamp(item.getCreatedDate()));
         }
 
