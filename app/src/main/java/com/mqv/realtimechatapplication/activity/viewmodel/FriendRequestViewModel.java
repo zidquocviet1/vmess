@@ -3,39 +3,57 @@ package com.mqv.realtimechatapplication.activity.viewmodel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.repository.FriendRequestRepository;
+import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.FriendRequest;
-import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
-import com.mqv.realtimechatapplication.util.Const;
 
-import java.util.Arrays;
+import java.net.HttpURLConnection;
 import java.util.List;
 
-public class FriendRequestViewModel extends CurrentUserViewModel {
-    private final MutableLiveData<List<FriendRequest>> friendRequestList = new MutableLiveData<>();
+import javax.inject.Inject;
 
-    public FriendRequestViewModel() {
+import dagger.hilt.android.lifecycle.HiltViewModel;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
+@HiltViewModel
+public class FriendRequestViewModel extends CurrentUserViewModel {
+    private final MutableLiveData<Result<List<FriendRequest>>> friendRequestList = new MutableLiveData<>();
+    private final FriendRequestRepository repository;
+
+    @Inject
+    public FriendRequestViewModel(FriendRequestRepository repository) {
+        this.repository = repository;
         loadFirebaseUser();
 
         loadPendingFriendRequest();
     }
 
-    public LiveData<List<FriendRequest>> getFriendRequestList() {
+    public LiveData<Result<List<FriendRequest>>> getFriendRequestList() {
         return friendRequestList;
     }
 
     private void loadPendingFriendRequest() {
-        var list = Arrays.asList(
-                new FriendRequest(1L, "abc", "bcd", Const.DUMMIES_IMAGES_URL[0], "Messika", FriendRequestStatus.PENDING),
-                new FriendRequest(2L, "abcf", "bcd", Const.DUMMIES_IMAGES_URL[1], "Cristiano Ronaldo", FriendRequestStatus.PENDING),
-                new FriendRequest(3L, "abcd", "bcd", Const.DUMMIES_IMAGES_URL[2], "Cúc Tịnh Y", FriendRequestStatus.PENDING),
-                new FriendRequest(4L, "abce", "bcd", Const.DUMMIES_IMAGES_URL[3], "David Beckham", FriendRequestStatus.PENDING),
-                new FriendRequest(5L, "abcg", "bcd", Const.DUMMIES_IMAGES_URL[4], "Địch Lệ Nhiệt Ba", FriendRequestStatus.PENDING),
-                new FriendRequest(6L, "abch", "bcd", Const.DUMMIES_IMAGES_URL[5], "Cúc Tịnh YY", FriendRequestStatus.PENDING),
-                new FriendRequest(7L, "abcn", "bcd", Const.DUMMIES_IMAGES_URL[6], "Toni Kross", FriendRequestStatus.PENDING),
-                new FriendRequest(8L, "abchd", "bcd", Const.DUMMIES_IMAGES_URL[7], "Messika", FriendRequestStatus.PENDING),
-                new FriendRequest(9L, "abcfdfgw", "bcd", Const.DUMMIES_IMAGES_URL[8], "Cristiano Ronaldo", FriendRequestStatus.PENDING),
-                new FriendRequest(10L, "abcdhw", "bcd", Const.DUMMIES_IMAGES_URL[9], "Cúc Tịnh Y", FriendRequestStatus.PENDING),
-                new FriendRequest(11L, "abceh", "bcd", Const.DUMMIES_IMAGES_URL[10], "David Beckham", FriendRequestStatus.PENDING));
-        friendRequestList.setValue(list);
+        var firebaseUser = getFirebaseUser().getValue();
+
+        if (firebaseUser != null) {
+            friendRequestList.setValue(Result.Loading());
+
+            repository.getAllPendingRequest(firebaseUser,
+                    observable -> cd.add(observable
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(response -> {
+                                if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                    friendRequestList.setValue(Result.Success(response.getSuccess()));
+                                } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                    friendRequestList.setValue(Result.Fail(R.string.error_authentication_fail));
+                                }
+                            }, t -> friendRequestList.setValue(Result.Fail(R.string.error_connect_server_fail)))),
+                    e -> friendRequestList.setValue(Result.Fail(R.string.error_authentication_fail)));
+        } else {
+            friendRequestList.setValue(Result.Fail(R.string.error_unknown));
+        }
     }
 }
