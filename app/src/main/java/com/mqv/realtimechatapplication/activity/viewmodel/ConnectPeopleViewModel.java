@@ -6,20 +6,28 @@ import androidx.lifecycle.MutableLiveData;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 
 import java.net.HttpURLConnection;
+import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class ConnectPeopleViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<Result<User>> connectUserResult = new MutableLiveData<>();
+    private Disposable qrCodeDisposable;
+    private Disposable usernameDisposable;
+    private static final int QR_CODE_REQUEST = -1;
+    private static final int USERNAME_REQUEST = 0;
 
     @Inject
     public ConnectPeopleViewModel(UserRepository userRepository) {
@@ -37,33 +45,70 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
         if (firebaseUser != null) {
             connectUserResult.setValue(Result.Loading());
 
-            userRepository.getConnectUserByQrCode(code,
-                    firebaseUser,
-                    observable -> cd.add(observable.subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(response -> {
-                                if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                    connectUserResult.setValue(Result.Success(response.getSuccess()));
-                                } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                                    connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail));
-                                }else if (response.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-                                    connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
-                                }
-                            }, t -> connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
-                    e -> connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail)));
+            userRepository.getConnectUserByQrCode(code, firebaseUser, observable ->
+                    handleRemoteCall(observable, QR_CODE_REQUEST), handleFirebaseAuthError());
         }
     }
 
     public void getConnectUserByUsername(String username) {
+        var firebaseUser = getFirebaseUser().getValue();
 
+        if (firebaseUser != null) {
+            connectUserResult.setValue(Result.Loading());
+
+            userRepository.getConnectUserByUsername(username, firebaseUser, observable ->
+                    handleRemoteCall(observable, USERNAME_REQUEST), handleFirebaseAuthError());
+        }
+    }
+
+    private void handleRemoteCall(Observable<ApiResponse<User>> observable, int requestCode) {
+        var disposable = observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(response -> {
+                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                        connectUserResult.setValue(Result.Success(response.getSuccess()));
+                    } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                        connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                    } else if (response.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+                        connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
+                    }
+                }, t -> {
+                    var message = t.getMessage();
+
+                    if (message != null && message.equals("HTTP 404 ")){
+                        connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
+                    }else
+                        connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail));
+                });
+
+        if (requestCode == QR_CODE_REQUEST){
+            qrCodeDisposable = disposable;
+        }else if (requestCode == USERNAME_REQUEST){
+            usernameDisposable = disposable;
+        }
+
+        cd.add(disposable);
+    }
+
+    private Consumer<Exception> handleFirebaseAuthError() {
+        return e -> connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail));
     }
 
     public void resetConnectUserResult() {
         connectUserResult.setValue(null);
     }
 
-    public void dispose(){
-        if (!cd.isDisposed())
-            cd.dispose();
+    public void removeQrCodeObservable() {
+        if (qrCodeDisposable != null) {
+            cd.remove(qrCodeDisposable);
+            qrCodeDisposable = null;
+        }
+    }
+
+    public void removeUsernameDisposable() {
+        if (usernameDisposable != null) {
+            cd.remove(usernameDisposable);
+            usernameDisposable = null;
+        }
     }
 }
