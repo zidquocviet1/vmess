@@ -46,6 +46,8 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
                                     connectUserResult.setValue(Result.Success(response.getSuccess()));
                                 } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
                                     connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                }else if (response.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+                                    connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
                                 }
                             }, t -> connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail)))),
                     e -> connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail)));
@@ -58,5 +60,10 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
 
     public void resetConnectUserResult() {
         connectUserResult.setValue(null);
+    }
+
+    public void dispose(){
+        if (!cd.isDisposed())
+            cd.dispose();
     }
 }
