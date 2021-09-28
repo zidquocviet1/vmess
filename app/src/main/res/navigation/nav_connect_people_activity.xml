@@ -12,7 +12,11 @@
         tools:layout="@layout/fragment_qr_code_scanner">
         <action
             android:id="@+id/action_qrCodeScannerFragment_to_usernameConnectionFragment"
-            app:destination="@id/username" />
+            app:destination="@id/username"
+            app:enterAnim="@anim/slide_in_from_right"
+            app:exitAnim="@anim/slide_out_to_left"
+            app:popEnterAnim="@anim/slide_in_from_left"
+            app:popExitAnim="@anim/slide_out_to_right"/>
     </fragment>
 
     <fragment
