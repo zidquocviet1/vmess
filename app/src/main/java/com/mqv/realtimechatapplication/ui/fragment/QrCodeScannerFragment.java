@@ -170,7 +170,7 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mViewModel.dispose();
+        mViewModel.removeQrCodeObservable();
     }
 
     @Override
