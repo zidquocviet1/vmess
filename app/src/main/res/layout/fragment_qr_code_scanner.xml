@@ -84,12 +84,13 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
             android:padding="@dimen/all_padding_common"
             android:text="@string/msg_camera_permission"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textSize="18sp" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_enable_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
