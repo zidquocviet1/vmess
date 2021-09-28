@@ -40,8 +40,15 @@
             </intent-filter>
         </activity>
         <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".activity.ConnectPeopleActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity"/>
         <activity
             android:name=".activity.preferences.PreferenceQrCodeActivity"
             android:exported="true"
