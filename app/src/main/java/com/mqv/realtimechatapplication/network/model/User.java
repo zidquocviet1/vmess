@@ -1,5 +1,8 @@
 package com.mqv.realtimechatapplication.network.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
@@ -13,7 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity(tableName = "user")
-public class User {
+public class User implements Parcelable {
     @PrimaryKey
     @NonNull
     private String uid;
@@ -72,6 +75,32 @@ public class User {
         this.socialLinks = another.getSocialLinks();
         this.username = another.getUsername();
     }
+
+    protected User(Parcel in) {
+        uid = in.readString();
+        biographic = in.readString();
+        displayName = in.readString();
+        photoUrl = in.readString();
+        gender = (Gender) in.readSerializable();
+        birthday = (LocalDateTime) in.readSerializable();
+        createdDate = (LocalDateTime) in.readSerializable();
+        modifiedDate = (LocalDateTime) in.readSerializable();
+        accessedDate = (LocalDateTime) in.readSerializable();
+        socialLinks = in.createTypedArrayList(UserSocialLink.CREATOR);
+        username = in.readString();
+    }
+
+    public static final Creator<User> CREATOR = new Creator<User>() {
+        @Override
+        public User createFromParcel(Parcel in) {
+            return new User(in);
+        }
+
+        @Override
+        public User[] newArray(int size) {
+            return new User[size];
+        }
+    };
 
     @NonNull
     public String getUid() {
@@ -160,5 +189,25 @@ public class User {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(uid);
+        dest.writeString(biographic);
+        dest.writeString(displayName);
+        dest.writeString(photoUrl);
+        dest.writeSerializable(gender);
+        dest.writeSerializable(birthday);
+        dest.writeSerializable(createdDate);
+        dest.writeSerializable(modifiedDate);
+        dest.writeSerializable(accessedDate);
+        dest.writeTypedList(socialLinks);
+        dest.writeString(username);
     }
 }
