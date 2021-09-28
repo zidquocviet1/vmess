@@ -3,8 +3,10 @@ package com.mqv.realtimechatapplication.activity.preferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mqv.realtimechatapplication.R;
@@ -15,6 +17,7 @@ import com.mqv.realtimechatapplication.network.model.FriendRequest;
 import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.ui.adapter.FriendRequestAdapter;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,14 +53,46 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
 
     @Override
     public void setupObserver() {
-        mViewModel.getFriendRequestList().observe(this, list -> {
-            if (list == null)
-                mAdapter.submitList(new ArrayList<>());
-            else {
-                mMutableList.addAll(list.stream().map(FriendRequest::new).collect(Collectors.toList()));
-                mAdapter.submitList(mMutableList);
+        mViewModel.getFriendRequestList().observe(this, result -> {
+            if (result == null)
+                return;
+
+            var status = result.getStatus();
+
+            showLoadingUi(status == NetworkStatus.LOADING);
+
+            switch (status) {
+                case ERROR:
+                    Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
+
+                    mBinding.recyclerViewRequest.setVisibility(View.GONE);
+                    mBinding.imageError.setVisibility(View.VISIBLE);
+                    mBinding.textError.setVisibility(View.VISIBLE);
+                    mBinding.imageError.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.image_server_break_down));
+                    mBinding.textError.setText(R.string.msg_oop_something_when_wrong);
+                    break;
+                case SUCCESS:
+                    var list = result.getSuccess();
+                    if (list == null || list.isEmpty()) {
+                        mAdapter.submitList(new ArrayList<>());
+                        mBinding.recyclerViewRequest.setVisibility(View.GONE);
+                        mBinding.imageError.setVisibility(View.VISIBLE);
+                        mBinding.textError.setVisibility(View.VISIBLE);
+                        mBinding.imageError.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.image_no_data));
+                        mBinding.textError.setText(R.string.msg_friend_request_empty_list);
+                    } else {
+                        mMutableList.addAll(list.stream().map(FriendRequest::new).collect(Collectors.toList()));
+                        mAdapter.submitList(mMutableList);
+                    }
+                    break;
             }
+
         });
+    }
+
+    private void showLoadingUi(boolean isLoading) {
+        mBinding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        mBinding.recyclerViewRequest.setVisibility(isLoading ? View.GONE : View.VISIBLE);
     }
 
     private void setupRecyclerView() {
