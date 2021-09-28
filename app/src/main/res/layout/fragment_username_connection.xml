@@ -1,15 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     tools:context=".ui.fragment.UsernameConnectionFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_back"
+        style="@style/MaterialIconButton"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginTop="42dp"
+        android:backgroundTint="@color/zxing_transparent"
+        app:icon="@drawable/ic_back"
+        app:iconTint="@color/text_color"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:rippleColor="@android:color/darker_gray" />
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/all_margin"
+        android:text="@string/msg_username_connect"
+        android:textAlignment="center"
+        app:layout_constraintTop_toBottomOf="@id/button_back" />
+
+    <EditText
+        android:id="@+id/edit_user_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/all_margin"
+        android:autofillHints="username"
+        android:hint="@string/prompt_find_username"
+        android:inputType="text"
+        android:maxLength="20"
+        app:layout_constraintTop_toBottomOf="@id/text1" />
+
+    <TextView
+        android:id="@+id/text_prompt_length"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/prompt_bio_length"
+        app:layout_constraintEnd_toEndOf="@id/edit_user_name"
+        app:layout_constraintTop_toBottomOf="@id/edit_user_name" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_find"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:paddingStart="@dimen/all_padding_common"
+        android:paddingEnd="@dimen/all_padding_common"
+        android:text="@string/action_find"
+        android:textAllCaps="false"
+        android:textColor="@color/text_color"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_prompt_length"
+        app:strokeColor="?colorControlHighlight" />
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintVertical_bias="0.1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/edit_user_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_find" />
+</androidx.constraintlayout.widget.ConstraintLayout>
