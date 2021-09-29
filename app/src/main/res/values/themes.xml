@@ -43,7 +43,7 @@
     <style name="ImageViewCornerSize5Percent" parent="">
         <item name="cornerSize">5%</item>
     </style>
-    
+
     <style name="TextInputLayoutOutlinedBoxCornerRadius" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
         <item name="boxCornerRadiusBottomEnd">@dimen/text_input_corner_radius</item>
         <item name="boxCornerRadiusBottomStart">@dimen/text_input_corner_radius</item>
@@ -124,7 +124,7 @@
         <item name="android:layout_marginEnd">@dimen/all_padding_common</item>
         <item name="background">@color/text_color</item>
     </style>
-    
+
     <style name="EditTextCustom.EditDetails" parent="">
         <item name="boxBackgroundColor">@color/navigation_background</item>
         <item name="boxStrokeColor">@null</item>
@@ -144,5 +144,18 @@
     <style name="UserSocialLinkListDialogFragment" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
         <item name="cornerSizeTopLeft">@dimen/button_corner_radius_soft</item>
         <item name="cornerSizeTopRight">@dimen/button_corner_radius_soft</item>
+    </style>
+
+    <style name="CustomOutlineButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Button</item>
+        <item name="android:textColor">@color/text_color</item>
+        <item name="android:textSize">18sp</item>
+        <item name="strokeColor">?colorControlHighlight</item>
+        <item name="android:paddingStart">@dimen/all_padding_common</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingEnd">@dimen/all_padding_common</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="rippleColor">@drawable/background_custom_button_outline_ripple</item>
     </style>
 </resources>
