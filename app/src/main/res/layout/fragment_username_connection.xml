@@ -49,20 +49,16 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_find"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="wrap_content"
+        style="@style/CustomOutlineButton"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin"
         android:enabled="false"
-        android:paddingStart="@dimen/all_padding_common"
-        android:paddingEnd="@dimen/all_padding_common"
         android:text="@string/action_find"
-        android:textAllCaps="false"
-        android:textColor="@color/text_color"
-        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_prompt_length"
-        app:strokeColor="?colorControlHighlight" />
+        app:layout_constraintWidth_percent="0.4" />
 
     <androidx.core.widget.ContentLoadingProgressBar
         android:id="@+id/progress_bar_loading"
@@ -70,9 +66,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintVertical_bias="0.1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/edit_user_name"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_find" />
+        app:layout_constraintTop_toBottomOf="@+id/button_find"
+        app:layout_constraintVertical_bias="0.1" />
 </androidx.constraintlayout.widget.ConstraintLayout>
