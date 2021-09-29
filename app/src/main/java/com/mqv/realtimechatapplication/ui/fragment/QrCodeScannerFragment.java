@@ -292,6 +292,9 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
         mBinding.textAddCode.setOnClickListener(v -> requestStoragePermission());
         if (!hasFlash())
             mBinding.buttonFlash.setVisibility(View.GONE);
+        if (!isFlashOff)
+            mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_on));
+        else mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_off));
     }
 
     private void checkCameraPermission() {
