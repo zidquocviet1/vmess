@@ -72,6 +72,8 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
 
         updateActionBarTitle(R.string.label_edit_links);
 
+        enableSaveButton(this);
+
         setupRecyclerView();
 
         socialTypeArrayList = SocialType.getSocialTypeAsArray();
@@ -100,7 +102,6 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
             }
             return false;
         });
-        mBinding.buttonSave.setOnClickListener(this);
         mBinding.buttonAddSocialLink.setOnClickListener(this);
         mBinding.buttonSelectService.setOnClickListener(this);
     }
@@ -118,6 +119,8 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
 
         mViewModel.getUpdateResult().observe(this, result -> {
             if (result == null) return;
+
+            makeButtonEnable(result.getStatus() != NetworkStatus.LOADING);
 
             if (result.getStatus() == NetworkStatus.LOADING) {
                 LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
@@ -148,7 +151,7 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
     public void onClick(View v) {
         var id = v.getId();
 
-        if (id == mBinding.buttonSave.getId()) {
+        if (id == mBinding.includedAppbar.buttonSave.getId()) {
             var newLinkList = mAdapter.getCurrentList();
 
             var oldSize = mOldLinkList == null ? 0 : mOldLinkList.size();
