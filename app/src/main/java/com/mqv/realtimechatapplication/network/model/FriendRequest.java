@@ -30,6 +30,19 @@ public class FriendRequest {
         this.createdDate = LocalDateTime.of(2021, 9, 25, 1, 10, 30);
     }
 
+    public FriendRequest(String senderId, String receiverId, FriendRequestStatus status) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.status = status;
+        this.createdDate = LocalDateTime.now();
+    }
+
+    public FriendRequest(String senderId, String receiverId) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.createdDate = LocalDateTime.now();
+    }
+
     public FriendRequest(FriendRequest that) {
         this.id = that.getId();
         this.senderId = that.getSenderId();
