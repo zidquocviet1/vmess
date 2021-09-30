@@ -6,4 +6,220 @@
     android:layout_height="match_parent"
     tools:context=".activity.RequestPeopleActivity">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_cover"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/image_cover_photo_height"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/background_sample_cover_photo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_back"
+            style="@style/MaterialIconButton"
+            android:layout_marginStart="@dimen/all_margin"
+            android:layout_marginTop="42dp"
+            android:backgroundTint="@color/zxing_transparent"
+            app:icon="@drawable/ic_back"
+            app:iconTint="@color/navigation_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@android:color/darker_gray" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_overflow"
+            style="@style/MaterialIconButton"
+            android:layout_marginTop="42dp"
+            android:layout_marginEnd="@dimen/all_margin"
+            android:backgroundTint="@color/zxing_transparent"
+            app:icon="@drawable/ic_more_vertical"
+            app:iconTint="@color/navigation_background"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@android:color/darker_gray" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/filter"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@color/white"
+            app:layout_constraintBottom_toBottomOf="@id/image_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_cover"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_avatar"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="42dp"
+            android:clickable="true"
+            android:src="@drawable/ic_round_account"
+            app:layout_constraintBottom_toBottomOf="@id/image_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_cover"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <TextView
+            android:id="@+id/text_display_name"
+            style="@style/TitleTextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/all_margin"
+            android:text="@string/author_app_full_name"
+            app:layout_constraintEnd_toEndOf="@id/image_avatar"
+            app:layout_constraintStart_toStartOf="@id/image_avatar"
+            app:layout_constraintTop_toBottomOf="@id/image_avatar" />
+
+        <TextView
+            android:id="@+id/text_bio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="@dimen/all_margin"
+            android:layout_marginEnd="10dp"
+            android:maxLength="255"
+            android:text="@string/author_app_full_name"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_display_name" />
+
+        <TextView
+            android:id="@+id/text_joined"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/all_margin"
+            android:layout_marginTop="@dimen/all_margin"
+            android:layout_marginEnd="@dimen/all_margin"
+            android:drawablePadding="@dimen/all_padding_default"
+            android:text="@string/title_joined_at"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:drawableStartCompat="@drawable/ic_round_calendar_today"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_bio" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toStartOf="@id/button_message"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_joined">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_add_friend"
+                style="@style/CustomOutlineButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/action_add_friend"
+                android:textColor="@color/navigation_background"
+                android:visibility="gone"
+                app:backgroundTint="@color/purple_500"
+                app:rippleColor="@color/mtrl_btn_ripple_color"
+                tools:ignore="PrivateResource" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_confirm"
+                style="@style/CustomOutlineButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/action_confirm"
+                android:textColor="@color/navigation_background"
+                android:visibility="visible"
+                app:backgroundTint="@color/purple_500"
+                app:rippleColor="@color/mtrl_btn_ripple_color"
+                tools:ignore="PrivateResource" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_cancel"
+                style="@style/CustomOutlineButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="@dimen/all_margin"
+                android:text="@string/action_cancel"
+                android:textColor="@color/navigation_background"
+                android:visibility="gone"
+                app:backgroundTint="@color/purple_500"
+                app:rippleColor="@color/mtrl_btn_ripple_color"
+                tools:ignore="PrivateResource" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_message"
+            style="@style/CustomOutlineButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="@string/action_message"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/layout_button"
+            app:layout_constraintTop_toTopOf="@id/layout_button" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_error"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/image_error"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/image_server_break_down"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.4"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.2"
+            app:layout_constraintWidth_percent="0.8" />
+
+        <TextView
+            android:id="@+id/text_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/all_margin"
+            android:text="@string/msg_oop_something_when_wrong"
+            android:textAlignment="center"
+            app:layout_constraintTop_toBottomOf="@id/image_error" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
