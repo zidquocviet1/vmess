@@ -80,6 +80,7 @@
     <string name="title_bio">Bio</string>
     <string name="title_details">Details</string>
     <string name="title_links">Links</string>
+    <string name="title_joined_at"><![CDATA[<b>Joined</b> %1$s]]></string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -111,6 +112,9 @@
     <string name="action_remove">Remove</string>
     <string name="action_create_new_account">Create new account</string>
     <string name="action_confirm">Confirm</string>
+    <string name="action_find">Find</string>
+    <string name="action_message">Message</string>
+    <string name="action_add_friend">Add Friend</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
@@ -137,6 +141,7 @@
     <string name="msg_current_login_user">The current user is login right now</string>
     <string name="msg_remove_history_account">%1$s will need to log in again to use from this device.</string>
     <string name="msg_username_explain">Your username becomes part of your custom links that let people connect with you on TAC.</string>
+    <string name="msg_username_connect">Use the username from the others people sent you, it will make you easy to find themself information.</string>
     <string name="msg_qr_code">Your <b>QR Code</b> here. Using this code to let people connect with you to make a conversation with each other.</string>
     <string name="msg_friend_request_empty_list">You don\'t have any friend request. Share your <b>Qr Code</b> or <b>Username</b> to make people have accessibility with you.</string>
     <string name="msg_oop_something_when_wrong">Oops! Something when wrong with the server. Try later</string>
@@ -144,6 +149,7 @@
     <string name="msg_camera_permission">The app needs access to your camera to run this feature.</string>
     <string name="msg_enable_camera_access">Enable camera access</string>
     <string name="msg_request_yourself">Can\'t request to find yourself</string>
+    <string name="msg_loading">Loading...</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -159,6 +165,7 @@
     <string name="error_unknown">Unknown error</string>
     <string name="error_too_many_request">Too many requests at the same time. Try again later</string>
     <string name="error_user_connect_name_conflict">Your username is not available. Try another one.</string>
+    <string name="error_response_request_conflict">Can\'t confirm your request</string>
     <string name="error_qr_code_not_found">This qr code is not available</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
@@ -171,6 +178,7 @@
     <string name="prompt_account_name">Account Name</string>
     <string name="prompt_enter_otp">Enter your verification code here.</string>
     <string name="prompt_new_username">New username</string>
+    <string name="prompt_find_username">Find username</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_email_exists">This email has exist</string>
@@ -198,6 +206,4 @@
     <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
     <string name="key_pref_edit_profile">key_pref_edit_profile</string>
     <string name="key_pref_friend_request">key_pref_friend_request</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
