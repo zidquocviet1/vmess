@@ -13,11 +13,15 @@ import com.mqv.realtimechatapplication.databinding.ActivityPreferenceUsernameBin
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
+import java.util.concurrent.TimeUnit;
+
 import dagger.hilt.android.AndroidEntryPoint;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.PublishSubject;
 
 @AndroidEntryPoint
-public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewModel, ActivityPreferenceUsernameBinding>
-        implements TextWatcher {
+public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewModel, ActivityPreferenceUsernameBinding> {
     private static final int MAX_USERNAME_LENGTH = 20;
     private String currentUsername;
 
@@ -49,7 +53,7 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
             currentUsername = username;
             mBinding.editUserName.setText(username);
             mBinding.textPromptLength.setText(getString(R.string.prompt_bio_length, username.length(), MAX_USERNAME_LENGTH));
-            mBinding.editUserName.addTextChangedListener(this);
+            mViewModel.observeQueryTextChanged(createQueryUsername());
         });
 
         mViewModel.getUpdateResult().observe(this, result -> {
@@ -88,21 +92,29 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
         });
     }
 
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    private Observable<String> createQueryUsername() {
+        PublishSubject<String> subject = PublishSubject.create();
 
-    }
+        mBinding.editUserName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
-    }
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-    @Override
-    public void afterTextChanged(Editable s) {
-        mBinding.textPromptLength.setText(getString(R.string.prompt_bio_length, s.length(), MAX_USERNAME_LENGTH));
-        if (!s.toString().equals(currentUsername))
-            mViewModel.checkUserConnectName(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                subject.onNext(s.toString());
+                mBinding.textPromptLength.setText(getString(R.string.prompt_bio_length, s.length(), MAX_USERNAME_LENGTH));
+            }
+        });
+
+        return subject.debounce(300, TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io());
     }
 
     private void showLoadingUi(boolean isLoading) {

@@ -16,6 +16,13 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.ObservableSource;
+import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -46,6 +53,41 @@ public class UsernameViewModel extends CurrentUserViewModel {
 
     public LiveData<Result<String>> getUsernameStatus() {
         return usernameStatus;
+    }
+
+    public void observeQueryTextChanged(Observable<String> observable) {
+        observable.filter(s -> !s.isEmpty())
+                .distinctUntilChanged()
+                .switchMap((Function<String, ObservableSource<String>>) s ->
+                        Observable.create((ObservableOnSubscribe<String>) emitter -> {
+                            if (!emitter.isDisposed()) {
+                                emitter.onNext(s);
+                            }
+                        }))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        cd.add(d);
+                    }
+
+                    @Override
+                    public void onNext(@NonNull String s) {
+                        Logging.show("Username: " + s);
+                        checkUserConnectName(s);
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     public void editUsername(String username) {
