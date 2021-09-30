@@ -7,6 +7,10 @@ public enum FriendRequestStatus {
     CONFIRM,
     @SerializedName("pending")
     PENDING,
+    @SerializedName("request")
+    REQUEST,
+    @SerializedName("acknowledge")
+    ACKNOWLEDGE,
     @SerializedName("cancel")
     CANCEL
 }
