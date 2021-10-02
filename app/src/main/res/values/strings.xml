@@ -22,6 +22,7 @@
     <string name="label_preview_cover_photo">Preview Cover Photo</string>
     <string name="label_edit_details">Edit Details</string>
     <string name="label_edit_links">Edit Links</string>
+    <string name="label_all_people">All People</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
@@ -96,6 +97,7 @@
     <string name="action_edit_profile">Edit Profile</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_edit">Edit</string>
+    <string name="action_yes">Yes</string>
     <string name="action_save">Save</string>
     <string name="action_take_photo">Take photo</string>
     <string name="action_choose_photo">Choose existing photo</string>
@@ -113,8 +115,9 @@
     <string name="action_create_new_account">Create new account</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_find">Find</string>
-    <string name="action_message">Message</string>
+    <string name="action_message">Send Message</string>
     <string name="action_add_friend">Add Friend</string>
+    <string name="action_un_friend">Unfriend</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
