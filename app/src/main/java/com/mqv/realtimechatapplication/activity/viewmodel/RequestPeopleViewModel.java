@@ -27,6 +27,8 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
     @Inject
     public RequestPeopleViewModel(FriendRequestRepository repository) {
         this.repository = repository;
+
+        loadFirebaseUser();
     }
 
     public LiveData<Result<FriendRequestStatus>> getFriendRequestStatus() {
@@ -42,7 +44,7 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
     }
 
     public void getFriendRequestStatusByUid(String uid) {
-        repository.findFriendRequestStatusByReceiverId(uid,
+        repository.findFriendRequestStatusByReceiverId(getFirebaseUser().getValue(), uid,
                 observable -> cd.add(observable
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -68,7 +70,7 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
     public void responseFriendRequest(FriendRequest request) {
         responseRequestResult.setValue(Result.Loading());
 
-        repository.responseFriendRequest(request,
+        repository.responseFriendRequest(getFirebaseUser().getValue(), request,
                 observable -> cd.add(observable
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
@@ -96,7 +98,7 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
     public void requestConnect(FriendRequest request) {
         requestConnectResult.setValue(Result.Loading());
 
-        repository.requestConnect(request, observable -> cd.add(observable
+        repository.requestConnect(getFirebaseUser().getValue(), request, observable -> cd.add(observable
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(response -> {

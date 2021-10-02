@@ -122,6 +122,8 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 case SUCCESS:
                     LoadingDialog.finishLoadingDialog();
 
+                    setResult(RESULT_OK);
+
                     finish();
                     break;
                 case ERROR:
@@ -144,7 +146,7 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
         } else if (id == mBinding.buttonCancel.getId()) {
             mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), FriendRequestStatus.CANCEL));
         } else if (id == mBinding.buttonMessage.getId()) {
-
+            // TODO: open message tap and check is friend or not
         } else if (id == mBinding.buttonBack.getId()) {
             onBackPressed();
         } else if (id == mBinding.buttonOverflow.getId()) {
