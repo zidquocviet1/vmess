@@ -20,6 +20,7 @@ import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.validator.LoginForm;
@@ -45,15 +46,18 @@ public class LoginViewModel extends ViewModel {
     private final CompositeDisposable cd = new CompositeDisposable();
     private final LoginRepository loginRepository;
     private final HistoryLoggedInUserRepository historyUserRepository;
+    private final PeopleRepository peopleRepository;
     private FirebaseUser currentLoginFirebaseUser;
     private FirebaseUser previousFirebaseUser;
     private FirebaseUser loginUserOnStop;
 
     @Inject
     public LoginViewModel(LoginRepository loginRepository,
-                          HistoryLoggedInUserRepository historyUserRepository) {
+                          HistoryLoggedInUserRepository historyUserRepository,
+                          PeopleRepository peopleRepository) {
         this.loginRepository = loginRepository;
         this.historyUserRepository = historyUserRepository;
+        this.peopleRepository = peopleRepository;
     }
 
     public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
@@ -174,6 +178,7 @@ public class LoginViewModel extends ViewModel {
 
         if (previousUser != null) {
             saveRequest = historyUserRepository.signOut(previousUser.getUid())
+                    .andThen(peopleRepository.deleteAll())
                     .andThen(loginRepository.saveLoggedInUser(user, historyUser));
         } else {
             saveRequest = loginRepository.saveLoggedInUser(user, historyUser);
