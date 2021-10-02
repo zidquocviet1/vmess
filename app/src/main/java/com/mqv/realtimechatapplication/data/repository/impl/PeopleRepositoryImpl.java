@@ -7,8 +7,11 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
+import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.NetworkBoundResource;
+import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.ui.data.People;
+import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.time.LocalDateTime;
@@ -25,11 +28,13 @@ import io.reactivex.rxjava3.core.Observable;
 
 public class PeopleRepositoryImpl implements PeopleRepository {
     private final PeopleDao peopleDao;
+    private final UserService userService;
     private final FirebaseUser user;
 
     @Inject
-    public PeopleRepositoryImpl(PeopleDao peopleDao) {
+    public PeopleRepositoryImpl(PeopleDao peopleDao, UserService userService) {
         this.peopleDao = peopleDao;
+        this.userService = userService;
         this.user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
@@ -104,5 +109,10 @@ public class PeopleRepositoryImpl implements PeopleRepository {
                         onAuthFail.accept(task.getException());
                     }
                 });
+    }
+
+    @Override
+    public Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token) {
+        return userService.getConnectPeopleByUid(Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, uid);
     }
 }

@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.data.repository;
 
+import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.ui.data.People;
 
 import java.util.List;
@@ -18,4 +19,6 @@ public interface PeopleRepository {
 
     Observable<List<People>> fetchPeopleUsingNBS(Consumer<String> onAuthSuccess,
                                                  Consumer<Exception> onAuthFail);
+
+    Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token);
 }
