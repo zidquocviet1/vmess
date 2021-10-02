@@ -1,0 +1,108 @@
+package com.mqv.realtimechatapplication.data.repository.impl;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.data.dao.PeopleDao;
+import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
+import com.mqv.realtimechatapplication.network.NetworkBoundResource;
+import com.mqv.realtimechatapplication.ui.data.People;
+import com.mqv.realtimechatapplication.util.Logging;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Observable;
+
+public class PeopleRepositoryImpl implements PeopleRepository {
+    private final PeopleDao peopleDao;
+    private final FirebaseUser user;
+
+    @Inject
+    public PeopleRepositoryImpl(PeopleDao peopleDao) {
+        this.peopleDao = peopleDao;
+        this.user = FirebaseAuth.getInstance().getCurrentUser();
+    }
+
+    @Override
+    public Flowable<List<People>> getAll() {
+        return peopleDao.getAll();
+    }
+
+    @Override
+    public Completable save(List<People> peopleList) {
+        return peopleDao.save(peopleList);
+    }
+
+    @Override
+    public Completable deleteAll() {
+        Logging.show(String.format("Sign out user with uid: %s, display name: %s", user.getUid(), user.getDisplayName()));
+        return peopleDao.deleteAll();
+    }
+
+    @Override
+    public Observable<List<People>> fetchPeopleUsingNBS(Consumer<String> onAuthSuccess,
+                                                        Consumer<Exception> onAuthFail) {
+        return new NetworkBoundResource<List<People>, List<People>>(true) {
+            @Override
+            protected void saveCallResult(@NonNull List<People> item) {
+
+            }
+
+            @Override
+            protected Boolean shouldFetch(@Nullable List<People> data) {
+                if (user == null)
+                    return false;
+
+                if (data == null || data.isEmpty())
+                    return true;
+
+                var time = data.stream()
+                        .map(p -> p.getAccessedDate().plusMinutes(10).compareTo(LocalDateTime.now()))
+                        .filter(i -> i <= 0)
+                        .collect(Collectors.toList());
+
+                return !time.isEmpty();
+            }
+
+            @Override
+            protected Flowable<List<People>> loadFromDb() {
+                return getAll();
+            }
+
+            @Override
+            protected Observable<List<People>> createCall() {
+                return null;
+            }
+
+            @Override
+            protected void callAndSaveResult() {
+                validateIdToken(onAuthSuccess, onAuthFail);
+            }
+        }.asObservable();
+    }
+
+    private void validateIdToken(Consumer<String> onAuthSuccess,
+                                 Consumer<Exception> onAuthFail) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var result = task.getResult();
+                        var token = Objects.requireNonNull(result).getToken();
+
+                        onAuthSuccess.accept(token);
+                    } else {
+                        onAuthFail.accept(task.getException());
+                    }
+                });
+    }
+}
