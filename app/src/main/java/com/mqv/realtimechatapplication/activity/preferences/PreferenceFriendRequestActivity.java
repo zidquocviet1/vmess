@@ -1,8 +1,11 @@
 package com.mqv.realtimechatapplication.activity.preferences;
 
+import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.CANCEL;
+import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.CONFIRM;
+import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.PENDING;
+
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.Toast;
 
@@ -10,15 +13,18 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.activity.RequestPeopleActivity;
 import com.mqv.realtimechatapplication.activity.ToolbarActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.FriendRequestViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceFriendRequestBinding;
 import com.mqv.realtimechatapplication.network.model.FriendRequest;
 import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.ui.adapter.FriendRequestAdapter;
+import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +35,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendRequestViewModel, ActivityPreferenceFriendRequestBinding> {
     private FriendRequestAdapter mAdapter;
     private final List<FriendRequest> mMutableList = new ArrayList<>();
+    private int currentItemPosition;
 
     @Override
     public void binding() {
@@ -88,6 +95,63 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
             }
 
         });
+
+        mViewModel.getResponseRequestResult().observe(this, result -> {
+            if (result == null) return;
+
+            var status = result.getStatus();
+
+            switch (status) {
+                case LOADING:
+                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+
+                    break;
+                case SUCCESS:
+                    LoadingDialog.finishLoadingDialog();
+
+                    mAdapter.removeItem(currentItemPosition);
+                    break;
+                case ERROR:
+                    LoadingDialog.finishLoadingDialog();
+
+                    Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
+
+        mViewModel.getConnectUserResult().observe(this, result -> {
+            if (result == null) return;
+
+            var status = result.getStatus();
+
+            switch (status) {
+                case LOADING:
+                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+
+                    break;
+                case SUCCESS:
+                    LoadingDialog.finishLoadingDialog();
+
+                    var intent = new Intent(this, RequestPeopleActivity.class);
+                    intent.putExtra("user", result.getSuccess());
+
+                    activityResultLauncher.launch(intent, data -> {
+                        if (data != null && data.getResultCode() == RESULT_OK) {
+                            var item = mAdapter.getCurrentList().get(currentItemPosition);
+
+                            confirmFriendRequest(item.getSenderId(), item.getPhotoUrl(), item.getDisplayName());
+
+                            mAdapter.removeItem(currentItemPosition);
+                        }
+                    });
+                    break;
+                case ERROR:
+                    LoadingDialog.finishLoadingDialog();
+
+                    Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
     }
 
     private void showLoadingUi(boolean isLoading) {
@@ -97,9 +161,9 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
 
     private void setupRecyclerView() {
         mAdapter = new FriendRequestAdapter(this, mMutableList,
-                confirmPosition -> handleAdapterClicked(confirmPosition, FriendRequestStatus.CONFIRM),
-                cancelPosition -> handleAdapterClicked(cancelPosition, FriendRequestStatus.CANCEL));
-        mAdapter.setOnRequestClicked(position -> handleAdapterClicked(position, FriendRequestStatus.PENDING));
+                confirmPosition -> handleAdapterClicked(confirmPosition, CONFIRM),
+                cancelPosition -> handleAdapterClicked(cancelPosition, CANCEL));
+        mAdapter.setOnRequestClicked(position -> handleAdapterClicked(position, PENDING));
 
         mBinding.recyclerViewRequest.setAdapter(mAdapter);
         mBinding.recyclerViewRequest.setLayoutManager(new LinearLayoutManager(this));
@@ -107,23 +171,28 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
     }
 
     private void handleAdapterClicked(int position, FriendRequestStatus status) {
+        var request = mAdapter.getCurrentList().get(position);
+
+        currentItemPosition = position;
+
         switch (status) {
             case PENDING:
+                mViewModel.getConnectUserByUid(request.getSenderId());
                 break;
             case CANCEL:
-                mAdapter.removeItem(position);
+                mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CANCEL));
                 break;
             case CONFIRM:
-                LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_uploading_photo);
+                confirmFriendRequest(request.getSenderId(), request.getPhotoUrl(), request.getDisplayName());
 
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    mAdapter.removeItem(position);
-
-                    Toast.makeText(getApplicationContext(), "Response request successfully", Toast.LENGTH_SHORT).show();
-
-                    LoadingDialog.finishLoadingDialog();
-                }, 2000);
+                mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CONFIRM));
                 break;
         }
+    }
+
+    private void confirmFriendRequest(String uid, String photoUrl, String displayName) {
+        var people = new People(uid, displayName, photoUrl, null, LocalDateTime.now().minusMinutes(11));
+
+        mViewModel.confirmFriendRequest(people);
     }
 }
