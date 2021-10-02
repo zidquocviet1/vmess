@@ -14,6 +14,7 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface FriendRequestService {
     @GET(value = "connection/pending-connection")
@@ -38,4 +39,9 @@ public interface FriendRequestService {
     @GET(value = "connection/friend")
     Observable<ApiResponse<List<String>>> getFriendListId(@Header(Const.AUTHORIZATION) String token,
                                                           @Header(Const.AUTHORIZER) String authorizer);
+
+    @PUT(value = "connection/unfriend")
+    Observable<ApiResponse<Boolean>> unfriend(@Header(Const.AUTHORIZATION) String token,
+                                              @Header(Const.AUTHORIZER) String authorizer,
+                                              @Query("uid") String uid);
 }
