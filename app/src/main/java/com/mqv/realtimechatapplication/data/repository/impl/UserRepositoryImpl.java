@@ -1,10 +1,11 @@
-package com.mqv.realtimechatapplication.data.repository;
+package com.mqv.realtimechatapplication.data.repository.impl;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
+import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.NetworkBoundResource;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -176,6 +177,24 @@ public class UserRepositoryImpl implements UserRepository {
 
                         onAuthSuccess.accept(userService.getConnectUserByUsername(
                                 Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, username));
+                    } else {
+                        onAuthError.accept(task.getException());
+                    }
+                });
+    }
+
+    @Override
+    public void getConnectUserByUid(FirebaseUser user,
+                                    @NonNull String uid,
+                                    Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                                    Consumer<Exception> onAuthError) {
+        user.getIdToken(true)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        var token = Objects.requireNonNull(task.getResult()).getToken();
+
+                        onAuthSuccess.accept(userService.getConnectUserByUid(
+                                Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, uid));
                     } else {
                         onAuthError.accept(task.getException());
                     }

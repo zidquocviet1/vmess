@@ -52,6 +52,11 @@ public interface UserRepository {
                                   Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
                                   Consumer<Exception> onAuthError);
 
+    void getConnectUserByUid(FirebaseUser user,
+                             @NonNull String uid,
+                             Consumer<Observable<ApiResponse<User>>> onAuthSuccess,
+                             Consumer<Exception> onAuthError);
+
     Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                              FirebaseUser user);
 }
