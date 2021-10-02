@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.network.service;
 
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
+import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Const;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -66,4 +67,14 @@ public interface UserService {
     Observable<ApiResponse<User>> getConnectUserByUsername(@Header(Const.AUTHORIZATION) String token,
                                                            @Header(Const.AUTHORIZER) String authorizer,
                                                            @Query("username") String username);
+
+    @GET(value = "user/connect-by-uid")
+    Observable<ApiResponse<User>> getConnectUserByUid(@Header(Const.AUTHORIZATION) String token,
+                                                      @Header(Const.AUTHORIZER) String authorizer,
+                                                      @Query("uid") String uid);
+
+    @GET(value = "user/connect-by-uid")
+    Observable<ApiResponse<People>> getConnectPeopleByUid(@Header(Const.AUTHORIZATION) String token,
+                                                          @Header(Const.AUTHORIZER) String authorizer,
+                                                          @Query("uid") String uid);
 }
