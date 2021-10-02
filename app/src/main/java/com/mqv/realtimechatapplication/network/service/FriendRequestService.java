@@ -34,4 +34,8 @@ public interface FriendRequestService {
     Observable<ApiResponse<Boolean>> requestConnect(@Header(Const.AUTHORIZATION) String token,
                                                     @Header(Const.AUTHORIZER) String authorizer,
                                                     @Body FriendRequest request);
+
+    @GET(value = "connection/friend")
+    Observable<ApiResponse<List<String>>> getFriendListId(@Header(Const.AUTHORIZATION) String token,
+                                                          @Header(Const.AUTHORIZER) String authorizer);
 }
