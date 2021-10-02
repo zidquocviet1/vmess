@@ -9,6 +9,7 @@ import com.mqv.realtimechatapplication.data.dao.PeopleDao;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.NetworkBoundResource;
+import com.mqv.realtimechatapplication.network.service.FriendRequestService;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Const;
@@ -30,11 +31,14 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     private final PeopleDao peopleDao;
     private final UserService userService;
     private final FirebaseUser user;
+    private final FriendRequestService friendRequestService;
 
     @Inject
-    public PeopleRepositoryImpl(PeopleDao peopleDao, UserService userService) {
+    public PeopleRepositoryImpl(PeopleDao peopleDao, UserService userService,
+                                FriendRequestService friendRequestService) {
         this.peopleDao = peopleDao;
         this.userService = userService;
+        this.friendRequestService = friendRequestService;
         this.user = FirebaseAuth.getInstance().getCurrentUser();
     }
 
@@ -44,8 +48,18 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
+    public Completable save(People people) {
+        return peopleDao.save(people);
+    }
+
+    @Override
     public Completable save(List<People> peopleList) {
         return peopleDao.save(peopleList);
+    }
+
+    @Override
+    public Completable delete(People people) {
+        return peopleDao.delete(people);
     }
 
     @Override
@@ -114,5 +128,17 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     @Override
     public Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token) {
         return userService.getConnectPeopleByUid(Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, uid);
+    }
+
+    @Override
+    public void unfriend(String uid,
+                         Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
+                         Consumer<Exception> onAuthFail) {
+        validateIdToken(token ->
+                        onAuthSuccess.accept(friendRequestService.unfriend(
+                                Const.PREFIX_TOKEN + token,
+                                Const.DEFAULT_AUTHORIZER,
+                                uid)),
+                onAuthFail);
     }
 }

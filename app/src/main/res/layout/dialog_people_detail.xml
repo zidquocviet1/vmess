@@ -5,94 +5,111 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_cover"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_content"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/image_cover_photo_height"
-        android:layout_gravity="center_horizontal"
-        android:src="@drawable/background_sample_cover_photo"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_cover"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/image_cover_photo_height"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/background_sample_cover_photo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/filter"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@color/white"
+            app:layout_constraintBottom_toBottomOf="@id/image_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_cover"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_avatar"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="42dp"
+            android:clickable="true"
+            android:src="@drawable/ic_round_account"
+            app:layout_constraintBottom_toBottomOf="@id/image_cover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/image_cover"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <TextView
+            android:id="@+id/text_display_name"
+            style="@style/TitleTextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/all_margin"
+            android:text="@string/author_app_full_name"
+            app:layout_constraintEnd_toEndOf="@id/image_avatar"
+            app:layout_constraintStart_toStartOf="@id/image_avatar"
+            app:layout_constraintTop_toBottomOf="@id/image_avatar" />
+
+        <TextView
+            android:id="@+id/test_username"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:maxLength="255"
+            android:text="@string/author_app_full_name"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_display_name" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_send_message"
+            style="@style/CustomOutlineButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="@dimen/all_margin"
+            android:layout_marginEnd="10dp"
+            android:text="@string/action_message"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/test_username" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_unfriend"
+            style="@style/CustomOutlineButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/action_un_friend"
+            android:textColor="@color/navigation_background"
+            android:visibility="visible"
+            app:backgroundTint="@color/purple_500"
+            app:layout_constraintEnd_toEndOf="@id/button_send_message"
+            app:layout_constraintStart_toStartOf="@id/button_send_message"
+            app:layout_constraintTop_toBottomOf="@id/button_send_message"
+            app:rippleColor="@color/mtrl_btn_ripple_color"
+            tools:ignore="PrivateResource" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progress_bar_loading"
+        style="?android:progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/filter"
-        android:layout_width="170dp"
-        android:layout_height="170dp"
-        android:contentDescription="@null"
-        android:scaleType="centerCrop"
-        android:src="@color/white"
-        app:layout_constraintBottom_toBottomOf="@id/image_cover"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image_cover"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_avatar"
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="42dp"
-        android:clickable="true"
-        android:src="@drawable/ic_round_account"
-        app:layout_constraintBottom_toBottomOf="@id/image_cover"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/image_cover"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-
-    <TextView
-        android:id="@+id/text_display_name"
-        style="@style/TitleTextAppearance"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/all_margin"
-        android:text="@string/author_app_full_name"
-        app:layout_constraintEnd_toEndOf="@id/image_avatar"
-        app:layout_constraintStart_toStartOf="@id/image_avatar"
-        app:layout_constraintTop_toBottomOf="@id/image_avatar" />
-
-    <TextView
-        android:id="@+id/test_username"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:maxLength="255"
-        android:text="@string/author_app_full_name"
-        android:textAlignment="center"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_display_name" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_send_message"
-        style="@style/CustomOutlineButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="@dimen/all_margin"
-        android:layout_marginEnd="10dp"
-        android:text="@string/action_message"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/test_username" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_unfriend"
-        style="@style/CustomOutlineButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="@string/action_un_friend"
-        android:textColor="@color/navigation_background"
-        android:visibility="visible"
-        app:backgroundTint="@color/purple_500"
-        app:layout_constraintEnd_toEndOf="@id/button_send_message"
-        app:layout_constraintStart_toStartOf="@id/button_send_message"
-        app:layout_constraintTop_toBottomOf="@id/button_send_message"
-        app:rippleColor="@color/mtrl_btn_ripple_color"
-        tools:ignore="PrivateResource" />
 </androidx.constraintlayout.widget.ConstraintLayout>

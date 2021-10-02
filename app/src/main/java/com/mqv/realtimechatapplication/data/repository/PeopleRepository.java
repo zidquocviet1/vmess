@@ -13,7 +13,11 @@ import io.reactivex.rxjava3.core.Observable;
 public interface PeopleRepository {
     Flowable<List<People>> getAll();
 
+    Completable save(People people);
+
     Completable save(List<People> peopleList);
+
+    Completable delete(People people);
 
     Completable deleteAll();
 
@@ -21,4 +25,8 @@ public interface PeopleRepository {
                                                  Consumer<Exception> onAuthFail);
 
     Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token);
+
+    void unfriend(String uid,
+                  Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
+                  Consumer<Exception> onAuthFail);
 }

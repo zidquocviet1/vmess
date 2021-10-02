@@ -19,7 +19,13 @@ public interface PeopleDao {
     Flowable<List<People>> getAll();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    Completable save(People people);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable save(List<People> peopleList);
+
+    @Delete
+    Completable delete(People people);
 
     @Query("delete from people")
     Completable deleteAll();

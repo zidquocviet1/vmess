@@ -11,16 +11,22 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemPeopleListBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Const;
 
+import java.util.List;
+import java.util.function.BiConsumer;
+
 public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewHolder> {
     private final Context mContext;
+    private final List<People> mMutableList;
+    private final BiConsumer<Integer, Boolean> onClickConsumer;
 
-    public PeopleAdapter(Context mContext) {
+    public PeopleAdapter(Context mContext, List<People> data, BiConsumer<Integer, Boolean> onClickConsumer) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull People oldItem, @NonNull People newItem) {
@@ -33,13 +39,21 @@ public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewH
             }
         });
         this.mContext = mContext;
+        this.mMutableList = data;
+        this.onClickConsumer = onClickConsumer;
+    }
+
+    public void removeItem(int position) {
+        mMutableList.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, mMutableList.size());
     }
 
     @NonNull
     @Override
     public PeopleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         var view = LayoutInflater.from(mContext).inflate(R.layout.item_people_list, parent, false);
-        return new PeopleViewHolder(ItemPeopleListBinding.bind(view));
+        return new PeopleViewHolder(ItemPeopleListBinding.bind(view), onClickConsumer);
     }
 
     @Override
@@ -52,9 +66,12 @@ public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewH
     public static class PeopleViewHolder extends RecyclerView.ViewHolder {
         ItemPeopleListBinding mBinding;
 
-        public PeopleViewHolder(@NonNull ItemPeopleListBinding binding) {
+        public PeopleViewHolder(@NonNull ItemPeopleListBinding binding, BiConsumer<Integer, Boolean> onClickConsumer) {
             super(binding.getRoot());
             mBinding = binding;
+
+            binding.getRoot().setOnClickListener(v -> onClickConsumer.accept(getAdapterPosition(), false));
+            binding.buttonError.setOnClickListener(v -> onClickConsumer.accept(getAdapterPosition(), true));
         }
 
         public void bindTo(People item, Context context) {
@@ -68,6 +85,7 @@ public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewH
                     .load(url)
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
+                    .signature(new ObjectKey(url))
                     .error(R.drawable.ic_round_account)
                     .into(mBinding.imageAvatar);
         }

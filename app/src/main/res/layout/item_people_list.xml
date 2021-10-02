@@ -63,15 +63,12 @@
             android:textSize="12sp" />
     </RelativeLayout>
 
-    <ImageView
-        android:id="@+id/icon_check"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_error"
+        style="@style/MaterialIconButton"
+        android:layout_gravity="end"
         android:layout_marginEnd="@dimen/all_padding_common"
-        android:background="@drawable/ic_round_check"
-        android:backgroundTint="@color/text_color"
-        android:contentDescription="@null"
-        android:visibility="gone"
+        app:icon="@drawable/ic_round_error"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
