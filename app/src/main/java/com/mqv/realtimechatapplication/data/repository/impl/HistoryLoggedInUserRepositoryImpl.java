@@ -1,7 +1,8 @@
-package com.mqv.realtimechatapplication.data.repository;
+package com.mqv.realtimechatapplication.data.repository.impl;
 
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 
 import java.util.List;
 

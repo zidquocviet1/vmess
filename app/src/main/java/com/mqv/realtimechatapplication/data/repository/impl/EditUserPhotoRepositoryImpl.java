@@ -1,7 +1,8 @@
-package com.mqv.realtimechatapplication.data.repository;
+package com.mqv.realtimechatapplication.data.repository.impl;
 
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
+import com.mqv.realtimechatapplication.data.repository.EditUserPhotoRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
@@ -16,7 +17,7 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
-public class EditUserPhotoRepositoryImpl implements EditUserPhotoRepository{
+public class EditUserPhotoRepositoryImpl implements EditUserPhotoRepository {
     private final UserService service;
     private final HistoryLoggedInUserDao historyUserDao;
     private final UserDao userDao;

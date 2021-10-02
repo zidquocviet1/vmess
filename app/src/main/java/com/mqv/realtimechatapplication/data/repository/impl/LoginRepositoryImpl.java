@@ -1,4 +1,4 @@
-package com.mqv.realtimechatapplication.data.repository;
+package com.mqv.realtimechatapplication.data.repository.impl;
 
 import androidx.annotation.NonNull;
 
@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.service.UserService;
