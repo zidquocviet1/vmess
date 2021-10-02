@@ -26,6 +26,7 @@ import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -49,6 +50,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ManageAccountViewModel extends CurrentUserViewModel {
     private final HistoryLoggedInUserRepository historyUserRepository;
     private final LoginRepository loginRepository;
+    private final PeopleRepository peopleRepository;
     private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
     private final MutableLiveData<HistoryLoggedInUser> verifyResult = new MutableLiveData<>();
     private final MutableLiveData<List<HistoryLoggedInUser>> historyUserList = new MutableLiveData<>();
@@ -62,9 +64,11 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
     @Inject
     public ManageAccountViewModel(HistoryLoggedInUserRepository historyUserRepository,
-                                  LoginRepository loginRepository) {
+                                  LoginRepository loginRepository,
+                                  PeopleRepository peopleRepository) {
         this.historyUserRepository = historyUserRepository;
         this.loginRepository = loginRepository;
+        this.peopleRepository = peopleRepository;
         getAllHistoryUser();
         loadLoggedInUser();
         loadFirebaseUser();
@@ -255,6 +259,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     private void saveLoggedInUser(FirebaseUser previousUser, User user, HistoryLoggedInUser historyUser) {
         cd.add(loginRepository.saveLoggedInUser(user, historyUser)
                 .andThen(historyUserRepository.signOut(previousUser.getUid()))
+                .andThen(peopleRepository.deleteAll())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(() -> {
