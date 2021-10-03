@@ -22,6 +22,16 @@ public interface UserService {
     Observable<ApiResponse<User>> loginWithToken(@Header(Const.AUTHORIZATION) String token,
                                                  @Header(Const.AUTHORIZER) String authorizer);
 
+    @POST(value = "user/fcm_token")
+    Observable<ApiResponse<Object>> sendFcmTokenToServer(@Header(Const.AUTHORIZATION) String token,
+                                                         @Header(Const.AUTHORIZER) String authorizer,
+                                                         @Query("fcm_token") String fcmToken);
+
+    @POST(value = "user/logout")
+    Observable<ApiResponse<Boolean>> logout(@Header(Const.AUTHORIZATION) String token,
+                                            @Header(Const.AUTHORIZER) String authorizer,
+                                            @Query("fcm_token") String fcmToken);
+
     @GET(value = "user/info")
     Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
                                                       @Header(Const.AUTHORIZER) String authorizer,
