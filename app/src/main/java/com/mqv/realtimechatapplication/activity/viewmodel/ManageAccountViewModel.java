@@ -257,6 +257,8 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     }
 
     private void saveLoggedInUser(FirebaseUser previousUser, User user, HistoryLoggedInUser historyUser) {
+        logoutPreviousUser(previousUser);
+
         cd.add(loginRepository.saveLoggedInUser(user, historyUser)
                 .andThen(historyUserRepository.signOut(previousUser.getUid()))
                 .andThen(peopleRepository.deleteAll())
@@ -268,6 +270,8 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                                 loginUserOnStop = null;
                             }
                             loginResult.setValue(Result.Success(user));
+
+                            sendFcmTokenToServer();
                         },
                         t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
@@ -311,5 +315,15 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
     public void signInAgainFirebaseUser(FirebaseUser previousUser) {
         FirebaseAuth.getInstance().updateCurrentUser(previousUser);
+    }
+
+    private void logoutPreviousUser(FirebaseUser previousFirebaseUser) {
+        loginRepository.logout(previousFirebaseUser);
+    }
+
+    private void sendFcmTokenToServer() {
+        var currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        loginRepository.sendFcmToken(currentUser);
     }
 }

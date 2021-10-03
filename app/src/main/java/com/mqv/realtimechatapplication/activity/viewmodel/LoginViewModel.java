@@ -177,6 +177,8 @@ public class LoginViewModel extends ViewModel {
         Completable saveRequest;
 
         if (previousUser != null) {
+            logoutPreviousUser(previousUser);
+
             saveRequest = historyUserRepository.signOut(previousUser.getUid())
                     .andThen(peopleRepository.deleteAll())
                     .andThen(loginRepository.saveLoggedInUser(user, historyUser));
@@ -185,16 +187,18 @@ public class LoginViewModel extends ViewModel {
         }
 
         cd.add(saveRequest
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(() -> {
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(() -> {
                             if (loginUserOnStop != null) {
                                 signInAgainFirebaseUser(loginUserOnStop);
                                 loginUserOnStop = null;
                             }
                             loginResult.setValue(Result.Success(user));
+
+                            sendFcmTokenToServer();
                         },
-                t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
+                        t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
     }
 
@@ -211,6 +215,16 @@ public class LoginViewModel extends ViewModel {
     public void signInAgainFirebaseUser(@Nullable FirebaseUser previousUser) {
         if (previousUser != null)
             FirebaseAuth.getInstance().updateCurrentUser(previousUser);
+    }
+
+    private void logoutPreviousUser(FirebaseUser previousFirebaseUser) {
+        loginRepository.logout(previousFirebaseUser);
+    }
+
+    private void sendFcmTokenToServer() {
+        var currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        loginRepository.sendFcmToken(currentUser);
     }
 
     @Override
