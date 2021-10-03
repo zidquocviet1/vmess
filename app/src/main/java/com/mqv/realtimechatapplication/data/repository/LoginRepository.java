@@ -25,4 +25,12 @@ public interface LoginRepository {
                Consumer<Exception> onFirebaseLoginFail,
                BiConsumer<Observable<ApiResponse<User>>, FirebaseUser> onAuthTokenSuccess,
                Consumer<Exception> onAuthTokenFail);
+
+    void logout(FirebaseUser previousUser);
+
+    void logoutWithObserve(FirebaseUser previousUser,
+                           Consumer<Observable<ApiResponse<Boolean>>> onSuccess,
+                           Consumer<Exception> onError);
+
+    void sendFcmToken(FirebaseUser currentUser);
 }
