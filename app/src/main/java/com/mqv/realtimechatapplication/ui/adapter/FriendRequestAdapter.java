@@ -29,11 +29,13 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequest, FriendReque
     private Consumer<Integer> onRequestClicked;
     private final Consumer<Integer> onConfirmClicked;
     private final Consumer<Integer> onCancelClicked;
+    private final Consumer<Integer> onDataSizeChanged;
 
     public FriendRequestAdapter(Context context,
                                 List<FriendRequest> listItem,
                                 Consumer<Integer> onConfirmClicked,
-                                Consumer<Integer> onCancelClicked) {
+                                Consumer<Integer> onCancelClicked,
+                                Consumer<Integer> onDataSizeChanged) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull FriendRequest oldItem, @NonNull FriendRequest newItem) {
@@ -49,6 +51,7 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequest, FriendReque
         mMutableListItem = listItem;
         this.onConfirmClicked = onConfirmClicked;
         this.onCancelClicked = onCancelClicked;
+        this.onDataSizeChanged = onDataSizeChanged;
     }
 
     public void setOnRequestClicked(Consumer<Integer> callback) {
@@ -59,6 +62,7 @@ public class FriendRequestAdapter extends ListAdapter<FriendRequest, FriendReque
         mMutableListItem.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, mMutableListItem.size());
+        onDataSizeChanged.accept(mMutableListItem.size());
     }
 
     @NonNull

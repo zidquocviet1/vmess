@@ -162,7 +162,20 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
     private void setupRecyclerView() {
         mAdapter = new FriendRequestAdapter(this, mMutableList,
                 confirmPosition -> handleAdapterClicked(confirmPosition, CONFIRM),
-                cancelPosition -> handleAdapterClicked(cancelPosition, CANCEL));
+                cancelPosition -> handleAdapterClicked(cancelPosition, CANCEL),
+                size -> {
+                    if (size > 0) {
+                        mBinding.recyclerViewRequest.setVisibility(View.VISIBLE);
+                        mBinding.imageError.setVisibility(View.GONE);
+                        mBinding.textError.setVisibility(View.GONE);
+                    } else {
+                        mBinding.recyclerViewRequest.setVisibility(View.GONE);
+                        mBinding.imageError.setVisibility(View.VISIBLE);
+                        mBinding.textError.setVisibility(View.VISIBLE);
+                        mBinding.imageError.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.image_no_data));
+                        mBinding.textError.setText(R.string.msg_friend_request_empty_list);
+                    }
+                });
         mAdapter.setOnRequestClicked(position -> handleAdapterClicked(position, PENDING));
 
         mBinding.recyclerViewRequest.setAdapter(mAdapter);
