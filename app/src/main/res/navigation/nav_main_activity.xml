@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_activity_nav"
     app:startDestination="@id/chat">
 
     <include app:graph="@navigation/chat"/>
     <include app:graph="@navigation/people"/>
+    <fragment
+        android:id="@+id/notification"
+        android:name="com.mqv.realtimechatapplication.ui.fragment.NotificationFragment"
+        android:label="fragment_notification"
+        tools:layout="@layout/fragment_notification" />
 </navigation>
