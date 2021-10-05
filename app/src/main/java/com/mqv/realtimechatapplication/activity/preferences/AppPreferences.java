@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity.preferences;
 
+import java.util.Optional;
+
 import javax.annotation.Nullable;
 
 /**
@@ -27,4 +29,8 @@ public interface AppPreferences {
     void setDarkModeTheme(DarkMode mode);
 
     DarkMode getDarkModeTheme();
+
+    void setFcmToken(String token);
+
+    Optional<String> getFcmToken();
 }

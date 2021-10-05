@@ -3,8 +3,10 @@ package com.mqv.realtimechatapplication.activity.preferences;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -80,5 +82,16 @@ public class AppPreferencesImpl implements AppPreferences{
             mPreferences.edit().putString(PREF_DARK_THEME, DarkMode.SYSTEM.name()).apply();
             return DarkMode.SYSTEM;
         }
+    }
+
+    @Override
+    public void setFcmToken(String token) {
+        mPreferences.edit().putString(Const.KEY_FCM_TOKEN, token).apply();
+    }
+
+    @Override
+    public Optional<String> getFcmToken() {
+        var token = mPreferences.getString(Const.KEY_FCM_TOKEN, null);
+        return Optional.ofNullable(token);
     }
 }
