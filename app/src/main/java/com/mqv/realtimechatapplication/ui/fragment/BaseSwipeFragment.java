@@ -29,7 +29,7 @@ public abstract class BaseSwipeFragment<V extends ViewModel, B extends ViewBindi
     }
 
     public void stopRefresh(){
-        if (srl != null){
+        if (srl != null && srl.isRefreshing()){
             srl.setRefreshing(false);
         }
     }
