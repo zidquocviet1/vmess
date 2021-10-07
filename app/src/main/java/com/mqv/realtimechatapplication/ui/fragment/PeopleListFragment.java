@@ -1,22 +1,22 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.navigation.Navigation;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.navigation.Navigation;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.FragmentPeopleListBinding;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.PeopleListFragmentViewModel;
 
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentViewModel, FragmentPeopleListBinding> {
     public PeopleListFragment() {
         // Required empty public constructor
@@ -36,7 +36,6 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
@@ -51,7 +50,9 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
 
     @Override
     public void setupObserver() {
+        mViewModel.getActivePeopleListSafe().observe(getViewLifecycleOwner(), peopleList -> {
 
+        });
     }
 
     @NonNull
@@ -62,6 +63,6 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
 
     @Override
     public void onRefresh() {
-
+        mViewModel.onRefresh();
     }
 }
