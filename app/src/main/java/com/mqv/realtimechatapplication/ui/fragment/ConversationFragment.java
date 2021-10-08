@@ -21,7 +21,7 @@ import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmen
 
 import java.util.ArrayList;
 
-public class ConversationFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>{
+public class ConversationFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
     private ConversationAdapter adapter;
     private RankUserConversationAdapter rankUserConversationAdapter;
 
@@ -44,9 +44,9 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
 
     @Override
     public void setupObserver() {
-        if (mViewModel != null){
+        if (mViewModel != null) {
             mViewModel.getConversationListSafe().observe(this, conversations -> {
-                if (conversations != null && !conversations.isEmpty()){
+                if (conversations != null && !conversations.isEmpty()) {
                     adapter.submitList(conversations);
 
                     stopRefresh();
@@ -54,7 +54,7 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
             });
 
             mViewModel.getRemoteUserListSafe().observe(this, remoteUsers -> {
-                if (remoteUsers != null && !remoteUsers.isEmpty()){
+                if (remoteUsers != null && !remoteUsers.isEmpty()) {
                     rankUserConversationAdapter.submitList(remoteUsers);
 
                     stopRefresh();
@@ -74,7 +74,13 @@ public class ConversationFragment extends BaseSwipeFragment<ConversationFragment
         mViewModel.onRefresh();
     }
 
-    private void setupRecyclerView(){
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mViewModel.forceClearDispose();
+    }
+
+    private void setupRecyclerView() {
         var listConversation = new ArrayList<Conversation>();
 
         adapter = new ConversationAdapter(listConversation, getContext());
