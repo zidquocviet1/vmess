@@ -65,4 +65,10 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
     public void onRefresh() {
         mViewModel.onRefresh();
     }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mViewModel.forceClearDispose();
+    }
 }
