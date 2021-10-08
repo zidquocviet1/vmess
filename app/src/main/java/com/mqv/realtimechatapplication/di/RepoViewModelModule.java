@@ -1,9 +1,13 @@
 package com.mqv.realtimechatapplication.di;
 
+import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
+import com.mqv.realtimechatapplication.data.repository.impl.NotificationRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.impl.PeopleRepositoryImpl;
 import com.mqv.realtimechatapplication.network.service.FriendRequestService;
+import com.mqv.realtimechatapplication.network.service.NotificationService;
 import com.mqv.realtimechatapplication.network.service.UserService;
 
 import dagger.Module;
@@ -18,7 +22,14 @@ public class RepoViewModelModule {
     @ViewModelScoped
     @Provides
     public PeopleRepository providePeopleRepository(PeopleDao peopleDao, UserService userService,
-                                                    FriendRequestService friendRequestService){
+                                                    FriendRequestService friendRequestService) {
         return new PeopleRepositoryImpl(peopleDao, userService, friendRequestService);
+    }
+
+    @ViewModelScoped
+    @Provides
+    public NotificationRepository provideNotificationRepository(NotificationService service,
+                                                                NotificationDao dao) {
+        return new NotificationRepositoryImpl(service, dao);
     }
 }

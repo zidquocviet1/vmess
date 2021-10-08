@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.network.adapter.LocalDateTimeAdapter;
 import com.mqv.realtimechatapplication.network.service.FriendRequestService;
+import com.mqv.realtimechatapplication.network.service.NotificationService;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -136,5 +137,11 @@ public class NetworkModule {
     @Provides
     public FriendRequestService provideFriendRequestService(Retrofit retrofit) {
         return retrofit.create(FriendRequestService.class);
+    }
+
+    @Provides
+    @Singleton
+    public NotificationService provideNotificationService(Retrofit retrofit){
+        return retrofit.create(NotificationService.class);
     }
 }
