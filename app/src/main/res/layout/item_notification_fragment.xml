@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:baselineAligned="false"
+    android:clickable="true"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <View
+        android:id="@+id/layout_unread"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="-9dp"
+        android:layout_marginBottom="-9dp"
+        android:alpha="0.1"
+        android:background="@color/purple_700"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_avatar"
+        android:layout_width="@dimen/image_user_avatar_medium"
+        android:layout_height="@dimen/image_user_avatar_medium"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:src="@drawable/ic_round_account"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_double_user"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
+        app:layout_constraintEnd_toEndOf="@id/image_avatar" />
+
+    <TextView
+        android:id="@+id/text_body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:ellipsize="marquee"
+        android:text="@string/msg_new_friend_request_notification_fragment"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/text_timestamp"
+        app:layout_constraintEnd_toStartOf="@id/icon_more_horizontal"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@id/image_avatar"
+        app:layout_constraintTop_toTopOf="@id/image_avatar" />
+
+    <TextView
+        android:id="@+id/text_timestamp"
+        style="@style/PreferenceSummaryTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sep 26 at 9:19 PM"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
+        app:layout_constraintStart_toStartOf="@id/text_body"
+        app:layout_constraintTop_toBottomOf="@id/text_body" />
+
+    <ImageView
+        android:id="@+id/icon_more_horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:background="?selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:contentDescription="@null"
+        android:rotation="90"
+        android:src="@drawable/ic_more_vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
