@@ -2,6 +2,8 @@ package com.mqv.realtimechatapplication.network.firebase;
 
 import android.text.TextUtils;
 
+import androidx.annotation.WorkerThread;
+
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -10,6 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public final class FcmUtil {
+    @WorkerThread
     public static Optional<String> getToken() {
         String token = null;
         try {
