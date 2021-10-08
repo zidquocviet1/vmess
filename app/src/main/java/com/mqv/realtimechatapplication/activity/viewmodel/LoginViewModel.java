@@ -20,6 +20,7 @@ import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -47,6 +48,7 @@ public class LoginViewModel extends ViewModel {
     private final LoginRepository loginRepository;
     private final HistoryLoggedInUserRepository historyUserRepository;
     private final PeopleRepository peopleRepository;
+    private final NotificationRepository notificationRepository;
     private FirebaseUser currentLoginFirebaseUser;
     private FirebaseUser previousFirebaseUser;
     private FirebaseUser loginUserOnStop;
@@ -54,10 +56,12 @@ public class LoginViewModel extends ViewModel {
     @Inject
     public LoginViewModel(LoginRepository loginRepository,
                           HistoryLoggedInUserRepository historyUserRepository,
-                          PeopleRepository peopleRepository) {
+                          PeopleRepository peopleRepository,
+                          NotificationRepository notificationRepository) {
         this.loginRepository = loginRepository;
         this.historyUserRepository = historyUserRepository;
         this.peopleRepository = peopleRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
@@ -181,6 +185,7 @@ public class LoginViewModel extends ViewModel {
 
             saveRequest = historyUserRepository.signOut(previousUser.getUid())
                     .andThen(peopleRepository.deleteAll())
+                    .andThen(notificationRepository.deleteAllLocal())
                     .andThen(loginRepository.saveLoggedInUser(user, historyUser));
         } else {
             saveRequest = loginRepository.saveLoggedInUser(user, historyUser);

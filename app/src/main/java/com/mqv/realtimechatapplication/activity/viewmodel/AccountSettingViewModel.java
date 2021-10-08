@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
@@ -26,6 +27,7 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
     private final HistoryLoggedInUserRepository historyUserRepository;
     private final PeopleRepository peopleRepository;
     private final LoginRepository loginRepository;
+    private final NotificationRepository notificationRepository;
     private final MutableLiveData<Result<Boolean>> signOutStatus = new MutableLiveData<>();
     private Disposable logoutDisposable;
     private Disposable logoutLocalDisposable;
@@ -33,10 +35,12 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
     @Inject
     public AccountSettingViewModel(HistoryLoggedInUserRepository historyUserRepository,
                                    PeopleRepository peopleRepository,
-                                   LoginRepository loginRepository) {
+                                   LoginRepository loginRepository,
+                                   NotificationRepository notificationRepository) {
         this.historyUserRepository = historyUserRepository;
         this.peopleRepository = peopleRepository;
         this.loginRepository = loginRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public LiveData<Result<Boolean>> getSignOutStatus() {
@@ -57,6 +61,7 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
 
                             var localDisposable = historyUserRepository.signOut(currentUser.getUid())
                                     .andThen(peopleRepository.deleteAll())
+                                    .andThen(notificationRepository.deleteAllLocal())
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe(() -> signOutStatus.setValue(Result.Success(response.getSuccess())),
