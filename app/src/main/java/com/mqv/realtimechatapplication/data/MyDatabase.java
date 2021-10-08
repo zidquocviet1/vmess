@@ -9,13 +9,15 @@ import com.mqv.realtimechatapplication.data.converter.LocalDateTimeConverter;
 import com.mqv.realtimechatapplication.data.converter.SocialLinksListConverter;
 import com.mqv.realtimechatapplication.data.converter.SocialTypeConverter;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
+import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.data.People;
 
-@Database(entities = {User.class, HistoryLoggedInUser.class, People.class}, version = 4, exportSchema = false)
+@Database(entities = {User.class, HistoryLoggedInUser.class, People.class, Notification.class}, version = 5, exportSchema = false)
 @TypeConverters({LocalDateTimeConverter.class, GenderConverter.class,
         SocialTypeConverter.class, SocialLinksListConverter.class})
 public abstract class MyDatabase extends RoomDatabase {
@@ -24,4 +26,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract HistoryLoggedInUserDao getHistoryUserDao();
 
     public abstract PeopleDao getPeopleDao();
+
+    public abstract NotificationDao getNotificationDao();
 }
