@@ -39,7 +39,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/ic_double_user"
+        android:background="@drawable/ic_user_notification"
         android:contentDescription="@null"
         app:layout_constraintBottom_toBottomOf="@id/image_avatar"
         app:layout_constraintEnd_toEndOf="@id/image_avatar" />
