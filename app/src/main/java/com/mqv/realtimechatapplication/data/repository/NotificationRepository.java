@@ -5,6 +5,7 @@ import com.mqv.realtimechatapplication.network.model.Notification;
 
 import java.util.List;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 
 public interface NotificationRepository {
@@ -16,4 +17,6 @@ public interface NotificationRepository {
                                                                   int duration);
 
     Observable<ApiResponse<Notification>> markAsRead(Notification notification);
+
+    Completable deleteAllLocal();
 }

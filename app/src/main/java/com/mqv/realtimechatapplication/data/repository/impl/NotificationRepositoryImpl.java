@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
@@ -39,7 +40,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class NotificationRepositoryImpl implements NotificationRepository {
     private final NotificationService service;
     private final NotificationDao dao;
-    private final FirebaseUser user;
+    private FirebaseUser user;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Inject
@@ -48,6 +49,9 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         this.service = service;
         this.dao = dao;
         this.user = FirebaseAuth.getInstance().getCurrentUser();
+
+        FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth ->
+                user = firebaseAuth.getCurrentUser());
     }
 
     @Override
@@ -159,6 +163,11 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                         return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
                     }
                 });
+    }
+
+    @Override
+    public Completable deleteAllLocal() {
+        return dao.deleteAll();
     }
 
     private CompletableFuture<Optional<String>> futureToken() {
