@@ -1,11 +1,10 @@
 package com.mqv.realtimechatapplication.ui.fragment.viewmodel;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.mqv.realtimechatapplication.activity.viewmodel.AbstractMainViewModel;
-import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.data.repository.FriendRequestRepository;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.ui.data.People;
@@ -22,8 +21,9 @@ public class PeopleListFragmentViewModel extends AbstractMainViewModel {
     @Inject
     public PeopleListFragmentViewModel(UserRepository userRepository,
                                        FriendRequestRepository friendRequestRepository,
-                                       PeopleRepository peopleRepository) {
-        super(userRepository, friendRequestRepository, peopleRepository);
+                                       PeopleRepository peopleRepository,
+                                       NotificationRepository notificationRepository) {
+        super(userRepository, friendRequestRepository, peopleRepository, notificationRepository);
     }
 
     @Override

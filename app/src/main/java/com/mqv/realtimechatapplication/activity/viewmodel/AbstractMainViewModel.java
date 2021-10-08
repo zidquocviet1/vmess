@@ -4,11 +4,14 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.FriendRequestRepository;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
+import com.mqv.realtimechatapplication.network.exception.FirebaseUnauthorizedException;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.data.People;
@@ -35,26 +38,28 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final PeopleRepository peopleRepository;
+    private final NotificationRepository notificationRepository;
 
     private final MutableLiveData<Result<User>> remoteUserResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<List<Notification>>> notificationListResult = new MutableLiveData<>();
     private final MutableLiveData<List<People>> listPeople = new MutableLiveData<>();
     private final MutableLiveData<List<People>> activePeopleList = new MutableLiveData<>();
     private final MutableLiveData<List<Conversation>> conversationList = new MutableLiveData<>();
     private final MutableLiveData<List<RemoteUser>> remoteUserList = new MutableLiveData<>();
 
+    protected static final int NOTIFICATION_DURATION_LIMIT = 1;
+
     public AbstractMainViewModel(UserRepository userRepository,
                                  FriendRequestRepository friendRequestRepository,
-                                 PeopleRepository peopleRepository) {
+                                 PeopleRepository peopleRepository,
+                                 NotificationRepository notificationRepository) {
         this.userRepository = userRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.peopleRepository = peopleRepository;
+        this.notificationRepository = notificationRepository;
 
         loadFirebaseUser();
         loadLoggedInUser();
-
-        loadRemoteUserUsingNBR();
-        loadAllPeople();
-        newData();
     }
 
     public abstract void onRefresh();
@@ -79,7 +84,11 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
         return activePeopleList;
     }
 
-    private void loadRemoteUserUsingNBR() {
+    protected MutableLiveData<Result<List<Notification>>> getNotificationList() {
+        return notificationListResult;
+    }
+
+    protected void loadRemoteUserUsingNBR() {
         var user = firebaseUser.getValue();
         if (user != null) {
             var uid = user.getUid();
@@ -97,7 +106,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
         }
     }
 
-    private void loadAllPeople() {
+    protected void loadAllPeople() {
         cd.add(peopleRepository
                 .fetchPeopleUsingNBS(this::createCall, this::handleAuthError)
                 .subscribeOn(Schedulers.io())
@@ -160,8 +169,27 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                 }));
     }
 
+    protected void loadNotificationUsingNBR() {
+        cd.add(notificationRepository
+                .fetchNotificationNBR(NOTIFICATION_DURATION_LIMIT)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(data -> notificationListResult.setValue(Result.Success(data)),
+                        e -> {
+                            if (e instanceof FirebaseUnauthorizedException) {
+                                notificationListResult.setValue(Result.Fail(((FirebaseUnauthorizedException) e).getError()));
+                            } else {
+                                notificationListResult.setValue(Result.Fail(R.string.error_unknown));
+                            }
+                        }));
+    }
+
+    public void forceClearDispose() {
+        cd.clear();
+    }
+
     /// test
-    public void newData() {
+    protected void newData() {
         var listConversation = Arrays.asList(
                 new Conversation(1L, "Phạm Thảo Duyên", "You: ok", LocalDateTime.now(), MessageStatus.RECEIVED),
                 new Conversation(2L, "Phạm Băng Băng", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),

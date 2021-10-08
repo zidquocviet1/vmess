@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 
 import com.mqv.realtimechatapplication.activity.viewmodel.AbstractMainViewModel;
 import com.mqv.realtimechatapplication.data.repository.FriendRequestRepository;
+import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -27,8 +28,11 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
     @Inject
     public ConversationFragmentViewModel(UserRepository userRepository,
                                          FriendRequestRepository friendRequestRepository,
-                                         PeopleRepository peopleRepository) {
-        super(userRepository, friendRequestRepository, peopleRepository);
+                                         PeopleRepository peopleRepository,
+                                         NotificationRepository notificationRepository) {
+        super(userRepository, friendRequestRepository, peopleRepository, notificationRepository);
+
+        newData();
     }
 
     @Override
