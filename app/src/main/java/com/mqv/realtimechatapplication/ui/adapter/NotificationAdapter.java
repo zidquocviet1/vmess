@@ -41,7 +41,7 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
 
             @Override
             public boolean areContentsTheSame(@NonNull Notification oldItem, @NonNull Notification newItem) {
-                return true;
+                return oldItem.equals(newItem);
             }
         });
         this.mContext = context;

@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 import com.mqv.realtimechatapplication.network.model.type.NotificationType;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 public class Notification {
@@ -137,5 +138,24 @@ public class Notification {
 
     public void setAccessedDate(LocalDateTime accessedDate) {
         this.accessedDate = accessedDate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Notification that = (Notification) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(messageId, that.messageId) &&
+                Objects.equals(title, that.title) &&
+                Objects.equals(body, that.body) &&
+                type == that.type &&
+                Objects.equals(hasRead, that.hasRead) &&
+                Objects.equals(ownerId, that.ownerId) &&
+                Objects.equals(agentId, that.agentId) &&
+                Objects.equals(agentImageUrl, that.agentImageUrl) &&
+                Objects.equals(isPushSent, that.isPushSent) &&
+                Objects.equals(createdDate, that.createdDate) &&
+                Objects.equals(accessedDate, that.accessedDate);
     }
 }
