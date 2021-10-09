@@ -17,7 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.signature.ObjectKey;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
@@ -82,22 +82,21 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             var user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
 
             var uri = user.getPhotoUrl();
-            if (uri != null) {
-                var url = uri.toString().replace("localhost", Const.BASE_IP);
+            var url = uri == null ? null : uri.toString().replace("localhost", Const.BASE_IP);
 
-                var placeHolder = new CircularProgressDrawable(this);
-                placeHolder.setStrokeWidth(5f);
-                placeHolder.setCenterRadius(30f);
-                placeHolder.start();
+            var placeHolder = new CircularProgressDrawable(this);
+            placeHolder.setStrokeWidth(5f);
+            placeHolder.setCenterRadius(30f);
+            placeHolder.start();
 
-                GlideApp.with(this)
-                        .load(url)
-                        .centerCrop()
-                        .placeholder(placeHolder)
-                        .error(R.drawable.ic_round_account)
-                        .signature(new ObjectKey(url))
-                        .into(mBinding.imageProfileInCover);
-            }
+            GlideApp.with(this)
+                    .load(url)
+                    .centerCrop()
+                    .placeholder(placeHolder)
+                    .fallback(R.drawable.ic_round_account)
+                    .error(R.drawable.ic_account_undefined)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(mBinding.imageProfileInCover);
 
             mBinding.textDisplayName.setText(user.getDisplayName());
 

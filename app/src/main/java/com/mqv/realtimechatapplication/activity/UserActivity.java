@@ -6,8 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.signature.ObjectKey;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
@@ -52,30 +51,29 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
     }
 
     @UiThread
-    private void showUserUi(FirebaseUser user){
+    private void showUserUi(FirebaseUser user) {
         runOnUiThread(() -> {
             if (user == null)
                 return;
 
             //TODO: reformat the url in the develop mode
             var uri = user.getPhotoUrl();
-            if (uri != null) {
-                var url = uri.toString().replace("localhost", Const.BASE_IP);
+            var url = uri == null ? null : uri.toString().replace("localhost", Const.BASE_IP);
 
-                var placeHolder = new CircularProgressDrawable(this);
-                placeHolder.setStrokeWidth(5f);
-                placeHolder.setCenterRadius(30f);
-                placeHolder.start();
+            var placeHolder = new CircularProgressDrawable(this);
+            placeHolder.setStrokeWidth(5f);
+            placeHolder.setCenterRadius(30f);
+            placeHolder.start();
 
-                GlideApp.with(getApplicationContext())
-                        .load(url)
-                        .centerCrop()
-                        .placeholder(placeHolder)
-                        .fallback(R.drawable.ic_round_account)
-                        .error(R.drawable.ic_round_account)
-                        .signature(new ObjectKey(url))
-                        .into(mBinding.imageAvatar);
-            }
+            GlideApp.with(this)
+                    .load(url)
+                    .centerCrop()
+                    .placeholder(placeHolder)
+                    .fallback(R.drawable.ic_round_account)
+                    .error(R.drawable.ic_account_undefined)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(mBinding.imageAvatar);
+
             mBinding.textDisplayName.setText(user.getDisplayName());
         });
     }

@@ -53,7 +53,7 @@
                 android:layout_width="160dp"
                 android:layout_height="160dp"
                 android:layout_marginTop="@dimen/all_margin"
-                android:background="@drawable/ic_round_account"
+                android:src="@drawable/ic_round_account"
                 android:scaleType="centerCrop"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

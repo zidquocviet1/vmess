@@ -13,7 +13,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.signature.ObjectKey;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
@@ -140,19 +140,20 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
 
         //TODO: reformat the url in the develop mode
         var uri = user.getPhotoUrl();
-        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : null;
 
         var placeHolder = new CircularProgressDrawable(this);
         placeHolder.setStrokeWidth(5f);
         placeHolder.setCenterRadius(30f);
         placeHolder.start();
 
-        GlideApp.with(getApplicationContext())
+        GlideApp.with(this)
                 .load(url)
                 .centerCrop()
                 .placeholder(placeHolder)
-                .error(R.drawable.ic_round_account)
-                .signature(new ObjectKey(url))
+                .fallback(R.drawable.ic_round_account)
+                .error(R.drawable.ic_account_undefined)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(mBinding.imageAvatar);
     }
 
