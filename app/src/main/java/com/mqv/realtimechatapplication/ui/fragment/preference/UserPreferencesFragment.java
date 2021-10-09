@@ -65,6 +65,7 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
                     .asBitmap()
                     .load(url)
                     .centerCrop()
+                    .fallback(R.drawable.ic_round_account)
                     .override(88, 88)
                     .signature(new ObjectKey(url))
                     .listener(new RequestListener<>() {
