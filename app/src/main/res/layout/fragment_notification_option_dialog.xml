@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/all_padding_common">
+
+    <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+        android:id="@+id/image_avatar"
+        android:layout_width="@dimen/image_user_avatar_medium"
+        android:layout_height="@dimen/image_user_avatar_medium"
+        android:layout_marginTop="@dimen/all_margin"
+        app:cardCornerRadius="100dp"
+        app:cardElevation="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_round_account" />
+    </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+    <TextView
+        android:id="@+id/text_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginTop="@dimen/all_margin"
+        android:layout_marginEnd="@dimen/all_margin"
+        android:textAlignment="center"
+        app:layout_constraintTop_toBottomOf="@id/image_avatar" />
+
+    <include
+        android:id="@+id/item_remove"
+        layout="@layout/item_preference_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        app:layout_constraintTop_toBottomOf="@id/text_body" />
+
+    <include
+        android:id="@+id/item_report_problem"
+        layout="@layout/item_preference_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/item_remove" />
+</androidx.constraintlayout.widget.ConstraintLayout>
