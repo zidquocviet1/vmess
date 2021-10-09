@@ -25,6 +25,10 @@ public class Result<T> {
         return new Result<>(NetworkStatus.LOADING, null, null);
     }
 
+    public static <T> Result<T> Terminate(){
+        return new Result<>(NetworkStatus.TERMINATE, null, null);
+    }
+
     public NetworkStatus getStatus() {
         return status;
     }
