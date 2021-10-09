@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.databinding.ItemAddLoggedInUserBinding;
@@ -116,7 +116,7 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
         }
 
         public void bindTo(HistoryLoggedInUser user, Context context) {
-            var photoUrl = user.getPhotoUrl() == null ? "" : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
+            var photoUrl = user.getPhotoUrl() == null ? null : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
 
             var placeHolder = new CircularProgressDrawable(context);
             placeHolder.setStrokeWidth(5f);
@@ -126,10 +126,11 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
             GlideApp.with(context)
                     .load(photoUrl)
                     .placeholder(placeHolder)
-                    .error(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
+                    .error(ContextCompat.getDrawable(context, R.drawable.ic_account_undefined))
+                    .fallback(ContextCompat.getDrawable(context, R.drawable.ic_account_undefined))
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
-                    .signature(new ObjectKey(photoUrl))
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(binding.imageAvatar);
 
             binding.title.setText(user.getDisplayName());
