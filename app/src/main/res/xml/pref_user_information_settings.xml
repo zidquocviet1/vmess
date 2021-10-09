@@ -74,12 +74,15 @@
         <Preference
             android:icon="@drawable/ic_preferences_alarm"
             android:key="@string/key_pref_notifications_and_sounds"
-            android:title="Notifications &amp; Sounds" />
+            android:title="@string/title_preference_item_notification_and_sounds">
+            <intent android:targetClass=".activity.preferences.PreferenceNotificationActivity"
+                android:action="com.tac.open.notification"/>
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_archive"
             android:key="@string/key_pref_archived_chats"
-            android:title="Archived Chats" />
+            android:title="@string/title_preference_item_archived_chats" />
 
         <Preference
             android:icon="@drawable/ic_preferences_privacy"
@@ -94,12 +97,12 @@
         <Preference
             android:icon="@drawable/ic_preferences_phone_contact"
             android:key="@string/key_pref_phone_contacts"
-            android:title="Phone Contacts" />
+            android:title="@string/title_preference_item_phone_contacts" />
 
         <Preference
             android:icon="@drawable/ic_preferences_photo_media"
             android:key="@string/key_pref_photos_and_media"
-            android:title="Photos &amp; Media" />
+            android:title="@string/title_preference_item_photos_and_media" />
     </PreferenceCategory>
 
     <PreferenceCategory
