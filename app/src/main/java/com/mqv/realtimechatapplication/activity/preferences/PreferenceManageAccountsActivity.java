@@ -38,6 +38,7 @@ import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -128,7 +129,9 @@ public class PreferenceManageAccountsActivity extends
             if (userList == null || userList.isEmpty()) {
             } else {
                 mHistoryUserList.clear();
-                mHistoryUserList.addAll(userList);
+                mHistoryUserList.addAll(userList.stream()
+                        .sorted((o1, o2) -> o2.getLogin().compareTo(o1.getLogin()))
+                .collect(Collectors.toList()));
             }
             mHistoryUserList.add(null);
             mAdapter.submitList(mHistoryUserList);
