@@ -23,16 +23,19 @@ import com.mqv.realtimechatapplication.util.Const;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class NotificationAdapter extends ListAdapter<Notification, NotificationAdapter.NotificationViewHolder> {
     private final Context mContext;
+    private List<Notification> mData;
     private Consumer<Integer> onItemClick;
     private Consumer<Integer> onChangeItem;
+    private Consumer<Boolean> onDatasetChange;
     private static final String WEEK_PATTERN = "EEE H:mm a";
     private static final String MONTH_PATTERN = "MMM dd H:mm a";
 
-    public NotificationAdapter(Context context) {
+    public NotificationAdapter(Context context, List<Notification> data) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull Notification oldItem, @NonNull Notification newItem) {
@@ -44,7 +47,8 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
                 return oldItem.equals(newItem);
             }
         });
-        this.mContext = context;
+        mContext = context;
+        mData = data;
     }
 
     public void setOnItemClick(Consumer<Integer> onItemClick) {
@@ -53,6 +57,22 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
 
     public void setOnChangeItem(Consumer<Integer> onChangeItem) {
         this.onChangeItem = onChangeItem;
+    }
+
+    public void setOnDatasetChange(Consumer<Boolean> onDatasetChange) {
+        this.onDatasetChange = onDatasetChange;
+    }
+
+    public void removeItem(Notification notification) {
+        var index = mData.indexOf(notification);
+
+        mData.remove(index);
+
+        notifyItemRemoved(index);
+        notifyItemRangeChanged(index, mData.size());
+
+        if (onDatasetChange != null)
+            onDatasetChange.accept(mData.isEmpty());
     }
 
     @NonNull
@@ -109,20 +129,16 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
             mBinding.textTimestamp.setText(convertReadableTimestamp(item.getCreatedDate()));
             mBinding.layoutUnread.setVisibility(item.getHasRead() ? View.GONE : View.VISIBLE);
 
-            if (item.getAgentImageUrl() == null) {
-                mRequest.load(R.drawable.ic_round_account)
-                        .centerCrop()
-                        .into(mBinding.imageAvatar);
-            } else {
-                var formatUrl = item.getAgentImageUrl().replace("localhost", Const.BASE_IP);
+            var formatUrl = item.getAgentImageUrl() == null ? null :
+                    item.getAgentImageUrl().replace("localhost", Const.BASE_IP);
 
-                mRequest.load(formatUrl)
-                        .error(R.drawable.ic_round_account)
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .centerCrop()
-                        .into(mBinding.imageAvatar);
-            }
+            mRequest.load(formatUrl)
+                    .fallback(R.drawable.ic_round_account)
+                    .error(R.drawable.ic_account_undefined)
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .centerCrop()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(mBinding.imageAvatar);
         }
 
         private String convertReadableTimestamp(LocalDateTime time) {
@@ -140,6 +156,12 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
 
             if (day <= 0) {
                 return mContext.getString(R.string.msg_notification_hours, hour);
+            }
+
+            if (day == 1) {
+                var arr = time.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
+
+                return mContext.getString(R.string.msg_notification_yesterday, arr[1] + " " + arr[2]);
             }
 
             if (day <= 7) {
