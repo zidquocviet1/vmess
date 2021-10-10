@@ -170,12 +170,65 @@ public class NotificationRepositoryImpl implements NotificationRepository {
         return dao.deleteAll();
     }
 
+    @Override
+    public Completable deleteLocal(Notification notification) {
+        return dao.delete(notification);
+    }
+
+    @Override
+    public Completable updateLocal(Notification notification) {
+        return dao.update(notification);
+    }
+
+    @Override
+    public Observable<ApiResponse<Integer>> getUnreadNotification(int duration) {
+        return Observable.fromFuture(futureToken())
+                .subscribeOn(Schedulers.io())
+                .flatMap(optionalToken -> {
+                    if (optionalToken.isPresent()) {
+                        var token = optionalToken.get();
+                        var bearerToken = Const.PREFIX_TOKEN + token;
+                        var authorizer = Const.DEFAULT_AUTHORIZER;
+
+                        return service.getUnreadNotification(bearerToken, authorizer, user.getUid(), duration);
+                    } else {
+                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                    }
+                });
+    }
+
+    @Override
+    public Observable<ApiResponse<Notification>> removeNotification(@NonNull Notification notification) {
+        return Observable.fromFuture(futureToken())
+                .subscribeOn(Schedulers.io())
+                .flatMap(optionalToken -> {
+                    if (optionalToken.isPresent()) {
+                        var token = optionalToken.get();
+                        var bearerToken = Const.PREFIX_TOKEN + token;
+                        var authorizer = Const.DEFAULT_AUTHORIZER;
+
+                        return service.removeNotification(bearerToken, authorizer, notification);
+                    } else {
+                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                    }
+                });
+    }
+
+    @Override
+    public Flowable<List<Notification>> getUnreadNotificationCached() {
+        return dao.fetchAll();
+    }
+
     private CompletableFuture<Optional<String>> futureToken() {
         return CompletableFuture.supplyAsync(() -> UserTokenUtil.getToken(user), executorService);
     }
 
     private void saveListNotification(List<Notification> notifications) {
         dao.save(notifications)
+                .andThen(dao.deleteById(notifications
+                        .stream()
+                        .map(Notification::getId)
+                        .collect(Collectors.toList())))
                 .subscribeOn(Schedulers.io())
                 .subscribe(new CompletableObserver() {
                     @Override
