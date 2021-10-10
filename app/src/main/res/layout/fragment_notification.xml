@@ -28,50 +28,52 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/text_friend_request"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/all_padding_common"
-                    android:layout_marginTop="@dimen/all_padding_common"
-                    android:layout_weight="9"
-                    android:text="@string/title_preference_item_friend_request"
-                    android:textAppearance="?textAppearanceBody1"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                <!--                <TextView-->
+                <!--                    android:id="@+id/text_friend_request"-->
+                <!--                    android:layout_width="wrap_content"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginStart="@dimen/all_padding_common"-->
+                <!--                    android:layout_marginTop="@dimen/all_padding_common"-->
+                <!--                    android:layout_weight="9"-->
+                <!--                    android:text="@string/title_preference_item_friend_request"-->
+                <!--                    android:textAppearance="?textAppearanceBody1"-->
+                <!--                    android:textStyle="bold"-->
+                <!--                    app:layout_constraintStart_toStartOf="parent"-->
+                <!--                    app:layout_constraintTop_toTopOf="parent" />-->
 
-                <TextView
-                    android:id="@+id/text_see_all"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/all_padding_common"
-                    android:background="?selectableItemBackground"
-                    android:clickable="true"
-                    android:text="@string/title_see_all"
-                    android:textAppearance="?textAppearanceSmallPopupMenu"
-                    android:textColor="?android:textColorLink"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/text_friend_request" />
+                <!--                <TextView-->
+                <!--                    android:id="@+id/text_see_all"-->
+                <!--                    android:layout_width="wrap_content"-->
+                <!--                    android:layout_height="wrap_content"-->
+                <!--                    android:layout_marginEnd="@dimen/all_padding_common"-->
+                <!--                    android:background="?selectableItemBackground"-->
+                <!--                    android:clickable="true"-->
+                <!--                    android:text="@string/title_see_all"-->
+                <!--                    android:textAppearance="?textAppearanceSmallPopupMenu"-->
+                <!--                    android:textColor="?android:textColorLink"-->
+                <!--                    app:layout_constraintEnd_toEndOf="parent"-->
+                <!--                    app:layout_constraintTop_toTopOf="@id/text_friend_request" />-->
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_recent_friend_request"
-                    android:layout_width="match_parent"
-                    android:layout_height="110dp"
-                    android:layout_marginTop="@dimen/all_margin_top_soft"
-                    android:orientation="horizontal"
-                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-                    app:layout_constraintTop_toBottomOf="@id/text_friend_request" />
+                <!--                <androidx.recyclerview.widget.RecyclerView-->
+                <!--                    android:id="@+id/recycler_recent_friend_request"-->
+                <!--                    android:layout_width="match_parent"-->
+                <!--                    android:layout_height="110dp"-->
+                <!--                    android:layout_marginTop="@dimen/all_margin_top_soft"-->
+                <!--                    android:orientation="horizontal"-->
+                <!--                    app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
+                <!--                    app:layout_constraintTop_toBottomOf="@id/text_friend_request" />-->
 
                 <TextView
                     android:id="@+id/text_earlier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/all_padding_common"
+                    android:layout_marginTop="@dimen/all_padding_common"
                     android:text="Earlier"
                     android:textAppearance="?textAppearanceBody1"
                     android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="@id/text_friend_request"
-                    app:layout_constraintTop_toBottomOf="@id/recycler_recent_friend_request" />
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_notification"
