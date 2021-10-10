@@ -12,7 +12,7 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <queries>
         <intent>
@@ -30,15 +30,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.preferences.PreferenceNotificationActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.tac.open.notification" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.AllPeopleActivity"
             android:exported="true" />
         <activity
             android:name=".activity.RequestPeopleActivity"
             android:exported="true" />
         <activity
-            android:parentActivityName=".activity.UserActivity"
             android:name=".activity.preferences.PreferenceFriendRequestActivity"
             android:exported="true"
+            android:parentActivityName=".activity.UserActivity"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
@@ -143,8 +151,8 @@
         </activity>
         <activity
             android:name=".activity.UserActivity"
-            android:parentActivityName=".activity.MainActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:parentActivityName=".activity.MainActivity" />
         <activity
             android:name=".activity.VerifyOtpActivity"
             android:configChanges="orientation"
