@@ -1,5 +1,8 @@
 package com.mqv.realtimechatapplication.network.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -10,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-public class Notification {
+public class Notification implements Parcelable {
     @PrimaryKey
     private Long id;
     private String messageId;
@@ -43,6 +46,36 @@ public class Notification {
         this.createdDate = createdDate;
         this.accessedDate = accessedDate;
     }
+
+    protected Notification(Parcel in) {
+        if (in.readByte() == 0) {
+            id = null;
+        } else {
+            id = in.readLong();
+        }
+        messageId = in.readString();
+        title = in.readString();
+        body = in.readString();
+        byte tmpHasRead = in.readByte();
+        hasRead = tmpHasRead == 0 ? null : tmpHasRead == 1;
+        ownerId = in.readString();
+        agentId = in.readString();
+        agentImageUrl = in.readString();
+        byte tmpIsPushSent = in.readByte();
+        isPushSent = tmpIsPushSent == 0 ? null : tmpIsPushSent == 1;
+    }
+
+    public static final Creator<Notification> CREATOR = new Creator<Notification>() {
+        @Override
+        public Notification createFromParcel(Parcel in) {
+            return new Notification(in);
+        }
+
+        @Override
+        public Notification[] newArray(int size) {
+            return new Notification[size];
+        }
+    };
 
     public Long getId() {
         return id;
@@ -155,7 +188,29 @@ public class Notification {
                 Objects.equals(agentId, that.agentId) &&
                 Objects.equals(agentImageUrl, that.agentImageUrl) &&
                 Objects.equals(isPushSent, that.isPushSent) &&
-                Objects.equals(createdDate, that.createdDate) &&
-                Objects.equals(accessedDate, that.accessedDate);
+                Objects.equals(createdDate, that.createdDate);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        if (id == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeLong(id);
+        }
+        dest.writeString(messageId);
+        dest.writeString(title);
+        dest.writeString(body);
+        dest.writeByte((byte) (hasRead == null ? 0 : hasRead ? 1 : 2));
+        dest.writeString(ownerId);
+        dest.writeString(agentId);
+        dest.writeString(agentImageUrl);
+        dest.writeByte((byte) (isPushSent == null ? 0 : isPushSent ? 1 : 2));
     }
 }
