@@ -25,6 +25,9 @@ public interface NotificationDao {
     @Query("delete from notification")
     Completable deleteAll();
 
+    @Query("delete from notification where id not in (:listId)")
+    Completable deleteById(List<Long> listId);
+
     @Delete
     Completable delete(Notification notification);
 
