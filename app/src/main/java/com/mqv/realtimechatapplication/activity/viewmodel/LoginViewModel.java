@@ -28,6 +28,7 @@ import com.mqv.realtimechatapplication.ui.validator.LoginForm;
 import com.mqv.realtimechatapplication.ui.validator.LoginFormValidator;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.Objects;
@@ -36,8 +37,10 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -230,6 +233,32 @@ public class LoginViewModel extends ViewModel {
         var currentUser = FirebaseAuth.getInstance().getCurrentUser();
 
         loginRepository.sendFcmToken(currentUser);
+
+        fetchNotification(Objects.requireNonNull(currentUser).getUid());
+    }
+
+    private void fetchNotification(String uid) {
+        cd.add(notificationRepository.fetchNotification(uid, 1)
+                .subscribeOn(Schedulers.io())
+                .subscribe(response -> {
+                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                        notificationRepository.saveCachedNotification(response.getSuccess())
+                                .subscribeOn(Schedulers.io())
+                                .subscribe(new DisposableCompletableObserver() {
+                                    @Override
+                                    public void onComplete() {
+                                        Logging.show("Fetch notification when login SUCCESSFULLY");
+                                    }
+
+                                    @Override
+                                    public void onError(@NonNull Throwable e) {
+
+                                    }
+                                });
+                    } else {
+                        Logging.show("Fetch notification when login FAIL");
+                    }
+                }, Throwable::printStackTrace));
     }
 
     @Override
