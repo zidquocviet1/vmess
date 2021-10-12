@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
@@ -45,6 +46,13 @@ public class Notification implements Parcelable {
         this.isPushSent = isPushSent;
         this.createdDate = createdDate;
         this.accessedDate = accessedDate;
+    }
+
+    @Ignore
+    public Notification(NotificationType type, String ownerId, String agentId) {
+        this.type = type;
+        this.ownerId = ownerId;
+        this.agentId = agentId;
     }
 
     protected Notification(Parcel in) {
