@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="@dimen/all_padding_common">
+    android:paddingBottom="@dimen/all_padding_default">
 
     <com.google.android.material.circularreveal.cardview.CircularRevealCardView
         android:id="@+id/image_avatar"
@@ -43,9 +43,16 @@
         app:layout_constraintTop_toBottomOf="@id/text_body" />
 
     <include
-        android:id="@+id/item_report_problem"
+        android:id="@+id/item_mark_read"
         layout="@layout/item_preference_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/item_remove" />
+
+    <include
+        android:id="@+id/item_report_problem"
+        layout="@layout/item_preference_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/item_mark_read" />
 </androidx.constraintlayout.widget.ConstraintLayout>
