@@ -9,10 +9,14 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.RequestPeopleViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityRequestPeopleBinding;
@@ -24,6 +28,7 @@ import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
 
 import java.time.format.DateTimeFormatter;
 
@@ -36,6 +41,7 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
     private User user;
     private User currentUser;
     private FriendRequestStatus friendRequestStatus;
+    private FriendRequestStatus responseStatus;
 
     @Override
     public void binding() {
@@ -122,6 +128,9 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 case SUCCESS:
                     LoadingDialog.finishLoadingDialog();
 
+                    if (responseStatus == FriendRequestStatus.CONFIRM)
+                        fetchNotificationWithWork();
+
                     setResult(RESULT_OK);
 
                     finish();
@@ -142,9 +151,11 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
         if (id == mBinding.buttonAddFriend.getId()) {
             mViewModel.requestConnect(new FriendRequest(currentUser.getUid(), user.getUid()));
         } else if (id == mBinding.buttonConfirm.getId()) {
-            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), FriendRequestStatus.CONFIRM));
+            responseStatus = FriendRequestStatus.CONFIRM;
+            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), responseStatus));
         } else if (id == mBinding.buttonCancel.getId()) {
-            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), FriendRequestStatus.CANCEL));
+            responseStatus = FriendRequestStatus.CANCEL;
+            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), responseStatus));
         } else if (id == mBinding.buttonMessage.getId()) {
             // TODO: open message tap and check is friend or not
         } else if (id == mBinding.buttonBack.getId()) {
@@ -167,13 +178,14 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
 
     private void showUserUi(User user) {
         if (user != null) {
-            var photoUrl = user.getPhotoUrl() == null ? "" : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
+            var photoUrl = user.getPhotoUrl() == null ? null : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
 
             GlideApp.with(this)
                     .load(photoUrl)
                     .centerCrop()
-                    .error(R.drawable.ic_round_account)
-                    .signature(new ObjectKey(photoUrl))
+                    .error(R.drawable.ic_account_undefined)
+                    .fallback(R.drawable.ic_round_account)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(mBinding.imageAvatar);
 
@@ -290,5 +302,20 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 .diskCacheStrategy(DiskCacheStrategy.NONE)
                 .into(img);
         dialog.show();
+    }
+
+    private void fetchNotificationWithWork() {
+        var constraint =
+                new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build();
+
+        var workRequest =
+                new OneTimeWorkRequest.Builder(FetchNotificationWorker.class)
+                        .setConstraints(constraint)
+                        .build();
+
+        WorkManager.getInstance(this)
+                .enqueueUniqueWork("notification_worker", ExistingWorkPolicy.REPLACE, workRequest);
     }
 }
