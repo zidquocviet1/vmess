@@ -10,7 +10,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
@@ -22,6 +21,11 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.TaskStackBuilder;
 import androidx.preference.PreferenceManager;
+import androidx.work.Constraints;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -30,17 +34,21 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.activity.MainActivity;
+import com.mqv.realtimechatapplication.activity.ConnectPeopleActivity;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferencesImpl;
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceFriendRequestActivity;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
 
 import java.util.Locale;
 
 public class MessagingService extends FirebaseMessagingService {
+    public static final String EXTRA_KEY = "notification_key";
+    public static final String EXTRA_ACTION_NEW_FRIEND = "new_friend_request";
+    public static final String EXTRA_ACTION_ACCEPTED = "accepted_friend";
 
     @Override
     public void onNewToken(@NonNull String s) {
@@ -70,18 +78,22 @@ public class MessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
+            startWorkFetchNotification();
+
             var data = remoteMessage.getData();
 
             Logging.show("Message data payload: " + data);
 
-            var title = data.get("title");
-            var body = data.get("body");
-            var channelId = data.get("channelId");
-            var channelName = data.get("channelName");
-            var actionClick = data.get("actionClick");
-            var imageUrl = data.get("imageUrl");
+            var title = data.get(Const.KEY_TITLE);
+            var body = data.get(Const.KEY_BODY);
+            var channelId = data.get(Const.KEY_CHANNEL_ID);
+            var channelName = data.get(Const.KEY_CHANNEL_NAME);
+            var actionClick = data.get(Const.KEY_ACTION_CLICK);
+            var imageUrl = data.get(Const.KEY_IMAGE_URL);
+            var uid = data.get(Const.KEY_UID);
+            var agentId = data.get(Const.KEY_AGENT_ID);
 
-            var intent = getIntentByAction(actionClick);
+            var intent = getIntentByAction(actionClick, uid, agentId, imageUrl);
 
             if (intent == null) {
                 Logging.show("Intent must not be null");
@@ -128,28 +140,24 @@ public class MessagingService extends FirebaseMessagingService {
                                               @Nullable String imageUrl) {
         var glideRequest = GlideApp.with(this);
 
-        if (imageUrl != null){
-            var photoUrl = imageUrl.replace("localhost", Const.BASE_IP);
+        var photoUrl = imageUrl == null ? null : imageUrl.replace("localhost", Const.BASE_IP);
 
-            glideRequest.asBitmap()
-                    .load(photoUrl)
-                    .error(R.drawable.ic_round_account)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                            showNotification(channelId, channelName, title, body, pendingIntent, resource);
-                        }
+        glideRequest.asBitmap()
+                .load(photoUrl)
+                .error(R.drawable.ic_account_undefined)
+                .fallback(R.drawable.ic_round_account)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                        showNotification(channelId, channelName, title, body, pendingIntent, resource);
+                    }
 
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {
 
-                        }
-                    });
-        }else{
-            var bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_round_account);
-            showNotification(channelId, channelName, title, body, pendingIntent, bitmap);
-        }
+                    }
+                });
     }
 
     private void showNotification(String channelId, String channelName,
@@ -183,17 +191,28 @@ public class MessagingService extends FirebaseMessagingService {
         notificationManager.notify(0, notificationBuilder.build());
     }
 
-    private Intent getIntentByAction(String actionClick) {
+    private Intent getIntentByAction(String actionClick, String uid, String agentId, String imageUrl) {
         if (actionClick == null) {
             Logging.show("Action click must not be null");
             return null;
         }
 
         switch (actionClick) {
-            case "newFriendRequest":
-                return new Intent(getApplicationContext(), PreferenceFriendRequestActivity.class);
-            case "acceptedFriendRequest":
-                return new Intent(getApplicationContext(), MainActivity.class);
+            case Const.DEFAULT_NEW_FRIEND_REQUEST:
+                var friendRequestIntent = new Intent(getApplicationContext(), PreferenceFriendRequestActivity.class);
+                friendRequestIntent.putExtra(EXTRA_KEY, EXTRA_ACTION_NEW_FRIEND);
+                friendRequestIntent.putExtra(Const.KEY_UID, uid);
+                friendRequestIntent.putExtra(Const.KEY_AGENT_ID, agentId);
+                friendRequestIntent.putExtra(Const.KEY_IMAGE_URL, imageUrl);
+                friendRequestIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                return friendRequestIntent;
+            case Const.DEFAULT_ACCEPTED_FRIEND_REQUEST:
+                var acceptedFriendIntent = new Intent(getApplicationContext(), ConnectPeopleActivity.class);
+                acceptedFriendIntent.putExtra(EXTRA_KEY, EXTRA_ACTION_ACCEPTED);
+                acceptedFriendIntent.putExtra(Const.KEY_UID, uid);
+                acceptedFriendIntent.putExtra(Const.KEY_AGENT_ID, agentId);
+                acceptedFriendIntent.putExtra(Const.KEY_IMAGE_URL, imageUrl);
+                return acceptedFriendIntent;
             default:
                 return null;
         }
@@ -209,5 +228,20 @@ public class MessagingService extends FirebaseMessagingService {
 
         return runningAppInfo.importance == IMPORTANCE_FOREGROUND ||
                 runningAppInfo.importance == IMPORTANCE_VISIBLE;
+    }
+
+    private void startWorkFetchNotification() {
+        var constraint =
+                new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build();
+
+        var workRequest =
+                new OneTimeWorkRequest.Builder(FetchNotificationWorker.class)
+                        .setConstraints(constraint)
+                        .build();
+
+        WorkManager.getInstance(this)
+                .enqueueUniqueWork("notification_worker", ExistingWorkPolicy.REPLACE, workRequest);
     }
 }
