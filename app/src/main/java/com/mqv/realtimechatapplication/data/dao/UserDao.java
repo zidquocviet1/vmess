@@ -11,6 +11,7 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface UserDao {
@@ -22,4 +23,7 @@ public interface UserDao {
 
     @Query("select * from user")
     Flowable<List<User>> findByUid();
+
+    @Query("select * from user where uid = :uid")
+    Single<User> findByUid(String uid);
 }
