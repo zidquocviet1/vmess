@@ -9,9 +9,7 @@ import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
-import com.mqv.realtimechatapplication.network.exception.FirebaseUnauthorizedException;
 import com.mqv.realtimechatapplication.network.model.Conversation;
-import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.data.People;
@@ -41,7 +39,6 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
     private final NotificationRepository notificationRepository;
 
     private final MutableLiveData<Result<User>> remoteUserResult = new MutableLiveData<>();
-    private final MutableLiveData<Result<List<Notification>>> notificationListResult = new MutableLiveData<>();
     private final MutableLiveData<List<People>> listPeople = new MutableLiveData<>();
     private final MutableLiveData<List<People>> activePeopleList = new MutableLiveData<>();
     private final MutableLiveData<List<Conversation>> conversationList = new MutableLiveData<>();
@@ -82,10 +79,6 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
 
     protected MutableLiveData<List<People>> getActivePeopleList() {
         return activePeopleList;
-    }
-
-    protected MutableLiveData<Result<List<Notification>>> getNotificationList() {
-        return notificationListResult;
     }
 
     protected void loadRemoteUserUsingNBR() {
@@ -169,21 +162,6 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                 }));
     }
 
-    protected void loadNotificationUsingNBR() {
-        cd.add(notificationRepository
-                .fetchNotificationNBR(NOTIFICATION_DURATION_LIMIT)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(data -> notificationListResult.setValue(Result.Success(data)),
-                        e -> {
-                            if (e instanceof FirebaseUnauthorizedException) {
-                                notificationListResult.setValue(Result.Fail(((FirebaseUnauthorizedException) e).getError()));
-                            } else {
-                                notificationListResult.setValue(Result.Fail(R.string.error_unknown));
-                            }
-                        }));
-    }
-
     public void forceClearDispose() {
         cd.clear();
     }
@@ -200,12 +178,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                 new Conversation(7L, "Pham Bang Bang 1", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),
                 new Conversation(8L, "Trieu Le Dinh 1", "You: wo ai ni", LocalDateTime.now(), MessageStatus.SEEN),
                 new Conversation(9L, "Ngo Diec Pham 1", "You: 2 phut hon", LocalDateTime.now(), MessageStatus.NOT_RECEIVED),
-                new Conversation(10L, "Luu Duc Hoa 1", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED),
-                new Conversation(11L, "Pham thao duyen 2", "You: ok", LocalDateTime.now(), MessageStatus.RECEIVED),
-                new Conversation(12L, "Pham Bang Bang 2", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(13L, "Trieu Le Dinh 2", "You: wo ai ni", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(14L, "Ngo Diec Pham 2", "You: 2 phut hon", LocalDateTime.now(), MessageStatus.NOT_RECEIVED),
-                new Conversation(15L, "Luu Duc Hoa 2", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED)
+                new Conversation(10L, "Luu Duc Hoa 1", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED)
         );
 
         var listRemoteUser = Arrays.asList(
