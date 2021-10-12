@@ -24,6 +24,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ConnectPeopleViewModel extends CurrentUserViewModel {
     private final UserRepository userRepository;
     private final MutableLiveData<Result<User>> connectUserResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<User>> connectUserIdResult = new MutableLiveData<>();
     private Disposable qrCodeDisposable;
     private Disposable usernameDisposable;
     private static final int QR_CODE_REQUEST = -1;
@@ -37,6 +38,10 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
 
     public LiveData<Result<User>> getConnectUserResult() {
         return connectUserResult;
+    }
+
+    public LiveData<Result<User>> getConnectUserIdResult() {
+        return connectUserIdResult;
     }
 
     public void getConnectUserByQrCode(String code) {
@@ -61,6 +66,34 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
         }
     }
 
+    public void getConnectUserByUid(String uid) {
+        var firebaseUser = getFirebaseUser().getValue();
+
+        if (firebaseUser != null) {
+            connectUserResult.setValue(Result.Loading());
+
+            userRepository.getConnectUserByUid(firebaseUser,
+                    uid,
+                    observable -> cd.add(observable.subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(response -> {
+                                if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                    connectUserIdResult.setValue(Result.Success(response.getSuccess()));
+                                } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                                    connectUserIdResult.setValue(Result.Fail(R.string.error_authentication_fail));
+                                }
+                            }, t -> {
+                                var message = t.getMessage();
+
+                                if (message != null && message.equals("HTTP 404 ")) {
+                                    connectUserIdResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
+                                } else
+                                    connectUserIdResult.setValue(Result.Fail(R.string.error_connect_server_fail));
+                            })),
+                    handleFirebaseAuthError());
+        }
+    }
+
     private void handleRemoteCall(Observable<ApiResponse<User>> observable, int requestCode) {
         var disposable = observable.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -75,15 +108,15 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
                 }, t -> {
                     var message = t.getMessage();
 
-                    if (message != null && message.equals("HTTP 404 ")){
+                    if (message != null && message.equals("HTTP 404 ")) {
                         connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
-                    }else
+                    } else
                         connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail));
                 });
 
-        if (requestCode == QR_CODE_REQUEST){
+        if (requestCode == QR_CODE_REQUEST) {
             qrCodeDisposable = disposable;
-        }else if (requestCode == USERNAME_REQUEST){
+        } else if (requestCode == USERNAME_REQUEST) {
             usernameDisposable = disposable;
         }
 
