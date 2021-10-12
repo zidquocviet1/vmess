@@ -32,4 +32,7 @@ public interface HistoryLoggedInUserDao {
 
     @Delete
     Completable delete(HistoryLoggedInUser user);
+
+    @Query("SELECT * FROM history_logged_in_user WHERE is_login = 1")
+    Single<HistoryLoggedInUser> getLoggedInUser();
 }
