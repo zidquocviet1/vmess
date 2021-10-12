@@ -32,4 +32,6 @@ public interface NotificationRepository {
     Observable<ApiResponse<Notification>> removeNotification(@NonNull Notification notification);
 
     Flowable<List<Notification>> getUnreadNotificationCached();
+
+    Completable saveCachedNotification(List<Notification> notifications);
 }

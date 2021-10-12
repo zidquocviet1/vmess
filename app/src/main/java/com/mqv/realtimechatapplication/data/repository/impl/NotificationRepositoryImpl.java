@@ -72,10 +72,17 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public Observable<List<Notification>> fetchNotificationNBR(int duration) {
         return new NetworkBoundResource<List<Notification>, ApiResponse<List<Notification>>>(false) {
+            boolean isCachedEmpty = false;
+
             @Override
             protected void saveCallResult(@NonNull ApiResponse<List<Notification>> response) {
                 if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                    saveListNotification(response.getSuccess());
+                    var data = response.getSuccess();
+
+                    if (isCachedEmpty && data.isEmpty())
+                        return;
+
+                    saveListNotification(data);
                 }
             }
 
@@ -84,8 +91,10 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                 if (user == null)
                     return false;
 
-                if (data == null || data.isEmpty())
+                if (data == null || data.isEmpty()) {
+                    isCachedEmpty = true;
                     return true;
+                }
 
                 var time = data.stream()
                         .map(p -> p.getAccessedDate().plusMinutes(10).compareTo(LocalDateTime.now()))
@@ -217,6 +226,11 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     @Override
     public Flowable<List<Notification>> getUnreadNotificationCached() {
         return dao.fetchAll();
+    }
+
+    @Override
+    public Completable saveCachedNotification(List<Notification> notifications) {
+        return dao.save(notifications);
     }
 
     private CompletableFuture<Optional<String>> futureToken() {
