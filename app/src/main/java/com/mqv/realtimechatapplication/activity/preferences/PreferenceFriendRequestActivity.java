@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity.preferences;
 
+import static com.mqv.realtimechatapplication.network.firebase.MessagingService.EXTRA_ACTION_NEW_FRIEND;
+import static com.mqv.realtimechatapplication.network.firebase.MessagingService.EXTRA_KEY;
 import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.CANCEL;
 import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.CONFIRM;
 import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.PENDING;
@@ -11,6 +13,12 @@ import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.work.Constraints;
+import androidx.work.Data;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.RequestPeopleActivity;
@@ -21,8 +29,11 @@ import com.mqv.realtimechatapplication.network.model.FriendRequest;
 import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.ui.adapter.FriendRequestAdapter;
 import com.mqv.realtimechatapplication.ui.data.People;
+import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
+import com.mqv.realtimechatapplication.work.MarkNotificationReadWorker;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,6 +67,8 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
         updateActionBarTitle(R.string.title_preference_item_friend_request);
 
         setupRecyclerView();
+
+        triggerOpenFromNotification(getIntent());
     }
 
     @Override
@@ -110,6 +123,8 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     LoadingDialog.finishLoadingDialog();
 
                     mAdapter.removeItem(currentItemPosition);
+
+                    setResult(RESULT_OK);
                     break;
                 case ERROR:
                     LoadingDialog.finishLoadingDialog();
@@ -194,11 +209,15 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                 break;
             case CANCEL:
                 mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CANCEL));
+
+                fetchNotificationWithWork();
                 break;
             case CONFIRM:
                 confirmFriendRequest(request.getSenderId(), request.getPhotoUrl(), request.getDisplayName());
 
                 mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CONFIRM));
+
+                fetchNotificationWithWork();
                 break;
         }
     }
@@ -207,5 +226,48 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
         var people = new People(uid, displayName, photoUrl, null, LocalDateTime.now().minusMinutes(11));
 
         mViewModel.confirmFriendRequest(people);
+    }
+
+    private void triggerOpenFromNotification(Intent intent) {
+        var extra = intent.getStringExtra(EXTRA_KEY);
+        if (extra != null && extra.equals(EXTRA_ACTION_NEW_FRIEND)) {
+            var uid = intent.getStringExtra(Const.KEY_UID);
+            var agentId = intent.getStringExtra(Const.KEY_AGENT_ID);
+            var imageUrl = intent.getStringExtra(Const.KEY_IMAGE_URL);
+
+            var constraint = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+
+            var workData = new Data.Builder()
+                    .putString(Const.KEY_UID, uid)
+                    .putString(Const.KEY_AGENT_ID, agentId)
+                    .putString(Const.KEY_IMAGE_URL, imageUrl)
+                    .putString("type", Const.DEFAULT_NEW_FRIEND_REQUEST)
+                    .build();
+
+            var workRequest = new OneTimeWorkRequest.Builder(MarkNotificationReadWorker.class)
+                    .setConstraints(constraint)
+                    .setInputData(workData)
+                    .build();
+
+            WorkManager.getInstance(this)
+                    .enqueueUniqueWork("mark_notification_read", ExistingWorkPolicy.REPLACE, workRequest);
+        }
+    }
+
+    private void fetchNotificationWithWork() {
+        var constraint =
+                new Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build();
+
+        var workRequest =
+                new OneTimeWorkRequest.Builder(FetchNotificationWorker.class)
+                        .setConstraints(constraint)
+                        .build();
+
+        WorkManager.getInstance(this)
+                .enqueueUniqueWork("notification_worker", ExistingWorkPolicy.REPLACE, workRequest);
     }
 }
