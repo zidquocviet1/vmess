@@ -11,6 +11,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.HTTP;
 import retrofit2.http.Header;
+import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -37,4 +38,9 @@ public interface NotificationService {
     Observable<ApiResponse<Notification>> removeNotification(@Header(Const.AUTHORIZATION) String token,
                                                              @Header(Const.AUTHORIZER) String authorizer,
                                                              @Body Notification notification);
+
+    @POST(value = "notification/find_by_uid")
+    Observable<ApiResponse<Notification>> findByUidAndAgentId(@Header(Const.AUTHORIZATION) String token,
+                                                              @Header(Const.AUTHORIZER) String authorizer,
+                                                              @Body Notification notification);
 }
