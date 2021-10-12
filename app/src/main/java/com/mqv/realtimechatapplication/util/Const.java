@@ -24,12 +24,6 @@ public final class Const {
 
     // DATABASE
     public static final String DATABASE_NAME = "tac_database";
-    // TABLE USER
-    public static final String TABLE_USER = "user";
-    public static final String KEY_USER_NAME = "username";
-    public static final String KEY_PASSWORD = "password";
-    public static final String KEY_DISPLAY_NAME = "display_name";
-    public static final String KEY_AVATAR = "avatar";
 
     // OTP Activity
     public static final String EXTRA_VERIFICATION_ID = "verification_id";
@@ -40,6 +34,17 @@ public final class Const {
     // Main Activity
     public static final String EXTRA_USER_INFO = "user_info";
 
+    // Notification KEY data payload
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_BODY = "body";
+    public static final String KEY_CHANNEL_ID = "channelId";
+    public static final String KEY_CHANNEL_NAME = "channelName";
+    public static final String KEY_ACTION_CLICK = "actionClick";
+    public static final String KEY_IMAGE_URL = "imageUrl";
+    public static final String KEY_UID = "user_id";
+    public static final String KEY_AGENT_ID = "agent_id";
+    public static final String DEFAULT_NEW_FRIEND_REQUEST = "newFriendRequest";
+    public static final String DEFAULT_ACCEPTED_FRIEND_REQUEST = "acceptedFriendRequest";
 
     private static final String DUMMIES_IMAGES_DOMAIN = BASE_URL + "user/photo/";
     public static final String[] DUMMIES_IMAGES_URL = new String[]{
