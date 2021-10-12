@@ -44,6 +44,14 @@
                     app:titleTextColor="@color/text_color">
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_notification_settings"
+                        style="@style/MaterialIconButton"
+                        android:layout_gravity="end"
+                        android:layout_marginEnd="@dimen/all_margin"
+                        android:visibility="gone"
+                        app:icon="@drawable/ic_round_settings" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/button_all_people"
                         style="@style/MaterialIconButton"
                         android:layout_gravity="end"
