@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
+import static com.mqv.realtimechatapplication.ui.fragment.NotificationFragment.ACTION_MARK_READ;
 import static com.mqv.realtimechatapplication.ui.fragment.NotificationFragment.ACTION_REMOVE;
 import static com.mqv.realtimechatapplication.ui.fragment.NotificationFragment.ACTION_REPORT;
 import static com.mqv.realtimechatapplication.ui.fragment.NotificationFragment.EXTRA_KEY_ACTION;
@@ -92,6 +93,11 @@ public class NotificationOptionDialogFragment extends BottomSheetDialogFragment 
         mBinding.itemReportProblem.summary.setVisibility(View.GONE);
         mBinding.itemReportProblem.icon.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_report));
 
+        mBinding.itemMarkRead.title.setText(R.string.title_mark_read_notification);
+        mBinding.itemMarkRead.title.setTypeface(Typeface.DEFAULT_BOLD);
+        mBinding.itemMarkRead.summary.setVisibility(View.GONE);
+        mBinding.itemMarkRead.icon.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_mark_read));
+
         var formatUrl = item.getAgentImageUrl() == null ? null :
                 item.getAgentImageUrl().replace("localhost", Const.BASE_IP);
 
@@ -117,6 +123,13 @@ public class NotificationOptionDialogFragment extends BottomSheetDialogFragment 
         mBinding.itemReportProblem.getRoot().setOnClickListener(v -> {
             var data = new Bundle();
             data.putString(EXTRA_KEY_ACTION, ACTION_REPORT);
+            data.putParcelable(EXTRA_NOTIFICATION, mNotification);
+            requireActivity().getSupportFragmentManager().setFragmentResult(REQUEST_KEY, data);
+            dismiss();
+        });
+        mBinding.itemMarkRead.getRoot().setOnClickListener(v -> {
+            var data = new Bundle();
+            data.putString(EXTRA_KEY_ACTION, ACTION_MARK_READ);
             data.putParcelable(EXTRA_NOTIFICATION, mNotification);
             requireActivity().getSupportFragmentManager().setFragmentResult(REQUEST_KEY, data);
             dismiss();
