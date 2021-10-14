@@ -32,8 +32,8 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
     private Consumer<Integer> onItemClick;
     private Consumer<Integer> onChangeItem;
     private Consumer<Boolean> onDatasetChange;
-    private static final String WEEK_PATTERN = "EEE H:mm a";
-    private static final String MONTH_PATTERN = "MMM dd H:mm a";
+    private static final String WEEK_PATTERN = "EEE hh:mm a";
+    private static final String MONTH_PATTERN = "MMM dd hh:mm a";
 
     public NotificationAdapter(Context context, List<Notification> data) {
         super(new DiffUtil.ItemCallback<>() {
