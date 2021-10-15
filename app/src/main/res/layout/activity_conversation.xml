@@ -1,9 +1,176 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".activity.ConversationActivity">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/footer"
+        android:fitsSystemWindows="true">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appbar"
+            style="@style/Widget.MaterialComponents.AppBarLayout.Surface"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:fitsSystemWindows="true"
+            app:liftOnScroll="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_back"
+                    style="@style/MaterialIconButton"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="@dimen/all_margin"
+                    android:backgroundTint="?android:colorBackground"
+                    app:icon="@drawable/ic_back" />
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/image_avatar"
+                    android:layout_width="@dimen/image_user_avatar_small"
+                    android:layout_height="@dimen/image_user_avatar_small"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="10dp"
+                    android:src="@drawable/ic_round_account"
+                    app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+                <com.google.android.material.appbar.MaterialToolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="-8dp"
+                    android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                    app:menu="@menu/menu_conversation_toolbar">
+
+                    <LinearLayout
+                        android:id="@+id/layout_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/toolbar_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/author_app_full_name"
+                            android:textAppearance="@style/ToolbarTitleTextAppearance" />
+
+                        <TextView
+                            android:id="@+id/toolbar_subtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/title_user_active_now"
+                            android:textAppearance="@style/ToolbarSubtitleTextAppearance" />
+                    </LinearLayout>
+                </com.google.android.material.appbar.MaterialToolbar>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/text_network_error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/title_no_internet_connection"
+                android:textColor="@android:color/holo_red_light"
+                android:visibility="gone" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_chat_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fitsSystemWindows="true"
+            android:paddingBottom="8dp"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/item_chat" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <LinearLayout
+        android:id="@+id/footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:fitsSystemWindows="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:weightSum="10">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_camera"
+            style="@style/MaterialIconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="10dp"
+            android:backgroundTint="?android:colorBackground"
+            app:icon="@drawable/ic_camera"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_gallery"
+            style="@style/MaterialIconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:backgroundTint="?android:colorBackground"
+            app:icon="@drawable/ic_round_photo_library"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_mic"
+            style="@style/MaterialIconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:backgroundTint="?android:colorBackground"
+            app:icon="@drawable/ic_round_mic"
+            app:iconSize="24dp" />
+
+        <EditText
+            android:id="@+id/edit_text_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
+            android:autofillHints="@null"
+            android:background="@drawable/background_rounded_chat"
+            android:backgroundTint="@color/base_background_color"
+            android:hint="Write a message..."
+            android:inputType="textMultiLine"
+            android:maxLines="5"
+            android:minHeight="38dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_send_message"
+            style="@style/MaterialIconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:backgroundTint="?android:colorBackground"
+            android:visibility="gone"
+            app:icon="@drawable/ic_round_send"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_more"
+            style="@style/MaterialIconButton"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="10dp"
+            android:backgroundTint="?android:colorBackground"
+            app:icon="@drawable/ic_round_add"
+            app:iconSize="24dp" />
+    </LinearLayout>
+</RelativeLayout>

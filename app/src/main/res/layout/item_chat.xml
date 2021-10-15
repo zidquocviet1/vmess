@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_chat"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="2dp">
+
+    <TextView
+        android:id="@+id/text_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/all_padding_common"
+        android:paddingBottom="@dimen/all_padding_common"
+        android:text="@string/title_timestamp_dummy"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_sender"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide_line"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.3" />
+
+        <View
+            android:id="@+id/sender_chat_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/background_rounded_chat"
+            android:backgroundTint="@color/purple_500"
+            app:layout_constraintBottom_toBottomOf="@id/text_sender_content"
+            app:layout_constraintEnd_toEndOf="@id/text_sender_content"
+            app:layout_constraintStart_toStartOf="@id/text_sender_content"
+            app:layout_constraintTop_toTopOf="@id/text_sender_content" />
+
+        <TextView
+            android:id="@+id/text_sender_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/all_margin_top_soft"
+            android:padding="@dimen/all_padding_default"
+            android:text="@string/dummy_chat_sender"
+            android:textAlignment="viewStart"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toStartOf="@id/image_message_status"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toStartOf="@id/guide_line"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_message_status"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="@dimen/all_margin_top_soft"
+            android:src="@drawable/ic_round_error"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@id/text_sender_content"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_receiver"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guide_line_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.7" />
+
+        <View
+            android:id="@+id/receiver_chat_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/background_rounded_chat"
+            android:backgroundTint="@color/base_background_color"
+            app:layout_constraintBottom_toBottomOf="@id/text_receiver_content"
+            app:layout_constraintEnd_toEndOf="@id/text_receiver_content"
+            app:layout_constraintStart_toStartOf="@id/text_receiver_content"
+            app:layout_constraintTop_toTopOf="@id/text_receiver_content" />
+
+        <TextView
+            android:id="@+id/text_receiver_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:padding="@dimen/all_padding_default"
+            android:text="@string/dummy_chat_receiver"
+            android:textAlignment="viewStart"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="@id/guide_line_2"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toEndOf="@id/image_receiver"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_receiver"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="10dp"
+            android:src="@drawable/ic_round_account"
+            app:layout_constraintBottom_toBottomOf="@id/text_receiver_content"
+            app:layout_constraintStart_toStartOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/conversationFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.ConversationFragment"
+        android:name="com.mqv.realtimechatapplication.ui.fragment.ConversationListFragment"
         android:label="@string/title_chat"
         tools:layout="@layout/fragment_conversation" />
 </navigation>

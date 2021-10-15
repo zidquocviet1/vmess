@@ -158,4 +158,12 @@
         <item name="android:paddingBottom">10dp</item>
         <item name="rippleColor">@drawable/background_custom_button_outline_ripple</item>
     </style>
+
+    <style name="ToolbarTitleTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ToolbarSubtitleTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionMode.Subtitle">
+        <item name="android:textSize">12sp</item>
+    </style>
 </resources>
