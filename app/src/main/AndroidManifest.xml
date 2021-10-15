@@ -30,10 +30,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.AddConversationActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activity.SearchConversationActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activity.ConversationActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true" />
+        <activity
             android:name=".activity.preferences.PreferenceNotificationActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.notification" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
