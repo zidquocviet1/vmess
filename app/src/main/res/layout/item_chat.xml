@@ -12,7 +12,6 @@
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/all_padding_common"
         android:paddingBottom="@dimen/all_padding_common"
-        android:text="@string/title_timestamp_dummy"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

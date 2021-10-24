@@ -33,4 +33,8 @@
     // override the max_width of the menu items in bottom navigation view
     <dimen name="design_bottom_navigation_item_max_width" tools:override="true">600dp</dimen>
     <dimen name="design_bottom_navigation_active_item_max_width" tools:override="true">600dp</dimen>
+
+    <dimen name="chat_corner_radius">20dp</dimen>
+    <dimen name="chat_corner_radius_normal">4dp</dimen>
+    <dimen name="chat_margin">10dp</dimen>
 </resources>

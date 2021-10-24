@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragment.ConversationFragment">
+    tools:context=".ui.fragment.ConversationListFragment">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipe_messages"
@@ -30,7 +30,7 @@
                 android:orientation="vertical">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/material_icon_button"
+                    android:id="@+id/search_button"
                     style="@style/Widget.MaterialComponents.Button.UnelevatedButton.Icon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

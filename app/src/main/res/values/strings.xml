@@ -10,6 +10,9 @@
     <string name="author_app_first_name">Viet</string>
     <string name="author_app_last_name">Mai</string>
     <string name="author_app_full_name">Mai Quoc Viet</string>
+    <string name="dummy_chat_sender">I\'v created this application since i was 21 years old</string>
+    <string name="dummy_chat_receiver">When were you create this app?</string>
+    <string name="dummy_first_chat">You have connected to this person. Text something to share your story.</string>
 
     // activity label
     <string name="label_switch_accounts">Switch Accounts</string>
@@ -23,6 +26,7 @@
     <string name="label_edit_details">Edit Details</string>
     <string name="label_edit_links">Edit Links</string>
     <string name="label_all_people">All People</string>
+    <string name="label_new_message">New Message</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
@@ -32,7 +36,7 @@
     <string name="title_notification">Notification</string>
     <string name="title_active_people">Active people</string>
     <string name="title_conversation_dummy">Conversation Title</string>
-    <string name="title_timestamp_dummy">\u2022 3:06 PM</string>
+    <string name="title_conversation_timestamp">\u2022 %1$s</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
@@ -91,6 +95,12 @@
     <string name="title_remove_notification">Remove this notification</string>
     <string name="title_report_notification">Report to Notification Team</string>
     <string name="title_mark_read_notification">Mark notification as read</string>
+    <string name="title_no_internet_connection">No Internet Connection</string>
+    <string name="title_user_active_now">Active Now</string>
+    <string name="title_user_active_now_lower_than_1_hour_ago">Active %1$d minutes ago</string>
+    <string name="title_sender_chat_unsent">You unsent a message</string>
+    <string name="title_receiver_chat_unsent">%1$s unsent a message</string>
+    <string name="title_just_you">Just you</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -127,6 +137,7 @@
     <string name="action_message">Send Message</string>
     <string name="action_add_friend">Add Friend</string>
     <string name="action_un_friend">Unfriend</string>
+    <string name="action_view_profile">View Profile</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
@@ -171,6 +182,7 @@
     <string name="msg_notification_week">%1$s at %2$s</string>
     <string name="msg_notification_yesterday">Yesterday at %1$s</string>
     <string name="msg_notification_month">%1$s %2$s at %3$s</string>
+    <string name="msg_owner_chat">You:\u0020</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

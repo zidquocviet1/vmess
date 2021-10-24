@@ -7,10 +7,10 @@
     android:background="?selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    android:paddingStart="14dp"
+    android:paddingStart="@dimen/all_padding_common"
     android:paddingTop="6dp"
     android:paddingBottom="6dp"
-    android:paddingEnd="@dimen/all_margin">
+    android:paddingEnd="@dimen/all_padding_common">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/image_conversation"
@@ -27,7 +27,7 @@
         android:id="@+id/text_title_conversation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/text_appearance_margin"
+        android:layout_marginStart="@dimen/all_padding_common"
         android:text="@string/title_conversation_dummy"
         android:textSize="16sp"
         android:maxLength="30"
@@ -45,7 +45,7 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_content_conversation"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/msg_conversation_content_dummy"
         app:layout_constraintVertical_bias="0"
@@ -57,9 +57,10 @@
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_created_at"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/title_timestamp_dummy"
+        android:text="@string/title_conversation_timestamp"
+        android:maxLines="1"
         android:textSize="14sp"
         android:layout_marginStart="@dimen/all_margin_top_soft"
         app:layout_constraintHorizontal_bias="0"
