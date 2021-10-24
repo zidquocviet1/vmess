@@ -210,4 +210,90 @@ public class User implements Parcelable {
         dest.writeTypedList(socialLinks);
         dest.writeString(username);
     }
+
+    public static class Builder {
+        private String uid;
+        private String biographic;
+        private String displayName;
+        private String photoUrl;
+        private String username;
+        private Gender gender;
+        private LocalDateTime birthday;
+        private LocalDateTime createdDate;
+        private LocalDateTime modifiedDate;
+        private LocalDateTime accessedDate;
+        private List<UserSocialLink> socialLinks;
+
+        public Builder() {
+        }
+
+        public Builder setUid(String uid) {
+            this.uid = uid;
+            return this;
+        }
+
+        public Builder setBiographic(String biographic) {
+            this.biographic = biographic;
+            return this;
+        }
+
+        public Builder setDisplayName(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
+
+        public Builder setPhotoUrl(String photoUrl) {
+            this.photoUrl = photoUrl;
+            return this;
+        }
+
+        public Builder setUsername(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder setGender(Gender gender) {
+            this.gender = gender;
+            return this;
+        }
+
+        public Builder setBirthday(LocalDateTime birthday) {
+            this.birthday = birthday;
+            return this;
+        }
+
+        public Builder setCreatedDate(LocalDateTime createdDate) {
+            this.createdDate = createdDate;
+            return this;
+        }
+
+        public Builder setModifiedDate(LocalDateTime modifiedDate) {
+            this.modifiedDate = modifiedDate;
+            return this;
+        }
+
+        public Builder setAccessedDate(LocalDateTime accessedDate) {
+            this.accessedDate = accessedDate;
+            return this;
+        }
+
+        public Builder setSocialLinks(List<UserSocialLink> socialLinks) {
+            this.socialLinks = socialLinks;
+            return this;
+        }
+
+        public User create() {
+            return new User(uid,
+                            biographic,
+                            displayName,
+                            photoUrl,
+                            gender,
+                            birthday,
+                            createdDate,
+                            modifiedDate,
+                            accessedDate,
+                            socialLinks,
+                            username);
+        }
+    }
 }
