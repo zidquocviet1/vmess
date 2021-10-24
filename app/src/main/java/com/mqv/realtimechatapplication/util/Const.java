@@ -18,6 +18,7 @@ public final class Const {
     public static final String MULTIPART_TYPE = "multipart/form-data";
     public static final String PREFIX_TOKEN = "Bearer ";
     public static final String IMAGE_FILE_NAME_PATTERN = "yyyyMMdd_HHmmss"; // example: 09/02/2021 13:01:30 -> 20210902_130130
+    public static final String DUMMY_FIRST_CHAT_PREFIX = "DUMMY_FIRST_CHAT";
 
     // Preference Key
     public static final String KEY_FCM_TOKEN = "fcm_token";
