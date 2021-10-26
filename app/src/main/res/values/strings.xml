@@ -212,6 +212,7 @@
     <string name="prompt_enter_otp">Enter your verification code here.</string>
     <string name="prompt_new_username">New username</string>
     <string name="prompt_find_username">Find username</string>
+    <string name="prompt_write_message">Write a message...</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_email_exists">This email has exist</string>
