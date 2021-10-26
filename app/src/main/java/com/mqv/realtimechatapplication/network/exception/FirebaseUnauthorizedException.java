@@ -6,7 +6,7 @@ public class FirebaseUnauthorizedException extends FirebaseAuthException {
     private final int error;
 
     public FirebaseUnauthorizedException(int errorRes) {
-        super("", "");
+        super("a", "a");
         this.error = errorRes;
     }
 
