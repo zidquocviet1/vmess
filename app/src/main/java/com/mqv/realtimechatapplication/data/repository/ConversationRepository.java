@@ -19,5 +19,7 @@ public interface ConversationRepository {
 
     Observable<ApiResponse<Chat>> sendMessage(@NonNull Chat chat);
 
+    Observable<ApiResponse<Chat>> seenMessage(@NonNull Chat chat);
+
     Completable updateConversation(Conversation conversation);
 }

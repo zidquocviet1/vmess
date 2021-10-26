@@ -14,6 +14,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
 public interface ConversationService {
@@ -24,6 +25,11 @@ public interface ConversationService {
 
     @POST("conversation/add_chat")
     Observable<ApiResponse<Chat>> sendMessage(@Header(AUTHORIZATION) String token,
+                                              @Header(AUTHORIZER) String authorizer,
+                                              @Body Chat chat);
+
+    @PUT("conversation")
+    Observable<ApiResponse<Chat>> seenMessage(@Header(AUTHORIZATION) String token,
                                               @Header(AUTHORIZER) String authorizer,
                                               @Body Chat chat);
 }

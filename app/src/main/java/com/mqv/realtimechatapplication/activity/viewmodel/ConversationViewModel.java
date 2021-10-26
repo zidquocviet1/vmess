@@ -16,6 +16,8 @@ import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -23,6 +25,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -34,8 +37,10 @@ public class ConversationViewModel extends CurrentUserViewModel {
     private final PeopleRepository                              peopleRepository;
     private final MutableLiveData<Pair<Chat, Chat>>             sendMessageStatus;
     private final MutableLiveData<User>                         userDetail;
+    private final MutableLiveData<Chat>                         seenMessageResult;
 
     private final Executor                                      sendMessageExecutors = Executors.newFixedThreadPool(3);
+    private final Executor                                      seenMessageExecutors = Executors.newFixedThreadPool(5);
 
     @Inject
     public ConversationViewModel(ConversationRepository repository,
@@ -46,6 +51,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
         this.peopleRepository   = peopleRepository;
         this.sendMessageStatus  = new MutableLiveData<>();
         this.userDetail         = new MutableLiveData<>();
+        this.seenMessageResult  = new MutableLiveData<>();
     }
 
     public LiveData<Pair<Chat, Chat>> getSendMessage() {
@@ -54,6 +60,10 @@ public class ConversationViewModel extends CurrentUserViewModel {
 
     public LiveData<User> getUserDetail() {
         return userDetail;
+    }
+
+    public LiveData<Chat> getSeenMessageResult() {
+        return seenMessageResult;
     }
 
     public void resetSendMessageResult() {
@@ -142,5 +152,21 @@ public class ConversationViewModel extends CurrentUserViewModel {
                           e.printStackTrace();
                       }
                   });
+    }
+
+    public void seenMessage(List<Chat> chats) {
+        Disposable disposable = Observable.fromIterable(chats)
+                                          .flatMap(repository::seenMessage)
+                                          .subscribeOn(Schedulers.from(seenMessageExecutors))
+                                          .observeOn(AndroidSchedulers.mainThread())
+                                          .subscribe(response -> {
+                                              if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                                  Chat chat = response.getSuccess();
+
+                                                  seenMessageResult.setValue(chat);
+                                              }
+                                          }, t -> {});
+
+        cd.add(disposable);
     }
 }
