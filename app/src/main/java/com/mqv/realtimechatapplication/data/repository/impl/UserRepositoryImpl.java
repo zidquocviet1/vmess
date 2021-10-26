@@ -3,15 +3,19 @@ package com.mqv.realtimechatapplication.data.repository.impl;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.NetworkBoundResource;
+import com.mqv.realtimechatapplication.network.exception.FirebaseUnauthorizedException;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.service.UserService;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.UserTokenUtil;
 
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
@@ -41,28 +45,27 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void fetchUserFromRemote(User remoteUser,
-                                    @NonNull FirebaseUser user,
-                                    @NonNull Consumer<Observable<ApiResponse<User>>> callback) {
+    public Observable<ApiResponse<User>> fetchUserFromRemote(@Nullable String uid) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+        }
+
         /*
          * Target remote user uid. If null it's mean clients want to load themself account information
          * */
-        var uid = remoteUser != null ? remoteUser.getUid() : user.getUid();
+        String realUid = uid != null ? uid : user.getUid();
 
-        // Required Firebase User token to make sure clients are using the app to make a call
-        user.getIdToken(true)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        var token = Objects.requireNonNull(task.getResult()).getToken();
+        return Observable.fromCallable(() -> UserTokenUtil.getToken(user))
+                .flatMap(tokenOptional -> {
+                    if (tokenOptional.isPresent()) {
+                        String token = tokenOptional.get();
+                        String bearerToken = Const.PREFIX_TOKEN + token;
 
-                        callback.accept(userService.fetchUserFromRemote(
-                                Const.PREFIX_TOKEN + token,
-                                Const.DEFAULT_AUTHORIZER,
-                                uid));
+                        return userService.fetchUserFromRemote(bearerToken,Const.DEFAULT_AUTHORIZER, realUid);
                     } else {
-                        callback.accept(null);
-                        var e = task.getException();
-                        Objects.requireNonNull(e).printStackTrace();
+                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
                     }
                 });
     }

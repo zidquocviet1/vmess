@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.data.repository;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.network.ApiResponse;
@@ -18,9 +19,7 @@ public interface UserRepository {
     /*
      * Using this method will help us easy to use from another ViewModel
      * */
-    void fetchUserFromRemote(User remoteUser,
-                             FirebaseUser user,
-                             Consumer<Observable<ApiResponse<User>>> callback);
+    Observable<ApiResponse<User>> fetchUserFromRemote(@Nullable String uid);
 
     void editUser(@NonNull User updateUser,
                   @NonNull FirebaseUser user,
