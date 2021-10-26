@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.data.repository;
 
+import androidx.annotation.NonNull;
+
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.ui.data.People;
 
@@ -9,9 +11,12 @@ import java.util.function.Consumer;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 
 public interface PeopleRepository {
     Flowable<List<People>> getAll();
+
+    Single<People> getCachedByUid(@NonNull String uid);
 
     Completable save(People people);
 

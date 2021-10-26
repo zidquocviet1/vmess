@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 
 public class PeopleRepositoryImpl implements PeopleRepository {
     private final PeopleDao peopleDao;
@@ -45,6 +46,11 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     @Override
     public Flowable<List<People>> getAll() {
         return peopleDao.getAll();
+    }
+
+    @Override
+    public Single<People> getCachedByUid(@NonNull String uid) {
+        return peopleDao.getByUid(uid);
     }
 
     @Override

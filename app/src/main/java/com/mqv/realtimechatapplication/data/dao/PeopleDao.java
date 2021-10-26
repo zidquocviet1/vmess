@@ -12,11 +12,15 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface PeopleDao {
     @Query("select * from people")
     Flowable<List<People>> getAll();
+
+    @Query("select * from people where uid = :uid")
+    Single<People> getByUid(String uid);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable save(People people);
