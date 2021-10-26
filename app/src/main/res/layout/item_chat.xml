@@ -117,4 +117,41 @@
             app:layout_constraintBottom_toBottomOf="@id/text_receiver_content"
             app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_welcome"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+
+        <View
+            android:id="@+id/welcome_chat_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/background_rounded_chat"
+            android:backgroundTint="@color/base_background_color"
+            app:layout_constraintBottom_toBottomOf="@id/text_welcome"
+            app:layout_constraintEnd_toEndOf="@id/text_welcome"
+            app:layout_constraintStart_toStartOf="@id/text_welcome"
+            app:layout_constraintTop_toTopOf="@id/text_welcome" />
+
+        <TextView
+            android:id="@+id/text_welcome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:alpha="0.7"
+            android:padding="@dimen/all_padding_default"
+            android:text="@string/dummy_first_chat"
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
