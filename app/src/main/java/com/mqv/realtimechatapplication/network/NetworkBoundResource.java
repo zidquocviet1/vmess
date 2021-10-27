@@ -31,8 +31,6 @@ public abstract class NetworkBoundResource<ResultType, RequestType> {
                             } else {
                                 makeCallFromRemote();
                             }
-                        } else {
-                            result = loadFromDb();
                         }
                     }
 
