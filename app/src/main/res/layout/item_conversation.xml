@@ -9,8 +9,8 @@
     android:focusable="true"
     android:paddingStart="@dimen/all_padding_common"
     android:paddingTop="6dp"
-    android:paddingBottom="6dp"
-    android:paddingEnd="@dimen/all_padding_common">
+    android:paddingEnd="@dimen/all_padding_common"
+    android:paddingBottom="6dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/image_conversation"
@@ -23,49 +23,69 @@
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_green_dot_wrapper"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="@id/image_conversation"
+        app:layout_constraintEnd_toEndOf="@id/image_conversation"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_green_dot"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:background="@drawable/ic_green_dot"
+        app:layout_constraintTop_toTopOf="@id/image_green_dot_wrapper"
+        app:layout_constraintEnd_toEndOf="@id/image_green_dot_wrapper"
+        app:layout_constraintBottom_toBottomOf="@id/image_green_dot_wrapper"
+        app:layout_constraintStart_toStartOf="@id/image_green_dot_wrapper"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title_conversation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/all_padding_common"
+        android:maxLength="30"
         android:text="@string/title_conversation_dummy"
         android:textSize="16sp"
-        android:maxLength="30"
-        app:layout_constraintVertical_bias="1"
         app:layout_constraintBottom_toBottomOf="@id/guide_line"
         app:layout_constraintStart_toEndOf="@id/image_conversation"
-        app:layout_constraintTop_toTopOf="@id/image_conversation" />
+        app:layout_constraintTop_toTopOf="@id/image_conversation"
+        app:layout_constraintVertical_bias="1" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guide_line"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.5"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_content_conversation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/msg_conversation_content_dummy"
-        app:layout_constraintVertical_bias="0"
-        android:textSize="14sp"
         android:maxLength="30"
+        android:text="@string/msg_conversation_content_dummy"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/image_conversation"
         app:layout_constraintStart_toStartOf="@id/text_title_conversation"
-        app:layout_constraintTop_toTopOf="@id/guide_line"/>
+        app:layout_constraintTop_toTopOf="@id/guide_line"
+        app:layout_constraintVertical_bias="0" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_created_at"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="@string/title_conversation_timestamp"
-        android:maxLines="1"
-        android:textSize="14sp"
         android:layout_marginStart="@dimen/all_margin_top_soft"
-        app:layout_constraintHorizontal_bias="0"
+        android:maxLines="1"
+        android:text="@string/title_conversation_timestamp"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/text_content_conversation"
         app:layout_constraintEnd_toStartOf="@id/image_state"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@id/text_content_conversation"
         app:layout_constraintTop_toTopOf="@id/text_content_conversation" />
 

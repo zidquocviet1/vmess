@@ -35,14 +35,41 @@
                     android:backgroundTint="?android:colorBackground"
                     app:icon="@drawable/ic_back" />
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/image_avatar"
-                    android:layout_width="@dimen/image_user_avatar_small"
-                    android:layout_height="@dimen/image_user_avatar_small"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="10dp"
-                    android:src="@drawable/ic_round_account"
-                    app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+                    android:layout_marginStart="10dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/image_avatar"
+                        android:layout_width="@dimen/image_user_avatar_small"
+                        android:layout_height="@dimen/image_user_avatar_small"
+                        android:src="@drawable/ic_round_account"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/image_green_dot_wrapper"
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:background="@color/white"
+                        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
+                        app:layout_constraintEnd_toEndOf="@id/image_avatar"
+                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/image_green_dot"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/ic_green_dot"
+                        app:layout_constraintBottom_toBottomOf="@id/image_green_dot_wrapper"
+                        app:layout_constraintEnd_toEndOf="@id/image_green_dot_wrapper"
+                        app:layout_constraintStart_toStartOf="@id/image_green_dot_wrapper"
+                        app:layout_constraintTop_toTopOf="@id/image_green_dot_wrapper"
+                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/toolbar"
