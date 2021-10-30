@@ -1,10 +1,15 @@
 package com.mqv.realtimechatapplication.activity;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModel;
@@ -13,6 +18,7 @@ import androidx.viewbinding.ViewBinding;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
@@ -31,14 +37,30 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
 
     public B mBinding;
     public V mViewModel;
-    @Inject
-    AppPreferences mPreferences;
-    private boolean themeChangePending;
-    private boolean paused;
+
+//    @Inject
+//    AppPreferences mPreferences;
+
+    /*
+     * Some callback to notify current user change
+     * */
     private Consumer<FirebaseUser> firebaseUserConsumer;
     private Consumer<User> loggedInUserConsumer;
     private FirebaseUserManager firebaseUserManager;
     private LoggedInUserManager loggedInUserManager;
+
+    /*
+    * Network manager to check network status and notify
+    * */
+    private static ConnectivityManager sConnectivityManager;
+    private OnNetworkChangedListener mOnNetworkChangedListener;
+
+    /*
+     * Attribute to check whether change dark mode theme
+     * */
+    private boolean themeChangePending;
+    private boolean paused;
+    private boolean hasNetwork;
 
     private final AppPreferences.Listener onPreferenceChanged = new AppPreferences.Listener() {
         @Override
@@ -86,12 +108,15 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
 
         firebaseUserManager = FirebaseUserManager.getInstance();
         loggedInUserManager = LoggedInUserManager.getInstance();
+        sConnectivityManager = getSystemService(ConnectivityManager.class);
+
+        registerNetworkEventManager();
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        mPreferences.addListener(onPreferenceChanged);
+//        mPreferences.addListener(onPreferenceChanged);
         firebaseUserManager.addListener(onFirebaseUserChanged);
         loggedInUserManager.addListener(onLoggedInUserChanged);
     }
@@ -116,7 +141,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     protected void onDestroy() {
         super.onDestroy();
         if (mBinding != null) mBinding = null;
-        mPreferences.removeListener(onPreferenceChanged);
+//        mPreferences.removeListener(onPreferenceChanged);
         firebaseUserManager.removeListener(onFirebaseUserChanged);
         loggedInUserManager.removeListener(onLoggedInUserChanged);
     }
@@ -127,6 +152,9 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         return FirebaseAuth.getInstance().getCurrentUser();
     }
 
+    /*
+     * OnCurrentUser changed
+     * */
     public void reloadFirebaseUser() {
         var executorService = Executors.newSingleThreadExecutor();
 
@@ -142,6 +170,9 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         loggedInUserManager.setLoggedInUser(user);
     }
 
+    /*
+     * Register event section
+     * */
     public void registerFirebaseUserChange(Consumer<FirebaseUser> callback) {
         this.firebaseUserConsumer = callback;
     }
@@ -150,11 +181,54 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         this.loggedInUserConsumer = callback;
     }
 
+    protected void registerNetworkEventCallback(OnNetworkChangedListener listener) {
+        mOnNetworkChangedListener = listener;
+    }
+
+    private void registerNetworkEventManager() {
+        sConnectivityManager.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(@NonNull Network network) {
+//                Logging.show("The default network is now: " + network);
+                hasNetwork = true;
+
+                if (mOnNetworkChangedListener != null)
+                    mOnNetworkChangedListener.onAvailable();
+            }
+
+            @Override
+            public void onLost(@NonNull Network network) {
+//                Logging.show("The application no longer has a default network. The last default network was " + network);
+                hasNetwork = false;
+
+                if (mOnNetworkChangedListener != null)
+                    mOnNetworkChangedListener.onLost();
+            }
+
+            @Override
+            public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
+//                Logging.show("The default network changed capabilities: " + networkCapabilities);
+            }
+
+            @Override
+            public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
+//                Logging.show("The default network changed link properties: " + linkProperties);
+            }
+        });
+    }
+
     private void onThemeSettingsModeChange() {
         if (paused) {
             themeChangePending = true;
         } else {
             recreate();
         }
+    }
+
+    /*
+     * Protected method for derived class
+     * */
+    public boolean getNetworkStatus() {
+        return hasNetwork;
     }
 }
