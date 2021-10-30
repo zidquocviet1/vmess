@@ -9,17 +9,12 @@ import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.ApiResponse;
-import com.mqv.realtimechatapplication.network.model.Conversation;
-import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Logging;
-import com.mqv.realtimechatapplication.util.MessageStatus;
 
 import java.net.HttpURLConnection;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -41,8 +36,6 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<User>> remoteUserResult = new MutableLiveData<>();
     private final MutableLiveData<List<People>> listPeople = new MutableLiveData<>();
     private final MutableLiveData<List<People>> activePeopleList = new MutableLiveData<>();
-    private final MutableLiveData<List<Conversation>> conversationList = new MutableLiveData<>();
-    private final MutableLiveData<List<RemoteUser>> remoteUserList = new MutableLiveData<>();
 
     protected static final int NOTIFICATION_DURATION_LIMIT = 1;
 
@@ -67,14 +60,6 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
 
     protected MutableLiveData<List<People>> getListPeople() {
         return listPeople;
-    }
-
-    protected MutableLiveData<List<Conversation>> getConversationList() {
-        return conversationList;
-    }
-
-    protected MutableLiveData<List<RemoteUser>> getRemoteUserList() {
-        return remoteUserList;
     }
 
     protected MutableLiveData<List<People>> getActivePeopleList() {
@@ -164,36 +149,5 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
 
     public void forceClearDispose() {
         cd.clear();
-    }
-
-    /// test
-    protected void newData() {
-        var listConversation = Arrays.asList(
-                new Conversation(1L, "Phạm Thảo Duyên", "You: ok", LocalDateTime.now(), MessageStatus.RECEIVED),
-                new Conversation(2L, "Phạm Băng Băng", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(3L, "Triệu Lệ Dĩnh", "You: wo ai ni", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(4L, "Ngô Diệc Phàm", "You: 2 phut hon", LocalDateTime.now(), MessageStatus.NOT_RECEIVED),
-                new Conversation(5L, "Lưu Đức Hoa", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED),
-                new Conversation(6L, "Pham thao duyen 1", "You: ok", LocalDateTime.now(), MessageStatus.RECEIVED),
-                new Conversation(7L, "Pham Bang Bang 1", "You: haha", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(8L, "Trieu Le Dinh 1", "You: wo ai ni", LocalDateTime.now(), MessageStatus.SEEN),
-                new Conversation(9L, "Ngo Diec Pham 1", "You: 2 phut hon", LocalDateTime.now(), MessageStatus.NOT_RECEIVED),
-                new Conversation(10L, "Luu Duc Hoa 1", "You: hao le", LocalDateTime.now(), MessageStatus.RECEIVED)
-        );
-
-        var listRemoteUser = Arrays.asList(
-                new RemoteUser("1", "Thảo Duyên", "Phạm"),
-                new RemoteUser("2", "Băng Băng", "Phạm"),
-                new RemoteUser("3", "Lệ Dĩnh", "Triệu"),
-                new RemoteUser("4", "Diệc Phàm", "Ngô"),
-                new RemoteUser("5", "Đức Hoa", "Lưu"),
-                new RemoteUser("6", "Viet", "Mai"),
-                new RemoteUser("7", "Han", "Ngoc"),
-                new RemoteUser("8", "Nhu", "Tran"),
-                new RemoteUser("9", "Mai", "Phuong"),
-                new RemoteUser("10", "Tuyen", "Huyen")
-        );
-        conversationList.setValue(listConversation);
-        remoteUserList.setValue(listRemoteUser);
     }
 }
