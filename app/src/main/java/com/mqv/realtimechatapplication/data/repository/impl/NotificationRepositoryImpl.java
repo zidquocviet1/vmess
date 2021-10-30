@@ -234,7 +234,13 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     private CompletableFuture<Optional<String>> futureToken() {
-        return CompletableFuture.supplyAsync(() -> UserTokenUtil.getToken(user), executorService);
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return UserTokenUtil.getToken(user);
+            } catch (Throwable throwable) {
+                return Optional.empty();
+            }
+        }, executorService);
     }
 
     private void saveListNotification(List<Notification> notifications) {

@@ -1,8 +1,11 @@
 package com.mqv.realtimechatapplication.data.repository.impl;
 
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
@@ -21,6 +24,7 @@ import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
@@ -57,15 +61,32 @@ public class UserRepositoryImpl implements UserRepository {
          * */
         String realUid = uid != null ? uid : user.getUid();
 
-        return Observable.fromCallable(() -> UserTokenUtil.getToken(user))
-                .flatMap(tokenOptional -> {
+        return Observable.fromCallable(() -> {
+                    try {
+                        return new Pair<Optional<String>, Throwable>(UserTokenUtil.getToken(user), null);
+                    } catch (Throwable t) {
+                        return new Pair<>(Optional.<String>empty(), t);
+                    }
+                })
+                .flatMap(pair -> {
+                    Optional<String> tokenOptional = pair.first;
+                    Throwable throwable = pair.second;
+
                     if (tokenOptional.isPresent()) {
                         String token = tokenOptional.get();
                         String bearerToken = Const.PREFIX_TOKEN + token;
 
-                        return userService.fetchUserFromRemote(bearerToken,Const.DEFAULT_AUTHORIZER, realUid);
+                        return userService.fetchUserFromRemote(bearerToken, Const.DEFAULT_AUTHORIZER, realUid);
                     } else {
-                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                        return Observable.create(emitter -> {
+                            if (!emitter.isDisposed()) {
+                                if (throwable instanceof FirebaseNetworkException) {
+                                    emitter.onError(new FirebaseUnauthorizedException(R.string.error_network_connection));
+                                } else {
+                                    emitter.onError(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                                }
+                            }
+                        });
                     }
                 });
     }

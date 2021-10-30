@@ -4,13 +4,16 @@ import static com.mqv.realtimechatapplication.network.model.type.NotificationTyp
 import static com.mqv.realtimechatapplication.network.model.type.NotificationType.NEW_FRIEND_REQUEST;
 
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.hilt.work.HiltWorker;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.network.ApiResponse;
@@ -24,6 +27,7 @@ import com.mqv.realtimechatapplication.util.UserTokenUtil;
 
 import java.net.HttpURLConnection;
 import java.util.Objects;
+import java.util.Optional;
 
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
@@ -63,15 +67,16 @@ public class MarkNotificationReadWorker extends Worker {
                 NEW_FRIEND_REQUEST : ACCEPTED_FRIEND_REQUEST;
 
         var notification = new Notification(type, uid, agentId);
+        var user = FirebaseAuth.getInstance().getCurrentUser();
 
-        findByUid(notification)
+        findByUid(user, notification)
                 .subscribeOn(Schedulers.io())
                 .doOnError(Throwable::printStackTrace)
                 .flatMap((Function<ApiResponse<Notification>, ObservableSource<ApiResponse<Notification>>>) response -> {
                     if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                         var data = response.getSuccess();
 
-                        return markNotificationReadObservable(data);
+                        return markNotificationReadObservable(user, data);
                     } else {
                         return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
                     }
@@ -102,25 +107,9 @@ public class MarkNotificationReadWorker extends Worker {
         return Result.success();
     }
 
-    private Observable<ApiResponse<Notification>> findByUid(Notification notification) {
-        var user = FirebaseAuth.getInstance().getCurrentUser();
-
-        if (user != null) {
-            return Observable.fromCallable(() -> UserTokenUtil.getToken(user))
-                    .flatMap(optionalToken -> {
-                        if (optionalToken.isPresent()) {
-                            var token = optionalToken.get();
-                            var bearerToken = Const.PREFIX_TOKEN + token;
-                            var authorizer = Const.DEFAULT_AUTHORIZER;
-
-                            return service.findByUidAndAgentId(bearerToken, authorizer, notification);
-                        } else {
-                            return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                        }
-                    });
-        } else {
-            return Observable.error(new FirebaseUnauthorizedException(R.string.error_user_id_not_found));
-        }
+    private Observable<ApiResponse<Notification>> findByUid(FirebaseUser user, Notification notification) {
+        return getBearerTokenObservable(user)
+                .flatMap(token -> service.findByUidAndAgentId(token, Const.DEFAULT_AUTHORIZER, notification));
     }
 
     private void updateLocalNotification(Notification updatedNotification) {
@@ -139,24 +128,42 @@ public class MarkNotificationReadWorker extends Worker {
                 });
     }
 
-    private Observable<ApiResponse<Notification>> markNotificationReadObservable(Notification item) {
-        var user = FirebaseAuth.getInstance().getCurrentUser();
+    private Observable<ApiResponse<Notification>> markNotificationReadObservable(FirebaseUser user, Notification item) {
+        return getBearerTokenObservable(user)
+                .flatMap(token -> service.markAsRead(token, Const.DEFAULT_AUTHORIZER, item));
+    }
 
-        if (user != null) {
-            return Observable.fromCallable(() -> UserTokenUtil.getToken(user))
-                    .flatMap(optionalToken -> {
-                        if (optionalToken.isPresent()) {
-                            var token = optionalToken.get();
-                            var bearerToken = Const.PREFIX_TOKEN + token;
-                            var authorizer = Const.DEFAULT_AUTHORIZER;
+    private Observable<String> getBearerTokenObservable(FirebaseUser user) {
+        return Observable.fromCallable(() -> {
+                    if (user == null)
+                        return new Pair<>(Optional.<String>empty(), new FirebaseUnauthorizedException(R.string.error_user_id_not_found));
 
-                            return service.markAsRead(bearerToken, authorizer, item);
-                        } else {
-                            return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                        }
-                    });
-        } else {
-            return Observable.error(new FirebaseUnauthorizedException(R.string.error_user_id_not_found));
-        }
+                    try {
+                        return new Pair<Optional<String>, Throwable>(UserTokenUtil.getToken(user), null);
+                    } catch (Throwable t) {
+                        return new Pair<>(Optional.<String>empty(), t);
+                    }
+                })
+                .flatMap(pair -> {
+                    Optional<String> tokenOptional = pair.first;
+                    Throwable throwable = pair.second;
+
+                    if (tokenOptional.isPresent()) {
+                        String token = tokenOptional.get();
+                        String bearerToken = Const.PREFIX_TOKEN + token;
+
+                        return Observable.just(bearerToken);
+                    } else {
+                        return Observable.create(emitter -> {
+                            if (!emitter.isDisposed()) {
+                                if (throwable instanceof FirebaseNetworkException) {
+                                    emitter.onError(new FirebaseUnauthorizedException(R.string.error_network_connection));
+                                } else {
+                                    emitter.onError(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                                }
+                            }
+                        });
+                    }
+                });
     }
 }

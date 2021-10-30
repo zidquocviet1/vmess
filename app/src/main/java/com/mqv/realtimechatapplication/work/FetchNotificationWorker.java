@@ -1,12 +1,14 @@
 package com.mqv.realtimechatapplication.work;
 
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.hilt.work.HiltWorker;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
@@ -25,6 +27,7 @@ import com.mqv.realtimechatapplication.util.UserTokenUtil;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import dagger.assisted.Assisted;
@@ -74,16 +77,33 @@ public class FetchNotificationWorker extends Worker {
         var user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user != null) {
-            return Observable.fromCallable(() -> UserTokenUtil.getToken(user))
-                    .flatMap(optionalToken -> {
-                        if (optionalToken.isPresent()) {
-                            var token = optionalToken.get();
-                            var bearerToken = Const.PREFIX_TOKEN + token;
-                            var authorizer = Const.DEFAULT_AUTHORIZER;
+            return Observable.fromCallable(() -> {
+                        try {
+                            return new Pair<Optional<String>, Throwable>(UserTokenUtil.getToken(user), null);
+                        } catch (Throwable t) {
+                            return new Pair<>(Optional.<String>empty(), t);
+                        }
+                    })
+                    .flatMap(pair -> {
+                        Optional<String> tokenOptional = pair.first;
+                        Throwable throwable = pair.second;
+
+                        if (tokenOptional.isPresent()) {
+                            String token = tokenOptional.get();
+                            String bearerToken = Const.PREFIX_TOKEN + token;
+                            String authorizer = Const.DEFAULT_AUTHORIZER;
 
                             return service.fetchNotification(bearerToken, authorizer, user.getUid(), 1);
                         } else {
-                            return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                            return Observable.create(emitter -> {
+                                if (!emitter.isDisposed()) {
+                                    if (throwable instanceof FirebaseNetworkException) {
+                                        emitter.onError(new FirebaseUnauthorizedException(R.string.error_network_connection));
+                                    } else {
+                                        emitter.onError(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
+                                    }
+                                }
+                            });
                         }
                     });
         } else {
