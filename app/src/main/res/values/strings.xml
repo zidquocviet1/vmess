@@ -200,6 +200,7 @@
     <string name="error_user_connect_name_conflict">Your username is not available. Try another one.</string>
     <string name="error_response_request_conflict">Can\'t confirm your request</string>
     <string name="error_qr_code_not_found">This qr code is not available</string>
+    <string name="error_user_not_in_conversation">You not belong to this conversation. Permission denied!</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
