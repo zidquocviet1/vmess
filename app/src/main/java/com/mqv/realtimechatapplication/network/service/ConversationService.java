@@ -29,7 +29,6 @@ public interface ConversationService {
 
     @POST("conversation/add_chat")
     Observable<ApiResponse<Chat>> sendMessage(@Header(AUTHORIZATION) String token,
-                                              @Header(AUTHORIZER) String authorizer,
                                               @Body Chat chat);
 
     @PUT("conversation")

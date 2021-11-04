@@ -197,9 +197,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Observable<ApiResponse<Chat>> sendMessage(@NonNull Chat chat) {
         return getBearerTokenObservable()
-                .flatMap(token -> service.sendMessage(token,
-                                                      DEFAULT_AUTHORIZER,
-                                                      chat))
+                .flatMap(token -> service.sendMessage(token, chat))
                 .subscribeOn(Schedulers.io());
     }
 
