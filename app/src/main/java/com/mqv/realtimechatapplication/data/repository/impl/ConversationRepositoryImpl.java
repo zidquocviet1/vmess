@@ -233,6 +233,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Completable deleteAll() {
+        return dao.deleteAll();
+    }
+
+    @Override
     public Single<Conversation> fetchCachedById(Conversation conversation) {
         return dao.fetchById(conversation.getId())
                   .flatMap(map -> {

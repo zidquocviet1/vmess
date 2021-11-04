@@ -24,6 +24,7 @@ import com.google.firebase.auth.PhoneAuthProvider;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
+import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
@@ -56,6 +57,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     private final LoginRepository loginRepository;
     private final PeopleRepository peopleRepository;
     private final NotificationRepository notificationRepository;
+    private final ConversationRepository conversationRepository;
     private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
     private final MutableLiveData<HistoryLoggedInUser> verifyResult = new MutableLiveData<>();
     private final MutableLiveData<List<HistoryLoggedInUser>> historyUserList = new MutableLiveData<>();
@@ -71,11 +73,13 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     public ManageAccountViewModel(HistoryLoggedInUserRepository historyUserRepository,
                                   LoginRepository loginRepository,
                                   PeopleRepository peopleRepository,
-                                  NotificationRepository notificationRepository) {
+                                  NotificationRepository notificationRepository,
+                                  ConversationRepository conversationRepository) {
         this.historyUserRepository = historyUserRepository;
         this.loginRepository = loginRepository;
         this.peopleRepository = peopleRepository;
         this.notificationRepository = notificationRepository;
+        this.conversationRepository = conversationRepository;
 
         getAllHistoryUser();
         loadLoggedInUser();
@@ -270,6 +274,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
         cd.add(historyUserRepository.signOut(previousUser.getUid())
                 .andThen(peopleRepository.deleteAll())
                 .andThen(notificationRepository.deleteAllLocal())
+                .andThen(conversationRepository.deleteAll())
                 .andThen(loginRepository.saveLoggedInUser(user, historyUser))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

@@ -32,6 +32,8 @@ public interface ConversationRepository {
 
     Completable deleteAll(List<String> conversationIdList);
 
+    Completable deleteAll();
+
     Single<Conversation> fetchCachedById(Conversation conversation);
 
     Single<List<Chat>> fetchChatByConversation(String id, int page, int size);

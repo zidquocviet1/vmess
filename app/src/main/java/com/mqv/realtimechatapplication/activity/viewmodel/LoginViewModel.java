@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.SignInProvider;
+import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
@@ -56,6 +57,7 @@ public class LoginViewModel extends ViewModel {
     private final HistoryLoggedInUserRepository historyUserRepository;
     private final PeopleRepository peopleRepository;
     private final NotificationRepository notificationRepository;
+    private final ConversationRepository conversationRepository;
     private FirebaseUser currentLoginFirebaseUser;
     private FirebaseUser previousFirebaseUser;
     private FirebaseUser loginUserOnStop;
@@ -64,11 +66,13 @@ public class LoginViewModel extends ViewModel {
     public LoginViewModel(LoginRepository loginRepository,
                           HistoryLoggedInUserRepository historyUserRepository,
                           PeopleRepository peopleRepository,
-                          NotificationRepository notificationRepository) {
+                          NotificationRepository notificationRepository,
+                          ConversationRepository conversationRepository) {
         this.loginRepository = loginRepository;
         this.historyUserRepository = historyUserRepository;
         this.peopleRepository = peopleRepository;
         this.notificationRepository = notificationRepository;
+        this.conversationRepository = conversationRepository;
     }
 
     public LiveData<LoginRegisterValidationResult> getLoginValidationResult() {
@@ -193,6 +197,7 @@ public class LoginViewModel extends ViewModel {
             saveRequest = historyUserRepository.signOut(previousUser.getUid())
                     .andThen(peopleRepository.deleteAll())
                     .andThen(notificationRepository.deleteAllLocal())
+                    .andThen(conversationRepository.deleteAll())
                     .andThen(loginRepository.saveLoggedInUser(user, historyUser));
         } else {
             saveRequest = loginRepository.saveLoggedInUser(user, historyUser);
