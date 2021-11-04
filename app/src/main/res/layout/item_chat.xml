@@ -6,22 +6,41 @@
     android:layout_height="wrap_content"
     android:layout_marginTop="2dp">
 
-    <TextView
-        android:id="@+id/text_timestamp"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_common"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="@dimen/all_padding_common"
-        android:paddingBottom="@dimen/all_padding_common"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.core.widget.ContentLoadingProgressBar
+            android:id="@+id/progress_bar_loading"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="32dp"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/all_padding_common"
+            android:paddingBottom="@dimen/all_padding_common"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_timestamp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/all_padding_common"
+            android:paddingBottom="@dimen/all_padding_common"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/progress_bar_loading" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_sender"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+        app:layout_constraintTop_toBottomOf="@id/layout_common">
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guide_line"
@@ -72,7 +91,7 @@
         android:id="@+id/layout_receiver"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+        app:layout_constraintTop_toBottomOf="@id/layout_common">
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guide_line_2"
@@ -123,7 +142,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+        app:layout_constraintTop_toBottomOf="@id/layout_common">
 
         <View
             android:id="@+id/welcome_chat_background"
