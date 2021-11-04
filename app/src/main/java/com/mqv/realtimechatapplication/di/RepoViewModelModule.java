@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.di;
 
+import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
@@ -40,7 +41,8 @@ public class RepoViewModelModule {
     @ViewModelScoped
     @Provides
     public ConversationRepository provideConversationRepository(ConversationService service,
-                                                                ConversationDao dao) {
-        return new ConversationRepositoryImpl(service, dao);
+                                                                ConversationDao dao,
+                                                                ChatDao chatDao) {
+        return new ConversationRepositoryImpl(service, dao, chatDao);
     }
 }
