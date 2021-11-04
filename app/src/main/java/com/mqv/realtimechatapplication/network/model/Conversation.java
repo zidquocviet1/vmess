@@ -4,7 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
-import androidx.room.Embedded;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
@@ -21,32 +21,49 @@ import java.util.Objects;
 public class Conversation implements Parcelable {
     @PrimaryKey
     @NonNull
+    @ColumnInfo(name = "conversation_id")
     private String id;
+    @ColumnInfo(name = "conversation_participants_id")
     private List<User> participants;
+    @Ignore
     private List<Chat> chats;
     @Ignore
     private ConversationGroup group;
+    @ColumnInfo(name = "conversation_type")
     private ConversationType type;
+    @ColumnInfo(name = "conversation_status")
     private ConversationStatusType status;
+    @ColumnInfo(name = "conversation_creation_time")
     private LocalDateTime creationTime;
     @SerializedName("last_chat")
-    @Embedded(prefix = "conversation_")
+    @Ignore
     private Chat lastChat;
 
+    public Conversation(@NonNull String id,
+                        List<User> participants,
+                        ConversationType type,
+                        ConversationStatusType status,
+                        LocalDateTime creationTime) {
+        this.id = id;
+        this.participants = participants;
+        this.type = type;
+        this.status = status;
+        this.creationTime = creationTime;
+    }
+
+    @Ignore
     public Conversation(@NonNull String id,
                         List<User> participants,
                         List<Chat> chats,
                         ConversationType type,
                         ConversationStatusType status,
-                        LocalDateTime creationTime,
-                        Chat lastChat) {
+                        LocalDateTime creationTime) {
         this.id = id;
         this.participants = participants;
         this.chats = chats;
         this.type = type;
         this.status = status;
         this.creationTime = creationTime;
-        this.lastChat = lastChat;
     }
 
     @Ignore
@@ -148,7 +165,7 @@ public class Conversation implements Parcelable {
     }
 
     public Chat getLastChat() {
-        return lastChat;
+        return chats.get(chats.size() - 1);
     }
 
     public void setLastChat(Chat lastChat) {
@@ -176,17 +193,11 @@ public class Conversation implements Parcelable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Conversation that = (Conversation) o;
-        return id.equals(that.id) &&
-                Objects.equals(participants, that.participants) &&
-                Objects.equals(chats, that.chats) &&
-                Objects.equals(group, that.group) &&
-                type == that.type &&
-                status == that.status &&
-                Objects.equals(creationTime, that.creationTime);
+        return id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, participants, chats, group, type, status, creationTime, lastChat);
+        return Objects.hash(id);
     }
 }

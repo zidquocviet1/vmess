@@ -1,12 +1,16 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -16,12 +20,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
+import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
+import com.mqv.realtimechatapplication.util.MyActivityForResult;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,21 +61,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     @SuppressLint("NotifyDataSetChanged")
     @Override
     public void setupObserver() {
-        mViewModel.getConversationListSafe().observe(this, conversations -> {
-            if (conversations != null && !conversations.isEmpty()) {
-                var preSize = mConversationList.size();
-
-                mConversationList.clear();
-                mConversationAdapter.notifyItemRangeRemoved(0, preSize);
-
-                mConversationList.addAll(conversations);
-                mConversationAdapter.notifyItemRangeInserted(0, conversations.size());
-
-                stopRefresh();
-            }
-        });
-
-        mViewModel.getRemoteUserListSafe().observe(this, remoteUsers -> {
+        mViewModel.getRankUserListSafe().observe(this, remoteUsers -> {
             if (remoteUsers != null && !remoteUsers.isEmpty()) {
                 mRankUserAdapter.submitList(remoteUsers);
 
@@ -92,6 +85,35 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
                 }
             }
         });
+
+        mViewModel.getCachedConversation().observe(this, conversation -> {
+            if (conversation == null)
+                return;
+
+            int index = mConversationList.indexOf(conversation);
+
+            mConversationList.set(index, conversation);
+            mConversationAdapter.notifyItemChanged(index, "last_chat");
+        });
+
+        mViewModel.getRefreshConversationResult().observe(this, result -> {
+            if (result == null)
+                return;
+
+            NetworkStatus status = result.getStatus();
+
+            switch (status) {
+                case ERROR:
+                    mBinding.swipeMessages.setRefreshing(false);
+
+                    Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
+                    break;
+                case SUCCESS:
+                case TERMINATE:
+                    mBinding.swipeMessages.setRefreshing(false);
+                    break;
+            }
+        });
     }
 
     @NonNull
@@ -102,7 +124,13 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     @Override
     public void onRefresh() {
-        mViewModel.onRefresh();
+        MainActivity activity = (MainActivity) requireActivity();
+
+        if (activity.getNetworkStatus()) {
+            mViewModel.onRefresh();
+        } else {
+            Toast.makeText(requireContext(), "Fetching new conversation when you are offline.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -129,16 +157,27 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     }
 
     private void registerEvent() {
-        mBinding.searchButton.setOnClickListener(v -> {
-            startActivity(new Intent(requireContext(), SearchConversationActivity.class));
-        });
+        mBinding.searchButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), SearchConversationActivity.class)));
 
         mConversationAdapter.registerOnConversationClick(position -> {
             Conversation conversation = mConversationList.get(position);
 
             Intent conversationIntent = new Intent(requireContext(), ConversationActivity.class);
             conversationIntent.putExtra("conversation", conversation);
-            startActivity(conversationIntent);
+
+            MainActivity activity = ((MainActivity) requireActivity());
+
+            activity.activityResultLauncher.launch(conversationIntent, result -> {
+                if (result != null && result.getResultCode() == Activity.RESULT_OK) {
+                    Intent intent = result.getData();
+
+                    if (intent != null) {
+                        Conversation updated = intent.getParcelableExtra("conversation");
+
+                        mViewModel.fetchCachedConversation(updated);
+                    }
+                }
+            });
         });
     }
 }

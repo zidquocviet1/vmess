@@ -3,17 +3,21 @@ package com.mqv.realtimechatapplication.activity;
 import static com.mqv.realtimechatapplication.R.id.menu_about;
 import static com.mqv.realtimechatapplication.R.id.menu_phone_call;
 import static com.mqv.realtimechatapplication.R.id.menu_video_call;
+import static com.mqv.realtimechatapplication.network.model.type.MessageStatus.ERROR;
+import static com.mqv.realtimechatapplication.network.model.type.MessageStatus.RECEIVED;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,15 +43,17 @@ import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
 import com.mqv.realtimechatapplication.ui.adapter.ChatListAdapter;
+import com.mqv.realtimechatapplication.ui.fragment.ConversationListFragment;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Picture;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -72,16 +78,22 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private static final String DOC_CHAT_TYPE = "type";
     private static final String DOC_CHAT_SEEN_BY = "seenBy";
     private static final String DOC_CHAT_TIMESTAMP = "timestamp";
+    private static final String EXTRA_CONVERSATION = "conversation";
+    private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
 
     private final List<Chat> mChatList = new ArrayList<>();
     private List<Chat> mConversationChatList;
     private List<User> mConversationParticipants;
-    private ChatListAdapter mChatListAdapter;
-    private ColorStateList mDefaultColorStateList;
-    private User mCurrentUser;
     private Conversation mConversation;
+    private ChatListAdapter mChatListAdapter;
+    private LinearLayoutManager mLayoutManager;
+    private User mCurrentUser;
+
+    // Default color for the whole conversation
+    private ColorStateList mDefaultColorStateList;
 
     // Only NonNull when the conversation type NORMAL or SELF
+    @Nullable
     private User mOtherUser;
 
     // Check the data from Firestore is first load or not
@@ -89,6 +101,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
     // Check the conversation is open as Request Message or not
     private boolean isNewConversation = false;
+
+    // Check whether the current conversation is updated or not
+    private boolean isConversationUpdated = false;
+
+    private boolean isFirstSetupRecyclerView = true;
+    private boolean isLoadMore = false;
 
     @Override
     public void binding() {
@@ -105,18 +123,20 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         super.onCreate(savedInstanceState);
 
         mCurrentUser = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
-        mConversation = getIntent().getParcelableExtra("conversation");
+        mConversation = getIntent().getParcelableExtra(EXTRA_CONVERSATION);
         mConversationChatList = mConversation.getChats();
         mConversationParticipants = mConversation.getParticipants();
         mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
 
         checkConversationType(mConversation);
-        registerFirestoreEvent();
         registerEventClick();
         registerNetworkEventCallback(this);
         setupColorUi();
         setupRecyclerView();
         seenChats();
+
+        if (getNetworkStatus())
+            mViewModel.isServerReadyForFirestoreSubscribe();
     }
 
     @Override
@@ -125,6 +145,17 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
         isUserActiveNow();
         showUserUi();
+    }
+
+    @Override
+    public void finish() {
+        if (isConversationUpdated) {
+            Intent resultIntent = new Intent(this, ConversationListFragment.class);
+            resultIntent.putExtra(EXTRA_CONVERSATION, mConversation);
+            setResult(RESULT_OK, resultIntent);
+        }
+
+        super.finish();
     }
 
     @Override
@@ -142,13 +173,14 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             mChatList.set(oldIndex, freshChat);
             mChatListAdapter.changeChatStatus(oldIndex);
 
-            // Add new chat and update conversation in local storage
-            mConversation.getChats().add(freshChat);
-            mConversation.setLastChat(freshChat);
-            mViewModel.updateConversation(mConversation);
+            if (freshChat.getStatus() == RECEIVED || freshChat.getStatus() == ERROR) {
+                mViewModel.saveChat(freshChat);
+            }
 
             // Reset the status of send message request
             mViewModel.resetSendMessageResult();
+
+            isConversationUpdated = true;
         });
 
         mViewModel.getUserDetail().observe(this, user -> mChatListAdapter.setUserDetail(user));
@@ -157,23 +189,62 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             if (updatedChat == null)
                 return;
 
-            mConversationChatList.stream()
-                    .filter(c -> c.getId().equals(updatedChat.getId()))
-                    .findFirst()
-                    .ifPresent(c2 -> {
-                        c2.setSeenBy(updatedChat.getSeenBy());
-                    });
+            mViewModel.updateChat(updatedChat);
+
+            isConversationUpdated = true;
+        });
+
+        mViewModel.getServerReadyResult().observe(this, isReady -> {
+            if (isReady) {
+                registerFirestoreEvent();
+            }
+        });
+
+        mViewModel.getMoreChatResult().observe(this, result -> {
+            if (result == null)
+                return;
+
+            isLoadMore = result.getStatus() == NetworkStatus.LOADING;
+
+            switch (result.getStatus()) {
+                case ERROR:
+                    mChatList.remove(0);
+                    mChatListAdapter.notifyItemRemoved(0);
+
+                    int error = result.getError();
+
+                    if (error != -1)
+                        Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
+                    break;
+                case SUCCESS:
+                    List<Chat> freshData = result.getSuccess();
+
+                    mChatList.remove(0);
+                    mChatList.addAll(0, freshData);
+                    mChatListAdapter.notifyItemRangeInserted(0, freshData.size() - 1);
+                    break;
+                case LOADING:
+                    // Show the Loading Progress Bar
+                    mChatList.add(0, null);
+                    mChatListAdapter.notifyItemInserted(0);
+                    mBinding.recyclerChatList.scrollToPosition(0);
+                    break;
+            }
         });
     }
 
     @Override
     public void onAvailable() {
-        mBinding.textNetworkError.setVisibility(View.GONE);
+        if (mBinding != null) {
+            runOnUiThread(() -> mBinding.textNetworkError.setVisibility(View.GONE));
+        }
     }
 
     @Override
     public void onLost() {
-        mBinding.textNetworkError.setVisibility(View.VISIBLE);
+        if (mBinding != null) {
+            runOnUiThread(() -> mBinding.textNetworkError.setVisibility(View.VISIBLE));
+        }
     }
 
     private void checkConversationType(Conversation conversation) {
@@ -227,33 +298,40 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                         if (!chat.getSenderId().equals(mCurrentUser.getUid())) {
                             addNewChatToAdapter(chat);
 
-                            // Binding a new UI for the new Chat item
-                            mConversation.getChats().add(chat);
-                            mConversation.setLastChat(chat);
+                            // Play ringtone when receive new message
+                            try {
+                                AssetFileDescriptor afd = getAssets().openFd(FILE_MESSAGE_RINGTONE);
 
-                            mViewModel.updateConversation(mConversation);
+                                MediaPlayer mp = new MediaPlayer();
+
+                                mp.setDataSource(afd);
+                                mp.prepare();
+                                mp.start();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            mViewModel.saveChat(chat);
 
                             // Mark the chat as read when the user is in this stage
                             mViewModel.seenMessage(Collections.singletonList(chat));
+
+                            isConversationUpdated = true;
                         }
-                        break;
-                    case REMOVED:
-                        Logging.show("Removed chat: " + doc.getDocument().getData());
                         break;
                     case MODIFIED:
                         QueryDocumentSnapshot modifiedDoc = doc.getDocument();
                         Chat modifiedChat = parseChatFromDocument(modifiedDoc);
 
                         if (modifiedChat.getSenderId().equals(mCurrentUser.getUid())) {
-                            mChatList.stream()
-                                    .filter(c2 -> modifiedChat.getId().equals(c2.getId()))
-                                    .findFirst()
-                                    .ifPresent(c3 -> {
-                                        int index = mChatList.indexOf(c3);
+                            int index = mChatList.indexOf(modifiedChat);
 
-                                        mChatList.set(index, modifiedChat);
-                                        mChatListAdapter.changeChatStatus(index);
-                                    });
+                            mChatList.set(index, modifiedChat);
+                            mChatListAdapter.changeChatStatus(index);
+
+                            mViewModel.updateChat(modifiedChat);
+
+                            isConversationUpdated = true;
                         }
                         break;
                 }
@@ -333,12 +411,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
             if (getNetworkStatus()) {
                 mViewModel.sendMessage(newChat);
-
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    newChat.setStatus(MessageStatus.NOT_RECEIVED);
-
-                    mChatListAdapter.changeChatStatus(newChat);
-                }, 300);
             }
         });
         mBinding.buttonMore.setOnClickListener(v -> {
@@ -403,26 +475,50 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mDefaultColorStateList,
                 mCurrentUser,
                 mOtherUser);
-        mChatListAdapter.submitList(mChatList);
 
-        mChatList.addAll(mConversationChatList.stream()
-                .sorted(Comparator.comparing(Chat::getTimestamp))
-                .collect(Collectors.toList()));
+        mLayoutManager = new LinearLayoutManager(this);
+
+        mChatList.addAll(mConversationChatList);
+        mChatListAdapter.submitList(mChatList);
 
         mBinding.recyclerChatList.addItemDecoration(new CustomItemDecoration(this, mChatList, mCurrentUser));
         mBinding.recyclerChatList.setAdapter(mChatListAdapter);
         mBinding.recyclerChatList.setHasFixedSize(true);
-        mBinding.recyclerChatList.setLayoutManager(new LinearLayoutManager(this));
+        mBinding.recyclerChatList.setLayoutManager(mLayoutManager);
         mBinding.recyclerChatList.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-            if (mChatList.size() > 0) {
+            if (mChatList.size() > 0 && !isFirstSetupRecyclerView && !isLoadMore) {
                 mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
             }
         });
 
-        mChatListAdapter.notifyItemRangeChanged(0, mChatList.size());
-
         if (mChatList.size() > 0) {
             mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
+        }
+
+        mBinding.recyclerChatList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int scrollDirection = -1; // Negative for scrolling up and positive for down
+
+                if (!recyclerView.canScrollVertically(scrollDirection)) {
+                    onLoadMore();
+                }
+            }
+        });
+
+        isFirstSetupRecyclerView = false;
+    }
+
+    private void onLoadMore() {
+        int index = mLayoutManager.findFirstVisibleItemPosition();
+        Chat headerChatItem = mChatList.get(index);
+
+        if (headerChatItem != null && !headerChatItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) && getNetworkStatus()) {
+            if (!isLoadMore) {
+                mViewModel.registerLoadMore(mConversation);
+            }
         }
     }
 
@@ -453,7 +549,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 loadImage(group.getThumbnail());
                 break;
             case NORMAL:
-                setToolbarTitle(mOtherUser.getDisplayName());
+                setToolbarTitle(Objects.requireNonNull(mOtherUser).getDisplayName());
                 loadImage(mOtherUser.getPhotoUrl());
                 break;
         }
@@ -509,9 +605,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
              * {item}: NonNull
              * {nextItem}: Nullable
              * */
-            Chat item = mChatList.get(position);
+            Chat item = position >= 0 ? mChatList.get(position) : null;
             Chat preItem = prePosition >= 0 ? mChatList.get(prePosition) : null;
             Chat nextItem = nextPosition < dataSize ? mChatList.get(nextPosition) : null;
+
+            if (item == null)
+                return;
 
             RecyclerView.ViewHolder viewHolder = parent.getChildViewHolder(view);
             /*

@@ -29,12 +29,13 @@ import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.util.Const;
-import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,8 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
             @Override
             public boolean areContentsTheSame(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
-                return oldItem.equals(newItem);
+                // TODO: complete later
+                return false;
             }
         });
         mConversations = data;
@@ -71,6 +73,15 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         var view = LayoutInflater.from(mContext).inflate(R.layout.item_conversation, parent, false);
 
         return new ConversationViewHolder(view, mContext, mCurrentUser, conversationConsumer);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position, @NonNull List<Object> payloads) {
+        super.onBindViewHolder(holder, position, payloads);
+
+        if (!payloads.isEmpty() && payloads.get(0).equals("last_chat")) {
+            holder.bindRecentChat(getItem(position));
+        }
     }
 
     @Override
@@ -113,15 +124,27 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             });
         }
 
-        public void bind(Conversation item) {
+        public void bindRecentChat(Conversation item) {
+            showRecentChat(item.getLastChat());
             bindConversationStatus(item.getLastChat(), item.getParticipants(), item.getType());
+        }
+
+        public void bind(Conversation item) {
+            List<Chat> sortedChat = item.getChats()
+                    .stream()
+                    .sorted(Comparator.comparing(Chat::getTimestamp))
+                    .collect(Collectors.toList());
+
+            Chat recentChat = sortedChat.get(sortedChat.size() - 1);
+
+            bindConversationStatus(recentChat, item.getParticipants(), item.getType());
 
             switch (item.getType()) {
                 case GROUP:
                     bindGroup();
                     break;
                 case NORMAL:
-                    bindNormal(item);
+                    bindNormal(item, recentChat);
                     break;
                 case SELF:
                     bindSelf();
@@ -133,7 +156,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
         }
 
-        private void bindNormal(Conversation item) {
+        private void bindNormal(Conversation item, Chat recentChat) {
             item.getParticipants()
                     .stream()
                     .filter(u -> !u.getUid().equals(mCurrentUser.getUid()))
@@ -144,7 +167,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                         /*
                          * Check whether the conversation has any chat or not.
                          * */
-                        Chat recentChat = item.getLastChat();
                         showRecentChat(recentChat);
 
                         mBinding.textTitleConversation.setText(user.getDisplayName());
@@ -253,6 +275,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             } else {
                 mBinding.textTitleConversation.setTypeface(Typeface.DEFAULT);
                 mBinding.textContentConversation.setTypeface(Typeface.DEFAULT);
+                mBinding.textCreatedAt.setTypeface(Typeface.DEFAULT);
 
                 mBinding.textTitleConversation.setTextColor(mDefaultTextViewColor);
                 mBinding.textContentConversation.setTextColor(mDefaultTextViewColor);
