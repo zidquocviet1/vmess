@@ -1,9 +1,16 @@
 package com.mqv.realtimechatapplication.network.model;
 
+import static androidx.room.ForeignKey.CASCADE;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
 
 import com.google.firebase.firestore.PropertyName;
 import com.google.gson.annotations.SerializedName;
@@ -13,19 +20,33 @@ import com.mqv.realtimechatapplication.network.model.type.MessageType;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+@Entity(tableName = "chat",
+        foreignKeys = { @ForeignKey(entity = Conversation.class,
+                                    parentColumns = "conversation_id",
+                                    childColumns = "chat_conversation_id",
+                                    onDelete = CASCADE)})
 public class Chat implements Parcelable {
+    @PrimaryKey
+    @NonNull
+    @ColumnInfo(name = "chat_id")
     private String id;
 
     @PropertyName("sender")
     @SerializedName("sender")
+    @ColumnInfo(name = "chat_sender_id")
     private String senderId;
 
     @SerializedName("conversation")
     @PropertyName("conversation")
+    @ColumnInfo(index = true, name = "chat_conversation_id")
     private String conversationId;
 
+    @ColumnInfo(name = "chat_content")
     private String content;
+
+    @ColumnInfo(name = "chat_timestamp")
     private LocalDateTime timestamp;
 
     @Ignore
@@ -38,18 +59,25 @@ public class Chat implements Parcelable {
     private List<File> files;
 
     private List<String> seenBy;
+
+    @ColumnInfo(name = "chat_status")
     private MessageStatus status;
+
+    @ColumnInfo(name = "chat_type")
     private MessageType type;
 
+    @ColumnInfo(name = "chat_is_unsent")
     @SerializedName("unsent")
     @PropertyName("unsent")
     private Boolean isUnsent;
 
+    @Ignore
     public Chat() {
         // Default no-arguments constructor for Firestore
     }
 
-    public Chat(String id,
+    @Ignore
+    public Chat(@NonNull String id,
                 String senderId,
                 String content,
                 String conversationId,
@@ -75,6 +103,27 @@ public class Chat implements Parcelable {
         this.isUnsent = isUnsent;
     }
 
+    public Chat(@NonNull String id,
+                String senderId,
+                String conversationId,
+                String content,
+                LocalDateTime timestamp,
+                List<String> seenBy,
+                MessageStatus status,
+                MessageType type,
+                Boolean isUnsent) {
+        this.id = id;
+        this.senderId = senderId;
+        this.conversationId = conversationId;
+        this.content = content;
+        this.timestamp = timestamp;
+        this.seenBy = seenBy;
+        this.status = status;
+        this.type = type;
+        this.isUnsent = isUnsent;
+    }
+
+    @Ignore
     public Chat(String id,
                 String senderId,
                 String content,
@@ -117,11 +166,12 @@ public class Chat implements Parcelable {
         }
     };
 
+    @NonNull
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(@NonNull String id) {
         this.id = id;
     }
 
@@ -229,6 +279,19 @@ public class Chat implements Parcelable {
         dest.writeSerializable(status);
         dest.writeSerializable(type);
         dest.writeByte((byte) (isUnsent == null ? 0 : isUnsent ? 1 : 2));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Chat chat = (Chat) o;
+        return id.equals(chat.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     public static class Photo {

@@ -15,12 +15,14 @@ import com.mqv.realtimechatapplication.data.converter.MessageStatusConverter;
 import com.mqv.realtimechatapplication.data.converter.MessageTypeConverter;
 import com.mqv.realtimechatapplication.data.converter.SocialLinksListConverter;
 import com.mqv.realtimechatapplication.data.converter.SocialTypeConverter;
+import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
+import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -30,8 +32,9 @@ import com.mqv.realtimechatapplication.ui.data.People;
                       HistoryLoggedInUser.class,
                       People.class,
                       Notification.class,
-                      Conversation.class},
-        version = 9,
+                      Conversation.class,
+                      Chat.class},
+        version = 14,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -54,4 +57,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract NotificationDao getNotificationDao();
 
     public abstract ConversationDao getConversationDao();
+
+    public abstract ChatDao getChatDao();
 }

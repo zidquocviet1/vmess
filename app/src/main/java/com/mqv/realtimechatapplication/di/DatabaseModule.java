@@ -6,6 +6,7 @@ import android.content.Context;
 import androidx.room.Room;
 
 import com.mqv.realtimechatapplication.data.MyDatabase;
+import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
 import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
@@ -60,5 +61,11 @@ public class DatabaseModule {
     @Singleton
     public ConversationDao provideConversationDao(MyDatabase db){
         return db.getConversationDao();
+    }
+
+    @Provides
+    @Singleton
+    public ChatDao provideChatDao(MyDatabase db){
+        return db.getChatDao();
     }
 }
