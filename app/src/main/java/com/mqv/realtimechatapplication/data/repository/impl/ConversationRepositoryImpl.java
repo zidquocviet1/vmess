@@ -112,19 +112,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
                         if (isSaveFreshSuccess)
                             return;
 
-                        List<Conversation> updatedData = freshData.stream()
-                                                                  .peek(u -> {
-                                                                        u.setStatus(type);
-                                                                        Collections.reverse(u.getChats());
-                                                                    })
-                                                                  .collect(Collectors.toList());
-
-                        List<String> conversationListId = freshData.stream()
-                                                                   .map(Conversation::getId)
-                                                                   .collect(Collectors.toList());
-
-                        Completable.fromAction(() -> dao.saveConversationList(updatedData))
-                                   .andThen(dao.deleteAll(conversationListId))
+                        saveAll(freshData, type)
                                    .subscribeOn(Schedulers.io())
                                    .subscribe(new CompletableObserver() {
                                        @Override
@@ -223,8 +211,20 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Completable saveAll(List<Conversation> conversations) {
-        return dao.saveAll(conversations);
+    public Completable saveAll(List<Conversation> freshData, ConversationStatusType type) {
+        List<Conversation> updatedData = freshData.stream()
+                                                  .peek(u -> {
+                                                      u.setStatus(type);
+                                                      Collections.reverse(u.getChats());
+                                                  })
+                                                  .collect(Collectors.toList());
+
+        List<String> conversationListId = freshData.stream()
+                                                   .map(Conversation::getId)
+                                                   .collect(Collectors.toList());
+
+        return Completable.fromAction(() -> dao.saveConversationList(updatedData))
+                          .andThen(dao.deleteAll(conversationListId));
     }
 
     @Override

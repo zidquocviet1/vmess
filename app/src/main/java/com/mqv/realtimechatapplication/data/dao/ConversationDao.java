@@ -12,7 +12,10 @@ import androidx.room.Update;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.util.Retriever;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +31,11 @@ public abstract class ConversationDao {
     @Insert
     public abstract Completable save(Conversation data);
 
-    @Query("select * from conversation join chat on chat_conversation_id = conversation_id where conversation_id = :id")
+    @Query("select * from conversation " +
+           "join chat on chat_conversation_id = conversation_id " +
+           "where conversation_id = :id " +
+           "order by chat_timestamp desc " +
+           "limit 40")
     abstract Map<Conversation, List<Chat>> conversationAndChat(String id);
 
     @Insert(onConflict = IGNORE)
@@ -49,7 +56,9 @@ public abstract class ConversationDao {
                 Map<Conversation, List<Chat>> conversationMapper = conversationAndChat(c.getId());
 
                 List<Chat> freshChat = c.getChats();
-                List<Chat> cacheChat = conversationMapper.get(c);
+                List<Chat> cacheChat = Retriever.getOrDefault(conversationMapper.get(c), new ArrayList<>());
+
+                Collections.reverse(cacheChat);
 
                 // Find the last cache chat appear in fresh chat
                 Chat lastCacheChat = cacheChat.get(cacheChat.size() - 1);
@@ -74,6 +83,8 @@ public abstract class ConversationDao {
                     List<Chat> shouldInsertList = freshChat.subList(index + 1, freshChat.size());
 
                     saveListChat(shouldInsertList);
+                } else {
+                    saveListChat(freshChat);
                 }
             }
         });

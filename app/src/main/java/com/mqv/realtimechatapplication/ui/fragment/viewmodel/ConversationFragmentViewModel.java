@@ -16,17 +16,16 @@ import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
+import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -92,43 +91,22 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
                                                           if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                                                               List<Conversation> freshConversationList = response.getSuccess();
 
-                                                              saveCallResult(freshConversationList);
+                                                              saveCallResult(freshConversationList, INBOX);
                                                           }
                                                       }, t -> refreshConversationResult.setValue(Result.Fail(R.string.error_connect_server_fail)));
 
         cd.add(disposable);
     }
 
-    private void saveCallResult(List<Conversation> conversations) {
-        List<Conversation> updatedData = conversations.stream()
-                                                      .peek(u -> u.setStatus(INBOX))
-                                                      .collect(Collectors.toList());
-
-        List<String> conversationIdList = conversations.stream()
-                                                       .map(Conversation::getId)
-                                                       .collect(Collectors.toList());
-
-        conversationRepository.saveAll(updatedData)
-                              .andThen(conversationRepository.deleteAll(conversationIdList))
-                              .subscribeOn(Schedulers.io())
-                              .observeOn(AndroidSchedulers.mainThread())
-                              .subscribe(new CompletableObserver() {
-                                  @Override
-                                  public void onSubscribe(@NonNull Disposable d) {
-
-                                  }
-
-                                  @Override
-                                  public void onComplete() {
-                                      refreshConversationResult.setValue(Result.Success(conversations));
-                                      inboxConversations.setValue(conversations);
-                                  }
-
-                                  @Override
-                                  public void onError(@NonNull Throwable e) {
-                                      e.printStackTrace();
-                                  }
-                              });
+    private void saveCallResult(List<Conversation> conversations, ConversationStatusType type) {
+        Disposable disposable = conversationRepository.saveAll(conversations, type)
+                                                      .subscribeOn(Schedulers.io())
+                                                      .observeOn(AndroidSchedulers.mainThread())
+                                                      .subscribe(() -> {
+                                                          refreshConversationResult.setValue(Result.Success(conversations));
+                                                          inboxConversations.setValue(conversations);
+                                                      });
+        cd.add(disposable);
     }
 
     private void fetchAllConversation() {

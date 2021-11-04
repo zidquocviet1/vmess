@@ -28,7 +28,7 @@ public interface ConversationRepository {
 
     Observable<ApiResponse<List<Chat>>> loadMoreChat(@NonNull String conversationId, int page, int size);
 
-    Completable saveAll(List<Conversation> conversations);
+    Completable saveAll(List<Conversation> freshData, ConversationStatusType type);
 
     Completable deleteAll(List<String> conversationIdList);
 
