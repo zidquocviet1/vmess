@@ -22,6 +22,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.TaskStackBuilder;
 import androidx.preference.PreferenceManager;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -41,7 +42,10 @@ import com.mqv.realtimechatapplication.activity.preferences.PreferenceFriendRequ
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.work.BaseWorker;
 import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
+import com.mqv.realtimechatapplication.work.NewConversationWorkWrapper;
+import com.mqv.realtimechatapplication.work.WorkDependency;
 
 import java.util.Locale;
 
@@ -92,6 +96,18 @@ public class MessagingService extends FirebaseMessagingService {
             var imageUrl = data.get(Const.KEY_IMAGE_URL);
             var uid = data.get(Const.KEY_UID);
             var agentId = data.get(Const.KEY_AGENT_ID);
+
+            // Start worker to retrieve new conversation if the app is foreground
+            if (actionClick != null && actionClick.equals(Const.DEFAULT_ACCEPTED_FRIEND_REQUEST)) {
+                Data workData = new Data.Builder()
+                                        .putString("otherId", agentId)
+                                        .putBoolean("from_notification", true)
+                                        .build();
+
+                BaseWorker worker = new NewConversationWorkWrapper(this, workData);
+
+                WorkDependency.enqueue(worker);
+            }
 
             var intent = getIntentByAction(actionClick, uid, agentId, imageUrl);
 

@@ -10,6 +10,7 @@ import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.FriendRequest;
 import com.mqv.realtimechatapplication.network.model.User;
+import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Logging;
 
@@ -25,7 +26,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 @HiltViewModel
 public class FriendRequestViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<List<FriendRequest>>> friendRequestList = new MutableLiveData<>();
-    private final MutableLiveData<Result<Boolean>> responseRequestResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<FriendRequest>> responseRequestResult = new MutableLiveData<>();
     private final MutableLiveData<Result<User>> connectUserResult = new MutableLiveData<>();
     private final FriendRequestRepository repository;
     private final UserRepository userRepository;
@@ -47,7 +48,7 @@ public class FriendRequestViewModel extends CurrentUserViewModel {
         return friendRequestList;
     }
 
-    public LiveData<Result<Boolean>> getResponseRequestResult() {
+    public LiveData<Result<FriendRequest>> getResponseRequestResult() {
         return responseRequestResult;
     }
 
@@ -83,7 +84,7 @@ public class FriendRequestViewModel extends CurrentUserViewModel {
                             var code = response.getStatusCode();
 
                             if (code == HttpURLConnection.HTTP_OK) {
-                                responseRequestResult.setValue(Result.Success(response.getSuccess()));
+                                responseRequestResult.setValue(Result.Success(request));
                             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                                 responseRequestResult.setValue(Result.Fail(R.string.error_authentication_fail));
                             } else if (code == HttpURLConnection.HTTP_CONFLICT) {

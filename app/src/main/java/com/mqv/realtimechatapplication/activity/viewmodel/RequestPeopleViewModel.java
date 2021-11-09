@@ -21,7 +21,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class RequestPeopleViewModel extends CurrentUserViewModel {
     private final FriendRequestRepository repository;
     private final MutableLiveData<Result<FriendRequestStatus>> friendRequestStatus = new MutableLiveData<>();
-    private final MutableLiveData<Result<Boolean>> responseRequestResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<FriendRequest>> responseRequestResult = new MutableLiveData<>();
     private final MutableLiveData<Result<Boolean>> requestConnectResult = new MutableLiveData<>();
 
     @Inject
@@ -35,7 +35,7 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
         return friendRequestStatus;
     }
 
-    public LiveData<Result<Boolean>> getResponseRequestResult() {
+    public LiveData<Result<FriendRequest>> getResponseRequestResult() {
         return responseRequestResult;
     }
 
@@ -78,7 +78,7 @@ public class RequestPeopleViewModel extends CurrentUserViewModel {
                             var code = response.getStatusCode();
 
                             if (code == HttpURLConnection.HTTP_OK) {
-                                responseRequestResult.setValue(Result.Success(response.getSuccess()));
+                                responseRequestResult.setValue(Result.Success(request));
                             } else if (code == HttpURLConnection.HTTP_UNAUTHORIZED) {
                                 responseRequestResult.setValue(Result.Fail(R.string.error_authentication_fail));
                             } else if (code == HttpURLConnection.HTTP_CONFLICT) {

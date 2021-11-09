@@ -32,8 +32,11 @@ import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.work.BaseWorker;
 import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
 import com.mqv.realtimechatapplication.work.MarkNotificationReadWorker;
+import com.mqv.realtimechatapplication.work.NewConversationWorkWrapper;
+import com.mqv.realtimechatapplication.work.WorkDependency;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -125,6 +128,18 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     mAdapter.removeItem(currentItemPosition);
 
                     setResult(RESULT_OK);
+
+                    FriendRequest request = result.getSuccess();
+
+                    if (request.getStatus() == CONFIRM) {
+                        Data data = new Data.Builder()
+                                            .putString("otherId", request.getReceiverId())
+                                            .build();
+
+                        BaseWorker worker = new NewConversationWorkWrapper(this, data);
+
+                        WorkDependency.enqueue(worker);
+                    }
                     break;
                 case ERROR:
                     LoadingDialog.finishLoadingDialog();

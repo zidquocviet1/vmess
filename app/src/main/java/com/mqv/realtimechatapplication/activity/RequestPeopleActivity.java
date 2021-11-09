@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity;
 
+import static com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus.CONFIRM;
+
 import android.app.Dialog;
 import android.os.Bundle;
 import android.text.Html;
@@ -10,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 import androidx.work.Constraints;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -28,7 +31,10 @@ import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.work.BaseWorker;
 import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
+import com.mqv.realtimechatapplication.work.NewConversationWorkWrapper;
+import com.mqv.realtimechatapplication.work.WorkDependency;
 
 import java.time.format.DateTimeFormatter;
 
@@ -128,9 +134,18 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 case SUCCESS:
                     LoadingDialog.finishLoadingDialog();
 
-                    if (responseStatus == FriendRequestStatus.CONFIRM)
+                    if (responseStatus == CONFIRM)
                         fetchNotificationWithWork();
 
+                    if (result.getSuccess().getStatus() == CONFIRM) {
+                        Data data = new Data.Builder()
+                                            .putString("otherId", result.getSuccess().getReceiverId())
+                                            .build();
+
+                        BaseWorker worker = new NewConversationWorkWrapper(this, data);
+
+                        WorkDependency.enqueue(worker);
+                    }
                     setResult(RESULT_OK);
 
                     finish();
@@ -151,7 +166,7 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
         if (id == mBinding.buttonAddFriend.getId()) {
             mViewModel.requestConnect(new FriendRequest(currentUser.getUid(), user.getUid()));
         } else if (id == mBinding.buttonConfirm.getId()) {
-            responseStatus = FriendRequestStatus.CONFIRM;
+            responseStatus = CONFIRM;
             mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), responseStatus));
         } else if (id == mBinding.buttonCancel.getId()) {
             responseStatus = FriendRequestStatus.CANCEL;
