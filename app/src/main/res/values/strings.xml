@@ -27,6 +27,16 @@
     <string name="label_edit_links">Edit Links</string>
     <string name="label_all_people">All People</string>
     <string name="label_new_message">New Message</string>
+    <string name="label_conversation_archive">Archive</string>
+    <string name="label_conversation_delete">Delete</string>
+    <string name="label_conversation_mute_notifications">Mute notifications</string>
+    <string name="label_conversation_unmute_notifications">Unmute notifications</string>
+    <string name="label_conversation_create_group">Create group with %1$s</string>
+    <string name="label_conversation_mark_unread">Mark as unread</string>
+    <string name="label_conversation_ignore_group">Ignore group</string>
+    <string name="label_conversation_ignore_messages">Ignore messages</string>
+    <string name="label_conversation_add_members">Add members</string>
+    <string name="label_conversation_leave_group">Leave group</string>
 
     <string name="title_brand_name_short">TAC</string>
     <string name="title_brand_name">Take a Conversation</string>
