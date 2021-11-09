@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -86,6 +87,14 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
                 case SUCCESS:
                     if (peopleDialog != null && peopleDialog.isShowing()) {
                         peopleDialog.dismiss();
+
+                        People people = mPeopleList.get(mCurrentPosition);
+
+                        Intent intent = new Intent("com.mqv.tac.NEW_CONVERSATION");
+                        intent.putExtra("is_unfriend", true);
+                        intent.putExtra("unfriend_user_id", people.getUid());
+
+                        sendBroadcast(intent);
 
                         mAdapter.removeItem(mCurrentPosition);
 
