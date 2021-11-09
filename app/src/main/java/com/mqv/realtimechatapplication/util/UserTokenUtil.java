@@ -13,7 +13,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public final class UserTokenUtil {
-    @WorkerThread
     public static Optional<String> getToken(@NonNull FirebaseUser user) throws Throwable {
         String token = null;
         try {

@@ -24,6 +24,8 @@ public interface ConversationRepository {
 
     Observable<ApiResponse<Chat>> seenMessage(@NonNull Chat chat);
 
+    Observable<ApiResponse<Chat>> seenWelcomeMessage(@NonNull Chat chat);
+
     Observable<ApiResponse<Boolean>> isServerAlive();
 
     Observable<ApiResponse<List<Chat>>> loadMoreChat(@NonNull String conversationId, int page, int size);
@@ -41,4 +43,6 @@ public interface ConversationRepository {
     void saveChat(List<Chat> chats);
 
     void updateChat(Chat chat);
+
+    void deleteNormalByParticipantId(String userId, String otherUserId);
 }

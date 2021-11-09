@@ -33,8 +33,11 @@ public interface ConversationService {
 
     @PUT("conversation")
     Observable<ApiResponse<Chat>> seenMessage(@Header(AUTHORIZATION) String token,
-                                              @Header(AUTHORIZER) String authorizer,
                                               @Body Chat chat);
+
+    @PUT("conversation/seen_welcome_chat")
+    Observable<ApiResponse<Chat>> seenWelcomeMessage(@Header(AUTHORIZATION) String token,
+                                                     @Body Chat chat);
 
     @GET("conversation/is_alive")
     Observable<ApiResponse<Boolean>> isServerAlive();
@@ -48,4 +51,8 @@ public interface ConversationService {
                                                      @Path("conversationId") String conversationId,
                                                      @Query("page") int page,
                                                      @Query("size") int size);
+
+    @GET("conversation/find_by_participant_id")
+    Observable<ApiResponse<Conversation>> findNormalByParticipantId(@Header(AUTHORIZATION) String token,
+                                                                    @Query("id") String otherId);
 }

@@ -1,7 +1,5 @@
 package com.mqv.realtimechatapplication.data.repository.impl;
 
-import static com.mqv.realtimechatapplication.util.Const.DEFAULT_AUTHORIZER;
-
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -192,9 +190,14 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Observable<ApiResponse<Chat>> seenMessage(@NonNull Chat chat) {
         return getBearerTokenObservable()
-                .flatMap(token -> service.seenMessage(token,
-                                                      DEFAULT_AUTHORIZER,
-                                                      chat))
+                .flatMap(token -> service.seenMessage(token, chat))
+                .subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Observable<ApiResponse<Chat>> seenWelcomeMessage(@NonNull Chat chat) {
+        return getBearerTokenObservable()
+                .flatMap(token -> service.seenWelcomeMessage(token, chat))
                 .subscribeOn(Schedulers.io());
     }
 
@@ -303,6 +306,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
                    }
                });
+    }
+
+    @Override
+    public void deleteNormalByParticipantId(String userId, String otherUserId) {
+        dao.deleteNormalByParticipantId(userId, otherUserId);
     }
 
     private Observable<String> getBearerTokenObservable() {

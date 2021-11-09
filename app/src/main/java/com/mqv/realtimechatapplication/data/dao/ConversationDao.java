@@ -1,31 +1,35 @@
 package com.mqv.realtimechatapplication.data.dao;
 
 import static androidx.room.OnConflictStrategy.IGNORE;
+import static androidx.room.OnConflictStrategy.REPLACE;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 import androidx.room.Update;
 
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.util.Retriever;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public abstract class ConversationDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = REPLACE)
     public abstract Completable saveAll(List<Conversation> data);
 
     @Insert
@@ -41,7 +45,7 @@ public abstract class ConversationDao {
     @Insert(onConflict = IGNORE)
     abstract long saveIfNotExists(Conversation data);
 
-    @Insert
+    @Insert(onConflict = REPLACE)
     abstract void saveListChat(List<Chat> chats);
 
     @Transaction
@@ -80,7 +84,7 @@ public abstract class ConversationDao {
 
                     int index = freshChat.indexOf(presenceChat);
 
-                    List<Chat> shouldInsertList = freshChat.subList(index + 1, freshChat.size());
+                    List<Chat> shouldInsertList = freshChat.subList(index, freshChat.size());
 
                     saveListChat(shouldInsertList);
                 } else {
@@ -105,12 +109,36 @@ public abstract class ConversationDao {
            " limit 40")
     public abstract Single<Map<Conversation, List<Chat>>> fetchById(String id);
 
+    @Query("select * from conversation")
+    abstract List<Conversation> fetchAll();
+
     @Update
     public abstract Completable update(Conversation conversation);
+
+    @Query("delete from Conversation where conversation_id = :id")
+    abstract void delete(String id);
 
     @Query("delete from Conversation")
     public abstract Completable deleteAll();
 
     @Query("delete from Conversation where conversation_id not in (:conversationListId)")
     public abstract Completable deleteAll(List<String> conversationListId);
+
+    @Transaction
+    public void deleteNormalByParticipantId(String userId, String otherUserId) {
+        List<Conversation> conversations = fetchAll().stream()
+                                                     .filter(c -> c.getType() == ConversationType.NORMAL)
+                                                     .collect(Collectors.toList());
+
+        conversations.forEach(c -> {
+            List<String> listUserId = c.getParticipants()
+                                       .stream()
+                                       .map(User::getUid)
+                                       .collect(Collectors.toList());
+
+            if (listUserId.containsAll(Arrays.asList(userId, otherUserId))) {
+                delete(c.getId());
+            }
+        });
+    }
 }

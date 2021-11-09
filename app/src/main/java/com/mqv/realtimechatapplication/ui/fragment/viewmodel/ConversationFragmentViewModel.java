@@ -16,16 +16,22 @@ import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -78,6 +84,44 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
 
     public LiveData<Result<List<Conversation>>> getRefreshConversationResult() {
         return refreshConversationResult;
+    }
+
+    // Submit new conversation to current list, when accepted new friend or added to new group
+    public void submitConversation(Conversation conversation) {
+        List<Conversation> conversations = inboxConversations.getValue();
+
+        if (conversations == null)
+            conversations = new ArrayList<>();
+        conversations.add(0, conversation);
+
+        inboxConversations.postValue(conversations);
+    }
+
+    public void submitRemoveConversation(String userId, String unFriendUserId) {
+        List<String> idList = Arrays.asList(userId, unFriendUserId);
+        List<Conversation> conversations = inboxConversations.getValue();
+
+        if (conversations == null)
+            return;
+
+        Optional<Conversation> conversation = conversations.stream()
+                                                           .filter(c -> c.getType() == ConversationType.NORMAL)
+                                                           .filter(c -> c.getParticipants()
+                                                                         .stream()
+                                                                         .map(User::getUid)
+                                                                         .collect(Collectors.toList()).containsAll(idList))
+                                                           .findFirst();
+
+        if (conversation.isPresent()) {
+            conversations.remove(conversation.get());
+
+            inboxConversations.postValue(conversations);
+        }
+
+        Completable.fromAction(() -> conversationRepository.deleteNormalByParticipantId(userId, unFriendUserId))
+                   .subscribeOn(Schedulers.io())
+                   .observeOn(Schedulers.io())
+                   .subscribe();
     }
 
     private void refreshConversation() {

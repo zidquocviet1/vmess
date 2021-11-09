@@ -8,11 +8,9 @@ import static com.mqv.realtimechatapplication.network.model.type.MessageStatus.R
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -48,8 +46,8 @@ import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Picture;
+import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -299,18 +297,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                             addNewChatToAdapter(chat);
 
                             // Play ringtone when receive new message
-                            try {
-                                AssetFileDescriptor afd = getAssets().openFd(FILE_MESSAGE_RINGTONE);
-
-                                MediaPlayer mp = new MediaPlayer();
-
-                                mp.setDataSource(afd);
-                                mp.prepare();
-                                mp.start();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-
+                            RingtoneUtil.open(this, FILE_MESSAGE_RINGTONE);
                             mViewModel.saveChat(chat);
 
                             // Mark the chat as read when the user is in this stage
@@ -523,13 +510,26 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     }
 
     private void seenChats() {
-        List<Chat> unseenChats = mChatList.stream()
-                .filter(c -> c.getSenderId() != null &&
-                        !c.getSenderId().equals(mCurrentUser.getUid()) &&
-                        !c.getSeenBy().contains(mCurrentUser.getUid()))
-                .collect(Collectors.toList());
+        // TODO: add seen chat to temp chat [SEEN_CHAT] when user offline or server not response
+        if (mChatList.size() == 2) {
+            Chat welcomeChat = mChatList.get(1);
 
-        mViewModel.seenMessage(unseenChats);
+            if (!welcomeChat.getSeenBy().contains(mCurrentUser.getUid())) {
+                welcomeChat.getSeenBy().add(mCurrentUser.getUid());
+
+                mViewModel.seenWelcomeMessage(welcomeChat);
+
+                isConversationUpdated = true;
+            }
+        } else {
+            List<Chat> unseenChats = mChatList.stream()
+                    .filter(c -> c.getSenderId() != null &&
+                            !c.getSenderId().equals(mCurrentUser.getUid()) &&
+                            !c.getSeenBy().contains(mCurrentUser.getUid()))
+                    .collect(Collectors.toList());
+
+            mViewModel.seenMessage(unseenChats);
+        }
     }
 
     private void isUserActiveNow() {

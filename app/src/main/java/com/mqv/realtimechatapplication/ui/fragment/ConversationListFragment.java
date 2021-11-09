@@ -2,15 +2,15 @@ package com.mqv.realtimechatapplication.ui.fragment;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -22,22 +22,32 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
+import com.mqv.realtimechatapplication.activity.br.ConversationBroadcastReceiver;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
-import com.mqv.realtimechatapplication.util.MyActivityForResult;
+import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
+public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding> implements ConversationDialogFragment.ConversationOptionListener {
+    private final List<Conversation> mConversationList = new ArrayList<>();
+
     private ConversationListAdapter mConversationAdapter;
     private RankUserConversationAdapter mRankUserAdapter;
-    private final List<Conversation> mConversationList = new ArrayList<>();
+
+    private boolean isNewConversationAdded = false;
+
+    private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -51,11 +61,48 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        ConversationBroadcastReceiver.OnConversationListener listener = new ConversationBroadcastReceiver.OnConversationListener() {
+            @Override
+            public void onNewConversationReceive(Conversation conversation) {
+                mViewModel.submitConversation(conversation);
+
+                isNewConversationAdded = true;
+            }
+
+            @Override
+            public void onDeleteConversation(String unFriendUserId) {
+                User user = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
+
+                mViewModel.submitRemoveConversation(user.getUid(), unFriendUserId);
+            }
+        };
+
+        // Load more conversation when the user is current this stage. And got accepted friend request
+        BroadcastReceiver newConversationReceiver = new ConversationBroadcastReceiver(listener);
+
+        requireContext().registerReceiver(newConversationReceiver, new IntentFilter("com.mqv.tac.NEW_CONVERSATION"));
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         setupRecyclerView();
         registerEvent();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (isNewConversationAdded) {
+            RingtoneUtil.open(requireContext(), FILE_MESSAGE_RINGTONE);
+
+            isNewConversationAdded = false;
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -81,7 +128,8 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
                                                                         .getTimestamp()
                                                                         .compareTo(o1.getLastChat().getTimestamp()))
                                                   .collect(Collectors.toList()));
-                    mConversationAdapter.notifyItemRangeChanged(0, inbox.size());
+//                    mConversationAdapter.notifyItemRangeChanged(0, inbox.size());
+                    mConversationAdapter.submitList(new ArrayList<>(mConversationList));
                 }
             }
         });
@@ -159,25 +207,78 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     private void registerEvent() {
         mBinding.searchButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), SearchConversationActivity.class)));
 
-        mConversationAdapter.registerOnConversationClick(position -> {
-            Conversation conversation = mConversationList.get(position);
+        mConversationAdapter.registerOnConversationClick((pos, isLongClicked) -> {
+            Conversation conversation = mConversationList.get(pos);
 
-            Intent conversationIntent = new Intent(requireContext(), ConversationActivity.class);
-            conversationIntent.putExtra("conversation", conversation);
-
-            MainActivity activity = ((MainActivity) requireActivity());
-
-            activity.activityResultLauncher.launch(conversationIntent, result -> {
-                if (result != null && result.getResultCode() == Activity.RESULT_OK) {
-                    Intent intent = result.getData();
-
-                    if (intent != null) {
-                        Conversation updated = intent.getParcelableExtra("conversation");
-
-                        mViewModel.fetchCachedConversation(updated);
-                    }
-                }
-            });
+            if (isLongClicked) {
+                onConversationLongClicked(conversation);
+            } else {
+                onConversationClicked(conversation);
+            }
         });
+    }
+
+    private void onConversationClicked(Conversation conversation) {
+        Intent conversationIntent = new Intent(requireContext(), ConversationActivity.class);
+        conversationIntent.putExtra("conversation", conversation);
+
+        MainActivity activity = ((MainActivity) requireActivity());
+
+        activity.activityResultLauncher.launch(conversationIntent, result -> {
+            if (result != null && result.getResultCode() == Activity.RESULT_OK) {
+                Intent intent = result.getData();
+
+                if (intent != null) {
+                    Conversation updated = intent.getParcelableExtra("conversation");
+
+                    mViewModel.fetchCachedConversation(updated);
+                }
+            }
+        });
+    }
+
+    private void onConversationLongClicked(Conversation conversation) {
+        ConversationDialogFragment dialog = ConversationDialogFragment.newInstance(this, conversation);
+        dialog.show(requireActivity().getSupportFragmentManager(), null);
+    }
+
+    @Override
+    public void onArchive(Conversation conversation) {
+        Logging.show("Archive conversation");
+    }
+
+    @Override
+    public void onDelete(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onMuteNotification(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onCreateGroup(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onMarkUnread(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onIgnore(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onLeaveGroup(Conversation conversation) {
+
+    }
+
+    @Override
+    public void onAddMember(Conversation conversation) {
+
     }
 }

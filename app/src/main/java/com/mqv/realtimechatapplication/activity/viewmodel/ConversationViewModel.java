@@ -185,6 +185,15 @@ public class ConversationViewModel extends CurrentUserViewModel {
         cd.add(disposable);
     }
 
+    public void seenWelcomeMessage(Chat chat) {
+        updateChat(chat);
+
+        repository.seenWelcomeMessage(chat)
+                  .subscribeOn(Schedulers.io())
+                  .observeOn(Schedulers.io())
+                  .subscribe();
+    }
+
     public void isServerReadyForFirestoreSubscribe() {
         Disposable disposable = repository.isServerAlive()
                                           .subscribeOn(Schedulers.io())
