@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.ui.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
@@ -35,15 +36,14 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class ConversationListAdapter extends ListAdapter<Conversation, ConversationListAdapter.ConversationViewHolder> {
     private final List<Conversation> mConversations;
     private final Context mContext;
     private final FirebaseUser mCurrentUser;
-    private Consumer<Integer> conversationConsumer;
+    private BiConsumer<Integer, Boolean> conversationConsumer;
 
     public ConversationListAdapter(List<Conversation> data, Context context) {
         super(new DiffUtil.ItemCallback<>() {
@@ -52,10 +52,27 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                 return oldItem.getId().equals(newItem.getId());
             }
 
+            @SuppressLint("DiffUtilEquals")
             @Override
             public boolean areContentsTheSame(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
-                // TODO: complete later
-                return false;
+                Chat oldLastChat = oldItem.getLastChat();
+                Chat newLastChat = newItem.getLastChat();
+
+                boolean isLastChatEquals = oldLastChat.getId().equals(newLastChat.getId()) &&
+                        oldLastChat.isUnsent().equals(newLastChat.isUnsent()) &&
+                        oldLastChat.getSeenBy().equals(newLastChat.getSeenBy()) &&
+                        oldLastChat.getStatus() == newLastChat.getStatus() &&
+                        oldLastChat.getType() == newLastChat.getType();
+
+                return oldItem.getId().equals(newItem.getId()) &&
+                       oldItem.getParticipants().equals(newItem.getParticipants()) &&
+                       oldItem.getType() == newItem.getType() &&
+                       ((oldItem.getGroup() == null && newItem.getGroup() == null) ||
+                               (oldItem.getGroup() != null && newItem.getGroup() != null &&
+                                       oldItem.getGroup().equals(newItem.getGroup()))) &&
+                       oldItem.getStatus() == newItem.getStatus() &&
+                       oldItem.getCreationTime().equals(newItem.getCreationTime()) &&
+                       isLastChatEquals;
             }
         });
         mConversations = data;
@@ -63,7 +80,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
     }
 
-    public void registerOnConversationClick(Consumer<Integer> conversationConsumer) {
+    public void registerOnConversationClick(BiConsumer<Integer, Boolean> conversationConsumer) {
         this.conversationConsumer = conversationConsumer;
     }
 
@@ -80,7 +97,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         super.onBindViewHolder(holder, position, payloads);
 
         if (!payloads.isEmpty() && payloads.get(0).equals("last_chat")) {
-            holder.bindRecentChat(getItem(position));
+            holder.bindRecentChat(mConversations.get(position));
         }
     }
 
@@ -108,7 +125,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         public ConversationViewHolder(@NonNull View itemView,
                                       Context context,
                                       FirebaseUser user,
-                                      Consumer<Integer> conversationConsumer) {
+                                      BiConsumer<Integer, Boolean> conversationConsumer) {
             super(itemView);
             mBinding = ItemConversationBinding.bind(itemView);
             mContext = context;
@@ -120,13 +137,26 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
             itemView.setOnClickListener(v -> {
                 if (conversationConsumer != null)
-                    conversationConsumer.accept(getAdapterPosition());
+                    conversationConsumer.accept(getBindingAdapterPosition(), false);
+            });
+            itemView.setOnLongClickListener(v -> {
+                if (conversationConsumer != null) {
+                    conversationConsumer.accept(getBindingAdapterPosition(), true);
+                    return true;
+                }
+                return false;
             });
         }
 
         public void bindRecentChat(Conversation item) {
-            showRecentChat(item.getLastChat());
-            bindConversationStatus(item.getLastChat(), item.getParticipants(), item.getType());
+            Chat recentChat = item.getChats().get(item.getChats().size() - 1);
+
+            if (recentChat.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
+                bindWelcomeChat(recentChat);
+            } else {
+                bindConversationStatus(recentChat, item.getParticipants(), item.getType());
+            }
+            showRecentChat(recentChat);
         }
 
         public void bind(Conversation item) {
@@ -204,6 +234,11 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             }
 
             mBinding.textContentConversation.setText(textContent);
+        }
+
+        private void bindWelcomeChat(Chat welcomeChat) {
+            markAsUnread(!welcomeChat.getSeenBy().contains(mCurrentUser.getUid()));
+            mBinding.imageState.setVisibility(View.GONE);
         }
 
         private void bindConversationStatus(Chat recentChat, List<User> participants, ConversationType type) {
