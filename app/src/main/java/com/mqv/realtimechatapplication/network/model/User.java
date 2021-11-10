@@ -14,6 +14,7 @@ import com.mqv.realtimechatapplication.network.model.type.Gender;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Entity(tableName = "user")
 public class User implements Parcelable {
@@ -209,6 +210,19 @@ public class User implements Parcelable {
         dest.writeSerializable(accessedDate);
         dest.writeTypedList(socialLinks);
         dest.writeString(username);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return uid.equals(user.uid);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(uid);
     }
 
     public static class Builder {
