@@ -30,6 +30,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication">
         <activity
+            android:name=".activity.preferences.PreferenceArchivedChatActivity"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.tac.open.archived_chats"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".activity.AddConversationActivity"
             android:exported="true" />
         <activity
@@ -37,8 +45,8 @@
             android:exported="true" />
         <activity
             android:name=".activity.ConversationActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="true" />
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.preferences.PreferenceNotificationActivity"
             android:exported="true">
@@ -196,13 +204,13 @@
             android:exported="true"
             android:windowSoftInputMode="adjustNothing" />
 
-        <receiver android:name=".activity.br.ConversationBroadcastReceiver"
+        <receiver
+            android:name=".activity.br.ConversationBroadcastReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.mqv.tac.NEW_CONVERSATION"/>
+                <action android:name="com.mqv.tac.NEW_CONVERSATION" />
             </intent-filter>
         </receiver>
-
         <receiver
             android:name=".activity.br.FileObserverBroadcastReceiver"
             android:exported="false"
@@ -244,8 +252,7 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove">
-        </provider>
+            tools:node="remove"/>
     </application>
 
 </manifest>
