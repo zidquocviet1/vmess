@@ -7,17 +7,12 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.realtimechatapplication.R;
-import com.mqv.realtimechatapplication.activity.viewmodel.AbstractMainViewModel;
+import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
-import com.mqv.realtimechatapplication.data.repository.FriendRequestRepository;
-import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
-import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
-import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.network.model.User;
-import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 
 import java.net.HttpURLConnection;
@@ -30,15 +25,14 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
-public class ConversationFragmentViewModel extends AbstractMainViewModel {
+public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final ConversationRepository                            conversationRepository;
-
     private final MutableLiveData<List<Conversation>>               inboxConversations;
     private final MutableLiveData<List<RemoteUser>>                 rankUser;
     private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
@@ -48,12 +42,8 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
     public static final int                                         DEFAULT_SIZE_CHAT_LIST          = 40;
 
     @Inject
-    public ConversationFragmentViewModel(UserRepository userRepository,
-                                         FriendRequestRepository friendRequestRepository,
-                                         PeopleRepository peopleRepository,
-                                         NotificationRepository notificationRepository,
-                                         ConversationRepository conversationRepository) {
-        super(userRepository, friendRequestRepository, peopleRepository, notificationRepository);
+    public ConversationFragmentViewModel(ConversationRepository conversationRepository) {
+        super(conversationRepository);
 
         this.conversationRepository         = conversationRepository;
         this.inboxConversations             = new MutableLiveData<>();
@@ -65,9 +55,20 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
         fetchAllConversation();
     }
 
-    @Override
     public void onRefresh() {
-        refreshConversation();
+        Disposable disposable = onRefresh(INBOX).doOnDispose(() -> refreshConversationResult.setValue(Result.Terminate()))
+                                                .subscribe(response -> {
+                                                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                                        List<Conversation> freshConversationList = response.getSuccess();
+
+                                                        saveCallResult(freshConversationList, INBOX, () -> {
+                                                            refreshConversationResult.setValue(Result.Success(freshConversationList));
+                                                            inboxConversations.setValue(freshConversationList);
+                                                        });
+                                                    }
+                                                }, t -> refreshConversationResult.setValue(Result.Fail(R.string.error_connect_server_fail)));
+
+        cd.add(disposable);
     }
 
     public LiveData<List<RemoteUser>> getRankUserListSafe() {
@@ -124,64 +125,15 @@ public class ConversationFragmentViewModel extends AbstractMainViewModel {
                    .subscribe();
     }
 
-    private void refreshConversation() {
-        Disposable disposable = conversationRepository.fetchByUid(INBOX,
-                                                                  DEFAULT_PAGE_CHAT_LIST,
-                                                                  DEFAULT_SIZE_CHAT_LIST)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
-                                                      .doOnDispose(() -> refreshConversationResult.setValue(Result.Terminate()))
-                                                      .subscribe(response -> {
-                                                          if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                                              List<Conversation> freshConversationList = response.getSuccess();
-
-                                                              saveCallResult(freshConversationList, INBOX);
-                                                          }
-                                                      }, t -> refreshConversationResult.setValue(Result.Fail(R.string.error_connect_server_fail)));
-
-        cd.add(disposable);
-    }
-
-    private void saveCallResult(List<Conversation> conversations, ConversationStatusType type) {
-        Disposable disposable = conversationRepository.saveAll(conversations, type)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
-                                                      .subscribe(() -> {
-                                                          refreshConversationResult.setValue(Result.Success(conversations));
-                                                          inboxConversations.setValue(conversations);
-                                                      });
-        cd.add(disposable);
-    }
-
     private void fetchAllConversation() {
-        Runnable onDataChanged = () -> {
-            Disposable cacheDisposable = conversationRepository.fetchCached(INBOX,
-                                                                            DEFAULT_PAGE_CHAT_LIST,
-                                                                            DEFAULT_SIZE_CHAT_LIST)
-                                                               .subscribeOn(Schedulers.io())
-                                                               .observeOn(AndroidSchedulers.mainThread())
-                                                               .subscribe(inboxConversations::setValue, Throwable::printStackTrace);
-            cd.add(cacheDisposable);
-        };
+        Consumer<List<Conversation>> onReceiveData = inboxConversations::setValue;
+        Consumer<Throwable>          onError       = Throwable::printStackTrace;
 
-        Disposable disposable = conversationRepository.fetchByUidNBR(INBOX,
-                                                                     DEFAULT_PAGE_CHAT_LIST,
-                                                                     DEFAULT_SIZE_CHAT_LIST,
-                                                                     onDataChanged)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
-                                                      .subscribe(inboxConversations::setValue, Throwable::printStackTrace);
-
-        cd.add(disposable);
+        initializeFetch(INBOX, onReceiveData, onError);
     }
 
     public void fetchCachedConversation(@NonNull Conversation conversation) {
-        Disposable disposable = conversationRepository.fetchCachedById(conversation)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
-                                                      .subscribe(cachedConversation::setValue, Throwable::printStackTrace);
-
-        cd.add(disposable);
+        fetchCachedConversation(conversation, cachedConversation::setValue);
     }
 
     private void newData() {
