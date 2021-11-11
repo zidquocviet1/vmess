@@ -42,7 +42,10 @@
         <Preference
             android:icon="@drawable/ic_preferences_messages_requests"
             android:key="@string/key_pref_messages_requests"
-            android:title="@string/title_preference_item_messages_requests" />
+            android:title="@string/title_preference_item_messages_requests" >
+            <intent android:action="com.tac.open.message_request"
+                android:targetClass=".activity.preferences.PreferenceMessageRequestActivity"/>
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_toggle_status"
@@ -82,7 +85,10 @@
         <Preference
             android:icon="@drawable/ic_preferences_archive"
             android:key="@string/key_pref_archived_chats"
-            android:title="@string/title_preference_item_archived_chats" />
+            android:title="@string/title_preference_item_archived_chats" >
+            <intent android:action="com.tac.open.archived_chats"
+                android:targetClass=".activity.preferences.PreferenceArchivedChatActivity"/>
+        </Preference>
 
         <Preference
             android:icon="@drawable/ic_preferences_privacy"
