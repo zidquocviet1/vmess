@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.network.model;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class ConversationGroup {
     private String id;
@@ -92,5 +93,18 @@ public class ConversationGroup {
 
     public void setLastModified(LocalDateTime lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConversationGroup that = (ConversationGroup) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
