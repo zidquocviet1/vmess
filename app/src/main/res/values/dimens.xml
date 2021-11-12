@@ -26,6 +26,7 @@
     <dimen name="custom_app_bar_height">52dp</dimen>
 
     <dimen name="button_height_default">60dp</dimen>
+    <dimen name="button_corner_radius_lightweight">10dp</dimen>
     <dimen name="button_corner_radius_soft">20dp</dimen>
     <dimen name="button_corner_radius_medium">40dp</dimen>
     <dimen name="button_corner_radius_hard">60dp</dimen>
