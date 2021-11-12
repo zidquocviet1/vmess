@@ -129,6 +129,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:elevation="10dp"
         android:fitsSystemWindows="true"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -200,4 +201,18 @@
             app:icon="@drawable/ic_round_add"
             app:iconSize="24dp" />
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_scroll_to_bottom"
+        style="@style/MaterialIconButton"
+        android:layout_above="@id/footer"
+        android:layout_centerInParent="true"
+        android:layout_gravity="end"
+        android:layout_marginBottom="@dimen/all_margin_top_soft"
+        android:backgroundTint="@color/white"
+        android:elevation="4dp"
+        android:rotation="-90"
+        android:visibility="gone"
+        app:icon="@drawable/ic_back"
+        app:iconSize="14dp" />
 </RelativeLayout>

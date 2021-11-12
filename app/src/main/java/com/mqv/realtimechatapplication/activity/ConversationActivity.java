@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -78,6 +80,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private static final String DOC_CHAT_TIMESTAMP = "timestamp";
     private static final String EXTRA_CONVERSATION = "conversation";
     private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
+    private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
 
     private final List<Chat> mChatList = new ArrayList<>();
     private List<Chat> mConversationChatList;
@@ -220,6 +223,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     mChatList.remove(0);
                     mChatList.addAll(0, freshData);
                     mChatListAdapter.notifyItemRangeInserted(0, freshData.size() - 1);
+                    mChatListAdapter.notifyItemChanged(freshData.size());
                     break;
                 case LOADING:
                     // Show the Loading Progress Bar
@@ -430,6 +434,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 }
             }
         });
+        mBinding.buttonScrollToBottom.setOnClickListener(v -> mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1));
     }
 
     private void addNewChatToAdapter(Chat chat) {
@@ -453,6 +458,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.buttonMic.setIconTint(mDefaultColorStateList);
         mBinding.buttonSendMessage.setIconTint(mDefaultColorStateList);
         mBinding.buttonMore.setIconTint(mDefaultColorStateList);
+        mBinding.buttonScrollToBottom.setIconTint(mDefaultColorStateList);
     }
 
     private void setupRecyclerView() {
@@ -483,6 +489,11 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         }
 
         mBinding.recyclerChatList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            private final Animation slideUpAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
+            private final Animation fadeAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
+            private static final int FAST_DURATION = 200;
+            private boolean isShowScrollButton = false;
+
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -491,6 +502,32 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
                 if (!recyclerView.canScrollVertically(scrollDirection)) {
                     onLoadMore();
+                }
+
+                LinearLayoutManager llm = (LinearLayoutManager) recyclerView.getLayoutManager();
+
+                if (llm != null) {
+                    int position = llm.findLastVisibleItemPosition();
+
+                    if (position < mChatList.size() - NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM) {
+                        if (!isShowScrollButton) {
+                            isShowScrollButton = true;
+
+                            slideUpAnimation.setDuration(FAST_DURATION);
+
+                            mBinding.buttonScrollToBottom.startAnimation(slideUpAnimation);
+                            mBinding.buttonScrollToBottom.setVisibility(View.VISIBLE);
+                        }
+                    } else {
+                        if (isShowScrollButton) {
+                            isShowScrollButton = false;
+
+                            fadeAnimation.setDuration(FAST_DURATION);
+
+                            mBinding.buttonScrollToBottom.startAnimation(fadeAnimation);
+                            mBinding.buttonScrollToBottom.setVisibility(View.GONE);
+                        }
+                    }
                 }
             }
         });
