@@ -1,6 +1,5 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -27,17 +26,16 @@ import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
+import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
-import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding> implements ConversationDialogFragment.ConversationOptionListener {
     private final List<Conversation> mConversationList = new ArrayList<>();
@@ -88,10 +86,10 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
         setupRecyclerView();
         registerEvent();
+
+        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
@@ -105,7 +103,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void setupObserver() {
         mViewModel.getRankUserListSafe().observe(this, remoteUsers -> {
@@ -118,19 +115,13 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
         mViewModel.getInboxConversation().observe(this, inbox -> {
             if (inbox != null) {
-                if (inbox.isEmpty()) {
-                    mConversationList.clear();
-                    mConversationAdapter.notifyDataSetChanged();
-                } else {
-                    mConversationList.clear();
-                    mConversationList.addAll(inbox.stream()
-                                                  .sorted((o1, o2) -> o2.getLastChat()
-                                                                        .getTimestamp()
-                                                                        .compareTo(o1.getLastChat().getTimestamp()))
-                                                  .collect(Collectors.toList()));
-//                    mConversationAdapter.notifyItemRangeChanged(0, inbox.size());
-                    mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+                mConversationList.clear();
+
+                if (!inbox.isEmpty()) {
+                    mConversationList.addAll(inbox);
                 }
+
+                mConversationAdapter.submitList(new ArrayList<>(mConversationList));
             }
         });
 
@@ -189,8 +180,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     private void setupRecyclerView() {
         mConversationAdapter = new ConversationListAdapter(mConversationList, getContext());
-        mConversationAdapter.submitList(mConversationList);
-
         mRankUserAdapter = new RankUserConversationAdapter(getContext());
 
         mBinding.recyclerMessages.setAdapter(mConversationAdapter);
@@ -244,7 +233,10 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     @Override
     public void onArchive(Conversation conversation) {
-        Logging.show("Archive conversation");
+        mConversationList.remove(conversation);
+        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+
+        mViewModel.changeConversationStatusType(conversation, ConversationStatusType.ARCHIVED);
     }
 
     @Override
