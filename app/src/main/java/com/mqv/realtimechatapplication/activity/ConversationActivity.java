@@ -186,15 +186,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
         mViewModel.getUserDetail().observe(this, user -> mChatListAdapter.setUserDetail(user));
 
-        mViewModel.getSeenMessageResult().observe(this, updatedChat -> {
-            if (updatedChat == null)
-                return;
-
-            mViewModel.updateChat(updatedChat);
-
-            isConversationUpdated = true;
-        });
-
         mViewModel.getServerReadyResult().observe(this, isReady -> {
             if (isReady) {
                 registerFirestoreEvent();
@@ -296,6 +287,9 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     case ADDED:
                         QueryDocumentSnapshot addDoc = doc.getDocument();
                         Chat chat = parseChatFromDocument(addDoc);
+
+                        if (mChatList.contains(chat))
+                            return;
 
                         if (!chat.getSenderId().equals(mCurrentUser.getUid())) {
                             addNewChatToAdapter(chat);
@@ -563,9 +557,13 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     .filter(c -> c.getSenderId() != null &&
                             !c.getSenderId().equals(mCurrentUser.getUid()) &&
                             !c.getSeenBy().contains(mCurrentUser.getUid()))
+                    .peek(c -> c.getSeenBy().add(mCurrentUser.getUid()))
                     .collect(Collectors.toList());
 
-            mViewModel.seenMessage(unseenChats);
+            if (!unseenChats.isEmpty()) {
+                mViewModel.seenMessage(unseenChats);
+                isConversationUpdated = true;
+            }
         }
     }
 

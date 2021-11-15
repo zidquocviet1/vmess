@@ -14,6 +14,7 @@ import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -83,6 +84,18 @@ public class Conversation implements Parcelable {
         this.status = status;
         this.creationTime = creationTime;
         this.lastChat = lastChat;
+    }
+
+    @Ignore
+    public Conversation(Conversation other) {
+        this.id = other.id;
+        this.participants = other.participants;
+        this.chats = new ArrayList<>(other.chats);
+        this.group = other.group;
+        this.type = other.type;
+        this.status = other.status;
+        this.creationTime = other.creationTime;
+        this.lastChat = other.lastChat;
     }
 
     protected Conversation(Parcel in) {

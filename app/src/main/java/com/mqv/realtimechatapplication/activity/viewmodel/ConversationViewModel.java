@@ -14,6 +14,7 @@ import androidx.room.rxjava3.EmptyResultSetException;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.repository.ChatRepository;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
@@ -45,11 +46,11 @@ import retrofit2.HttpException;
 @HiltViewModel
 public class ConversationViewModel extends CurrentUserViewModel {
     private final ConversationRepository                        repository;
+    private final ChatRepository                                chatRepository;
     private final UserRepository                                userRepository;
     private final PeopleRepository                              peopleRepository;
     private final MutableLiveData<Pair<Chat, Chat>>             sendMessageStatus;
     private final MutableLiveData<User>                         userDetail;
-    private final MutableLiveData<Chat>                         seenMessageResult;
     private final MutableLiveData<Boolean>                      serverReadyResult;
     private final MutableLiveData<Result<List<Chat>>>           moreChatResult;
 
@@ -60,13 +61,14 @@ public class ConversationViewModel extends CurrentUserViewModel {
     @Inject
     public ConversationViewModel(ConversationRepository repository,
                                  UserRepository userRepository,
-                                 PeopleRepository peopleRepository) {
+                                 PeopleRepository peopleRepository,
+                                 ChatRepository chatRepository) {
         this.repository         = repository;
+        this.chatRepository     = chatRepository;
         this.userRepository     = userRepository;
         this.peopleRepository   = peopleRepository;
         this.sendMessageStatus  = new MutableLiveData<>();
         this.userDetail         = new MutableLiveData<>();
-        this.seenMessageResult  = new MutableLiveData<>();
         this.serverReadyResult  = new MutableLiveData<>();
         this.moreChatResult     = new MutableLiveData<>();
     }
@@ -77,10 +79,6 @@ public class ConversationViewModel extends CurrentUserViewModel {
 
     public LiveData<User> getUserDetail() {
         return userDetail;
-    }
-
-    public LiveData<Chat> getSeenMessageResult() {
-        return seenMessageResult;
     }
 
     public LiveData<Boolean> getServerReadyResult() {
@@ -96,19 +94,19 @@ public class ConversationViewModel extends CurrentUserViewModel {
     }
 
     public void sendMessage(@NonNull Chat chat) {
-        Disposable disposable = repository.sendMessage(chat)
-                                          .subscribeOn(Schedulers.from(sendMessageExecutors))
-                                          .observeOn(AndroidSchedulers.mainThread())
-                                          .doOnSubscribe(d -> handleSendMessageStatus(chat, MessageStatus.NOT_RECEIVED))
-                                          .subscribe(response -> {
-                                              if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                                  Chat freshChat = response.getSuccess();
+        Disposable disposable = chatRepository.sendMessage(chat)
+                                              .subscribeOn(Schedulers.from(sendMessageExecutors))
+                                              .observeOn(AndroidSchedulers.mainThread())
+                                              .doOnSubscribe(d -> handleSendMessageStatus(chat, MessageStatus.NOT_RECEIVED))
+                                              .subscribe(response -> {
+                                                  if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                                      Chat freshChat = response.getSuccess();
 
-                                                  sendMessageStatus.setValue(new Pair<>(chat, freshChat));
-                                              } else {
-                                                  handleSendMessageStatus(chat, MessageStatus.ERROR);
-                                              }
-                                          }, t -> handleSendMessageStatus(chat, MessageStatus.ERROR));
+                                                      sendMessageStatus.setValue(new Pair<>(chat, freshChat));
+                                                  } else {
+                                                      handleSendMessageStatus(chat, MessageStatus.ERROR);
+                                                  }
+                                              }, t -> handleSendMessageStatus(chat, MessageStatus.ERROR));
 
         cd.add(disposable);
     }
@@ -162,36 +160,28 @@ public class ConversationViewModel extends CurrentUserViewModel {
     }
 
     public void updateChat(Chat chat) {
-        repository.updateChat(chat);
+        chatRepository.updateCached(chat);
     }
 
     public void saveChat(Chat chat) {
-        repository.saveChat(Collections.singletonList(chat));
+        chatRepository.saveCached(Collections.singletonList(chat));
     }
 
     public void seenMessage(List<Chat> chats) {
-        Disposable disposable = Observable.fromIterable(chats)
-                                          .flatMap(repository::seenMessage)
-                                          .subscribeOn(Schedulers.from(seenMessageExecutors))
-                                          .observeOn(AndroidSchedulers.mainThread())
-                                          .subscribe(response -> {
-                                              if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                                  Chat chat = response.getSuccess();
-
-                                                  seenMessageResult.setValue(chat);
-                                              }
-                                          }, t -> {});
-
-        cd.add(disposable);
+        Observable.fromIterable(chats)
+                  .flatMap(chatRepository::seenMessage)
+                  .subscribeOn(Schedulers.from(seenMessageExecutors))
+                  .observeOn(AndroidSchedulers.mainThread())
+                  .subscribe();
     }
 
     public void seenWelcomeMessage(Chat chat) {
         updateChat(chat);
 
-        repository.seenWelcomeMessage(chat)
-                  .subscribeOn(Schedulers.io())
-                  .observeOn(Schedulers.io())
-                  .subscribe();
+        chatRepository.seenWelcomeMessage(chat)
+                      .subscribeOn(Schedulers.io())
+                      .observeOn(Schedulers.io())
+                      .subscribe();
     }
 
     public void isServerReadyForFirestoreSubscribe() {
@@ -212,62 +202,62 @@ public class ConversationViewModel extends CurrentUserViewModel {
     public void registerLoadMore(Conversation conversation) {
         Preconditions.checkNotNull(conversation);
 
-        Disposable cachedDisposable = repository.fetchChatByConversation(conversation.getId(), currentChatPage + 1, DEFAULT_SIZE_CHAT_LIST)
-                                                .subscribeOn(Schedulers.io())
-                                                .observeOn(AndroidSchedulers.mainThread())
-                                                .doOnSubscribe(d -> {
-                                                    if (!d.isDisposed())
-                                                        moreChatResult.setValue(Result.Loading());
-                                                })
-                                                .subscribe(cacheData -> new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                                    Collections.reverse(cacheData);
+        Disposable cachedDisposable = chatRepository.pagingCachedByConversation(conversation.getId(), currentChatPage + 1, DEFAULT_SIZE_CHAT_LIST)
+                                                    .subscribeOn(Schedulers.io())
+                                                    .observeOn(AndroidSchedulers.mainThread())
+                                                    .doOnSubscribe(d -> {
+                                                        if (!d.isDisposed())
+                                                            moreChatResult.setValue(Result.Loading());
+                                                    })
+                                                    .subscribe(cacheData -> new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                                        Collections.reverse(cacheData);
 
-                                                    moreChatResult.setValue(Result.Success(cacheData));
+                                                        moreChatResult.setValue(Result.Success(cacheData));
 
-                                                    currentChatPage += 1;
-                                                }, 400), t -> loadMoreChatRemote(conversation));
+                                                        currentChatPage += 1;
+                                                    }, 400), t -> loadMoreChatRemote(conversation));
         cd.add(cachedDisposable);
     }
 
     private void loadMoreChatRemote(Conversation conversation) {
-        Disposable disposable = repository.loadMoreChat(conversation.getId(), currentChatPage + 1, DEFAULT_SIZE_CHAT_LIST)
-                                          .subscribeOn(Schedulers.io())
-                                          .observeOn(AndroidSchedulers.mainThread())
-                                          .onErrorResumeNext(throwable2 -> {
-                                              if (throwable2 instanceof HttpException) {
-                                                  if (((HttpException)throwable2).code() == HttpURLConnection.HTTP_NOT_FOUND)
-                                                      return Observable.error(new Exception("The conversation is not exists"));
-                                                  else
-                                                      return Observable.error(new Exception("Unknown Error"));
-                                              } else {
-                                                  return Observable.error(throwable2);
-                                              }
-                                          })
-                                          .subscribe(response -> {
-                                              if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                                  List<Chat> freshData = response.getSuccess();
+        Disposable disposable = chatRepository.loadMoreChat(conversation.getId(), currentChatPage + 1, DEFAULT_SIZE_CHAT_LIST)
+                                              .subscribeOn(Schedulers.io())
+                                              .observeOn(AndroidSchedulers.mainThread())
+                                              .onErrorResumeNext(throwable2 -> {
+                                                  if (throwable2 instanceof HttpException) {
+                                                      if (((HttpException)throwable2).code() == HttpURLConnection.HTTP_NOT_FOUND)
+                                                          return Observable.error(new Exception("The conversation is not exists"));
+                                                      else
+                                                          return Observable.error(new Exception("Unknown Error"));
+                                                  } else {
+                                                      return Observable.error(throwable2);
+                                                  }
+                                              })
+                                              .subscribe(response -> {
+                                                  if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                                      List<Chat> freshData = response.getSuccess();
 
-                                                  Collections.reverse(freshData);
+                                                      Collections.reverse(freshData);
 
-                                                  moreChatResult.setValue(Result.Success(freshData));
+                                                      moreChatResult.setValue(Result.Success(freshData));
 
-                                                  currentChatPage += 1;
+                                                      currentChatPage += 1;
 
-                                                  repository.saveChat(freshData);
-                                              } else if (response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
-                                                  handleLoadChatError(R.string.error_user_not_in_conversation);
-                                              }
-                                          }, t -> {
-                                              Logging.show("Load more chats error: " + t.getMessage());
+                                                      chatRepository.saveCached(freshData);
+                                                  } else if (response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
+                                                      handleLoadChatError(R.string.error_user_not_in_conversation);
+                                                  }
+                                              }, t -> {
+                                                  Logging.show("Load more chats error: " + t.getMessage());
 
-                                              if (t instanceof FirebaseNetworkException) {
-                                                  handleLoadChatError(R.string.error_network_connection);
-                                              } else if (t instanceof ConnectException || t instanceof SocketTimeoutException){
-                                                  handleLoadChatError(R.string.error_connect_server_fail);
-                                              } else {
-                                                  handleLoadChatError(-1);
-                                              }
-                                          });
+                                                  if (t instanceof FirebaseNetworkException) {
+                                                      handleLoadChatError(R.string.error_network_connection);
+                                                  } else if (t instanceof ConnectException || t instanceof SocketTimeoutException){
+                                                      handleLoadChatError(R.string.error_connect_server_fail);
+                                                  } else {
+                                                      handleLoadChatError(-1);
+                                                  }
+                                              });
 
         cd.add(disposable);
     }
