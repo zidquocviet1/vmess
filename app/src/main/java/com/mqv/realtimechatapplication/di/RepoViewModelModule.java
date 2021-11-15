@@ -4,12 +4,15 @@ import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
+import com.mqv.realtimechatapplication.data.repository.ChatRepository;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
+import com.mqv.realtimechatapplication.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.impl.ConversationRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.impl.NotificationRepositoryImpl;
 import com.mqv.realtimechatapplication.data.repository.impl.PeopleRepositoryImpl;
+import com.mqv.realtimechatapplication.network.service.ChatService;
 import com.mqv.realtimechatapplication.network.service.ConversationService;
 import com.mqv.realtimechatapplication.network.service.FriendRequestService;
 import com.mqv.realtimechatapplication.network.service.NotificationService;
@@ -44,5 +47,11 @@ public class RepoViewModelModule {
                                                                 ConversationDao dao,
                                                                 ChatDao chatDao) {
         return new ConversationRepositoryImpl(service, dao, chatDao);
+    }
+
+    @ViewModelScoped
+    @Provides
+    public ChatRepository provideChatRepository(ChatDao dao, ChatService service) {
+        return new ChatRepositoryImpl(dao, service);
     }
 }
