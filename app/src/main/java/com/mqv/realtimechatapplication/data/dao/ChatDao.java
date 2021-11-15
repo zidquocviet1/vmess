@@ -11,7 +11,6 @@ import com.mqv.realtimechatapplication.network.model.Chat;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
@@ -33,4 +32,7 @@ public interface ChatDao {
 
     @Update
     Completable update(Chat chat);
+
+    @Update
+    Completable update(List<Chat> chats);
 }

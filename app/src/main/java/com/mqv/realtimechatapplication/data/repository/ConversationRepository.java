@@ -1,9 +1,6 @@
 package com.mqv.realtimechatapplication.data.repository;
 
-import androidx.annotation.NonNull;
-
 import com.mqv.realtimechatapplication.network.ApiResponse;
-import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 
@@ -20,29 +17,18 @@ public interface ConversationRepository {
 
     Single<List<Conversation>> fetchCached(ConversationStatusType type, int page, int size);
 
-    Observable<ApiResponse<Chat>> sendMessage(@NonNull Chat chat);
-
-    Observable<ApiResponse<Chat>> seenMessage(@NonNull Chat chat);
-
-    Observable<ApiResponse<Chat>> seenWelcomeMessage(@NonNull Chat chat);
-
     Observable<ApiResponse<Boolean>> isServerAlive();
 
-    Observable<ApiResponse<List<Chat>>> loadMoreChat(@NonNull String conversationId, int page, int size);
-
     Completable saveAll(List<Conversation> freshData, ConversationStatusType type);
-
-    Completable deleteAll(List<String> conversationIdList);
 
     Completable deleteAll();
 
     Single<Conversation> fetchCachedById(Conversation conversation);
 
-    Single<List<Chat>> fetchChatByConversation(String id, int page, int size);
-
-    void saveChat(List<Chat> chats);
-
-    void updateChat(Chat chat);
-
     void deleteNormalByParticipantId(String userId, String otherUserId);
+
+    /////// Conversation changes option
+    Completable changeConversationStatus(Conversation conversation);
+
+    Observable<ApiResponse<Conversation>> changeConversationStatusRemote(Conversation conversation);
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -42,10 +43,6 @@ public interface ConversationService {
     @GET("conversation/is_alive")
     Observable<ApiResponse<Boolean>> isServerAlive();
 
-    @GET
-    Observable<Map<String, String>> sseConversations(@Url String url,
-                                                     @Header(AUTHORIZATION) String token);
-
     @GET("conversation/chat/{conversationId}")
     Observable<ApiResponse<List<Chat>>> loadMoreChat(@Header(AUTHORIZATION) String token,
                                                      @Path("conversationId") String conversationId,
@@ -55,4 +52,12 @@ public interface ConversationService {
     @GET("conversation/find_by_participant_id")
     Observable<ApiResponse<Conversation>> findNormalByParticipantId(@Header(AUTHORIZATION) String token,
                                                                     @Query("id") String otherId);
+
+    @PUT("conversation/archive")
+    Observable<ApiResponse<Conversation>> makeConversationArchive(@Header(AUTHORIZATION) String token,
+                                                                  @Body Conversation conversation);
+
+    @GET("conversation/find_by_id")
+    Single<ApiResponse<Conversation>> findById(@Header(AUTHORIZATION) String token,
+                                               @Query("id") String conversationId);
 }

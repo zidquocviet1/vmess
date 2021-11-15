@@ -40,13 +40,16 @@ public abstract class ConversationDao {
            "where conversation_id = :id " +
            "order by chat_timestamp desc " +
            "limit 40")
-    abstract Map<Conversation, List<Chat>> conversationAndChat(String id);
+    public abstract Map<Conversation, List<Chat>> conversationAndChat(String id);
 
     @Insert(onConflict = IGNORE)
     abstract long saveIfNotExists(Conversation data);
 
     @Insert(onConflict = REPLACE)
     abstract void saveListChat(List<Chat> chats);
+
+    @Update
+    abstract void privateUpdate(Conversation conversation);
 
     @Transaction
     public void saveConversationList(List<Conversation> data) {
@@ -90,6 +93,9 @@ public abstract class ConversationDao {
                 } else {
                     saveListChat(freshChat);
                 }
+
+                // update conversation [GROUP, PARTICIPANTS, STATUS]
+                privateUpdate(c);
             }
         });
     }
@@ -121,8 +127,8 @@ public abstract class ConversationDao {
     @Query("delete from Conversation")
     public abstract Completable deleteAll();
 
-    @Query("delete from Conversation where conversation_id not in (:conversationListId)")
-    public abstract Completable deleteAll(List<String> conversationListId);
+    @Query("delete from Conversation where conversation_id not in (:conversationListId) and conversation_status = :status")
+    public abstract Completable deleteAll(List<String> conversationListId, ConversationStatusType status);
 
     @Transaction
     public void deleteNormalByParticipantId(String userId, String otherUserId) {

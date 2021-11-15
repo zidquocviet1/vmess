@@ -4,7 +4,6 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.room.rxjava3.EmptyResultSetException;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
@@ -181,36 +180,8 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Observable<ApiResponse<Chat>> sendMessage(@NonNull Chat chat) {
-        return getBearerTokenObservable()
-                .flatMap(token -> service.sendMessage(token, chat))
-                .subscribeOn(Schedulers.io());
-    }
-
-    @Override
-    public Observable<ApiResponse<Chat>> seenMessage(@NonNull Chat chat) {
-        return getBearerTokenObservable()
-                .flatMap(token -> service.seenMessage(token, chat))
-                .subscribeOn(Schedulers.io());
-    }
-
-    @Override
-    public Observable<ApiResponse<Chat>> seenWelcomeMessage(@NonNull Chat chat) {
-        return getBearerTokenObservable()
-                .flatMap(token -> service.seenWelcomeMessage(token, chat))
-                .subscribeOn(Schedulers.io());
-    }
-
-    @Override
     public Observable<ApiResponse<Boolean>> isServerAlive() {
         return service.isServerAlive().subscribeOn(Schedulers.io());
-    }
-
-    @Override
-    public Observable<ApiResponse<List<Chat>>> loadMoreChat(@NonNull String conversationId, int page, int size) {
-        return getBearerTokenObservable()
-                .flatMap(token -> service.loadMoreChat(token, conversationId, page, size))
-                .subscribeOn(Schedulers.io());
     }
 
     @Override
@@ -227,17 +198,24 @@ public class ConversationRepositoryImpl implements ConversationRepository {
                                                    .collect(Collectors.toList());
 
         return Completable.fromAction(() -> dao.saveConversationList(updatedData))
-                          .andThen(dao.deleteAll(conversationListId));
-    }
-
-    @Override
-    public Completable deleteAll(List<String> conversationIdList) {
-        return dao.deleteAll(conversationIdList);
+                          .andThen(dao.deleteAll(conversationListId, type));
     }
 
     @Override
     public Completable deleteAll() {
         return dao.deleteAll();
+    }
+
+    @Override
+    public Completable changeConversationStatus(Conversation conversation) {
+        return dao.update(conversation);
+    }
+
+    @Override
+    public Observable<ApiResponse<Conversation>> changeConversationStatusRemote(Conversation conversation) {
+        return getBearerTokenObservable()
+                .flatMap(token -> service.makeConversationArchive(token, conversation))
+                .subscribeOn(Schedulers.io());
     }
 
     @Override
@@ -252,60 +230,6 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
                       return Single.just(conversation);
                   });
-    }
-
-    @Override
-    public Single<List<Chat>> fetchChatByConversation(String id, int page, int size) {
-        return chatDao.fetchChatByConversation(id, page, size)
-                      .flatMap(list -> {
-                          if (list == null || list.isEmpty())
-                              return Single.error(new EmptyResultSetException("Empty list chats"));
-                          return Single.just(list);
-                      });
-    }
-
-    @Override
-    public void saveChat(List<Chat> chats) {
-        chatDao.insert(chats)
-                .subscribeOn(Schedulers.io())
-                .subscribe(new CompletableObserver() {
-                    @Override
-                    public void onSubscribe(@NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable e) {
-
-                    }
-                });
-    }
-
-    @Override
-    public void updateChat(Chat chat) {
-        chatDao.update(chat)
-               .subscribeOn(Schedulers.io())
-               .subscribe(new CompletableObserver() {
-                   @Override
-                   public void onSubscribe(@NonNull Disposable d) {
-
-                   }
-
-                   @Override
-                   public void onComplete() {
-
-                   }
-
-                   @Override
-                   public void onError(@NonNull Throwable e) {
-
-                   }
-               });
     }
 
     @Override
