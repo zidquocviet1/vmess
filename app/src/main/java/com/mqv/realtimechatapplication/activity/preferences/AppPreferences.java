@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.activity.preferences;
 
+import androidx.annotation.NonNull;
+
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -33,4 +35,8 @@ public interface AppPreferences {
     void setFcmToken(String token);
 
     Optional<String> getFcmToken();
+
+    void setNotificationStatus(Boolean isTurnOn);
+
+    Boolean getNotificationStatus();
 }

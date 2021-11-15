@@ -3,6 +3,8 @@ package com.mqv.realtimechatapplication.activity.preferences;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import androidx.annotation.NonNull;
+
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
@@ -86,12 +88,23 @@ public class AppPreferencesImpl implements AppPreferences{
 
     @Override
     public void setFcmToken(String token) {
-        mPreferences.edit().putString(Const.KEY_FCM_TOKEN, token).apply();
+        mPreferences.edit().putString(Const.KEY_PREF_FCM_TOKEN, token).apply();
     }
 
     @Override
     public Optional<String> getFcmToken() {
-        var token = mPreferences.getString(Const.KEY_FCM_TOKEN, null);
+        var token = mPreferences.getString(Const.KEY_PREF_FCM_TOKEN, null);
         return Optional.ofNullable(token);
+    }
+
+    @Override
+    public void setNotificationStatus(Boolean isTurnOn) {
+        mPreferences.edit().putBoolean(Const.KEY_PREF_NOTIFICATION_STATUS, isTurnOn).apply();
+    }
+
+    @NonNull
+    @Override
+    public Boolean getNotificationStatus() {
+        return mPreferences.getBoolean(Const.KEY_PREF_NOTIFICATION_STATUS, true);
     }
 }
