@@ -163,10 +163,10 @@ public class ConversationRepositoryImpl implements ConversationRepository {
 
     @Override
     public Single<List<Conversation>> fetchCached(ConversationStatusType type, int page, int size) {
-        return dao.fetchAllByStatus(type)
+        return dao.fetchAllByStatus(type, 0, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
                   .toObservable()
                   .flatMap(Observable::fromIterable)
-                  .flatMap(c -> chatDao.fetchChatByConversation(c.getId(), size)
+                  .flatMap(c -> chatDao.fetchChatByConversation(c.getId(), Const.DEFAULT_CHAT_PAGING_SIZE)
                                        .toObservable()
                                        .flatMap(list -> {
                                            Collections.reverse(list);
@@ -204,6 +204,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Completable deleteAll() {
         return dao.deleteAll();
+    }
+
+    @Override
+    public Completable delete(Conversation conversation) {
+        return dao.delete(conversation);
+    }
+
+    @Override
+    public void deleteConversationChatRemote(Conversation conversation) {
+        delete(conversation).andThen(getBearerTokenObservable()
+                            .flatMap(token -> service.deleteConversationChat(token, conversation.getId())))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(Schedulers.io())
+                            .onErrorComplete()
+                            .subscribe();
     }
 
     @Override

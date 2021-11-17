@@ -23,6 +23,10 @@ public interface ConversationRepository {
 
     Completable deleteAll();
 
+    Completable delete(Conversation conversation);
+
+    void deleteConversationChatRemote(Conversation conversation);
+
     Single<Conversation> fetchCachedById(Conversation conversation);
 
     void deleteNormalByParticipantId(String userId, String otherUserId);

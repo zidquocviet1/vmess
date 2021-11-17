@@ -7,6 +7,7 @@ import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.util.Const;
 
 import java.util.List;
 
@@ -23,7 +24,6 @@ public class ConversationListViewModel extends ViewModel {
     protected final CompositeDisposable         cd;
 
     private static final int                    INITIALIZE_PAGE             = 0;
-    private static final int                    DEFAULT_CONVERSATION_SIZE   = 20;
 
     public ConversationListViewModel(ConversationRepository conversationRepository) {
         this.conversationRepository = conversationRepository;
@@ -32,7 +32,7 @@ public class ConversationListViewModel extends ViewModel {
 
     // Only call with the activity has swipe refresh layout
     public Observable<ApiResponse<List<Conversation>>> onRefresh(ConversationStatusType type) {
-        return conversationRepository.fetchByUid(type, INITIALIZE_PAGE, DEFAULT_CONVERSATION_SIZE)
+        return conversationRepository.fetchByUid(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
                                      .subscribeOn(Schedulers.io())
                                      .observeOn(AndroidSchedulers.mainThread());
     }
@@ -41,14 +41,14 @@ public class ConversationListViewModel extends ViewModel {
                                    Consumer<List<Conversation>> onReceiveData,
                                    Consumer<Throwable> onError) {
         Runnable onDataChanged = () -> {
-            Disposable cacheDisposable = conversationRepository.fetchCached(type, INITIALIZE_PAGE, DEFAULT_CONVERSATION_SIZE)
+            Disposable cacheDisposable = conversationRepository.fetchCached(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
                                                                .subscribeOn(Schedulers.io())
                                                                .observeOn(AndroidSchedulers.mainThread())
                                                                .subscribe(onReceiveData, onError);
             cd.add(cacheDisposable);
         };
 
-        Disposable disposable = conversationRepository.fetchByUidNBR(type, INITIALIZE_PAGE, DEFAULT_CONVERSATION_SIZE, onDataChanged)
+        Disposable disposable = conversationRepository.fetchByUidNBR(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE, onDataChanged)
                                                       .subscribeOn(Schedulers.io())
                                                       .observeOn(AndroidSchedulers.mainThread())
                                                       .subscribe(onReceiveData, onError);
@@ -75,14 +75,14 @@ public class ConversationListViewModel extends ViewModel {
     }
 
     public void delete(Conversation conversation) {
-
+        conversationRepository.deleteConversationChatRemote(conversation);
     }
 
     public void changeConversationStatusType(Conversation conversation, ConversationStatusType type) {
         conversation.setStatus(type);
 
-        conversationRepository.updateConversation(conversation)
-                              .andThen(conversationRepository.makeConversationArchive(conversation))
+        conversationRepository.changeConversationStatus(conversation)
+                              .andThen(conversationRepository.changeConversationStatusRemote(conversation))
                               .subscribeOn(Schedulers.io())
                               .observeOn(Schedulers.io())
                               .onErrorComplete()
