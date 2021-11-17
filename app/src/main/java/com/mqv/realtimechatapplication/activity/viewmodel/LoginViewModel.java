@@ -14,6 +14,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
@@ -121,6 +122,8 @@ public class LoginViewModel extends ViewModel {
                         error = R.string.error_network_connection;
                     } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
                         error = R.string.msg_login_failed;
+                    } else if (e instanceof FirebaseAuthInvalidUserException) {
+                        error = R.string.invalid_username_not_exists;
                     } else if (e instanceof FirebaseTooManyRequestsException) {
                         error = R.string.error_too_many_request;
                     } else {
