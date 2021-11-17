@@ -293,7 +293,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
     private HistoryLoggedInUser fetchHistoryUser(FirebaseUser user) {
         var uri = user.getPhotoUrl();
-        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
+        var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : null;
 
         var signInProvider = user.getProviderData()
                 .stream()
