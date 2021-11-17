@@ -127,7 +127,7 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
                     .load(photoUrl)
                     .placeholder(placeHolder)
                     .error(ContextCompat.getDrawable(context, R.drawable.ic_account_undefined))
-                    .fallback(ContextCompat.getDrawable(context, R.drawable.ic_account_undefined))
+                    .fallback(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
                     .centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
