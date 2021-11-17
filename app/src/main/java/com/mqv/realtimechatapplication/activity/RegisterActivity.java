@@ -18,7 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.RegisterViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityRegisterBinding;
@@ -121,9 +120,6 @@ public class RegisterActivity extends BaseActivity<RegisterViewModel, ActivityRe
             if (result.getStatus() == NetworkStatus.LOADING) {
                 startLoadingDialog();
             } else if (result.getStatus() == NetworkStatus.SUCCESS) {
-
-                FirebaseAuth.getInstance().signOut();
-
                 finishLoadingDialog();
 
                 Toast.makeText(this, result.getSuccess(), Toast.LENGTH_SHORT).show();

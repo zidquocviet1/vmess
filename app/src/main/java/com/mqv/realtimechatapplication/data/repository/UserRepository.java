@@ -21,6 +21,10 @@ public interface UserRepository {
      * */
     Observable<ApiResponse<User>> fetchUserFromRemote(@Nullable String uid);
 
+    Observable<ApiResponse<String>> registerEmailAndPassword(@NonNull String email,
+                                                             @NonNull String password,
+                                                             @NonNull String displayName);
+
     void editUser(@NonNull User updateUser,
                   @NonNull FirebaseUser user,
                   Consumer<Observable<ApiResponse<User>>> onAuthSuccess,

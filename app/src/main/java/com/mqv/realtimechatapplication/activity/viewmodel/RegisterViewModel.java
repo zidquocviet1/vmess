@@ -5,31 +5,38 @@ import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator
 import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isPasswordValid;
 import static com.mqv.realtimechatapplication.ui.validator.RegisterFormValidator.isRePasswordValid;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthUserCollisionException;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.ui.validator.LoginRegisterValidationResult;
 import com.mqv.realtimechatapplication.ui.validator.RegisterForm;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.net.ConnectException;
+import java.net.HttpURLConnection;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.lifecycle.HiltViewModel;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
+@HiltViewModel
 public class RegisterViewModel extends ViewModel {
     private final MutableLiveData<LoginRegisterValidationResult> registerValidationResult = new MutableLiveData<>();
     private final MutableLiveData<Result<Integer>> registerResult = new MutableLiveData<>();
-    private final ExecutorService registerExecutor = Executors.newSingleThreadExecutor();
-    private static final int SIMULATION_LOADING_TIME = 2000;
+    private final UserRepository repository;
+    private final CompositeDisposable cd;
 
-    public RegisterViewModel() {
+    @Inject
+    public RegisterViewModel(UserRepository repository) {
+        this.repository = repository;
+        this.cd = new CompositeDisposable();
     }
 
     public LiveData<LoginRegisterValidationResult> getRegisterValidationResult() {
@@ -56,35 +63,26 @@ public class RegisterViewModel extends ViewModel {
     }
 
     public void createUserWithEmailAndPassword(String email, String password, String displayName) {
-        registerResult.postValue(Result.Loading());
+        Disposable disposable = repository.registerEmailAndPassword(email, password, displayName)
+                                          .doOnSubscribe(d -> {
+                                              if (!d.isDisposed()) registerResult.postValue(Result.Loading());
+                                          })
+                                          .subscribeOn(Schedulers.io())
+                                          .observeOn(AndroidSchedulers.mainThread())
+                                          .subscribe(response -> {
+                                              if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                                                  registerResult.postValue(Result.Success(R.string.msg_register_successfully));
+                                              } else {
+                                                  registerResult.postValue(Result.Fail(R.string.error_auth_email_in_use));
+                                              }
+                                          }, t -> {
+                                              if (t instanceof ConnectException) {
+                                                  registerResult.postValue(Result.Fail(R.string.error_network_connection));
+                                              } else {
+                                                  registerResult.postValue(Result.Fail(R.string.error_connect_server_fail));
+                                              }
+                                          });
 
-        FirebaseAuth.getInstance()
-                .createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(registerExecutor, task -> {
-                    if (task.isSuccessful()) {
-                        var result = task.getResult();
-                        if (result != null) {
-                            var user = result.getUser();
-                            if (user != null) {
-                                var profileChangeRequest = new UserProfileChangeRequest.Builder()
-                                        .setDisplayName(displayName)
-                                        .build();
-                                user.updateProfile(profileChangeRequest);
-
-                                new Handler(Looper.getMainLooper()).postDelayed(() ->
-                                        registerResult.postValue(Result.Success(R.string.msg_register_successfully)), SIMULATION_LOADING_TIME);
-                            }
-                        }
-                    } else {
-                        var e = task.getException();
-                        if (e instanceof FirebaseAuthUserCollisionException) {
-                            new Handler(Looper.getMainLooper()).postDelayed(() ->
-                                    registerResult.postValue(Result.Fail(R.string.error_auth_email_in_use)), SIMULATION_LOADING_TIME);
-                        } else {
-                            new Handler(Looper.getMainLooper()).postDelayed(() ->
-                                    registerResult.postValue(Result.Fail(R.string.error_create_user_not_complete)), SIMULATION_LOADING_TIME);
-                        }
-                    }
-                });
+        cd.add(disposable);
     }
 }

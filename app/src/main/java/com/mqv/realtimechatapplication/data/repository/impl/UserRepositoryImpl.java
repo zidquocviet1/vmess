@@ -92,6 +92,13 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Observable<ApiResponse<String>> registerEmailAndPassword(@NonNull String email,
+                                                                    @NonNull String password,
+                                                                    @NonNull String displayName) {
+        return userService.registerEmailAndPassword(email, password, displayName);
+    }
+
+    @Override
     public void editUser(@NonNull User updateUser,
                          @NonNull FirebaseUser user,
                          Consumer<Observable<ApiResponse<User>>> onAuthSuccess,

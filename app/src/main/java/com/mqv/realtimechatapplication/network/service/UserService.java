@@ -22,6 +22,12 @@ public interface UserService {
     Observable<ApiResponse<User>> loginWithToken(@Header(Const.AUTHORIZATION) String token,
                                                  @Header(Const.AUTHORIZER) String authorizer);
 
+    @POST(value = "user/register")
+    Observable<ApiResponse<String>> registerEmailAndPassword(@Query("email") String email,
+                                                             @Query("password") String password,
+                                                             @Query("displayName") String displayName);
+
+
     @POST(value = "user/fcm_token")
     Observable<ApiResponse<Object>> sendFcmTokenToServer(@Header(Const.AUTHORIZATION) String token,
                                                          @Header(Const.AUTHORIZER) String authorizer,
