@@ -129,10 +129,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
             if (conversation == null)
                 return;
 
-            int index = mConversationList.indexOf(conversation);
-
-            mConversationList.set(index, conversation);
-            mConversationAdapter.notifyItemChanged(index, "last_chat");
+            onConversationUpdate(conversation);
         });
 
         mViewModel.getRefreshConversationResult().observe(this, result -> {
@@ -148,9 +145,35 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
                     Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
                     break;
                 case SUCCESS:
+                    List<Conversation> freshConversations = result.getSuccess();
+
+                    if (freshConversations != null) {
+                        mConversationList.removeAll(freshConversations);
+                        if (!freshConversations.isEmpty()) {
+                            mConversationList.addAll(0, freshConversations);
+                        }
+                        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+                    }
                 case TERMINATE:
                     mBinding.swipeMessages.setRefreshing(false);
                     break;
+            }
+        });
+
+        mViewModel.getNewChatConversation().observe(this, chat -> {
+            if (chat != null) {
+                mConversationList.stream()
+                        .filter(c -> c.getId().equals(chat.getConversationId()))
+                        .findFirst()
+                        .ifPresent(c2 -> {
+                            Conversation conversation = new Conversation(c2);
+                            List<Chat> chats = conversation.getChats();
+
+                            if (!chats.contains(chat)) {
+                                chats.add(chat);
+                                onConversationUpdate(conversation);
+                            }
+                        });
             }
         });
     }
@@ -231,6 +254,29 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
         dialog.show(requireActivity().getSupportFragmentManager(), null);
     }
 
+    private void onConversationUpdate(Conversation updatedConversation) {
+        int index = mConversationList.indexOf(updatedConversation);
+
+        if (index < 0 || index > mConversationList.size()) return;
+
+        // Get the to check last chat and sort by the last chat
+        List<Conversation> shouldSortList = mConversationList.subList(0, index);
+
+        if (shouldSortList.isEmpty()) {
+            mConversationList.set(0, updatedConversation);
+        } else {
+            shouldSortList.add(updatedConversation);
+            List<Conversation> sortedList = shouldSortList.stream()
+                                                          .sorted((o1, o2) -> o2.getLastChat()
+                                                                  .getTimestamp()
+                                                                  .compareTo(o1.getLastChat().getTimestamp()))
+                                                          .collect(Collectors.toList());
+            mConversationList.removeAll(sortedList);
+            mConversationList.addAll(0, sortedList);
+        }
+        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+    }
+
     @Override
     public void onArchive(Conversation conversation) {
         mConversationList.remove(conversation);
@@ -272,5 +318,37 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     @Override
     public void onAddMember(Conversation conversation) {
 
+    }
+
+    @Override
+    public void onNewConversationReceive(Conversation conversation) {
+        mViewModel.submitConversation(conversation);
+        isNewConversationAdded = true;
+    }
+
+    @Override
+    public void onDeleteConversation(String unFriendUserId) {
+        User user = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
+        mViewModel.submitRemoveConversation(user.getUid(), unFriendUserId);
+    }
+
+    @Override
+    public void onConversationNewMessage(String newMessageId, Conversation conversation) {
+        List<String> chatIdList = conversation.getChats()
+                                              .stream()
+                                              .map(Chat::getId)
+                                              .collect(Collectors.toList());
+
+        if (!chatIdList.contains(newMessageId)) {
+            // Reload conversation from remote
+            mViewModel.fetchChatRemoteById(newMessageId);
+        } else {
+            onConversationUpdate(conversation);
+        }
+    }
+
+    private void removeConversationAdapterUI(Conversation conversation) {
+        mConversationList.remove(conversation);
+        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
     }
 }
