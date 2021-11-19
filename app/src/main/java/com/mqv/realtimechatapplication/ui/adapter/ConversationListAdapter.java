@@ -36,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -115,12 +116,14 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         private final int mTextUnreadColor;
         private final int mDefaultTextViewColor;
 
-        private static final String TOO_LONG_TEXT_SUFFIX = "...";
-        private static final String WEEK_PATTERN = "EEE hh:mm a";
-        private static final String MONTH_PATTERN = "MMM dd hh:mm a";
+        private static final String DAY_PATTERN = "hh:mm a";
+        private static final String WEEK_PATTERN = "EEE";
+        private static final String MONTH_PATTERN = "MMM dd";
+        private static final String YEAR_PATTERN = "MMM dd, yyyy";
 
-        private static final int MAX_CONTENT_LENGTH = 30;
-        private static final int MAX_TITLE_LENGTH = 30;
+        private static final int MONTH_INTERVAL = 6;
+        private static final int WEEK_INTERVAL = 1;
+        private static final int DAY_INTERVAL = 1;
 
         public ConversationViewHolder(@NonNull View itemView,
                                       Context context,
@@ -224,15 +227,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                 }
                 textContent.append(recentChat.getContent());
             }
-
-            if (textContent.length() >= MAX_CONTENT_LENGTH) {
-                int suffixSize = TOO_LONG_TEXT_SUFFIX.length();
-
-                textContent = new StringBuilder(textContent
-                        .substring(0, MAX_CONTENT_LENGTH - (suffixSize + 1))
-                        .concat(TOO_LONG_TEXT_SUFFIX));
-            }
-
             mBinding.textContentConversation.setText(textContent);
         }
 
@@ -335,28 +329,14 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             var now = LocalDateTime.now();
 
             var day = ChronoUnit.DAYS.between(from, now);
+            var week = ChronoUnit.WEEKS.between(from, now);
+            var month = ChronoUnit.MONTHS.between(from, now);
+            var defaultLocale = Locale.getDefault();
 
-            if (day < 1) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return arr[1] + " " + arr[2];
-            }
-
-            if (day == 1) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_yesterday, arr[1] + " " + arr[2]);
-            }
-
-            if (day <= 7) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_week, arr[0], arr[1] + " " + arr[2]);
-            } else {
-                var arr = from.format(DateTimeFormatter.ofPattern(MONTH_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_month, arr[0], arr[1], arr[2] + " " + arr[3]);
-            }
+            if (month >= MONTH_INTERVAL) return from.format(DateTimeFormatter.ofPattern(YEAR_PATTERN, defaultLocale));
+            if (week >= WEEK_INTERVAL) return from.format(DateTimeFormatter.ofPattern(MONTH_PATTERN, defaultLocale));
+            if (day < DAY_INTERVAL) return from.format(DateTimeFormatter.ofPattern(DAY_PATTERN, defaultLocale));
+            return from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN, defaultLocale));
         }
     }
 }
