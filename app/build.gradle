@@ -18,6 +18,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "API_URL", "\"https://192.168.100.15/api/v1\""
+        buildConfigField "String", "SERVER_URL", "\"https://192.168.100.15\""
     }
 
     buildTypes {
