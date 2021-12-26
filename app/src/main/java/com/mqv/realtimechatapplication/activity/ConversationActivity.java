@@ -81,6 +81,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private static final String EXTRA_CONVERSATION = "conversation";
     private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
+    private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
 
     private final List<Chat> mChatList = new ArrayList<>();
     private List<Chat> mConversationChatList;
@@ -428,7 +429,19 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 }
             }
         });
-        mBinding.buttonScrollToBottom.setOnClickListener(v -> mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1));
+        mBinding.buttonScrollToBottom.setOnClickListener(v -> {
+            LinearLayoutManager llm = (LinearLayoutManager) mBinding.recyclerChatList.getLayoutManager();
+
+            if (llm == null) return;
+
+            int position = llm.findLastVisibleItemPosition();
+
+            if (mChatList.size() - position >= NUM_ITEM_TO_SCROLL_FAST_THRESHOLD) {
+                mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
+            } else {
+                mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1);
+            }
+        });
     }
 
     private void addNewChatToAdapter(Chat chat) {
@@ -491,6 +504,9 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+
+                if (mChatList.size() <= 2)
+                    return;
 
                 int scrollDirection = -1; // Negative for scrolling up and positive for down
 
