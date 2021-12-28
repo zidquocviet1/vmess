@@ -4,6 +4,7 @@ import static androidx.room.OnConflictStrategy.IGNORE;
 import static androidx.room.OnConflictStrategy.REPLACE;
 
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Transaction;
@@ -25,10 +26,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public abstract class ConversationDao {
+    @Query("select * from conversation co \n" +
+            "join chat ch on ch.chat_conversation_id = co.conversation_id")
+    public abstract Flowable<Map<Conversation, List<Chat>>> observe();
+
     @Insert(onConflict = REPLACE)
     public abstract Completable saveAll(List<Conversation> data);
 
@@ -100,8 +106,16 @@ public abstract class ConversationDao {
         });
     }
 
-    @Query("select * from Conversation where conversation_status = :status")
-    public abstract Single<List<Conversation>> fetchAllByStatus(ConversationStatusType status);
+    @Query(" select conversation_id, conversation_participants_id, conversation_status, conversation_type, conversation_creation_time \n" +
+           " from conversation \n" +
+           " inner join chat \n" +
+           " on conversation_id = chat_conversation_id \n" +
+           " where conversation_status = :status\n" +
+           " group by conversation_id \n" +
+           " order by max(chat.chat_timestamp) desc\n" +
+           " limit :size" +
+           " offset :page")
+    public abstract Single<List<Conversation>> fetchAllByStatus(ConversationStatusType status, int page, int size);
 
     @Query("select * from conversation co \n" +
             "join chat ch on ch.chat_conversation_id = co.conversation_id \n" +
@@ -130,6 +144,9 @@ public abstract class ConversationDao {
     @Query("delete from Conversation where conversation_id not in (:conversationListId) and conversation_status = :status")
     public abstract Completable deleteAll(List<String> conversationListId, ConversationStatusType status);
 
+    @Delete
+    public abstract Completable delete(Conversation conversation);
+
     @Transaction
     public void deleteNormalByParticipantId(String userId, String otherUserId) {
         List<Conversation> conversations = fetchAll().stream()
@@ -146,5 +163,22 @@ public abstract class ConversationDao {
                 delete(c.getId());
             }
         });
+    }
+
+    public Completable markConversationAsInbox(Conversation conversation) {
+        return markConversationStatusChange(conversation, ConversationStatusType.INBOX);
+    }
+
+    public Completable markConversationAsArchived(Conversation conversation) {
+        return markConversationStatusChange(conversation, ConversationStatusType.ARCHIVED);
+    }
+
+    public Completable markConversationAsRequest(Conversation conversation) {
+        return markConversationStatusChange(conversation, ConversationStatusType.REQUEST);
+    }
+
+    public Completable markConversationStatusChange(Conversation conversation, ConversationStatusType status) {
+        conversation.setStatus(status);
+        return update(conversation);
     }
 }

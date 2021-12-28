@@ -10,7 +10,6 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
-import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
@@ -32,9 +31,10 @@ public interface ConversationService {
     Observable<ApiResponse<Conversation>> findNormalByParticipantId(@Header(AUTHORIZATION) String token,
                                                                     @Query("id") String otherId);
 
-    @PUT("conversation/archive")
-    Observable<ApiResponse<Conversation>> makeConversationArchive(@Header(AUTHORIZATION) String token,
-                                                                  @Body Conversation conversation);
+    @PUT("conversation/change_status/{id}")
+    Observable<ApiResponse<Conversation>> requestChangeConversationStatus(@Header(AUTHORIZATION) String token,
+                                                                          @Path("id") String conversationId,
+                                                                          @Query("status") int ordinal);
 
     @GET("conversation/find_by_id")
     Single<ApiResponse<Conversation>> findById(@Header(AUTHORIZATION) String token,

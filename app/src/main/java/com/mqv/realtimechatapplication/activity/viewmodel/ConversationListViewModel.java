@@ -82,7 +82,7 @@ public class ConversationListViewModel extends ViewModel {
         conversation.setStatus(type);
 
         conversationRepository.changeConversationStatus(conversation)
-                              .andThen(conversationRepository.changeConversationStatusRemote(conversation))
+                              .andThen(conversationRepository.changeConversationStatusRemote(conversation.getId(), type.ordinal()))
                               .subscribeOn(Schedulers.io())
                               .observeOn(Schedulers.io())
                               .onErrorComplete()
@@ -102,6 +102,10 @@ public class ConversationListViewModel extends ViewModel {
     }
 
     public void ignore(Conversation conversation) {
+
+    }
+
+    public void loadMore(int page, ConversationStatusType statusType) {
 
     }
 

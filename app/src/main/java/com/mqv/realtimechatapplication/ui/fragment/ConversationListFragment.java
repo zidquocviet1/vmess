@@ -12,18 +12,22 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
 import com.mqv.realtimechatapplication.activity.br.ConversationBroadcastReceiver;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
+import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
@@ -36,9 +40,12 @@ import com.mqv.realtimechatapplication.util.RingtoneUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding> implements ConversationDialogFragment.ConversationOptionListener {
-    private final List<Conversation> mConversationList = new ArrayList<>();
+public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>
+        implements ConversationDialogFragment.ConversationOptionListener,
+                   ConversationBroadcastReceiver.OnConversationListener {
+    private List<Conversation> mConversationList = new ArrayList<>();
 
     private ConversationListAdapter mConversationAdapter;
     private RankUserConversationAdapter mRankUserAdapter;
@@ -46,6 +53,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     private boolean isNewConversationAdded = false;
 
     private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
+    private static final String ACTION_NEW_CONVERSATION = "com.mqv.tac.NEW_CONVERSATION";
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -62,26 +70,10 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ConversationBroadcastReceiver.OnConversationListener listener = new ConversationBroadcastReceiver.OnConversationListener() {
-            @Override
-            public void onNewConversationReceive(Conversation conversation) {
-                mViewModel.submitConversation(conversation);
-
-                isNewConversationAdded = true;
-            }
-
-            @Override
-            public void onDeleteConversation(String unFriendUserId) {
-                User user = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
-
-                mViewModel.submitRemoveConversation(user.getUid(), unFriendUserId);
-            }
-        };
-
         // Load more conversation when the user is current this stage. And got accepted friend request
-        BroadcastReceiver newConversationReceiver = new ConversationBroadcastReceiver(listener);
+        BroadcastReceiver newConversationReceiver = new ConversationBroadcastReceiver(this);
 
-        requireContext().registerReceiver(newConversationReceiver, new IntentFilter("com.mqv.tac.NEW_CONVERSATION"));
+        requireContext().registerReceiver(newConversationReceiver, new IntentFilter(ACTION_NEW_CONVERSATION));
     }
 
     @Override
@@ -115,12 +107,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
         mViewModel.getInboxConversation().observe(this, inbox -> {
             if (inbox != null) {
-                mConversationList.clear();
-
-                if (!inbox.isEmpty()) {
-                    mConversationList.addAll(inbox);
-                }
-
+                mConversationList = inbox;
                 mConversationAdapter.submitList(new ArrayList<>(mConversationList));
             }
         });
@@ -175,6 +162,14 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
                             }
                         });
             }
+        });
+
+        mViewModel.getConversationListObserver().observe(this, updatedList -> {
+            if (updatedList == null) return;
+
+            mConversationList.removeAll(updatedList);
+            mConversationList.addAll(updatedList);
+            mConversationAdapter.submitList(new ArrayList<>(mConversationList));
         });
     }
 
@@ -241,9 +236,13 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
                 Intent intent = result.getData();
 
                 if (intent != null) {
-                    Conversation updated = intent.getParcelableExtra("conversation");
+                    Conversation updated = intent.getParcelableExtra(ConversationActivity.EXTRA_CONVERSATION);
+                    boolean isNewChatAdded = intent.getBooleanExtra(ConversationActivity.EXTRA_NEW_CHAT_ADDED, false);
+                    boolean isSeenChat = intent.getBooleanExtra(ConversationActivity.EXTRA_SEEN_CHAT, false);
 
-                    mViewModel.fetchCachedConversation(updated);
+//                    mViewModel.fetchCachedConversation(updated);
+                    mConversationList.set(mConversationList.indexOf(updated), updated);
+                    mConversationAdapter.submitList(new ArrayList<>(mConversationList));
                 }
             }
         });
@@ -279,15 +278,24 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     @Override
     public void onArchive(Conversation conversation) {
-        mConversationList.remove(conversation);
-        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
-
+        removeConversationAdapterUI(conversation);
         mViewModel.changeConversationStatusType(conversation, ConversationStatusType.ARCHIVED);
     }
 
     @Override
     public void onDelete(Conversation conversation) {
-
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.msg_delete_conversation_title)
+                .setMessage(R.string.msg_delete_conversation_message)
+                .setPositiveButton(R.string.action_delete, (dialog, which) -> {
+                    dialog.dismiss();
+                    removeConversationAdapterUI(conversation);
+                    mViewModel.delete(conversation);
+                })
+                .setNegativeButton(R.string.action_cancel, (dialog, which) -> dialog.dismiss())
+                .setBackground(ContextCompat.getDrawable(requireContext(), R.drawable.background_alert_dialog_corner_radius))
+                .create()
+                .show();
     }
 
     @Override
@@ -334,17 +342,44 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
     @Override
     public void onConversationNewMessage(String newMessageId, Conversation conversation) {
-        List<String> chatIdList = conversation.getChats()
-                                              .stream()
-                                              .map(Chat::getId)
-                                              .collect(Collectors.toList());
+        // test
+        mViewModel.fetchChatRemoteById(newMessageId);
 
-        if (!chatIdList.contains(newMessageId)) {
-            // Reload conversation from remote
-            mViewModel.fetchChatRemoteById(newMessageId);
-        } else {
-            onConversationUpdate(conversation);
-        }
+//        List<String> chatIdList = conversation.getChats()
+//                                              .stream()
+//                                              .map(Chat::getId)
+//                                              .collect(Collectors.toList());
+//
+//        if (!chatIdList.contains(newMessageId)) {
+//            // Reload conversation from remote
+//            mViewModel.fetchChatRemoteById(newMessageId);
+//        } else {
+//            onConversationUpdate(conversation);
+//        }
+    }
+
+    @Override
+    public void onUnarchiveConversation(Conversation conversation) {
+        mConversationList.add(conversation);
+        List<Conversation> sortedList = sortConversationList(mConversationList);
+
+        mConversationList.clear();
+        mConversationList.addAll(sortedList);
+        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+    }
+
+    /*
+    * Sort new list with the last chat recent first
+    * */
+    private List<Conversation> sortConversationList(List<Conversation> oldList) {
+        if (oldList == null)
+            return new ArrayList<>();
+
+        return oldList.stream()
+                      .sorted((o1, o2) -> o2.getLastChat()
+                              .getTimestamp()
+                              .compareTo(o1.getLastChat().getTimestamp()))
+                      .collect(Collectors.toList());
     }
 
     private void removeConversationAdapterUI(Conversation conversation) {

@@ -28,6 +28,7 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         this.user    = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> user = firebaseAuth.getCurrentUser());
+    }
+
+    @Override
+    public Flowable<Map<Conversation, List<Chat>>> conversationListUpdateObserve() {
+        return dao.observe();
     }
 
     @Override
@@ -227,9 +233,9 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Observable<ApiResponse<Conversation>> changeConversationStatusRemote(Conversation conversation) {
+    public Observable<ApiResponse<Conversation>> changeConversationStatusRemote(String conversationId, int ordinal) {
         return getBearerTokenObservable()
-                .flatMap(token -> service.makeConversationArchive(token, conversation))
+                .flatMap(token -> service.requestChangeConversationStatus(token, conversationId, ordinal))
                 .subscribeOn(Schedulers.io());
     }
 
