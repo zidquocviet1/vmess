@@ -8,4 +8,12 @@ public class Logging {
     public static void show(String msg){
         Log.d(TAG, msg);
     }
+
+    public static void debug(String tag, String msg) {
+        Log.d(tag, msg);
+    }
+
+    public static void info(String tag, String msg) {
+        Log.i(tag, msg);
+    }
 }
