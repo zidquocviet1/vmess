@@ -36,7 +36,7 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
 public class WebSocketConnection extends WebSocketListener {
-    private static final String TAG = WebSocketConnection.class.getCanonicalName();
+    private static final String TAG = WebSocketConnection.class.getSimpleName();
 
     private final String                                    wsUri;
     private final Gson                                      gson;
@@ -51,14 +51,13 @@ public class WebSocketConnection extends WebSocketListener {
         String uri = BuildConfig.SERVER_URL.replace("https://", "wss://")
                                            .replace("http://", "ws://");
 
-        this.wsUri          = uri + "/v1/websocket?conversationId=%s";
+        this.wsUri          = uri + "/v1/websocket";
         this.gson           = gson;
         this.webSocketState = BehaviorSubject.createDefault(DISCONNECTED);
         this.okHttpClient   = okHttpClient;
     }
 
-    public Observable<WebSocketConnectionState> connect(@NonNull FirebaseUser user,
-                                                        @NonNull String conversationId) {
+    public synchronized Observable<WebSocketConnectionState> connect(@NonNull FirebaseUser user) throws InterruptedException {
         Logging.debug(TAG, "connect()");
 
         if (client == null) {
@@ -69,10 +68,9 @@ public class WebSocketConnection extends WebSocketListener {
                     } else {
                         String token        = result.getToken();
                         String bearerToken  = Const.PREFIX_TOKEN + token;
-                        String filledUri    = String.format(wsUri, conversationId);
 
                         Request.Builder requestBuilder = new Request.Builder()
-                                                                    .url(filledUri)
+                                                                    .url(wsUri)
                                                                     .addHeader(HttpHeaders.AUTHORIZATION, bearerToken);
 
                         webSocketState.onNext(CONNECTING);
@@ -84,7 +82,7 @@ public class WebSocketConnection extends WebSocketListener {
         return webSocketState;
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         Logging.debug(TAG, "disconnect()");
 
         if (client != null) {
@@ -92,9 +90,26 @@ public class WebSocketConnection extends WebSocketListener {
             client = null;
             webSocketState.onNext(DISCONNECTING);
         }
+
+        notifyAll();
     }
 
-    public WebSocketRequestMessage readRequest() throws IOException, TimeoutException {
+    public boolean isDead() {
+        return this.client == null;
+    }
+
+    public synchronized WebSocketRequestMessage readRequest(long timeout) throws IOException, TimeoutException, InterruptedException {
+        if (client == null) {
+            throw new IOException("Connection is closed!");
+        }
+
+        // Make the thread wait for new message coming in.
+        long startTime = System.currentTimeMillis();
+
+        while (client != null && incomingRequests.isEmpty() && elapsedTime(startTime) < timeout) {
+            wait(Math.max(1, timeout - elapsedTime(startTime)));
+        }
+
         if (client == null) {
             throw new IOException("No connection!");
         } else if (incomingRequests.isEmpty()) {
@@ -104,7 +119,7 @@ public class WebSocketConnection extends WebSocketListener {
         }
     }
 
-    public Single<WebSocketResponse> sendRequest(WebSocketRequestMessage request) throws IOException{
+    public synchronized Single<WebSocketResponse> sendRequest(WebSocketRequestMessage request) throws IOException{
         if (client == null) {
             throw new IOException("No connection!");
         }
@@ -123,7 +138,7 @@ public class WebSocketConnection extends WebSocketListener {
                      .timeout(10, TimeUnit.SECONDS, Schedulers.io());
     }
 
-    public void sendResponse(WebSocketResponseMessage response) throws IOException {
+    public synchronized void sendResponse(WebSocketResponseMessage response) throws IOException {
         if (client == null) {
             throw new IOException("No connection!");
         }
@@ -135,8 +150,19 @@ public class WebSocketConnection extends WebSocketListener {
         }
     }
 
+    public synchronized void sendPingMessage() throws IOException {
+        if (client != null) {
+            Logging.debug(TAG, "Sending ping message...");
+            long id = System.currentTimeMillis();
+
+            if (!client.send(id + " hello")) {
+                throw new IOException("Send failed!");
+            }
+        }
+    }
+
     @Override
-    public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
+    public synchronized void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
         if (client != null) {
             Logging.debug(TAG, "onOpen() connected");
             webSocketState.onNext(CONNECTED);
@@ -144,7 +170,7 @@ public class WebSocketConnection extends WebSocketListener {
     }
 
     @Override
-    public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
+    public synchronized void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
         Logging.debug(TAG, "onMessage(): " + text);
 
         WebSocketMessage message = gson.fromJson(text, WebSocketMessage.class);
@@ -160,24 +186,27 @@ public class WebSocketConnection extends WebSocketListener {
                 }
             }
         }
+        notifyAll();
     }
 
     @Override
-    public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
+    public synchronized void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         Logging.debug(TAG, "onClosed()");
         webSocketState.onNext(DISCONNECTED);
+
         cleanupAfterShutdown();
+        notifyAll();
     }
 
     @Override
-    public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
+    public synchronized void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
         Logging.debug(TAG, "onClosing()");
         webSocketState.onNext(DISCONNECTING);
         webSocket.close(1000, "OK");
     }
 
     @Override
-    public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
+    public synchronized void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
         Logging.debug(TAG, "onFailure(): " + t);
 
         if (response != null && (response.code() == 401 || response.code() == 403)) {
@@ -187,6 +216,7 @@ public class WebSocketConnection extends WebSocketListener {
         }
 
         cleanupAfterShutdown();
+        notifyAll();
     }
 
     private void cleanupAfterShutdown() {
@@ -203,6 +233,10 @@ public class WebSocketConnection extends WebSocketListener {
             client.close(1000, "OK");
             client = null;
         }
+    }
+
+    private long elapsedTime(long startTime) {
+        return System.currentTimeMillis() - startTime;
     }
 
     private static class OutgoingRequest {

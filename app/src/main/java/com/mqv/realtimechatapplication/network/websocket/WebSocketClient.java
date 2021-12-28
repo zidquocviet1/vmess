@@ -25,7 +25,6 @@ public class WebSocketClient {
     private CompositeDisposable webSocketDisposable;
     private final BehaviorSubject<WebSocketConnectionState> webSocketState;
 
-    private String  conversationId;
     private boolean canConnect;
 
     public WebSocketClient(OkHttpClient httpClient, Gson gson) {
@@ -40,17 +39,16 @@ public class WebSocketClient {
         return webSocketState;
     }
 
-    public void connect(String conversationId) {
-        this.canConnect     = true;
-        this.conversationId = conversationId;
+    public synchronized void connect() {
+        this.canConnect = true;
         try {
             getWebSocket();
-        } catch (WebSocketUnavailableException e) {
+        } catch (WebSocketUnavailableException | InterruptedException e) {
             throw new AssertionError(e);
         }
     }
 
-    public void disconnect() {
+    public synchronized void disconnect() {
         canConnect = false;
 
         if (webSocket != null) {
@@ -64,7 +62,7 @@ public class WebSocketClient {
         }
     }
 
-    private WebSocketConnection getWebSocket() throws WebSocketUnavailableException {
+    private synchronized WebSocketConnection getWebSocket() throws WebSocketUnavailableException, InterruptedException {
         if (!canConnect || user == null) {
             throw new WebSocketUnavailableException();
         }
@@ -75,7 +73,7 @@ public class WebSocketClient {
             webSocket           = new WebSocketConnection(okHttpClient, gson);
             webSocketDisposable = new CompositeDisposable();
 
-            Disposable disposable = webSocket.connect(user, conversationId)
+            Disposable disposable = webSocket.connect(user)
                                              .subscribeOn(Schedulers.computation())
                                              .observeOn(Schedulers.computation())
                                              .subscribe(webSocketState::onNext);
@@ -87,25 +85,36 @@ public class WebSocketClient {
     public Single<WebSocketResponse> sendRequest(WebSocketRequestMessage requestMessage) {
         try {
             return getWebSocket().sendRequest(requestMessage);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             return Single.error(e);
         }
     }
 
-    public WebSocketResponse readMessage(long timeoutMillis) throws IOException, TimeoutException, InterruptedException {
-        WebSocketRequestMessage  request  = getWebSocket().readRequest(timeoutMillis);
-        WebSocketResponseMessage response = createWebSocketResponse(request);
-
+    public void sendPingMessage() {
         try {
-            // Decrypt the request message and return the readable message
-            return new WebSocketResponse(HttpURLConnection.HTTP_OK, request.getBody());
-        } finally {
-            // Acknowledge the request message
-            getWebSocket().sendResponse(response);
+            getWebSocket().sendPingMessage();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    private WebSocketResponseMessage createWebSocketResponse(WebSocketRequestMessage request) {
+    public WebSocketResponse readMessage(long timeoutMillis)
+            throws IOException, TimeoutException, InterruptedException {
+        while (true) {
+            WebSocketRequestMessage  request  = getWebSocket().readRequest(timeoutMillis);
+            WebSocketResponseMessage response = createWebSocketResponse(request);
+
+            try {
+                // Decrypt the request message and return the readable message
+                return new WebSocketResponse(HttpURLConnection.HTTP_OK, request.getBody());
+            } finally {
+                // Acknowledge the request message
+                getWebSocket().sendResponse(response);
+            }
+        }
+    }
+
+    private static WebSocketResponseMessage createWebSocketResponse(WebSocketRequestMessage request) {
         return new WebSocketResponseMessage(request.getId(), HttpURLConnection.HTTP_OK, "OK", request.getBody());
     }
 }
