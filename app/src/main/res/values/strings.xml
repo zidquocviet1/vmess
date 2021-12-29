@@ -28,6 +28,7 @@
     <string name="label_all_people">All People</string>
     <string name="label_new_message">New Message</string>
     <string name="label_conversation_archive">Archive</string>
+    <string name="label_conversation_unarchive">Unarchive</string>
     <string name="label_conversation_delete">Delete</string>
     <string name="label_conversation_mute_notifications">Mute notifications</string>
     <string name="label_conversation_unmute_notifications">Unmute notifications</string>
@@ -46,7 +47,7 @@
     <string name="title_notification">Notification</string>
     <string name="title_active_people">Active people</string>
     <string name="title_conversation_dummy">Conversation Title</string>
-    <string name="title_conversation_timestamp">\u2022 %1$s</string>
+    <string name="title_conversation_timestamp">\u0020 \u2022 %1$s</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
@@ -126,6 +127,7 @@
     <string name="action_edit_profile">Edit Profile</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_edit">Edit</string>
+    <string name="action_delete">Delete</string>
     <string name="action_yes">Yes</string>
     <string name="action_save">Save</string>
     <string name="action_take_photo">Take photo</string>
@@ -178,6 +180,7 @@
     <string name="msg_qr_code">Your <b>QR Code</b> here. Using this code to let people connect with you to make a conversation with each other.</string>
     <string name="msg_friend_request_empty_list">You don\'t have any friend request. Share your <b>Qr Code</b> or <b>Username</b> to make people have accessibility with you.</string>
     <string name="msg_notification_empty_list">You don\'t have any notification.</string>
+    <string name="msg_archived_chats_empty_list">Empty folder... This place will store all the archived chats which you don\'t want to see more.</string>
     <string name="msg_oop_something_when_wrong">Oops! Something when wrong with the server. Try later</string>
     <string name="msg_add_qr_from_gallery">Add code from gallery</string>
     <string name="msg_camera_permission">The app needs access to your camera to run this feature.</string>
@@ -193,6 +196,8 @@
     <string name="msg_notification_yesterday">Yesterday at %1$s</string>
     <string name="msg_notification_month">%1$s %2$s at %3$s</string>
     <string name="msg_owner_chat">You:\u0020</string>
+    <string name="msg_delete_conversation_title">Delete this entire conversation?</string>
+    <string name="msg_delete_conversation_message">Once you delete this conversation, the entire chats will be deleted and it can\'t be undone.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -225,6 +230,7 @@
     <string name="prompt_find_username">Find username</string>
     <string name="prompt_write_message">Write a message...</string>
 
+    <string name="invalid_username_not_exists">The username is not exists.</string>
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_email_exists">This email has exist</string>
     <string name="invalid_password">Password must be >8 characters. Example: Abcdef!1</string>
@@ -251,4 +257,6 @@
     <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
     <string name="key_pref_edit_profile">key_pref_edit_profile</string>
     <string name="key_pref_friend_request">key_pref_friend_request</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
