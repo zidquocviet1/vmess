@@ -25,7 +25,7 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
 
     @Inject
     public ConversationListArchivedViewModel(ConversationRepository repository) {
-        super(repository);
+        super(repository, ARCHIVED);
 
         this.repository             = repository;
         this.archivedChatResult     = new MutableLiveData<>();
@@ -38,7 +38,13 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
         return archivedChatResult;
     }
 
+    public LiveData<List<Conversation>> getListObserver() {
+        return conversationListObserver;
+    }
+
     private void fetchArchivedChat() {
+        archivedChatResult.setValue(Result.Loading());
+
         Consumer<List<Conversation>> onReceiveData = data -> archivedChatResult.setValue(Result.Success(data));
         Consumer<Throwable>          onError       = t -> {
             archivedChatResult.setValue(Result.Fail(R.string.error_authentication_fail));

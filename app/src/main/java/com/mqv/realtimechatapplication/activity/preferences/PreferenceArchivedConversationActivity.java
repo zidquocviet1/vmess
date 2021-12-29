@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.ToolbarActivity;
+import com.mqv.realtimechatapplication.activity.br.ConversationBroadcastReceiver;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListArchivedViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceArchivedChatBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -25,9 +26,9 @@ import java.util.function.BiConsumer;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PreferenceArchivedChatActivity extends ToolbarActivity<ConversationListArchivedViewModel, ActivityPreferenceArchivedChatBinding>
+public class PreferenceArchivedConversationActivity extends ToolbarActivity<ConversationListArchivedViewModel, ActivityPreferenceArchivedChatBinding>
         implements ConversationDialogFragment.ConversationOptionListener {
-    private final List<Conversation> mConversations = new ArrayList<>();
+    private List<Conversation> mConversations = new ArrayList<>();
     private ConversationListAdapter mAdapter;
 
     @Override
@@ -56,17 +57,28 @@ public class PreferenceArchivedChatActivity extends ToolbarActivity<Conversation
         mViewModel.getArchivedChatResult().observe(this, result -> {
             if (result == null) return;
 
-            mBinding.progressBarLoading.setVisibility(result.getStatus() == NetworkStatus.LOADING ? View.VISIBLE : View.GONE);
+            boolean isLoading = result.getStatus() == NetworkStatus.LOADING;
+
+            mBinding.progressBarLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+            mBinding.recyclerViewArchivedChats.setVisibility(isLoading ? View.GONE : View.VISIBLE);
 
             switch (result.getStatus()) {
                 case SUCCESS:
-                    mConversations.clear();
-                    mConversations.addAll(result.getSuccess());
+                    mConversations = result.getSuccess() == null ? new ArrayList<>() : result.getSuccess();
                     mAdapter.submitList(new ArrayList<>(mConversations));
+                    checkDataIsEmpty();
                     break;
                 case ERROR:
                     break;
             }
+        });
+
+        mViewModel.getListObserver().observe(this, list -> {
+            if (list == null) return;
+
+            mConversations = list;
+            mAdapter.submitList(new ArrayList<>(mConversations));
+            checkDataIsEmpty();
         });
     }
 
@@ -98,7 +110,8 @@ public class PreferenceArchivedChatActivity extends ToolbarActivity<Conversation
                             // Change the conversation status to INBOX if updated
                             Conversation updated = intent.getParcelableExtra("conversation");
 
-//                            mViewModel.fetchCachedConversation(updated);
+                            mViewModel.changeConversationStatusType(updated, ConversationStatusType.INBOX);
+                            removeConversationAdapterUI(updated);
                         }
                     }
                 });
@@ -109,11 +122,13 @@ public class PreferenceArchivedChatActivity extends ToolbarActivity<Conversation
     @Override
     public void onUnArchive(Conversation conversation) {
         mViewModel.changeConversationStatusType(conversation, ConversationStatusType.INBOX);
+        removeConversationAdapterUI(conversation);
     }
 
     @Override
     public void onDelete(Conversation conversation) {
-
+        mViewModel.delete(conversation);
+        removeConversationAdapterUI(conversation);
     }
 
     @Override
@@ -144,5 +159,30 @@ public class PreferenceArchivedChatActivity extends ToolbarActivity<Conversation
     @Override
     public void onIgnore(Conversation conversation) {
 
+    }
+
+    private void removeConversationAdapterUI(Conversation conversation) {
+        mConversations.remove(conversation);
+        checkDataIsEmpty();
+        mAdapter.submitList(new ArrayList<>(mConversations));
+    }
+
+    private void checkDataIsEmpty() {
+        if (mConversations.isEmpty()) {
+            mBinding.recyclerViewArchivedChats.setVisibility(View.GONE);
+            mBinding.imageNoData.setVisibility(View.VISIBLE);
+            mBinding.textNoData.setVisibility(View.VISIBLE);
+        } else {
+            mBinding.recyclerViewArchivedChats.setVisibility(View.VISIBLE);
+            mBinding.imageNoData.setVisibility(View.GONE);
+            mBinding.textNoData.setVisibility(View.GONE);
+        }
+    }
+
+    private void sendBroadcastRemoveConversation(Conversation conversation) {
+        Intent intent = new Intent(ConversationBroadcastReceiver.ACTION_NEW_CONVERSATION);
+        intent.putExtra(ConversationBroadcastReceiver.EXTRA_CONVERSATION_DATA, conversation);
+        intent.putExtra(ConversationBroadcastReceiver.KEY_FROM_ARCHIVED, true);
+        sendBroadcast(intent);
     }
 }
