@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Entity(tableName = "chat",
         foreignKeys = { @ForeignKey(entity = Conversation.class,
@@ -74,6 +75,7 @@ public class Chat implements Parcelable {
     @Ignore
     public Chat() {
         // Default no-arguments constructor for Firestore
+        this.id = UUID.randomUUID().toString();
     }
 
     @Ignore
@@ -124,7 +126,7 @@ public class Chat implements Parcelable {
     }
 
     @Ignore
-    public Chat(String id,
+    public Chat(@NonNull String id,
                 String senderId,
                 String content,
                 String conversationId,
@@ -137,6 +139,7 @@ public class Chat implements Parcelable {
         this.status = MessageStatus.SENDING;
         this.type = type;
         this.isUnsent = Boolean.FALSE;
+        this.seenBy = new ArrayList<>();
     }
 
     protected Chat(Parcel in) {
@@ -240,7 +243,7 @@ public class Chat implements Parcelable {
     }
 
     public List<String> getSeenBy() {
-        return seenBy;
+        return seenBy == null ? new ArrayList<>() : seenBy;
     }
 
     public void setSeenBy(List<String> seenBy) {

@@ -11,10 +11,17 @@ import com.mqv.realtimechatapplication.network.model.Chat;
 import java.util.List;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public interface ChatDao {
+    @Query("SELECT * FROM CHAT" +
+            " WHERE chat_conversation_id = :conversationId " +
+            "ORDER BY chat_timestamp DESC " +
+            "LIMIT :size")
+    Flowable<List<Chat>> observe(String conversationId, int size);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable insert(List<Chat> chats);
 
@@ -29,6 +36,9 @@ public interface ChatDao {
            " order by chat_timestamp desc" +
            " limit :size offset (:size * :page)")
     Single<List<Chat>> fetchChatByConversation(String conversationId, int page, int size);
+
+    @Query("select * from chat where chat_id = :id")
+    Single<Chat> findById(String id);
 
     @Update
     Completable update(Chat chat);
