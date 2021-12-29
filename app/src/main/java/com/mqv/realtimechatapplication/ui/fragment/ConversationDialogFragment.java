@@ -1,5 +1,8 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
+import static com.mqv.realtimechatapplication.network.model.type.ConversationStatusType.ARCHIVED;
+import static com.mqv.realtimechatapplication.network.model.type.ConversationStatusType.INBOX;
+
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,11 +25,15 @@ import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 public class ConversationDialogFragment extends BottomSheetDialogFragment {
     private FragmentConversationBottomDialogBinding mBinding;
     private Conversation mConversation;
-    private ConversationOptionListener mListener;
+    private final ConversationOptionListener mListener;
     private static final String EXTRA_CONVERSATION = "extra_conversation";
 
     public interface ConversationOptionListener {
-        void onArchive(Conversation conversation);
+        default void onUnArchive(Conversation conversation) {
+        }
+
+        default void onArchive(Conversation conversation) {
+        }
 
         void onDelete(Conversation conversation);
 
@@ -87,7 +94,13 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             bindNormal();
         }
 
-        bindItem(mBinding.itemArchive, R.string.label_conversation_archive, R.drawable.ic_round_archive);
+        if (mConversation.getStatus() == ARCHIVED) {
+            bindItem(mBinding.itemArchive, R.string.label_conversation_unarchive, R.drawable.ic_round_unarchive);
+        } else if (mConversation.getStatus() == INBOX) {
+            bindItem(mBinding.itemArchive, R.string.label_conversation_archive, R.drawable.ic_round_archive);
+        } else {
+            mBinding.itemArchive.getRoot().setVisibility(View.GONE);
+        }
         bindItem(mBinding.itemDelete, R.string.label_conversation_delete, R.drawable.ic_round_delete);
         bindItem(mBinding.itemMuteNotifications, R.string.label_conversation_mute_notifications, R.drawable.ic_round_notifications_off);
         bindItem(mBinding.itemMarkUnread, R.string.label_conversation_mark_unread, R.drawable.ic_round_mark_email_unread);
@@ -134,7 +147,11 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
 
     private void registerItemClickEvent() {
         mBinding.itemArchive.getRoot().setOnClickListener(v -> {
-            mListener.onArchive(mConversation);
+            if (mConversation.getStatus() == ARCHIVED) {
+                mListener.onUnArchive(mConversation);
+            } else {
+                mListener.onArchive(mConversation);
+            }
             dismiss();
         });
         mBinding.itemDelete.getRoot().setOnClickListener(v -> {
@@ -165,12 +182,5 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             mListener.onIgnore(mConversation);
             dismiss();
         });
-    }
-
-    private void notifyItemClicked(String action) {
-        Bundle data = new Bundle();
-        data.putString("key_action", action);
-        requireActivity().getSupportFragmentManager().setFragmentResult("key_option", data);
-        dismiss();
     }
 }
