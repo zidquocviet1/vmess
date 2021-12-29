@@ -135,7 +135,6 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
     private void showFirebaseUserUi(FirebaseUser user) {
         if (user == null) return;
 
-        //TODO: reformat the url in the develop mode
         var uri = user.getPhotoUrl();
         var url = uri != null ? uri.toString() : null;
 
