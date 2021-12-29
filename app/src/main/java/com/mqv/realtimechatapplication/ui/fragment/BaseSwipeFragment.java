@@ -23,9 +23,13 @@ public abstract class BaseSwipeFragment<V extends ViewModel, B extends ViewBindi
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        srl = getSwipeLayout();
-        srl.setOnRefreshListener(this);
-        srl.setColorSchemeResources(indicatorColorArr);
+        if (this instanceof ConversationListFragment) {
+            getSwipeLayout().setEnabled(false);
+        } else {
+            srl = getSwipeLayout();
+            srl.setOnRefreshListener(this);
+            srl.setColorSchemeResources(indicatorColorArr);
+        }
     }
 
     public void stopRefresh(){
