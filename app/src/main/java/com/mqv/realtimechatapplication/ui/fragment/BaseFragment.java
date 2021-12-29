@@ -20,18 +20,15 @@ public abstract class BaseFragment<V extends ViewModel, B extends ViewBinding> e
 
     public abstract Class<V> getViewModelClass();
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getViewModelClass() != null) {
-            mViewModel = new ViewModelProvider(requireActivity()).get(getViewModelClass());
-        }
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding(inflater, container);
+
+        if (getViewModelClass() != null) {
+            mViewModel = new ViewModelProvider(requireActivity()).get(getViewModelClass());
+        }
+
         return mBinding.getRoot();
     }
 
