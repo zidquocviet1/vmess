@@ -4,6 +4,10 @@
     package="com.mqv.realtimechatapplication">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <uses-feature android:name="android.hardware.camera.any" />
 
@@ -28,10 +32,11 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.RealTimeChatApplication">
+        android:theme="@style/Theme.RealTimeChatApplication"
+        tools:ignore="DataExtractionRules">
         <activity
             android:name=".activity.preferences.PreferenceMessageRequestActivity"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.tac.open.message_request" />
 
@@ -39,7 +44,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.preferences.PreferenceArchivedChatActivity"
+            android:name=".activity.preferences.PreferenceArchivedConversationActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.tac.open.archived_chats" />
@@ -56,6 +61,7 @@
         <activity
             android:name=".activity.ConversationActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".activity.preferences.PreferenceNotificationActivity"
@@ -83,6 +89,10 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.UserActivity" />
         </activity>
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
@@ -181,7 +191,11 @@
         <activity
             android:name=".activity.UserActivity"
             android:exported="true"
-            android:parentActivityName=".activity.MainActivity" />
+            android:parentActivityName=".activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.MainActivity" />
+        </activity>
         <activity
             android:name=".activity.VerifyOtpActivity"
             android:configChanges="orientation"
