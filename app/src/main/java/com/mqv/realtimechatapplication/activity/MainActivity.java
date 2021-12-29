@@ -13,18 +13,15 @@ import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceNotificationActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.ui.data.People;
-import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -143,18 +140,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
     @UiThread
     private void showUserImage(Uri photoUri) {
-        runOnUiThread(() -> {
-            var reformatPhotoUrl = photoUri == null ? null : photoUri.toString().replace("localhost", Const.BASE_IP);
-
-            GlideApp.with(this)
-                    .load(reformatPhotoUrl)
-                    .fallback(R.drawable.ic_round_account)
-                    .error(R.drawable.ic_account_undefined)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(mBinding.imageAvatar);
-        });
+        runOnUiThread(() -> Picture.loadUserAvatar(this, photoUri == null ? null : photoUri.toString()).into(mBinding.imageAvatar));
     }
 
     private void startActivity(Class<?> target) {

@@ -11,14 +11,13 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemNotificationFragmentBinding;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.di.GlideRequests;
 import com.mqv.realtimechatapplication.network.model.Notification;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -129,16 +128,9 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
             mBinding.textTimestamp.setText(convertReadableTimestamp(item.getCreatedDate()));
             mBinding.layoutUnread.setVisibility(item.getHasRead() ? View.GONE : View.VISIBLE);
 
-            var formatUrl = item.getAgentImageUrl() == null ? null :
-                    item.getAgentImageUrl().replace("localhost", Const.BASE_IP);
-
-            mRequest.load(formatUrl)
-                    .fallback(R.drawable.ic_round_account)
-                    .error(R.drawable.ic_account_undefined)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .centerCrop()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(mBinding.imageAvatar);
+            Picture.loadUserAvatar(mContext, item.getAgentImageUrl())
+                   .transition(DrawableTransitionOptions.withCrossFade())
+                   .into(mBinding.imageAvatar);
         }
 
         private String convertReadableTimestamp(LocalDateTime time) {

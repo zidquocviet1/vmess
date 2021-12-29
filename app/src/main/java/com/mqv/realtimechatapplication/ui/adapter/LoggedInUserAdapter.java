@@ -6,20 +6,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.databinding.ItemAddLoggedInUserBinding;
 import com.mqv.realtimechatapplication.databinding.ItemLoggedInUserBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -116,22 +111,7 @@ public class LoggedInUserAdapter extends ListAdapter<HistoryLoggedInUser, Recycl
         }
 
         public void bindTo(HistoryLoggedInUser user, Context context) {
-            var photoUrl = user.getPhotoUrl() == null ? null : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
-
-            var placeHolder = new CircularProgressDrawable(context);
-            placeHolder.setStrokeWidth(5f);
-            placeHolder.setCenterRadius(30f);
-            placeHolder.start();
-
-            GlideApp.with(context)
-                    .load(photoUrl)
-                    .placeholder(placeHolder)
-                    .error(ContextCompat.getDrawable(context, R.drawable.ic_account_undefined))
-                    .fallback(ContextCompat.getDrawable(context, R.drawable.ic_round_account))
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(binding.imageAvatar);
+            Picture.loadUserAvatarWithPlaceHolder(context, user.getPhotoUrl()).into(binding.imageAvatar);
 
             binding.title.setText(user.getDisplayName());
             binding.iconCheck.setVisibility(user.getLogin() ? View.VISIBLE : View.GONE);
