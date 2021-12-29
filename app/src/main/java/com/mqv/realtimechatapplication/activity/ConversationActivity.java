@@ -33,7 +33,6 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityConversationBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -607,16 +606,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     }
 
     private void loadImage(@Nullable String url) {
-        String formattedUrl = url == null ? null : url.replace("localhost", Const.BASE_IP);
-
-        GlideApp.with(this)
-                .load(formattedUrl)
-                .placeholder(Picture.getDefaultCirclePlaceHolder(this))
-                .fallback(R.drawable.ic_round_account)
-                .error(R.drawable.ic_account_undefined)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .circleCrop()
-                .into(mBinding.imageAvatar);
+        Picture.loadUserAvatar(this, url).into(mBinding.imageAvatar);
     }
 
     private void setToolbarTitle(String title) {

@@ -8,17 +8,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.signature.ObjectKey;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.AllPeopleViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityAllPeopleBinding;
 import com.mqv.realtimechatapplication.databinding.DialogPeopleDetailBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.adapter.PeopleAdapter;
 import com.mqv.realtimechatapplication.ui.data.People;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -133,15 +130,7 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
                 .setView(view)
                 .create();
 
-        var url = item.getPhotoUrl() == null ? "" : item.getPhotoUrl().replace("localhost", Const.BASE_IP);
-
-        GlideApp.with(this)
-                .load(url)
-                .centerCrop()
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .signature(new ObjectKey(url))
-                .error(R.drawable.ic_round_account)
-                .into(dialogPeopleDetailBinding.imageAvatar);
+        Picture.loadUserAvatarWithPlaceHolder(this, item.getPhotoUrl()).into(dialogPeopleDetailBinding.imageAvatar);
 
         dialogPeopleDetailBinding.textDisplayName.setText(item.getDisplayName());
         dialogPeopleDetailBinding.testUsername.setText(item.getUsername());

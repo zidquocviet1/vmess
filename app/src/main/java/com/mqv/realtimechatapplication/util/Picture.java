@@ -1,7 +1,11 @@
 package com.mqv.realtimechatapplication.util;
 
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -9,35 +13,70 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.di.GlideRequest;
 
+import javax.annotation.Nullable;
+
 /*
 Util class to load picture with Glide and added some default drawable
 */
 public class Picture {
-    public static GlideRequest defaultUser(Context context, String url) {
-        return GlideApp.with(context)
-                .load(url)
-                .error(R.drawable.ic_account_undefined)
-                .fallback(R.drawable.ic_round_account)
-                .circleCrop()
-                .diskCacheStrategy(DiskCacheStrategy.ALL);
+    private static final String DEFAULT_USER_AVATAR = "user_circle";
+    private static final String RESOURCE_TYPE       = "drawable";
+    private static final int    DEFAULT_LOAD_FAILED = R.color.base_background_color;
+
+    private static Drawable getPngDrawable(Context context) {
+        return ContextCompat.getDrawable(context, getPngDrawableId(context));
     }
 
-    public static GlideRequest defaultUserWithPlaceHolder(Context context, String url) {
-        return GlideApp.with(context)
-                .load(url)
-                .error(R.drawable.ic_account_undefined)
-                .fallback(R.drawable.ic_round_account)
-                .circleCrop()
-                .placeholder(getDefaultCirclePlaceHolder(context))
-                .diskCacheStrategy(DiskCacheStrategy.ALL);
+    private static int getPngDrawableId(Context context) {
+        return context.getResources().getIdentifier(DEFAULT_USER_AVATAR, RESOURCE_TYPE, context.getPackageName());
     }
 
-    public static CircularProgressDrawable getDefaultCirclePlaceHolder(Context context) {
+    // Remove the host name of the photo URL
+    private static String reformatUrl(@Nullable String photoUrl) {
+        return photoUrl == null ? null : photoUrl.replace("localhost", Const.BASE_IP);
+    }
+
+    public static GlideRequest<Drawable> loadUserAvatar(Fragment fragment, @Nullable String url) {
+        Context context = fragment.requireContext();
+
+        return GlideApp.with(context)
+                       .load(reformatUrl(url))
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getPngDrawable(context))
+                       .circleCrop()
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    public static GlideRequest<Drawable> loadUserAvatar(Context context, @Nullable String url) {
+        return GlideApp.with(context)
+                       .load(reformatUrl(url))
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getPngDrawable(context))
+//                       .transition(DrawableTransitionOptions.withCrossFade())
+                       .circleCrop()
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    public static GlideRequest<Drawable> loadUserAvatarWithPlaceHolder(Context context, @Nullable String url) {
+        return GlideApp.with(context)
+                       .load(reformatUrl(url))
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getPngDrawable(context))
+                       .circleCrop()
+                       .placeholder(getDefaultCirclePlaceHolder(context))
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    private static CircularProgressDrawable getDefaultCirclePlaceHolder(Context context) {
         var placeHolder = new CircularProgressDrawable(context);
         placeHolder.setStrokeWidth(5f);
         placeHolder.setCenterRadius(30f);
         placeHolder.start();
 
         return placeHolder;
+    }
+
+    public static Drawable getErrorAvatarLoaded(Context context) {
+        return new ColorDrawable(ContextCompat.getColor(context, DEFAULT_LOAD_FAILED));
     }
 }

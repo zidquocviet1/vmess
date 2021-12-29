@@ -12,16 +12,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemChatBinding;
 import com.mqv.realtimechatapplication.databinding.ItemChatProfileBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
@@ -401,16 +400,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
 
         private void renderImage(String url, ImageView container) {
-            String formattedUrl = url == null ? null : url.replace("localhost", Const.BASE_IP);
-
-            GlideApp.with(mContext)
-                    .load(formattedUrl)
-                    .placeholder(Picture.getDefaultCirclePlaceHolder(mContext))
-                    .fallback(R.drawable.ic_round_account)
-                    .error(R.drawable.ic_account_undefined)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .circleCrop()
-                    .into(container);
+            Picture.loadUserAvatar(mContext, url).into(container);
         }
 
         private String getReadableTime(LocalDateTime from) {

@@ -3,6 +3,8 @@ package com.mqv.realtimechatapplication.ui.fragment.preference;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -10,24 +12,16 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceGroup;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.request.transition.Transition;
-import com.bumptech.glide.signature.ObjectKey;
 import com.google.firebase.auth.FirebaseAuth;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceManageAccountsActivity;
-import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.util.Objects;
@@ -36,6 +30,12 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class UserPreferencesFragment extends PreferenceFragmentCompat {
+    private static final String KEY_PREF_SIGNED_IN = "signedIn";
+    private static final int    USER_AVATAR_HEIGHT = 88;
+    private static final int    USER_AVATAR_WIDTH  = 88;
+
+    private PreferenceGroup category;
+
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         var user = FirebaseAuth.getInstance().getCurrentUser();
@@ -44,7 +44,7 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
         @SuppressLint("RestrictedApi")
         var screen = getPreferenceManager()
                 .inflateFromResource(context, R.xml.pref_user_information_settings, null);
-        var category = Objects.requireNonNull((PreferenceGroup)
+        category = Objects.requireNonNull((PreferenceGroup)
                 screen.findPreference(getString(R.string.key_pref_category_accounts)));
 
         if (user != null) {
@@ -55,50 +55,12 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
             manageAccountsItem.setIntent(new Intent(requireActivity(), PreferenceManageAccountsActivity.class));
 
             var signedInItem = new Preference(context);
+            signedInItem.setKey(KEY_PREF_SIGNED_IN);
             signedInItem.setTitle(user.getDisplayName());
             signedInItem.setSummary(getString(R.string.title_preference_item_manage_accounts_summary));
 
-            var uri = user.getPhotoUrl();
-            var url = uri != null ? uri.toString().replace("localhost", Const.BASE_IP) : "";
-
-            Glide.with(this)
-                    .asBitmap()
-                    .load(url)
-                    .centerCrop()
-                    .fallback(R.drawable.ic_round_account)
-                    .override(88, 88)
-                    .signature(new ObjectKey(url))
-                    .listener(new RequestListener<>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Bitmap> target, boolean isFirstResource) {
-                            signedInItem.setIcon(R.drawable.ic_preferences_image_user_not_found);
-                            category.addPreference(signedInItem);
-                            category.addPreference(manageAccountsItem);
-                            return false;
-                        }
-
-                        @Override
-                        public boolean onResourceReady(Bitmap resource, Object model, Target<Bitmap> target, DataSource dataSource, boolean isFirstResource) {
-                            RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(getResources(), resource);
-                            rbd.setCornerRadius(Math.max(resource.getHeight(), resource.getWidth()) / 2.0f);
-
-                            signedInItem.setIcon(rbd);
-                            category.addPreference(signedInItem);
-                            category.addPreference(manageAccountsItem);
-                            return false;
-                        }
-                    })
-                    .into(new CustomTarget<Bitmap>() {
-                        @Override
-                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-
-                        }
-
-                        @Override
-                        public void onLoadCleared(@Nullable Drawable placeholder) {
-
-                        }
-                    });
+            category.addPreference(signedInItem);
+            category.addPreference(manageAccountsItem);
         }
 
         setPreferenceScreen(screen);
@@ -172,5 +134,25 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
             dstBmp = Bitmap.createBitmap(srcBmp, 0, height / 2 - width / 2, width, width);
         }
         return dstBmp;
+    }
+
+    public void setSignInIcon(Drawable resource) {
+        Preference signedInPreference = category.findPreference(KEY_PREF_SIGNED_IN);
+        if (signedInPreference != null) {
+            if (resource != null) {
+                Bitmap sourceBitmap = ((BitmapDrawable) resource).getBitmap();
+                Bitmap destBitmap = Bitmap.createScaledBitmap(sourceBitmap, USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, true);
+                Drawable destDrawable = new BitmapDrawable(requireContext().getResources(), destBitmap);
+                signedInPreference.setIcon(destDrawable);
+            } else {
+                Bitmap bmp = Bitmap.createBitmap(USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bmp);
+                canvas.drawColor(ContextCompat.getColor(requireContext(), R.color.base_background_color));
+                RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(requireContext().getResources(), bmp);
+                rbd.setCornerRadius(Math.max(bmp.getHeight(), bmp.getWidth()) / 2.0f);
+
+                signedInPreference.setIcon(rbd);
+            }
+        }
     }
 }

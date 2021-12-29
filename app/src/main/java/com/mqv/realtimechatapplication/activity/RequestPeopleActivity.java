@@ -31,6 +31,7 @@ import com.mqv.realtimechatapplication.network.model.type.FriendRequestStatus;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
+import com.mqv.realtimechatapplication.util.Picture;
 import com.mqv.realtimechatapplication.work.BaseWorker;
 import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
 import com.mqv.realtimechatapplication.work.NewConversationWorkWrapper;
@@ -193,16 +194,7 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
 
     private void showUserUi(User user) {
         if (user != null) {
-            var photoUrl = user.getPhotoUrl() == null ? null : user.getPhotoUrl().replace("localhost", Const.BASE_IP);
-
-            GlideApp.with(this)
-                    .load(photoUrl)
-                    .centerCrop()
-                    .error(R.drawable.ic_account_undefined)
-                    .fallback(R.drawable.ic_round_account)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(mBinding.imageAvatar);
+            Picture.loadUserAvatar(this, user.getPhotoUrl()).into(mBinding.imageAvatar);
 
             mBinding.textDisplayName.setText(user.getDisplayName());
 

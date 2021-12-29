@@ -1,24 +1,29 @@
 package com.mqv.realtimechatapplication.activity;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
-import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.UserViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityUserBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.fragment.preference.UserPreferencesFragment;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBinding> {
+    private UserPreferencesFragment fragment;
+
     @Override
     public void binding() {
         mBinding = ActivityUserBinding.inflate(getLayoutInflater());
@@ -38,8 +43,10 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
 
         updateActionBarTitle(R.string.label_user_information);
 
+        fragment = new UserPreferencesFragment();
+
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.frame_layout_preferences, new UserPreferencesFragment())
+                .replace(R.id.frame_layout_preferences, fragment)
                 .commit();
 
         registerFirebaseUserChange(this::showUserUi);
@@ -56,23 +63,25 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
             if (user == null)
                 return;
 
-            //TODO: reformat the url in the develop mode
             var uri = user.getPhotoUrl();
-            var url = uri == null ? null : uri.toString().replace("localhost", Const.BASE_IP);
+            var url = uri == null ? null : uri.toString();
 
-            var placeHolder = new CircularProgressDrawable(this);
-            placeHolder.setStrokeWidth(5f);
-            placeHolder.setCenterRadius(30f);
-            placeHolder.start();
+            Picture.loadUserAvatar(this, url)
+                   .listener(new RequestListener<>() {
+                       @Override
+                       public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                           fragment.setSignInIcon(null);
+                           mBinding.imageAvatar.setImageDrawable(Picture.getErrorAvatarLoaded(UserActivity.this));
+                           return true;
+                       }
 
-            GlideApp.with(this)
-                    .load(url)
-                    .centerCrop()
-                    .placeholder(placeHolder)
-                    .fallback(R.drawable.ic_round_account)
-                    .error(R.drawable.ic_account_undefined)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(mBinding.imageAvatar);
+                       @Override
+                       public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                           fragment.setSignInIcon(resource);
+                           return false;
+                       }
+                   })
+                   .into(mBinding.imageAvatar);
 
             mBinding.textDisplayName.setText(user.getDisplayName());
         });

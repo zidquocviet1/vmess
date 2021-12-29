@@ -10,13 +10,10 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
-import com.bumptech.glide.signature.ObjectKey;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemPeopleListBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.ui.data.People;
-import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -79,15 +76,7 @@ public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewH
             mBinding.textUsername.setVisibility(item.getUsername() == null ? View.GONE : View.VISIBLE);
             mBinding.textUsername.setText(item.getUsername() == null ? "" : item.getUsername());
 
-            var url = item.getPhotoUrl() == null ? "" : item.getPhotoUrl().replace("localhost", Const.BASE_IP);
-
-            GlideApp.with(context)
-                    .load(url)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .signature(new ObjectKey(url))
-                    .error(R.drawable.ic_round_account)
-                    .into(mBinding.imageAvatar);
+            Picture.loadUserAvatar(context, item.getPhotoUrl()).into(mBinding.imageAvatar);
         }
     }
 }

@@ -18,18 +18,16 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemConversationBinding;
-import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Picture;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -313,16 +311,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         }
 
         private void loadImage(@Nullable String url, ImageView container) {
-            String formattedUrl = url == null ? null : url.replace("localhost", Const.BASE_IP);
-
-            GlideApp.with(mContext)
-                    .load(formattedUrl)
-                    .error(ContextCompat.getDrawable(mContext, R.drawable.ic_account_undefined))
-                    .fallback(ContextCompat.getDrawable(mContext, R.drawable.ic_round_account))
-                    .circleCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(container);
+            Picture.loadUserAvatar(mContext, url).into(container);
         }
 
         private String getReadableTime(LocalDateTime from) {

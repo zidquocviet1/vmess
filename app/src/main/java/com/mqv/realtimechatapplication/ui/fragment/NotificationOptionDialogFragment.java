@@ -98,18 +98,7 @@ public class NotificationOptionDialogFragment extends BottomSheetDialogFragment 
         mBinding.itemMarkRead.summary.setVisibility(View.GONE);
         mBinding.itemMarkRead.icon.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_mark_read));
 
-        var formatUrl = item.getAgentImageUrl() == null ? null :
-                item.getAgentImageUrl().replace("localhost", Const.BASE_IP);
-
-        GlideApp.with(this)
-                .load(formatUrl)
-                .placeholder(Picture.getDefaultCirclePlaceHolder(requireContext()))
-                .fallback(R.drawable.ic_round_account)
-                .error(R.drawable.ic_account_undefined)
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(mBinding.image);
+        Picture.loadUserAvatar(this, item.getAgentImageUrl()).into(mBinding.image);
     }
 
     private void registerEventClick() {
