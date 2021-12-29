@@ -145,17 +145,6 @@
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/layout_common">
 
-        <View
-            android:id="@+id/welcome_chat_background"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:background="@drawable/background_rounded_chat"
-            android:backgroundTint="@color/base_background_color"
-            app:layout_constraintBottom_toBottomOf="@id/text_welcome"
-            app:layout_constraintEnd_toEndOf="@id/text_welcome"
-            app:layout_constraintStart_toStartOf="@id/text_welcome"
-            app:layout_constraintTop_toTopOf="@id/text_welcome" />
-
         <TextView
             android:id="@+id/text_welcome"
             android:layout_width="0dp"

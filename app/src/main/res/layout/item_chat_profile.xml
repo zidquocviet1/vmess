@@ -52,12 +52,15 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_view_profile"
-        style="@style/CustomOutlineButton"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin_top_soft"
-        android:paddingTop="0dp"
-        android:paddingBottom="0dp"
+        android:backgroundTint="@color/base_background_color"
+        android:minHeight="42dp"
+        android:outlineProvider="none"
         android:text="@string/action_view_profile"
-        android:textSize="14sp" />
+        android:textColor="@color/black"
+        android:textSize="11sp"
+        app:cornerRadius="40dp"
+        app:rippleColor="@android:color/darker_gray" />
 </LinearLayout>
