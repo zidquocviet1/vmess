@@ -1,7 +1,6 @@
 package com.mqv.realtimechatapplication.work;
 
 import android.content.Context;
-import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.hilt.work.HiltWorker;
@@ -90,7 +89,6 @@ public class NewConversationWorkWrapper extends BaseWorker {
 
     @HiltWorker
     public static class NewConversationWorker extends RxWorker {
-        private final Context mContext;
         private final ConversationService mService;
         private final ConversationDao mDao;
         private final FirebaseUser mUser;
@@ -104,7 +102,6 @@ public class NewConversationWorkWrapper extends BaseWorker {
                                      ConversationDao dao,
                                      UserUtil userUtil) {
             super(context, workerParams);
-            mContext = context;
             mService = service;
             mDao = dao;
             mUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -160,20 +157,8 @@ public class NewConversationWorkWrapper extends BaseWorker {
                                                  }
                                              })
                                              .singleOrError()
-                                             .map(c -> {
-                                                 notifyNewConversation(c);
-                                                 return Result.success(new Data.Builder().putString("id", c.getId()).build());
-                                             })
+                                             .map(c -> Result.success(new Data.Builder().putString("id", c.getId()).build()))
                                              .onErrorReturnItem(Result.failure());
-        }
-
-        private void notifyNewConversation(Conversation conversation) {
-            if (LifecycleUtil.isAppForeground()) {
-                Intent intent = new Intent("com.mqv.tac.NEW_CONVERSATION");
-                intent.putExtra("data", conversation);
-
-                mContext.sendBroadcast(intent);
-            }
         }
 
         private Observable<String> getBearerTokenObservable() {
