@@ -38,23 +38,26 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private final List<User> mParticipants;
     private final ColorStateList mChatColorStateList;
     private final User mCurrentUser;
+    @Nullable
     private final User mOtherUser;
     private User mOtherUserDetail;
-    private RecyclerView mRecyclerView;
 
     private static final int VIEW_PROFILE = -1;
     private static final int VIEW_PROFILE_SELF = 0;
     private static final int VIEW_CHAT = 1;
-    private static final String MESSAGE_STATUS_PAYLOAD = "message_status";
-    private static final String PROFILE_USER_PAYLOAD = "profile_user";
-    private static final String ICON_RECEIVER_PAYLOAD = "icon_receiver";
+    private static final int VIEW_LOAD_MORE = 2;
+    public static final String MESSAGE_STATUS_PAYLOAD = "message_status";
+    public static final String PROFILE_USER_PAYLOAD = "profile_user";
+    public static final String ICON_RECEIVER_PAYLOAD = "icon_receiver";
+    public static final String TIMESTAMP_MESSAGE_PAYLOAD = "timestamp";
+    public static final String MESSAGE_UNSENT_PAYLOAD = "message_unsent";
 
     public ChatListAdapter(Context context,
                            List<Chat> chatList,
                            List<User> participants,
                            ColorStateList chatColorStateList,
                            @NonNull User user,
-                           @NonNull User otherUser) {
+                           @Nullable User otherUser) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull Chat oldItem, @NonNull Chat newItem) {
@@ -63,7 +66,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
             @Override
             public boolean areContentsTheSame(@NonNull Chat oldItem, @NonNull Chat newItem) {
-                return false;
+                return oldItem.getId().equals(newItem.getId()) &&
+                        oldItem.getSenderId().equals(newItem.getSenderId()) &&
+                        oldItem.getTimestamp().equals(newItem.getTimestamp()) &&
+                        oldItem.getSeenBy().equals(newItem.getSeenBy()) &&
+                        oldItem.getStatus().equals(newItem.getStatus()) &&
+                        oldItem.getConversationId().equals(newItem.getConversationId()) &&
+                        oldItem.isUnsent().equals(newItem.isUnsent());
             }
         });
         mContext = context;
@@ -72,13 +81,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mOtherUser = otherUser;
         mChatList = chatList;
         mParticipants = participants;
-    }
-
-    @Override
-    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
-
-        mRecyclerView = recyclerView;
     }
 
     public void addChat(Chat chat) {
@@ -98,18 +100,20 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         notifyItemChanged(position, MESSAGE_STATUS_PAYLOAD);
     }
 
+    public void changeChatUnsentStatus(int position) {
+        notifyItemChanged(position, MESSAGE_UNSENT_PAYLOAD);
+    }
+
     public void setUserDetail(User user) {
         mOtherUserDetail = user;
-
-        notifyItemChanged(0, PROFILE_USER_PAYLOAD);
     }
 
     @Override
     public int getItemViewType(int position) {
         var item = getItem(position);
 
-        if (item.getId() == null)
-            return VIEW_CHAT;
+        if (item == null)
+            return VIEW_LOAD_MORE;
 
         if (item.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
             if (mCurrentUser.getUid().equals(mOtherUser.getUid())) {
@@ -139,8 +143,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mCurrentUser,
                         mOtherUser,
                         mParticipants,
-                        mChatColorStateList,
-                        mRecyclerView);
+                        mChatColorStateList);
         }
     }
 
@@ -152,9 +155,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             var chatHolder = (ChatListViewHolder) holder;
 
             if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_STATUS_PAYLOAD)) {
-                chatHolder.bindMessageStatus(getItem(position));
+                chatHolder.bindMessageStatus(getItem(position), (position + 1) >= getItemCount() ? null : getItem(position + 1));
             } else if (!payloads.isEmpty() && payloads.get(0).equals(ICON_RECEIVER_PAYLOAD)) {
                 chatHolder.hiddenIconReceiver();
+            } else if (!payloads.isEmpty() && payloads.get(0).equals(TIMESTAMP_MESSAGE_PAYLOAD)) {
+                chatHolder.shouldShowTimestamp(getItem(position - 1), getItem(position));
+            } else if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_UNSENT_PAYLOAD)) {
+                chatHolder.bindUnsentStatus(getItem(position));
             }
         } else if (holder instanceof ProfileViewHolder) {
             if (!payloads.isEmpty() && payloads.get(0).equals(PROFILE_USER_PAYLOAD)) {
@@ -173,7 +180,11 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         if (holder instanceof ChatListViewHolder) {
             var chatHolder = (ChatListViewHolder) holder;
 
-            chatHolder.bindTo(preItem, getItem(position), nextItem);
+            if (getItemViewType(position) == VIEW_LOAD_MORE) {
+                chatHolder.showLoading();
+            } else {
+                chatHolder.bindTo(preItem, getItem(position), nextItem);
+            }
         } else if (holder instanceof ProfileViewHolder) {
             ProfileViewHolder profileHolder = (ProfileViewHolder) holder;
 
@@ -185,15 +196,22 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
     }
 
+    public static void initializePool(RecyclerView.RecycledViewPool pool) {
+        pool.setMaxRecycledViews(VIEW_CHAT, 25);
+        pool.setMaxRecycledViews(VIEW_LOAD_MORE, 1);
+        pool.setMaxRecycledViews(VIEW_PROFILE_SELF, 1);
+        pool.setMaxRecycledViews(VIEW_PROFILE, 1);
+    }
+
     public static class ChatListViewHolder extends RecyclerView.ViewHolder {
         final ItemChatBinding mBinding;
         final User mUser;
+        @Nullable
         final User mOtherUser;
         final List<User> mParticipants;
         final ColorStateList mBackgroundChatColor;
         final ColorStateList mErrorChatColor;
         final Context mContext;
-        final RecyclerView mRecyclerView;
         Drawable mReceivedIconDrawable;
         Drawable mNotReceivedIconDrawable;
         Drawable mSendingIconDrawable;
@@ -205,10 +223,9 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         public ChatListViewHolder(@NonNull ItemChatBinding binding,
                                   @NonNull Context context,
                                   @NonNull User user,
-                                  @NonNull User otherUser,
+                                  @Nullable User otherUser,
                                   @NonNull List<User> participants,
-                                  @NonNull ColorStateList colorStateList,
-                                  @NonNull RecyclerView recyclerView) {
+                                  @NonNull ColorStateList colorStateList) {
             super(binding.getRoot());
 
             mBinding = binding;
@@ -217,7 +234,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mOtherUser = otherUser;
             mParticipants = participants;
             mBackgroundChatColor = colorStateList;
-            mRecyclerView = recyclerView;
             mErrorChatColor = ColorStateList.valueOf(ContextCompat.getColor(mContext, android.R.color.holo_red_light));
 
             mReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle);
@@ -245,6 +261,12 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mBinding.imageReceiver.setVisibility(View.VISIBLE);
         }
 
+        public void showLoading() {
+            mBinding.progressBarLoading.setVisibility(View.VISIBLE);
+            mBinding.layoutSender.setVisibility(View.GONE);
+            mBinding.layoutReceiver.setVisibility(View.GONE);
+        }
+
         public View getBackground(Chat item) {
             if (item.getSenderId().equals(mUser.getUid())) {
                 return mBinding.senderChatBackground;
@@ -253,10 +275,23 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
         }
 
+        public void changeSeenStatusVisibility(boolean shouldShow) {
+            mBinding.imageMessageStatus.setVisibility(shouldShow ? View.VISIBLE : View.INVISIBLE);
+        }
         /*
          * Used to bind specific chat status.
          * */
-        public void bindMessageStatus(Chat item) {
+        public void bindMessageStatus(Chat item, @Nullable Chat nextItem) {
+            if (nextItem != null && nextItem.getSenderId().equals(item.getSenderId())) {
+                List<String> itemSeenBy = item.getSeenBy();
+                List<String> nextItemSeenBy = nextItem.getSeenBy();
+
+                if (itemSeenBy.equals(nextItemSeenBy)) {
+                    mBinding.imageMessageStatus.setVisibility(View.INVISIBLE);
+                    return;
+                }
+            }
+
             if (item.getSeenBy() != null && item.getSeenBy().size() > 0) {
                 item.getSeenBy()
                         .stream()
@@ -284,35 +319,56 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
         }
 
+        public void bindUnsentStatus(Chat item) {
+            View messageBackground;
+            TextView messageText;
+            String message;
+
+            if (isSelf(item)) {
+                message = mContext.getString(R.string.title_sender_chat_unsent);
+                messageBackground = mBinding.senderChatBackground;
+                messageText = mBinding.textSenderContent;
+            } else {
+                String[] otherNameArr = mOtherUser.getDisplayName().split(" ");
+                String otherName = otherNameArr[otherNameArr.length - 1];
+
+                message = mContext.getString(R.string.title_receiver_chat_unsent, otherName);
+                messageBackground = mBinding.receiverChatBackground;
+                messageText = mBinding.textReceiverContent;
+            }
+
+            if (item.isUnsent()) {
+                renderUnsentMessage(messageBackground, messageText, message);
+            } else {
+                messageText.setText(message);
+            }
+        }
+
         public void bindTo(Chat preItem, Chat item, Chat nextItem) {
             String senderId = item.getSenderId();
 
+            mBinding.progressBarLoading.setVisibility(View.GONE);
             if (senderId == null) {
-                if (nextItem != null) {
-                    mBinding.layoutWelcome.setVisibility(View.GONE);
-                    mBinding.layoutReceiver.setVisibility(View.GONE);
-                    mBinding.layoutSender.setVisibility(View.GONE);
-                } else {
-                    mBinding.layoutWelcome.setVisibility(View.VISIBLE);
-                    mBinding.layoutReceiver.setVisibility(View.GONE);
-                    mBinding.layoutSender.setVisibility(View.GONE);
-                }
+                mBinding.layoutWelcome.setVisibility(nextItem != null ? View.GONE : View.VISIBLE);
+                mBinding.layoutReceiver.setVisibility(View.GONE);
+                mBinding.layoutSender.setVisibility(View.GONE);
             } else {
-                if (senderId.equals(mUser.getUid())) {
-                    bindSenderMessage(preItem, item);
+                if (isSelf(item)) {
+                    bindSenderMessage(preItem, item, nextItem);
                 } else {
                     bindReceiverMessage(preItem, item);
                 }
             }
         }
 
-        private void bindSenderMessage(Chat preItem, Chat item) {
+        private void bindSenderMessage(Chat preItem, Chat item, Chat nextItem) {
             mBinding.layoutReceiver.setVisibility(View.GONE);
             mBinding.layoutSender.setVisibility(View.VISIBLE);
             mBinding.layoutWelcome.setVisibility(View.GONE);
             mBinding.textSenderContent.setText(item.getContent());
             mBinding.senderChatBackground.setBackgroundTintList(mBackgroundChatColor);
 
+//            bindMessageStatus(item, nextItem);
             if (item.getSeenBy() != null && item.getSeenBy().size() > 0) {
                 item.getSeenBy()
                         .stream()
@@ -365,8 +421,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
          * The method to check the duration time of two chat in a row larger than 10 minutes or not.
          * */
         private void shouldShowTimestamp(Chat preItem, Chat item) {
-            if (preItem == null)
+            if (preItem == null) {
+                if (!item.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+                    mBinding.textTimestamp.setVisibility(View.VISIBLE);
+                    mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
+                }
                 return;
+            }
 
             if (preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
                 mBinding.textTimestamp.setVisibility(View.VISIBLE);
@@ -430,6 +491,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 return mContext.getString(R.string.msg_notification_month, arr[0], arr[1], arr[2] + " " + arr[3]);
             }
         }
+
+        private boolean isSelf(Chat item) {
+            return item.getSenderId().equals(mUser.getUid());
+        }
     }
 
     static class ProfileViewHolder extends RecyclerView.ViewHolder {
@@ -451,26 +516,19 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             String bio;
             String username;
 
+            // TODO: load remote user
             if (user == null) {
                 photoUrl    = null;
                 displayName = "Unknown";
                 bio         = "Unknown";
                 username    = "Unknown";
             } else {
-                photoUrl    = user.getPhotoUrl() != null ? user.getPhotoUrl().replace("localhost", Const.BASE_IP) : null;
+                photoUrl    = user.getPhotoUrl();
                 bio         = user.getBiographic() == null ? "" : user.getBiographic();
                 username    = user.getUsername() == null ? "" : user.getUsername();
                 displayName = mIsSelf ? mContext.getString(R.string.title_just_you) : user.getDisplayName();
             }
-
-            GlideApp.with(mContext)
-                    .load(photoUrl)
-                    .placeholder(Picture.getDefaultCirclePlaceHolder(mContext))
-                    .fallback(R.drawable.ic_round_account)
-                    .error(R.drawable.ic_account_undefined)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .circleCrop()
-                    .into(mBinding.imageAvatar);
+            Picture.loadUserAvatar(mContext, photoUrl).into(mBinding.imageAvatar);
 
             mBinding.textDisplayName.setText(displayName);
             mBinding.textBio.setText(bio);

@@ -24,11 +24,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationViewModel;
@@ -39,7 +34,6 @@ import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.ConversationGroup;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
-import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
 import com.mqv.realtimechatapplication.ui.adapter.ChatListAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.ConversationListFragment;
@@ -47,12 +41,10 @@ import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Picture;
-import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -94,6 +86,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private boolean isSeenChat = false;
     private boolean isLoadMore = false;
 
+    private RecyclerView.OnScrollListener mScrollListener;
     private final RecyclerView.AdapterDataObserver mAdapterObserver = new RecyclerView.AdapterDataObserver() {
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
@@ -149,6 +142,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         if (isConversationUpdated) {
             Intent resultIntent = new Intent(this, ConversationListFragment.class);
             resultIntent.putExtra(EXTRA_CONVERSATION, mConversation);
+            resultIntent.putExtra(EXTRA_SEEN_CHAT, isSeenChat);
+            resultIntent.putExtra(EXTRA_NEW_CHAT_ADDED, isNewChatAdded);
             setResult(RESULT_OK, resultIntent);
         }
 
@@ -177,8 +172,10 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
             switch (result.getStatus()) {
                 case ERROR:
+                    mBinding.recyclerChatList.removeOnScrollListener(mScrollListener);
                     mChatList.remove(0);
                     mChatListAdapter.notifyItemRemoved(0);
+                    mBinding.recyclerChatList.postDelayed(() -> mBinding.recyclerChatList.addOnScrollListener(mScrollListener), 500);
 
                     if (result.getError() != -1) Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
                     break;
@@ -290,15 +287,13 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.buttonSendMessage.setOnClickListener(v -> {
             String senderId = mCurrentUser.getUid();
             String content = mBinding.editTextContent.getText().toString();
-            Chat newChat = new Chat(UUID.randomUUID().toString(), senderId, content, mConversation.getId(), MessageType.GENERIC);
-
-            addNewChatToAdapter(newChat);
+            String conversationId = mConversation.getId();
 
             mBinding.editTextContent.setText("");
 
-            if (getNetworkStatus()) {
-                mViewModel.sendMessage(newChat);
-            }
+            Chat chat = new Chat(UUID.randomUUID().toString(), senderId, content, conversationId, MessageType.GENERIC);
+            addNewChatToAdapter(chat);
+            mViewModel.sendMessage(this, getApplicationContext(), chat);
         });
         mBinding.buttonMore.setOnClickListener(v -> {
         });
@@ -389,7 +384,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.recyclerChatList.addOnLayoutChangeListener(this);
         ChatListAdapter.initializePool(mBinding.recyclerChatList.getRecycledViewPool());
 
-        mBinding.recyclerChatList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+        mScrollListener = new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
@@ -404,7 +399,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 int position = mLayoutManager.findLastVisibleItemPosition();
                 mViewModel.setScrollButtonState(position < mChatList.size() - NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM);
             }
-        });
+        };
+        mBinding.recyclerChatList.addOnScrollListener(mScrollListener);
 
         mChatListAdapter.submitList(mChatList);
         mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);

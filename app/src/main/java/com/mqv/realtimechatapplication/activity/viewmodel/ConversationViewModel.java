@@ -110,7 +110,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
     }
 
     public LiveData<Result<List<Chat>>> getMoreChatResult() {
-        return moreChatResult;
+        return Transformations.distinctUntilChanged(moreChatResult);
     }
 
     public LiveData<Chat> getMessageObserver() {
