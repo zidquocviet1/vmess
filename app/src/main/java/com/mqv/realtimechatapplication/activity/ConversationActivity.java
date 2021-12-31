@@ -545,7 +545,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                                    @NonNull View view,
                                    @NonNull RecyclerView parent,
                                    @NonNull RecyclerView.State state) {
-            int dataSize = mChatList.size();
             int position = parent.getChildAdapterPosition(view);
             int prePosition = position - 1;
             int nextPosition = position + 1;
@@ -558,7 +557,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
              * */
             Chat item = position >= 0 ? mChatList.get(position) : null;
             Chat preItem = prePosition >= 0 ? mChatList.get(prePosition) : null;
-            Chat nextItem = nextPosition < dataSize ? mChatList.get(nextPosition) : null;
+            Chat nextItem = nextPosition < mChatList.size() ? mChatList.get(nextPosition) : null;
 
             if (item == null)
                 return;
@@ -629,6 +628,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 }
 
                 renderBunchOfChats(chatViewHolder, preItem, item, nextItem);
+                findLastSeenStatus(chatViewHolder, item);
             }
         }
 
@@ -784,6 +784,34 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             });
 
             v.setBackground(drawable);
+        }
+
+        private void findLastSeenStatus(ChatListAdapter.ChatListViewHolder vh, Chat item) {
+            List<Chat> mSenderChatList = mChatList.stream()
+                                                  .filter(c -> c != null &&
+                                                          c.getSenderId() != null &&
+                                                          isSelf(c) &&
+                                                          hasSeen(c))
+                                                  .collect(Collectors.toList());
+
+            if (isSelf(item)) {
+                if (mSenderChatList.contains(item)) {
+                    vh.changeSeenStatusVisibility(mSenderChatList.indexOf(item) == mSenderChatList.size() - 1);
+                } else {
+                    if (hasSeen(item)) {
+                        mSenderChatList.add(item);
+                    }
+                    vh.changeSeenStatusVisibility(true);
+                }
+            }
+        }
+
+        private boolean isSelf(Chat item) {
+            return item.getSenderId().equals(mCurrentUser.getUid());
+        }
+
+        private boolean hasSeen(Chat item) {
+            return !item.getSeenBy().isEmpty();
         }
     }
 }
