@@ -3,8 +3,6 @@ package com.mqv.realtimechatapplication.activity;
 import static com.mqv.realtimechatapplication.R.id.menu_about;
 import static com.mqv.realtimechatapplication.R.id.menu_phone_call;
 import static com.mqv.realtimechatapplication.R.id.menu_video_call;
-import static com.mqv.realtimechatapplication.network.model.type.MessageStatus.ERROR;
-import static com.mqv.realtimechatapplication.network.model.type.MessageStatus.RECEIVED;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +13,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
@@ -52,8 +51,8 @@ import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -63,25 +62,15 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class ConversationActivity extends BaseActivity<ConversationViewModel, ActivityConversationBinding>
-        implements OnNetworkChangedListener {
-    /*
-     * Some field to get the data from Cloud Firestore and observe real time data flow.
-     * */
-    private static final String COLLECTION_CONVERSATION = "conversations";
-    private static final String COLLECTION_MESSAGES = "conversation_messages";
-    private static final String DOC_CHAT_ID = "id";
-    private static final String DOC_CHAT_CONTENT = "content";
-    private static final String DOC_CHAT_SENDER_ID = "sender";
-    private static final String DOC_CHAT_CONVERSATION_ID = "conversation";
-    private static final String DOC_CHAT_UNSENT = "unsent";
-    private static final String DOC_CHAT_STATUS = "status";
-    private static final String DOC_CHAT_TYPE = "type";
-    private static final String DOC_CHAT_SEEN_BY = "seenBy";
-    private static final String DOC_CHAT_TIMESTAMP = "timestamp";
-    private static final String EXTRA_CONVERSATION = "conversation";
+        implements OnNetworkChangedListener,
+                   View.OnLayoutChangeListener {
+    public static final String EXTRA_CONVERSATION = "conversation";
+    public static final String EXTRA_SEEN_CHAT = "is_seen_chat";
+    public static final String EXTRA_NEW_CHAT_ADDED = "is_new_chat_added";
     private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
     private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
+    private static final int FAST_DURATION = 200;
 
     private List<Chat> mChatList;
     private List<User> mConversationParticipants;
@@ -92,16 +81,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
     // Default color for the whole conversation
     private ColorStateList mDefaultColorStateList;
+    private Animation slideUpAnimation;
+    private Animation fadeAnimation;
 
     // Only NonNull when the conversation type NORMAL or SELF
     @Nullable
     private User mOtherUser;
-
-    // Check the data from Firestore is first load or not
-    private boolean isFirstLoad = true;
-
-    // Check the conversation is open as Request Message or not
-    private boolean isNewConversation = false;
 
     // Check whether the current conversation is updated or not
     private boolean isConversationUpdated = false;
@@ -138,15 +123,17 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mConversationParticipants = mConversation.getParticipants();
         mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
 
+        slideUpAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
+        fadeAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
+        slideUpAnimation.setDuration(FAST_DURATION);
+        fadeAnimation.setDuration(FAST_DURATION);
+
         checkConversationType(mConversation);
         registerEventClick();
         registerNetworkEventCallback(this);
         setupColorUi();
         setupRecyclerView();
         seenChats();
-
-        if (getNetworkStatus())
-            mViewModel.isServerReadyForFirestoreSubscribe();
     }
 
     @Override
@@ -173,9 +160,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mViewModel.getUserDetail().observe(this, user -> {
             mChatListAdapter.setUserDetail(user);
 
-            Chat firstVisible = mChatList.get(mLayoutManager.findFirstVisibleItemPosition());
-            if (firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
-                mChatListAdapter.notifyItemChanged(0, ChatListAdapter.PROFILE_USER_PAYLOAD);
+            int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
+            if (firstItemPosition != -1) {
+                Chat firstVisible = mChatList.get(firstItemPosition);
+                if (firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+                    mChatListAdapter.notifyItemChanged(0, ChatListAdapter.PROFILE_USER_PAYLOAD);
+                }
             }
         });
 
@@ -230,6 +220,16 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 postRequestSeenMessages(Collections.singletonList(c));
             }
         });
+
+        mViewModel.getShowScrollButton().observe(this, shouldShow -> {
+            if (shouldShow) {
+                mBinding.buttonScrollToBottom.startAnimation(slideUpAnimation);
+                mBinding.buttonScrollToBottom.setVisibility(View.VISIBLE);
+            } else {
+                mBinding.buttonScrollToBottom.startAnimation(fadeAnimation);
+                mBinding.buttonScrollToBottom.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
@@ -249,10 +249,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private void checkConversationType(Conversation conversation) {
         if (conversation.getId().startsWith("NEW_CONVERSATION")) {
             // The new conversation when user request a new message but have not friend relationship
-            isNewConversation = true;
         } else {
-            isNewConversation = false;
-
             List<User> participants = conversation.getParticipants();
 
             if (conversation.getType() == ConversationType.SELF) {
@@ -267,107 +264,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                         });
             }
         }
-    }
-
-    private void registerFirestoreEvent() {
-        CollectionReference collectionRef = FirebaseFirestore.getInstance()
-                .collection(COLLECTION_CONVERSATION)
-                .document(mConversation.getId())
-                .collection(COLLECTION_MESSAGES);
-
-        collectionRef.addSnapshotListener((value, error) -> {
-            if (value == null)
-                return;
-
-            if (error != null) {
-                Logging.show("Firestore Error: " + error.getMessage());
-            }
-
-            List<DocumentChange> documentChanges = value.getDocumentChanges();
-
-            for (var doc : documentChanges) {
-                if (isFirstLoad)
-                    continue;
-
-                switch (doc.getType()) {
-                    case ADDED:
-                        QueryDocumentSnapshot addDoc = doc.getDocument();
-                        Chat chat = parseChatFromDocument(addDoc);
-
-                        if (mChatList.contains(chat))
-                            return;
-
-                        if (!chat.getSenderId().equals(mCurrentUser.getUid())) {
-                            addNewChatToAdapter(chat);
-
-                            // Play ringtone when receive new message
-                            RingtoneUtil.open(this, FILE_MESSAGE_RINGTONE);
-                            mViewModel.saveChat(chat);
-
-                            // Mark the chat as read when the user is in this stage
-                            mViewModel.seenMessage(Collections.singletonList(chat));
-
-                            isConversationUpdated = true;
-                        }
-                        break;
-                    case MODIFIED:
-                        QueryDocumentSnapshot modifiedDoc = doc.getDocument();
-                        Chat modifiedChat = parseChatFromDocument(modifiedDoc);
-
-                        if (modifiedChat.getSenderId().equals(mCurrentUser.getUid())) {
-                            int index = mChatList.indexOf(modifiedChat);
-
-                            mChatList.set(index, modifiedChat);
-                            mChatListAdapter.changeChatStatus(index);
-
-                            mViewModel.updateChat(modifiedChat);
-
-                            isConversationUpdated = true;
-                        }
-                        break;
-                }
-            }
-
-            isFirstLoad = false;
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    private Chat parseChatFromDocument(QueryDocumentSnapshot document) {
-        String id = document.getString(DOC_CHAT_ID);
-        String conversationId = document.getString(DOC_CHAT_CONVERSATION_ID);
-        String content = document.getString(DOC_CHAT_CONTENT);
-        String senderId = document.getString(DOC_CHAT_SENDER_ID);
-        Boolean isUnsent = document.getBoolean(DOC_CHAT_UNSENT);
-        MessageStatus status = document.get(DOC_CHAT_STATUS, MessageStatus.class);
-        MessageType type = document.get(DOC_CHAT_TYPE, MessageType.class);
-        List<String> seenBy = (List<String>) document.get(DOC_CHAT_SEEN_BY);
-        List<Long> timestampArray = (List<Long>) Objects.requireNonNull(document.get(DOC_CHAT_TIMESTAMP));
-        LocalDateTime timestamp = parseFromList(timestampArray);
-
-        return new Chat(id,
-                senderId,
-                content,
-                conversationId,
-                timestamp,
-                null,
-                null,
-                null,
-                seenBy,
-                status,
-                type,
-                isUnsent);
-    }
-
-    private LocalDateTime parseFromList(@NonNull List<Long> arr) {
-        return LocalDateTime.of(
-                arr.get(0).intValue(),
-                arr.get(1).intValue(),
-                arr.get(2).intValue(),
-                arr.get(3).intValue(),
-                arr.get(4).intValue(),
-                arr.get(5).intValue(),
-                arr.get(6).intValue());
     }
 
     private void registerEventClick() {
@@ -482,78 +378,60 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mOtherUser);
 
         mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager.setReverseLayout(false);
+        mLayoutManager.setStackFromEnd(true);
 
-        mChatList.addAll(mConversationChatList);
-        mChatListAdapter.submitList(mChatList);
-
+        mBinding.recyclerChatList.setItemAnimator(null); // Remove DefaultItemAnimator
         mBinding.recyclerChatList.addItemDecoration(new CustomItemDecoration(this, mChatList, mCurrentUser));
         mBinding.recyclerChatList.setAdapter(mChatListAdapter);
         mBinding.recyclerChatList.setHasFixedSize(true);
         mBinding.recyclerChatList.setLayoutManager(mLayoutManager);
-        mBinding.recyclerChatList.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-            int     lastItem        = mLayoutManager.findLastCompletelyVisibleItemPosition();
-            boolean wasAtBottom     = lastItem >= mChatList.size() - 1;
-            boolean isSoftInputShow = WindowInsetsCompat.toWindowInsetsCompat(mBinding.editTextContent.getRootWindowInsets())
-                                                        .isVisible(WindowInsetsCompat.Type.ime());
-
-            if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
-                mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
-            }
-        });
+        mBinding.recyclerChatList.addOnLayoutChangeListener(this);
         ChatListAdapter.initializePool(mBinding.recyclerChatList.getRecycledViewPool());
 
-        if (mChatList.size() > 0) {
-            mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
-        }
         mBinding.recyclerChatList.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            private final Animation slideUpAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
-            private final Animation fadeAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
-            private static final int FAST_DURATION = 200;
-            private boolean isShowScrollButton = false;
-
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                if (mChatList.size() <= 2)
+                if (mChatList.size() <= 2) {
                     return;
-
-                int scrollDirection = -1; // Negative for scrolling up and positive for down
-
-                if (!recyclerView.canScrollVertically(scrollDirection)) {
+                }
+                if (!recyclerView.canScrollVertically(-1)) {
                     onLoadMore();
                 }
 
-                LinearLayoutManager llm = (LinearLayoutManager) recyclerView.getLayoutManager();
-
-                if (llm != null) {
-                    int position = llm.findLastVisibleItemPosition();
-
-                    if (position < mChatList.size() - NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM) {
-                        if (!isShowScrollButton) {
-                            isShowScrollButton = true;
-
-                            slideUpAnimation.setDuration(FAST_DURATION);
-
-                            mBinding.buttonScrollToBottom.startAnimation(slideUpAnimation);
-                            mBinding.buttonScrollToBottom.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        if (isShowScrollButton) {
-                            isShowScrollButton = false;
-
-                            fadeAnimation.setDuration(FAST_DURATION);
-
-                            mBinding.buttonScrollToBottom.startAnimation(fadeAnimation);
-                            mBinding.buttonScrollToBottom.setVisibility(View.GONE);
-                        }
-                    }
-                }
+                int position = mLayoutManager.findLastVisibleItemPosition();
+                mViewModel.setScrollButtonState(position < mChatList.size() - NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM);
             }
         });
 
         mChatListAdapter.submitList(mChatList);
         mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);
+
+        mBinding.recyclerChatList
+                .getViewTreeObserver()
+                .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        /*
+                        * Check the first dummy Profile chat view type
+                        * If the layout can show the view completely then make the layout manager stackFromEnd = false
+                        * Otherwise true
+                        * */
+                        int firstItem = mLayoutManager.findFirstCompletelyVisibleItemPosition();
+                        if (firstItem != -1) {
+                            Chat chat = mChatList.get(firstItem);
+                            mLayoutManager.setStackFromEnd(!chat.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
+                        }
+                        // At this point the layout is complete and the
+                        // dimensions of recyclerView and any child views
+                        // are known.
+                        mBinding.recyclerChatList
+                                .getViewTreeObserver()
+                                .removeOnGlobalLayoutListener(this);
+                    }
+                });
     }
 
     private void onLoadMore() {
@@ -578,6 +456,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mViewModel.seenWelcomeMessage(welcomeChat);
 
                 isConversationUpdated = true;
+                isSeenChat = true;
             }
         } else {
             postRequestSeenMessages(mChatList);
@@ -630,6 +509,18 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
     public Conversation currentConversation() {
         return mConversation;
+    }
+
+    @Override
+    public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
+        int     lastItem        = mLayoutManager.findLastCompletelyVisibleItemPosition();
+        boolean wasAtBottom     = lastItem >= mChatList.size() - 1;
+        boolean isSoftInputShow = WindowInsetsCompat.toWindowInsetsCompat(mBinding.editTextContent.getRootWindowInsets())
+                .isVisible(WindowInsetsCompat.Type.ime());
+
+        if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
+            mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
+        }
     }
 
     static class CustomItemDecoration extends RecyclerView.ItemDecoration {
