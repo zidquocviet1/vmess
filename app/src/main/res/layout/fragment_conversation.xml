@@ -58,6 +58,7 @@
                     android:layout_height="110dp"
                     android:layout_marginTop="@dimen/all_margin_top_soft"
                     android:orientation="horizontal"
+                    android:visibility="gone"
                     app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior"
                     tools:listitem="@layout/item_rank_conversation" />
@@ -66,15 +67,8 @@
                     android:id="@+id/recycler_messages"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="@dimen/all_margin_top_soft"
                     app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-
-<!--                <ImageView-->
-<!--                    android:contentDescription="@null"-->
-<!--                    android:layout_gravity="center_vertical"-->
-<!--                    android:padding="40dp"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="match_parent"-->
-<!--                    android:src="@drawable/ic_round_inbox"/>-->
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
