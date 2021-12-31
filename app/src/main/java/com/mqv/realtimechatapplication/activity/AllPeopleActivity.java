@@ -1,6 +1,5 @@
 package com.mqv.realtimechatapplication.activity;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -13,12 +12,15 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.AllPeopleViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityAllPeopleBinding;
 import com.mqv.realtimechatapplication.databinding.DialogPeopleDetailBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.ui.adapter.PeopleAdapter;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.Picture;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -28,6 +30,7 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
     private PeopleAdapter mAdapter;
     private AlertDialog peopleDialog;
     private DialogPeopleDetailBinding dialogPeopleDetailBinding;
+    private User mCurrentUser;
     private int mCurrentPosition;
 
     @Override
@@ -55,7 +58,7 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
         } else {
             mPeopleList = new ArrayList<>(listPeople);
         }
-
+        Objects.requireNonNull(mCurrentUser = LoggedInUserManager.getInstance().getLoggedInUser());
         setupRecyclerView();
     }
 
@@ -84,14 +87,6 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
                 case SUCCESS:
                     if (peopleDialog != null && peopleDialog.isShowing()) {
                         peopleDialog.dismiss();
-
-                        People people = mPeopleList.get(mCurrentPosition);
-
-                        Intent intent = new Intent("com.mqv.tac.NEW_CONVERSATION");
-                        intent.putExtra("is_unfriend", true);
-                        intent.putExtra("unfriend_user_id", people.getUid());
-
-                        sendBroadcast(intent);
 
                         mAdapter.removeItem(mCurrentPosition);
 
@@ -145,7 +140,7 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
                 .setTitle("Unfriend?")
                 .setMessage(String.format("Are you sure you want to unfriend with %s?", item.getDisplayName()))
                 .setPositiveButton(R.string.action_yes, (dialog, which) -> {
-                    mViewModel.unfriend(item);
+                    mViewModel.unfriend(mCurrentUser.getUid(), item);
 
                     dialog.dismiss();
                 })

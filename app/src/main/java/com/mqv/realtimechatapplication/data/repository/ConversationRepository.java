@@ -36,6 +36,8 @@ public interface ConversationRepository {
 
     void deleteNormalByParticipantId(String userId, String otherUserId);
 
+    void deleteByParticipantId(String userId, String otherUserId);
+
     /////// Conversation changes option
     Completable changeConversationStatus(Conversation conversation);
 

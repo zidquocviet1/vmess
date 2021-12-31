@@ -258,6 +258,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         dao.deleteNormalByParticipantId(userId, otherUserId);
     }
 
+    @Override
+    public void deleteByParticipantId(String userId, String otherUserId) {
+        dao.deleteByParticipantId(userId, otherUserId);
+    }
+
     private Observable<String> getBearerTokenObservable() {
         return Observable.fromCallable(() -> {
                             try {

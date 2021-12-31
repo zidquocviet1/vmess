@@ -138,6 +138,9 @@ public abstract class ConversationDao {
     @Query("delete from Conversation where conversation_id = :id")
     abstract void delete(String id);
 
+    @Delete
+    abstract void deleteWithoutNIO(Conversation conversation);
+
     @Query("delete from Conversation")
     public abstract Completable deleteAll();
 
@@ -161,6 +164,22 @@ public abstract class ConversationDao {
 
             if (listUserId.containsAll(Arrays.asList(userId, otherUserId))) {
                 delete(c.getId());
+            }
+        });
+    }
+
+    @Transaction
+    public void deleteByParticipantId(String userId, String otherUserId) {
+        List<Conversation> conversations = fetchAll();
+
+        conversations.forEach(c -> {
+            List<String> listUserId = c.getParticipants()
+                                       .stream()
+                                       .map(User::getUid)
+                                       .collect(Collectors.toList());
+
+            if (listUserId.containsAll(Arrays.asList(userId, otherUserId))) {
+                deleteWithoutNIO(c);
             }
         });
     }
