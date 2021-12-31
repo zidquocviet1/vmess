@@ -12,6 +12,7 @@ import androidx.work.Configuration;
 
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
+import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import javax.inject.Inject;
@@ -33,6 +34,7 @@ public class MainApplication extends Application implements Configuration.Provid
         super.onCreate();
         setAppTheme(mPreferences.getDarkModeTheme());
         setupActivityListener();
+        setupObserveIncomingMessage();
     }
 
     private void setAppTheme(DarkMode mode){
@@ -94,5 +96,9 @@ public class MainApplication extends Application implements Configuration.Provid
 
     public Activity getActiveActivity() {
         return activeActivity;
+    }
+
+    private void setupObserveIncomingMessage() {
+        new IncomingMessageObserver(this);
     }
 }
