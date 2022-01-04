@@ -125,18 +125,12 @@ public class SendMessageWorkWrapper extends BaseWorker {
                                                                     chat))
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
-                            .onErrorReturnItem(new WebSocketResponse(HttpURLConnection.HTTP_BAD_REQUEST, chat))
                             .flatMap(response -> {
-                                Chat body = response.getBody();
-
-                                if (response.getStatus() == HttpURLConnection.HTTP_BAD_REQUEST) {
-                                    body.setStatus(MessageStatus.ERROR);
-                                }
-
-                                updateMessageStatus(body);
+                                updateMessageStatus(response.getBody());
 
                                 return Single.just(Result.success());
-                            });
+                            })
+                            .onErrorReturnItem(Result.failure());
         }
 
         private void insertMessage(Chat message) {
