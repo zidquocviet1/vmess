@@ -8,17 +8,16 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
 import androidx.lifecycle.Transformations;
 import androidx.room.rxjava3.EmptyResultSetException;
 import androidx.work.Data;
-import androidx.work.WorkInfo;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.realtimechatapplication.R;
+import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.repository.ChatRepository;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
@@ -27,7 +26,6 @@ import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
-import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -37,7 +35,6 @@ import com.mqv.realtimechatapplication.work.WorkDependency;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -63,6 +60,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<List<Chat>>>           moreChatResult;
     private final MutableLiveData<Chat>                         messageObserver;
     private final MutableLiveData<Boolean>                      scrollButtonState;
+    private final DatabaseObserver.MessageListener              messageListener;
 
     private final Executor                                      seenMessageExecutors = Executors.newFixedThreadPool(5);
     private int                                                 currentChatPage      = DEFAULT_PAGE_CHAT_LIST;
@@ -83,6 +81,17 @@ public class ConversationViewModel extends CurrentUserViewModel {
         this.moreChatResult     = new MutableLiveData<>();
         this.messageObserver    = new MutableLiveData<>();
         this.scrollButtonState  = new MutableLiveData<>(false);
+        this.messageListener    = new DatabaseObserver.MessageListener() {
+            @Override
+            public void onMessageInserted(@NonNull String messageId) {
+                getCacheMessage(messageId);
+            }
+
+            @Override
+            public void onMessageUpdated(@NonNull String messageId) {
+                getCacheMessage(messageId);
+            }
+        };
 
         Conversation conversation = savedStateHandle.get(KEY_CONVERSATION_ID);
 
@@ -90,18 +99,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
             throw new IllegalArgumentException("Conversation can't be null");
         }
 
-        //noinspection ResultOfMethodCallIgnored
-        chatRepository.observeMessages(conversation.getId(), DEFAULT_SIZE_CHAT_LIST)
-                      .subscribeOn(Schedulers.io())
-                      .observeOn(AndroidSchedulers.mainThread())
-                      .onErrorComplete()
-                      .subscribe(list -> {
-                          Chat newMessage = list.stream()
-                                                .findFirst()
-                                                .filter(c -> c.getTimestamp().plusSeconds(20).compareTo(LocalDateTime.now()) >= 0)
-                                                .orElse(null);
-                          messageObserver.postValue(newMessage);
-                      });
+        DatabaseObserver.getInstance().registerMessageListener(conversation.getId(), messageListener);
     }
 
     //// Getter
@@ -191,8 +189,17 @@ public class ConversationViewModel extends CurrentUserViewModel {
         moreChatResult.setValue(Result.Fail(error));
     }
 
+    private void getCacheMessage(String messageId) {
+        Disposable disposable = chatRepository.fetchCached(messageId)
+                                              .subscribeOn(Schedulers.io())
+                                              .observeOn(AndroidSchedulers.mainThread())
+                                              .onErrorComplete()
+                                              .subscribe(messageObserver::postValue);
+        cd.add(disposable);
+    }
+
     //// Public method
-    public void sendMessage(LifecycleOwner lifecycleOwner, Context context, Chat chat) {
+    public void sendMessage(Context context, Chat chat) {
         Data input = new Data.Builder()
                              .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, chat.getId())
                              .putString(SendMessageWorkWrapper.EXTRA_SENDER_ID, chat.getSenderId())
@@ -201,14 +208,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
                              .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_TYPE, chat.getType().name())
                              .build();
 
-        WorkDependency.enqueueAndGet(new SendMessageWorkWrapper(context, input)).observe(lifecycleOwner, info -> {
-            if (info.getState() == WorkInfo.State.SUCCEEDED) {
-                Data        output              = info.getOutputData();
-                String      successMessageId    = output.getString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID);
-            } else if (info.getState() == WorkInfo.State.FAILED) {
-                chat.setStatus(MessageStatus.ERROR);
-            }
-        });
+        WorkDependency.enqueue(new SendMessageWorkWrapper(context, input));
     }
 
     public void loadUserDetail(@NonNull String uid) {
@@ -290,5 +290,11 @@ public class ConversationViewModel extends CurrentUserViewModel {
 
     public void setScrollButtonState(boolean state) {
         scrollButtonState.setValue(state);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        DatabaseObserver.getInstance().unregisterMessageListener(messageListener);
     }
 }

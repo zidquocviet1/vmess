@@ -14,11 +14,11 @@ import androidx.work.rxjava3.RxWorker;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
-import com.mqv.realtimechatapplication.network.service.ChatService;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
@@ -30,9 +30,8 @@ import java.util.Objects;
 
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleSource;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /*
@@ -77,9 +76,8 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
     @HiltWorker
     public static class SendMessageWorker extends RxWorker {
-        private final ChatService  service;
-        private final ChatDao      dao;
-        private final FirebaseUser user;
+        private final ChatDao         dao;
+        private final FirebaseUser    user;
         private final WebSocketClient webSocket;
         /**
          * @param appContext   The application {@link Context}
@@ -88,13 +86,11 @@ public class SendMessageWorkWrapper extends BaseWorker {
         @AssistedInject
         public SendMessageWorker(@Assisted @NonNull Context appContext,
                                  @Assisted @NonNull WorkerParameters workerParams,
-                                 ChatService service,
                                  ChatDao dao,
                                  WebSocketClient webSocket) {
             super(appContext, workerParams);
-            this.service = service;
-            this.dao     = dao;
-            this.user    = FirebaseAuth.getInstance().getCurrentUser();
+            this.dao       = dao;
+            this.user      = FirebaseAuth.getInstance().getCurrentUser();
             this.webSocket = webSocket;
         }
 
@@ -119,45 +115,14 @@ public class SendMessageWorkWrapper extends BaseWorker {
                             MessageType.valueOf(messageTypeString));
         }
 
-        @NonNull
-        private Single<Result> sendMessageResult() {
-            Chat chat = parseChat();
-
-            return dao.insert(Collections.singletonList(chat))
-                      .subscribeOn(Schedulers.io())
-                      .andThen(UserUtil.getBearerTokenObservable(user)
-                                       .subscribeOn(Schedulers.io())
-                                       .observeOn(AndroidSchedulers.mainThread())
-                                       .flatMap(token -> service.sendMessage(token, chat))
-                                       .singleOrError()
-                                       .flatMap(response -> {
-                                           if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                               Chat freshChat = response.getSuccess();
-
-                                               return dao.update(freshChat)
-                                                         .subscribeOn(Schedulers.io())
-                                                         .andThen((SingleSource<Result>) observer -> {
-                                                             Data output = new Data.Builder()
-                                                                                   .putString(EXTRA_MESSAGE_ID, freshChat.getId())
-                                                                                   .build();
-                                                             observer.onSuccess(Result.success(output));
-                                                         });
-                                           }
-                                           return Single.just(Result.failure());
-                                       })
-                                       .onErrorReturnItem(Result.failure()));
-        }
-
         private Single<Result> sendRequest() {
             Chat chat = parseChat();
-            dao.insert(Collections.singletonList(chat))
-               .subscribeOn(Schedulers.io())
-               .observeOn(Schedulers.io())
-               .subscribe();
 
-            webSocket.connect();
+            insertMessage(chat);
 
-            return webSocket.sendRequest(new WebSocketRequestMessage(new SecureRandom().nextLong(), chat))
+            return webSocket.sendRequest(new WebSocketRequestMessage(new SecureRandom().nextLong(),
+                                                                    WebSocketRequestMessage.Status.INCOMING_MESSAGE,
+                                                                    chat))
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
                             .onErrorReturnItem(new WebSocketResponse(HttpURLConnection.HTTP_BAD_REQUEST, chat))
@@ -168,16 +133,27 @@ public class SendMessageWorkWrapper extends BaseWorker {
                                     body.setStatus(MessageStatus.ERROR);
                                 }
 
-                                dao.update(body)
-                                   .subscribeOn(Schedulers.io())
-                                   .observeOn(Schedulers.io())
-                                   .subscribe();
+                                updateMessageStatus(body);
 
-                                Data output = new Data.Builder()
-                                                      .putString(EXTRA_MESSAGE_ID, body.getId())
-                                                      .build();
-                                return Single.just(Result.success(output));
+                                return Single.just(Result.success());
                             });
+        }
+
+        private void insertMessage(Chat message) {
+            dao.insert(Collections.singletonList(message))
+               .subscribeOn(Schedulers.io())
+               .observeOn(Schedulers.io())
+               .onErrorComplete()
+               .subscribe();
+        }
+
+        private void updateMessageStatus(Chat message) {
+            dao.update(message)
+               .andThen(Completable.fromAction(() -> DatabaseObserver.getInstance()
+                       .notifyMessageUpdated(message.getConversationId(), message.getId())))
+               .subscribeOn(Schedulers.io())
+               .observeOn(Schedulers.io())
+               .subscribe();
         }
     }
 }
