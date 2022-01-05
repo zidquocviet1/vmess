@@ -230,13 +230,6 @@
             android:windowSoftInputMode="adjustNothing" />
 
         <receiver
-            android:name=".activity.br.ConversationBroadcastReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.mqv.tac.NEW_CONVERSATION" />
-            </intent-filter>
-        </receiver>
-        <receiver
             android:name=".activity.br.FileObserverBroadcastReceiver"
             android:exported="false"
             android:permission="android.permission.READ_EXTERNAL_STORAGE">

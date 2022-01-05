@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.ToolbarActivity;
-import com.mqv.realtimechatapplication.activity.br.ConversationBroadcastReceiver;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListArchivedViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityPreferenceArchivedChatBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -177,12 +176,5 @@ public class PreferenceArchivedConversationActivity extends ToolbarActivity<Conv
             mBinding.imageNoData.setVisibility(View.GONE);
             mBinding.textNoData.setVisibility(View.GONE);
         }
-    }
-
-    private void sendBroadcastRemoveConversation(Conversation conversation) {
-        Intent intent = new Intent(ConversationBroadcastReceiver.ACTION_NEW_CONVERSATION);
-        intent.putExtra(ConversationBroadcastReceiver.EXTRA_CONVERSATION_DATA, conversation);
-        intent.putExtra(ConversationBroadcastReceiver.KEY_FROM_ARCHIVED, true);
-        sendBroadcast(intent);
     }
 }
