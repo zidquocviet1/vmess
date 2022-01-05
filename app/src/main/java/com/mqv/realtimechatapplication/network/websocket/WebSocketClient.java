@@ -3,6 +3,7 @@ package com.mqv.realtimechatapplication.network.websocket;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
+import com.mqv.realtimechatapplication.network.model.Chat;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -106,15 +107,51 @@ public class WebSocketClient {
 
             try {
                 // Decrypt the request message and return the readable message
-                return new WebSocketResponse(HttpURLConnection.HTTP_OK, request.getBody());
+                if (isServiceMessage(request)) {
+                    return new WebSocketResponse(HttpURLConnection.HTTP_OK, request.getBody());
+                } else if (isAcceptedMessage(request) || isSeenMessage(request)) {
+                    return new WebSocketResponse(HttpURLConnection.HTTP_ACCEPTED, request.getBody());
+                } else if (isEmptyMessage(request)) {
+                    return null;
+                }
             } finally {
-                // Acknowledge the request message
                 getWebSocket().sendResponse(response);
             }
         }
     }
 
+    private static boolean isServiceMessage(WebSocketRequestMessage request) {
+        return request.getStatus() == WebSocketRequestMessage.Status.INCOMING_MESSAGE;
+    }
+
+    private static boolean isAcceptedMessage(WebSocketRequestMessage request) {
+        return request.getStatus() == WebSocketRequestMessage.Status.ACCEPTED_MESSAGE;
+    }
+
+    private static boolean isSeenMessage(WebSocketRequestMessage request) {
+        return request.getStatus() == WebSocketRequestMessage.Status.SEEN_MESSAGE;
+    }
+
+    private static boolean isEmptyMessage(WebSocketRequestMessage request) {
+        return request.getStatus() == WebSocketRequestMessage.Status.UNKNOWN;
+    }
+
     private static WebSocketResponseMessage createWebSocketResponse(WebSocketRequestMessage request) {
-        return new WebSocketResponseMessage(request.getId(), HttpURLConnection.HTTP_OK, "OK", request.getBody());
+        if (isServiceMessage(request)) {
+            return new WebSocketResponseMessage(request.getId(),
+                                                HttpURLConnection.HTTP_ACCEPTED,
+                                                "Accepted",
+                                                request.getBody());
+        } else if (isAcceptedMessage(request) || isSeenMessage(request)) {
+            return new WebSocketResponseMessage(request.getId(),
+                                                HttpURLConnection.HTTP_NO_CONTENT,
+                                                "No content",
+                                                request.getBody());
+        } else {
+            return new WebSocketResponseMessage(request.getId(),
+                                                HttpURLConnection.HTTP_BAD_REQUEST,
+                                                "Empty",
+                                                new Chat());
+        }
     }
 }
