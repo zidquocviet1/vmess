@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Data;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
@@ -41,10 +42,11 @@ import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Picture;
+import com.mqv.realtimechatapplication.work.PushMessageAcknowledgeWorkWrapper;
+import com.mqv.realtimechatapplication.work.WorkDependency;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -59,7 +61,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     public static final String EXTRA_CONVERSATION = "conversation";
     public static final String EXTRA_SEEN_CHAT = "is_seen_chat";
     public static final String EXTRA_NEW_CHAT_ADDED = "is_new_chat_added";
-    private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
     private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
     private static final int FAST_DURATION = 200;
@@ -126,7 +127,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         registerNetworkEventCallback(this);
         setupColorUi();
         setupRecyclerView();
-        seenChats();
+        seenWelcomeChat();
+        postRequestSeenMessages();
     }
 
     @Override
@@ -211,10 +213,11 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     mChatListAdapter.changeChatUnsentStatus(index);
                 } else if (oldItem.getStatus() != c.getStatus()) {
                     mChatListAdapter.changeChatStatus(index);
+                    mChatListAdapter.notifyItemRangeChanged(0, mChatList.subList(0, index).size(), ChatListAdapter.MESSAGE_STATUS_PAYLOAD);
                 }
             } else {
                 mChatListAdapter.addChat(c);
-                postRequestSeenMessages(Collections.singletonList(c));
+                postRequestSeenMessages();
             }
         });
 
@@ -293,7 +296,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
             Chat chat = new Chat(UUID.randomUUID().toString(), senderId, content, conversationId, MessageType.GENERIC);
             addNewChatToAdapter(chat);
-            mViewModel.sendMessage(this, getApplicationContext(), chat);
+            mViewModel.sendMessage(this, chat);
         });
         mBinding.buttonMore.setOnClickListener(v -> {
         });
@@ -344,7 +347,9 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mChatListAdapter.addChat(chat);
 
         if (mBinding != null)
-            mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
+            mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1);
+
+        isConversationUpdated = true;
     }
 
     private void setupColorUi() {
@@ -441,7 +446,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         }
     }
 
-    private void seenChats() {
+    private void seenWelcomeChat() {
         // TODO: add seen chat to temp chat [SEEN_CHAT] when user offline or server not response
         if (mChatList.size() == 2) {
             Chat welcomeChat = mChatList.get(1);
@@ -454,8 +459,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 isConversationUpdated = true;
                 isSeenChat = true;
             }
-        } else {
-            postRequestSeenMessages(mChatList);
         }
     }
 
@@ -490,17 +493,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.toolbarTitle.setText(title);
     }
 
-    private void postRequestSeenMessages(List<Chat> messages) {
-        List<Chat> seenChatsRequest = messages.stream()
-                                              .filter(c -> c.getSenderId() != null &&
-                                                      !c.getSenderId().equals(mCurrentUser.getUid()) &&
-                                                      !c.getSeenBy().contains(mCurrentUser.getUid()))
-                                              .peek(c -> c.getSeenBy().add(mCurrentUser.getUid()))
-                                              .collect(Collectors.toList());
-
-        if (!seenChatsRequest.isEmpty()) {
-            mViewModel.seenMessage(seenChatsRequest);
-        }
+    private void postRequestSeenMessages() {
+        Data data = new Data.Builder()
+                            .putString(PushMessageAcknowledgeWorkWrapper.EXTRA_CONVERSATION_ID, mConversation.getId())
+                            .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
+                            .build();
+        WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
     }
 
     public Conversation currentConversation() {
@@ -512,7 +510,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         int     lastItem        = mLayoutManager.findLastCompletelyVisibleItemPosition();
         boolean wasAtBottom     = lastItem >= mChatList.size() - 1;
         boolean isSoftInputShow = WindowInsetsCompat.toWindowInsetsCompat(mBinding.editTextContent.getRootWindowInsets())
-                .isVisible(WindowInsetsCompat.Type.ime());
+                                                    .isVisible(WindowInsetsCompat.Type.ime());
 
         if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
             mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
