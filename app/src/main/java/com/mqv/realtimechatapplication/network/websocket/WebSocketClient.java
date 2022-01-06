@@ -20,7 +20,6 @@ import okhttp3.OkHttpClient;
 public class WebSocketClient {
     private final OkHttpClient  okHttpClient;
     private final Gson          gson;
-    private final FirebaseUser  user;
 
     private WebSocketConnection webSocket;
     private CompositeDisposable webSocketDisposable;
@@ -31,7 +30,6 @@ public class WebSocketClient {
     public WebSocketClient(OkHttpClient httpClient, Gson gson) {
         this.okHttpClient           = httpClient;
         this.gson                   = gson;
-        this.user                   = FirebaseAuth.getInstance().getCurrentUser();
         this.webSocketState         = BehaviorSubject.createDefault(WebSocketConnectionState.DISCONNECTED);
         this.webSocketDisposable    = new CompositeDisposable();
     }
@@ -64,6 +62,8 @@ public class WebSocketClient {
     }
 
     private synchronized WebSocketConnection getWebSocket() throws WebSocketUnavailableException, InterruptedException {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         if (!canConnect || user == null) {
             throw new WebSocketUnavailableException();
         }

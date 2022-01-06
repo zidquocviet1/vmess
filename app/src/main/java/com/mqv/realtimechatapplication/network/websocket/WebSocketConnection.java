@@ -8,9 +8,12 @@ import static com.mqv.realtimechatapplication.network.websocket.WebSocketConnect
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
+import com.google.android.gms.tasks.Tasks;
 import com.google.common.net.HttpHeaders;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
 import com.mqv.realtimechatapplication.BuildConfig;
 import com.mqv.realtimechatapplication.util.Const;
@@ -21,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -57,27 +61,31 @@ public class WebSocketConnection extends WebSocketListener {
         this.okHttpClient   = okHttpClient;
     }
 
+    @WorkerThread
     public synchronized Observable<WebSocketConnectionState> connect(@NonNull FirebaseUser user) throws InterruptedException {
         Logging.debug(TAG, "connect()");
 
         if (client == null) {
-            user.getIdToken(true)
-                .addOnSuccessListener(result -> {
-                    if (result == null) {
-                        webSocketState.onNext(AUTHENTICATION_FAILED);
-                    } else {
-                        String token        = result.getToken();
-                        String bearerToken  = Const.PREFIX_TOKEN + token;
+            try {
+                GetTokenResult result = Tasks.await(user.getIdToken(true));
 
-                        Request.Builder requestBuilder = new Request.Builder()
-                                                                    .url(wsUri)
-                                                                    .addHeader(HttpHeaders.AUTHORIZATION, bearerToken);
+                if (result == null) {
+                    webSocketState.onNext(AUTHENTICATION_FAILED);
+                } else {
+                    String token       = result.getToken();
+                    String bearerToken = Const.PREFIX_TOKEN + token;
 
-                        webSocketState.onNext(CONNECTING);
+                    Request.Builder requestBuilder = new Request.Builder()
+                                                                .url(wsUri)
+                                                                .addHeader(HttpHeaders.AUTHORIZATION, bearerToken);
 
-                        this.client = okHttpClient.newWebSocket(requestBuilder.build(), this);
-                    }
-                });
+                    webSocketState.onNext(CONNECTING);
+
+                    this.client = okHttpClient.newWebSocket(requestBuilder.build(), this);
+                }
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
         }
         return webSocketState;
     }
