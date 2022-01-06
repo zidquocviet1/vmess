@@ -18,6 +18,7 @@ import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListene
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceNotificationActivity;
 import com.mqv.realtimechatapplication.activity.viewmodel.MainViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityMainBinding;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.ui.data.People;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
@@ -46,6 +47,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppDependencies.getIncomingMessageObserver();
         registerNetworkEventCallback(this);
 
         super.onCreate(savedInstanceState);
@@ -62,12 +64,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         mBinding.buttonAllPeople.setOnClickListener(this);
         mBinding.buttonNotificationSettings.setOnClickListener(this);
 
-        registerFirebaseUserChange(user -> {
-            if (user == null)
-                showUserImage(null);
-            else
-                showUserImage(user.getPhotoUrl());
-        });
+        registerFirebaseUserChange(user -> showUserImage(user == null ? null : user.getPhotoUrl()));
     }
 
     @Override

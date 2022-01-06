@@ -12,6 +12,7 @@ import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 
 import java.net.HttpURLConnection;
@@ -62,6 +63,7 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
                         if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                             LoggedInUserManager.getInstance().signOut();
                             FirebaseAuth.getInstance().signOut();
+                            AppDependencies.closeAllConnection();
 
                             var localDisposable = historyUserRepository.signOut(currentUser.getUid())
                                     .andThen(peopleRepository.deleteAll())

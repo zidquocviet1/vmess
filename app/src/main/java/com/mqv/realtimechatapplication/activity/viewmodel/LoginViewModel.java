@@ -25,6 +25,7 @@ import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -196,6 +197,7 @@ public class LoginViewModel extends ViewModel {
 
         if (previousUser != null) {
             logoutPreviousUser(previousUser);
+            AppDependencies.closeAllConnection();
 
             saveRequest = historyUserRepository.signOut(previousUser.getUid())
                     .andThen(peopleRepository.deleteAll())

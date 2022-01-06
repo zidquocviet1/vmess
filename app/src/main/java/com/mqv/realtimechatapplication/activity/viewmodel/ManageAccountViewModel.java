@@ -30,6 +30,7 @@ import com.mqv.realtimechatapplication.data.repository.LoginRepository;
 import com.mqv.realtimechatapplication.data.repository.NotificationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Notification;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -64,6 +65,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     private static final int LOADING_SIMULATION_TIME = 1500;
     private static final int DEFAULT_REQUEST_EMAIL = 1;
     private static final int DEFAULT_REQUEST_PHONE = 2;
+
     private String mVerifyCodeId;
     private boolean isTimeOut;
     private FirebaseUser previousFirebaseUser;
@@ -285,6 +287,7 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                             }
                             loginResult.setValue(Result.Success(user));
 
+                            AppDependencies.closeAllConnection();
                             sendFcmTokenToServer();
                         },
                         t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
