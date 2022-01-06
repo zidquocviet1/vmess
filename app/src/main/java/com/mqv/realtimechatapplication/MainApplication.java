@@ -10,14 +10,19 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.hilt.work.HiltWorkerFactory;
 import androidx.work.Configuration;
 
+import com.google.gson.Gson;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
-import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
+import com.mqv.realtimechatapplication.data.MyDatabase;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
+import com.mqv.realtimechatapplication.dependencies.AppDependencyProvider;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.HiltAndroidApp;
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
 
 @HiltAndroidApp
 public class MainApplication extends Application implements Configuration.Provider{
@@ -27,11 +32,24 @@ public class MainApplication extends Application implements Configuration.Provid
     @Inject
     HiltWorkerFactory workerFactory;
 
+    @Inject
+    OkHttpClient okHttpClient;
+
+    @Inject
+    Gson gson;
+
+    @Inject
+    MyDatabase database;
+
+    @Inject
+    Retrofit retrofit;
+
     private Activity activeActivity;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        initializeAppDependencies();
         setAppTheme(mPreferences.getDarkModeTheme());
         setupActivityListener();
         setupObserveIncomingMessage();
@@ -98,7 +116,11 @@ public class MainApplication extends Application implements Configuration.Provid
         return activeActivity;
     }
 
+    private void initializeAppDependencies() {
+        AppDependencies.init(new AppDependencyProvider(this, database, retrofit, okHttpClient, gson));
+    }
+
     private void setupObserveIncomingMessage() {
-        new IncomingMessageObserver(this);
+        AppDependencies.getIncomingMessageObserver();
     }
 }
