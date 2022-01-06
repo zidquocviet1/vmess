@@ -37,6 +37,16 @@ public interface ChatDao {
            " limit :size offset (:size * :page)")
     Single<List<Chat>> fetchChatByConversation(String conversationId, int page, int size);
 
+    @Query(" select * from chat" +
+           " where chat_conversation_id = :conversationId " +
+                    "and chat_sender_id != :senderId " +
+                    "and (chat_status = 'RECEIVED' or chat_status = 'NOT_RECEIVED')" +
+           " order by chat_timestamp desc")
+    Single<List<Chat>> fetchUnreadChatByConversation(String conversationId, String senderId);
+
+    @Query("select * from chat")
+    Single<List<Chat>> fetchNotReceivedChatList();
+
     @Query("select * from chat where chat_id = :id")
     Single<Chat> findById(String id);
 
