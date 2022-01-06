@@ -14,16 +14,12 @@ import androidx.work.rxjava3.RxWorker;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
-import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
-import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
-import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
 
-import java.net.HttpURLConnection;
 import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Objects;
@@ -78,7 +74,6 @@ public class SendMessageWorkWrapper extends BaseWorker {
     public static class SendMessageWorker extends RxWorker {
         private final ChatDao         dao;
         private final FirebaseUser    user;
-        private final WebSocketClient webSocket;
         /**
          * @param appContext   The application {@link Context}
          * @param workerParams Parameters to setup the internal state of this worker
@@ -86,12 +81,10 @@ public class SendMessageWorkWrapper extends BaseWorker {
         @AssistedInject
         public SendMessageWorker(@Assisted @NonNull Context appContext,
                                  @Assisted @NonNull WorkerParameters workerParams,
-                                 ChatDao dao,
-                                 WebSocketClient webSocket) {
+                                 ChatDao dao) {
             super(appContext, workerParams);
             this.dao       = dao;
             this.user      = FirebaseAuth.getInstance().getCurrentUser();
-            this.webSocket = webSocket;
         }
 
         @NonNull
@@ -120,9 +113,9 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
             insertMessage(chat);
 
-            return webSocket.sendRequest(new WebSocketRequestMessage(new SecureRandom().nextLong(),
+            return AppDependencies.getWebSocket().sendRequest(new WebSocketRequestMessage(new SecureRandom().nextLong(),
                                                                     WebSocketRequestMessage.Status.INCOMING_MESSAGE,
-                                                                    chat))
+                                                                    chat, user.getUid()))
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
                             .flatMap(response -> {
@@ -143,8 +136,8 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
         private void updateMessageStatus(Chat message) {
             dao.update(message)
-               .andThen(Completable.fromAction(() -> DatabaseObserver.getInstance()
-                       .notifyMessageUpdated(message.getConversationId(), message.getId())))
+               .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver()
+                                                                    .notifyMessageUpdated(message.getConversationId(), message.getId())))
                .subscribeOn(Schedulers.io())
                .observeOn(Schedulers.io())
                .subscribe();

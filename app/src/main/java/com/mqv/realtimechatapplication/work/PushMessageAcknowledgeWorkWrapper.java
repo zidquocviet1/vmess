@@ -15,9 +15,9 @@ import androidx.work.rxjava3.RxWorker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
-import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
 
@@ -68,7 +68,6 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
     @HiltWorker
     public static class PushMessageWorker extends RxWorker {
         private final ChatDao chatDao;
-        private final WebSocketClient webSocket;
         private final FirebaseUser user;
 
         private static final int MARK_AS_READ_CODE = 201;
@@ -81,11 +80,9 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
         @AssistedInject
         public PushMessageWorker(@Assisted @NonNull Context appContext,
                                  @Assisted @NonNull WorkerParameters workerParams,
-                                 ChatDao chatDao,
-                                 WebSocketClient webSocket) {
+                                 ChatDao chatDao) {
             super(appContext, workerParams);
             this.chatDao = chatDao;
-            this.webSocket = webSocket;
             this.user = FirebaseAuth.getInstance().getCurrentUser();
         }
 
@@ -133,7 +130,7 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
                                                                           status,
                                                                           body,
                                                                           userId);
-            return webSocket.sendRequest(request);
+            return AppDependencies.getWebSocket().sendRequest(request);
         }
     }
 }

@@ -23,6 +23,7 @@ import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -99,7 +100,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
             throw new IllegalArgumentException("Conversation can't be null");
         }
 
-        DatabaseObserver.getInstance().registerMessageListener(conversation.getId(), messageListener);
+        AppDependencies.getDatabaseObserver().registerMessageListener(conversation.getId(), messageListener);
     }
 
     //// Getter
@@ -295,6 +296,6 @@ public class ConversationViewModel extends CurrentUserViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        DatabaseObserver.getInstance().unregisterMessageListener(messageListener);
+        AppDependencies.getDatabaseObserver().unregisterMessageListener(messageListener);
     }
 }

@@ -1,8 +1,8 @@
 package com.mqv.realtimechatapplication.message;
 
-import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.exception.ResourceNotFoundException;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -44,13 +44,13 @@ public final class IncomingMessageProcessor {
         if (message.getStatus() == 200) {
             processMessageInternal(body, chatDao.insert(Collections.singletonList(body))
                                                 .andThen(Completable.fromAction(() ->
-                                                        DatabaseObserver.getInstance()
-                                                                        .notifyMessageInserted(body.getConversationId(), body.getId()))));
+                                                        AppDependencies.getDatabaseObserver()
+                                                                       .notifyMessageInserted(body.getConversationId(), body.getId()))));
         } else if (message.getStatus() == HttpURLConnection.HTTP_ACCEPTED) {
             processMessageInternal(body, chatDao.update(body)
                                                 .andThen(Completable.fromAction(() ->
-                                                        DatabaseObserver.getInstance()
-                                                                        .notifyMessageUpdated(body.getConversationId(), body.getId()))));
+                                                        AppDependencies.getDatabaseObserver()
+                                                                       .notifyMessageUpdated(body.getConversationId(), body.getId()))));
         }
     }
 
