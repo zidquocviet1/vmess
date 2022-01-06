@@ -1,35 +1,23 @@
 package com.mqv.realtimechatapplication.message;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 
-import androidx.annotation.NonNull;
-import androidx.hilt.work.HiltWorker;
-import androidx.work.Constraints;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
-import androidx.work.WorkerParameters;
-import androidx.work.rxjava3.RxWorker;
-
-import com.mqv.realtimechatapplication.data.dao.ChatDao;
-import com.mqv.realtimechatapplication.data.dao.ConversationDao;
-import com.mqv.realtimechatapplication.network.exception.ResourceNotFoundException;
-import com.mqv.realtimechatapplication.network.model.Chat;
+import com.google.firebase.auth.FirebaseAuth;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
+import com.mqv.realtimechatapplication.network.NetworkConstraint;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
-import com.mqv.realtimechatapplication.network.websocket.WebSocketConnectionState;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketUnavailableException;
 import com.mqv.realtimechatapplication.util.Logging;
 
-import java.io.IOException;
-import java.util.Collections;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import dagger.assisted.Assisted;
-import dagger.assisted.AssistedInject;
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.schedulers.Schedulers;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 * Class for observing all of the messages from websocket: request, response, ping, pong
@@ -38,102 +26,102 @@ public class IncomingMessageObserver {
     private static final String TAG                     = IncomingMessageObserver.class.getSimpleName();
     private static final long   READ_REQUEST_TIMEOUT    = TimeUnit.MINUTES.toMillis(1);
 
-    public IncomingMessageObserver(Context context) {
-        Constraints constraints = new Constraints.Builder()
-                                                 .setRequiredNetworkType(NetworkType.CONNECTED)
-                                                 .build();
-        WorkManager.getInstance(context).enqueue(new OneTimeWorkRequest.Builder(MessageWorkerRetriever.class)
-                                                                        .setConstraints(constraints).build());
-    }
+    private static final AtomicInteger INSTANCE = new AtomicInteger(0);
 
-    @HiltWorker
-    public static class MessageWorkerRetriever extends RxWorker {
-        private final WebSocketClient webSocket;
-        private final ChatDao chatDao;
-        private final ConversationDao conversationDao;
-        private boolean terminated;
-        /**
-         * @param appContext   The application {@link Context}
-         * @param workerParams Parameters to setup the internal state of this worker
-         */
-        @AssistedInject
-        public MessageWorkerRetriever(@Assisted @NonNull Context appContext,
-                                      @Assisted @NonNull WorkerParameters workerParams,
-                                      ChatDao chatDao,
-                                      ConversationDao conversationDao,
-                                      WebSocketClient webSocket) {
-            super(appContext, workerParams);
-            this.webSocket = webSocket;
-            this.chatDao = chatDao;
-            this.conversationDao = conversationDao;
+    private final Context           context;
+    private final BroadcastReceiver networkConnectionReceiver;
+
+    private boolean terminated;
+
+    public IncomingMessageObserver(Context context) {
+        // Make sure only one instance running at the same time
+        if (INSTANCE.incrementAndGet() != 1) {
+            throw new AssertionError("Multiple instances");
         }
 
-        @NonNull
+        this.context = context;
+
+        new MessageRetriever().start();
+
+        networkConnectionReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                synchronized (IncomingMessageObserver.this) {
+                    if (!NetworkConstraint.isMet(context)) {
+                        Logging.debug(TAG, "Lost network need to shutdown our webSocket and reset state");
+                        disconnect();
+                    }
+                    // When the network connection changed, we need to notifyAll to all threads to connect again.
+                    IncomingMessageObserver.this.notifyAll();
+                }
+            }
+        };
+        context.registerReceiver(networkConnectionReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    private synchronized void waitForConnectionNecessary() {
+        while (!isConnectionNecessary()) {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new AssertionError(e);
+            }
+        }
+    }
+
+    private boolean isConnectionNecessary() {
+        boolean registered = FirebaseAuth.getInstance().getCurrentUser() != null;
+        boolean hasNetwork = NetworkConstraint.isMet(context);
+
+        return registered && hasNetwork;
+    }
+
+    private void disconnect() {
+        AppDependencies.getWebSocket().disconnect();
+    }
+
+    public void terminate() {
+        INSTANCE.decrementAndGet();
+
+        context.unregisterReceiver(networkConnectionReceiver);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            terminated = true;
+            disconnect();
+        });
+    }
+
+    private class MessageRetriever extends Thread {
         @Override
-        public Single<Result> createWork() {
-            Logging.debug(TAG, "Making websocket connection...");
+        public void run() {
+            while (!terminated) {
+                Logging.debug(TAG, "Waiting for websocket state change....");
+                waitForConnectionNecessary();
 
-            webSocket.connect();
+                Logging.debug(TAG, "Making websocket connection...");
+                WebSocketClient webSocket = AppDependencies.getWebSocket();
+                webSocket.connect();
 
-            //noinspection ResultOfMethodCallIgnored
-            webSocket.getWebSocketState()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .subscribe(state -> {
-                        if (state == WebSocketConnectionState.CONNECTED) {
-                            try {
-                                while (!terminated) {
-                                    try {
-                                        Logging.debug(TAG, "Reading message....");
-
-                                        WebSocketResponse message = webSocket.readMessage(TimeUnit.MINUTES.toMillis(READ_REQUEST_TIMEOUT));
-
-                                        if (message.getStatus() == 200) {
-                                            Logging.debug(TAG, "Receive new request message");
-
-                                            Chat body = message.getBody();
-
-                                            // Fetch local if not present then make a request to server to get conversation
-                                            // Insert message into conversation
-                                            // update conversation status as inbox
-
-                                            conversationDao.fetchById(body.getConversationId())
-                                                            .flatMap(map -> Single.just(map.keySet()
-                                                                    .stream()
-                                                                    .filter(c -> c.getId().equals(body.getConversationId()))
-                                                                    .findFirst()))
-                                                            .flatMapCompletable(optional -> {
-                                                                if (optional.isPresent()) {
-                                                                    return chatDao.insert(Collections.singletonList(body))
-                                                                            .andThen(conversationDao.markConversationAsInbox(optional.get()))
-                                                                            .onErrorComplete()
-                                                                            .doOnError(t -> Logging.debug(TAG, "Insert incoming message failed: " + t));
-                                                                } else {
-                                                                    // TODO: make remote request to receive conversation
-                                                                    return Completable.error(ResourceNotFoundException::new);
-                                                                }
-                                                            })
-                                                           .onErrorComplete()
-                                                           .doOnError(t -> Logging.debug(TAG, "Can't notify new incoming message update: " + t))
-                                                           .subscribe();
-                                        }
-                                    } catch (IOException e) {
-                                        Logging.show("Connection is not available right now!");
-                                        terminated = true;
-                                    } catch (TimeoutException e) {
-                                        Logging.show("Have no any request message");
-                                        terminated = true;
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                        terminated = true;
-                                    }
-                                }
-                            } finally {
-                                 webSocket.disconnect();
-                            }
+                try {
+                    while (isConnectionNecessary()) {
+                        try {
+                            Logging.debug(TAG, "Reading message....");
+                            WebSocketResponse message = webSocket.readMessage(TimeUnit.MINUTES.toMillis(READ_REQUEST_TIMEOUT));
+                            AppDependencies.getIncomingMessageProcessor().process(message);
+                        } catch (WebSocketUnavailableException e) {
+                            Logging.debug(TAG, "Pipe unexpectedly unavailable, connecting");
+                            webSocket.connect();
+                        } catch (TimeoutException e) {
+                            Logging.debug(TAG, "Application level read timeout...");
                         }
-                    });
-            return Single.just(Result.success());
+                    }
+                } catch (Throwable e) {
+                    Logging.debug(TAG, e.getMessage());
+                } finally {
+                    Logging.debug(TAG, "Shutting down pipe...");
+                    disconnect();
+                }
+            }
         }
     }
 }
