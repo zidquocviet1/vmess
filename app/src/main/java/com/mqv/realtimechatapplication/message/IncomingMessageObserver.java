@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 * */
 public class IncomingMessageObserver {
     private static final String TAG                     = IncomingMessageObserver.class.getSimpleName();
-    private static final long   READ_REQUEST_TIMEOUT    = TimeUnit.MINUTES.toMillis(1);
+    private static final long   READ_REQUEST_TIMEOUT    = 1;
 
     private static final AtomicInteger INSTANCE = new AtomicInteger(0);
 
