@@ -8,7 +8,11 @@ import com.mqv.realtimechatapplication.data.MyDatabase;
 import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
 import com.mqv.realtimechatapplication.network.service.ConversationService;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketAlarmTimer;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketConnection;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketFactory;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketHeartbeatMonitor;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -37,7 +41,13 @@ public class AppDependencyProvider implements AppDependencies.Provider {
 
     @Override
     public WebSocketClient provideWebSocket() {
-        return new WebSocketClient(okHttpClient, gson);
+        WebSocketAlarmTimer       timer     = new WebSocketAlarmTimer();
+        WebSocketHeartbeatMonitor monitor   = new WebSocketHeartbeatMonitor(timer);
+        WebSocketClient           webSocket = new WebSocketClient(provideWebSocketFactory(monitor));
+
+        monitor.monitor(webSocket);
+
+        return webSocket;
     }
 
     @Override
@@ -55,5 +65,9 @@ public class AppDependencyProvider implements AppDependencies.Provider {
     @Override
     public DatabaseObserver provideDatabaseObserver() {
         return new DatabaseObserver();
+    }
+
+    private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {
+        return () -> new WebSocketConnection(okHttpClient, gson, monitor);
     }
 }

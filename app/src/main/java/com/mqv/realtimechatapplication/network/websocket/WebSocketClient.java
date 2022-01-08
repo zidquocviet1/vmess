@@ -2,7 +2,6 @@ package com.mqv.realtimechatapplication.network.websocket;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.Gson;
 import com.mqv.realtimechatapplication.network.model.Chat;
 
 import java.io.IOException;
@@ -15,23 +14,20 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
-import okhttp3.OkHttpClient;
 
 public class WebSocketClient {
-    private final OkHttpClient  okHttpClient;
-    private final Gson          gson;
-
     private WebSocketConnection webSocket;
     private CompositeDisposable webSocketDisposable;
+
+    private final WebSocketFactory                          webSocketFactory;
     private final BehaviorSubject<WebSocketConnectionState> webSocketState;
 
     private boolean canConnect;
 
-    public WebSocketClient(OkHttpClient httpClient, Gson gson) {
-        this.okHttpClient           = httpClient;
-        this.gson                   = gson;
-        this.webSocketState         = BehaviorSubject.createDefault(WebSocketConnectionState.DISCONNECTED);
-        this.webSocketDisposable    = new CompositeDisposable();
+    public WebSocketClient(WebSocketFactory webSocketFactory) {
+        this.webSocketFactory    = webSocketFactory;
+        this.webSocketState      = BehaviorSubject.createDefault(WebSocketConnectionState.DISCONNECTED);
+        this.webSocketDisposable = new CompositeDisposable();
     }
 
     public Observable<WebSocketConnectionState> getWebSocketState() {
@@ -71,7 +67,7 @@ public class WebSocketClient {
         if (webSocket == null || webSocket.isDead()) {
             webSocketDisposable.dispose();
 
-            webSocket           = new WebSocketConnection(okHttpClient, gson);
+            webSocket           = webSocketFactory.createWebSocket();
             webSocketDisposable = new CompositeDisposable();
 
             Disposable disposable = webSocket.connect(user)

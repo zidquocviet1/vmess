@@ -16,14 +16,17 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
 import com.mqv.realtimechatapplication.BuildConfig;
+import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -45,13 +48,16 @@ public class WebSocketConnection extends WebSocketListener {
     private final String                                    wsUri;
     private final Gson                                      gson;
     private final OkHttpClient                              okHttpClient;
+    private final WebSocketHeartbeatMonitor                 monitor;
     private final BehaviorSubject<WebSocketConnectionState> webSocketState;
     private final Map<Long, OutgoingRequest>                outgoingRequests = new HashMap<>();
     private final LinkedList<WebSocketRequestMessage>       incomingRequests = new LinkedList<>();
+    private final Set<Long>                                 pingRequests     = new HashSet<>();
 
-    private WebSocket client;
+    private WebSocket    client;
+    private FirebaseUser user;
 
-    public WebSocketConnection(OkHttpClient okHttpClient, Gson gson) {
+    public WebSocketConnection(OkHttpClient okHttpClient, Gson gson, WebSocketHeartbeatMonitor monitor) {
         String uri = BuildConfig.SERVER_URL.replace("https://", "wss://")
                                            .replace("http://", "ws://");
 
@@ -59,6 +65,7 @@ public class WebSocketConnection extends WebSocketListener {
         this.gson           = gson;
         this.webSocketState = BehaviorSubject.createDefault(DISCONNECTED);
         this.okHttpClient   = okHttpClient;
+        this.monitor        = monitor;
     }
 
     @WorkerThread
@@ -67,6 +74,8 @@ public class WebSocketConnection extends WebSocketListener {
 
         if (client == null) {
             try {
+                this.user = user;
+
                 GetTokenResult result = Tasks.await(user.getIdToken(true));
 
                 if (result == null) {
@@ -161,9 +170,17 @@ public class WebSocketConnection extends WebSocketListener {
     public synchronized void sendPingMessage() throws IOException {
         if (client != null) {
             Logging.debug(TAG, "Sending ping message...");
-            long id = System.currentTimeMillis();
 
-            if (!client.send(id + " hello")) {
+            long                    id   = System.currentTimeMillis();
+            WebSocketRequestMessage ping = new WebSocketRequestMessage(id,
+                                                                       WebSocketRequestMessage.Status.PING,
+                                                                       new Chat(),
+                                                                       user.getUid());
+            WebSocketMessage message = new WebSocketMessage(WebSocketMessage.Type.REQUEST, ping, null);
+
+            pingRequests.add(id);
+
+            if (!client.send(gson.toJson(message))) {
                 throw new IOException("Send failed!");
             }
         }
@@ -191,6 +208,9 @@ public class WebSocketConnection extends WebSocketListener {
                 OutgoingRequest emitter = outgoingRequests.remove(response.getId());
                 if (emitter != null) {
                     emitter.onSuccess(new WebSocketResponse(response.getStatus(), response.getBody()));
+                } else if (pingRequests.remove(response.getId())) {
+                    Logging.debug(TAG, "Receive pong message, sent time: " + response.getId());
+                    monitor.onKeepAliveResponse(response.getId());
                 }
             }
         }

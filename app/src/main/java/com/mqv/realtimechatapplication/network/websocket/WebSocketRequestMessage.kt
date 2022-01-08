@@ -11,6 +11,8 @@ data class WebSocketRequestMessage(val id: Long, val status: Status, val body: C
         ACCEPTED_MESSAGE,
         @SerializedName("seen")
         SEEN_MESSAGE,
+        @SerializedName("ping")
+        PING,
         @SerializedName("unknown")
         UNKNOWN
     }
