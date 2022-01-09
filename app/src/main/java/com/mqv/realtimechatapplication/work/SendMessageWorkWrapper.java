@@ -18,6 +18,7 @@ import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 
 import java.security.SecureRandom;
@@ -113,11 +114,15 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
             insertMessage(chat);
 
-            return AppDependencies.getWebSocket().sendRequest(new WebSocketRequestMessage(new SecureRandom().nextLong(),
-                                                                    WebSocketRequestMessage.Status.INCOMING_MESSAGE,
-                                                                    chat, user.getUid()))
+            WebSocketClient         webSocket = AppDependencies.getWebSocket();
+            WebSocketRequestMessage request   = new WebSocketRequestMessage(new SecureRandom().nextLong(),
+                                                                            WebSocketRequestMessage.Status.INCOMING_MESSAGE,
+                                                                            chat, user.getUid());
+
+            return webSocket.sendRequest(request)
                             .subscribeOn(Schedulers.io())
                             .observeOn(Schedulers.io())
+                            .doOnError(t -> webSocket.notifyMessageError(request))
                             .flatMap(response -> {
                                 updateMessageStatus(response.getBody());
 

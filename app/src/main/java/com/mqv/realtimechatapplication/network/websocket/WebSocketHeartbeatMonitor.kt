@@ -1,5 +1,7 @@
 package com.mqv.realtimechatapplication.network.websocket
 
+import com.mqv.realtimechatapplication.dependencies.AppDependencies
+import com.mqv.realtimechatapplication.util.Logging
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -12,6 +14,7 @@ private const val PING_PONG_SENT_TIME_INTERVAL = 50L
 private const val MAX_MESSAGE_ALLOWED_MISSING = 3L
 
 class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
+    private val pendingMessage = HashSet<WebSocketRequestMessage>()
     private val executor = Executors.newSingleThreadExecutor()
     private var webSocket: WebSocketClient? = null
     private var sender: PingPongSender? = null
@@ -19,34 +22,67 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
     private var lastTimeReceivePong = 0L
 
     fun monitor(webSocket: WebSocketClient) {
-        this.webSocket = webSocket
+        executor.execute {
+            this.webSocket = webSocket
 
-        webSocket.webSocketState
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .distinctUntilChanged()
-            .subscribe { onStateChange(it) }
+            webSocket.webSocketState
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .distinctUntilChanged()
+                .subscribe { onStateChange(it) }
+        }
     }
 
     // Check the state, when it connected create PingPongSender to send ping messages
     private fun onStateChange(state: WebSocketConnectionState) {
-        isPingPongNecessary = state == WebSocketConnectionState.CONNECTED
+        executor.execute {
+            isPingPongNecessary = state == WebSocketConnectionState.CONNECTED
 
-        if (sender == null && isPingPongNecessary) {
-            sender = PingPongSender()
-            sender!!.start()
-        } else if (sender != null && !isPingPongNecessary) {
-            sender!!.shutdown()
-            sender = null;
+            if (isPingPongNecessary) {
+                retrySendingErrorMessage()
+            }
+
+            if (sender == null && isPingPongNecessary) {
+                sender = PingPongSender()
+                sender!!.start()
+            } else if (sender != null && !isPingPongNecessary) {
+                sender!!.shutdown()
+                sender = null
+            }
         }
     }
 
     override fun onKeepAliveResponse(sentTime: Long) {
-        lastTimeReceivePong = sentTime
+        executor.execute {
+            lastTimeReceivePong = sentTime
+        }
     }
 
-    override fun onMessageError() {
-        TODO("Not yet implemented")
+    override fun onMessageError(request: WebSocketRequestMessage) {
+        executor.execute {
+            pendingMessage.add(request)
+        }
+    }
+
+    private fun retrySendingErrorMessage() {
+        executor.execute {
+            val iterator = pendingMessage.iterator()
+
+            while (iterator.hasNext()) {
+                val request = iterator.next()
+                Logging.debug(TAG, "Retry sending message id = ${request.id}")
+
+                webSocket!!.sendRequest(request)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .onErrorComplete()
+                    .subscribe { response ->
+                        iterator.remove()
+
+                        AppDependencies.getIncomingMessageProcessor().process(response)
+                    }
+            }
+        }
     }
 
     inner class PingPongSender : Thread() {
@@ -61,8 +97,10 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
                 timer.sleep(TimeUnit.SECONDS.toMillis(PING_PONG_SENT_TIME_INTERVAL))
 
                 if (shouldSend && isPingPongNecessary) {
-                    val sinceTime = System.currentTimeMillis() - (TimeUnit.SECONDS.toMillis(
-                        PING_PONG_SENT_TIME_INTERVAL) * MAX_MESSAGE_ALLOWED_MISSING)
+                    val maxAllowedTime = TimeUnit.SECONDS.toMillis(
+                        PING_PONG_SENT_TIME_INTERVAL
+                    ) * MAX_MESSAGE_ALLOWED_MISSING
+                    val sinceTime = System.currentTimeMillis() - maxAllowedTime
 
                     if (lastTimeReceivePong < sinceTime) {
                         webSocket?.disconnect()

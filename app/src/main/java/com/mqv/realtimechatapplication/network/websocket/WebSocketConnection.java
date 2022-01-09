@@ -136,7 +136,7 @@ public class WebSocketConnection extends WebSocketListener {
         }
     }
 
-    public synchronized Single<WebSocketResponse> sendRequest(WebSocketRequestMessage request) throws IOException{
+    public synchronized Single<WebSocketResponse> sendRequest(WebSocketRequestMessage request) throws IOException {
         if (client == null) {
             throw new IOException("No connection!");
         }
@@ -184,6 +184,10 @@ public class WebSocketConnection extends WebSocketListener {
                 throw new IOException("Send failed!");
             }
         }
+    }
+
+    public void notifyMessageError(WebSocketRequestMessage request) {
+        monitor.onMessageError(request);
     }
 
     @Override

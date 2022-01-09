@@ -95,6 +95,14 @@ public class WebSocketClient {
         }
     }
 
+    public void notifyMessageError(WebSocketRequestMessage request) {
+        try {
+            getWebSocket().notifyMessageError(request);
+        } catch (WebSocketUnavailableException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public WebSocketResponse readMessage(long timeoutMillis)
             throws IOException, TimeoutException, InterruptedException {
         while (true) {
