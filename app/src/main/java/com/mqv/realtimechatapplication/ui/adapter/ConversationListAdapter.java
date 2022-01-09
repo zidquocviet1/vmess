@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,7 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.ConversationGroup;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.util.Const;
@@ -32,17 +34,23 @@ import com.mqv.realtimechatapplication.util.Picture;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 public class ConversationListAdapter extends ListAdapter<Conversation, ConversationListAdapter.ConversationViewHolder> {
     private final List<Conversation> mConversations;
     private final Context mContext;
     private final FirebaseUser mCurrentUser;
     private BiConsumer<Integer, Boolean> conversationConsumer;
+
+    public static final String LAST_CHAT_PAYLOAD = "last_chat";
+    public static final String LAST_CHAT_STATUS_PAYLOAD = "last_chat_status";
+    public static final String LAST_CHAT_UNSENT_PAYLOAD = "last_chat_unsent";
+    public static final String NAME_PAYLOAD = "name";
+    public static final String PRESENCE_PAYLOAD = "presence";
+    public static final String THUMBNAIL_PAYLOAD = "avatar";
 
     public ConversationListAdapter(List<Conversation> data, Context context) {
         super(new DiffUtil.ItemCallback<>() {
@@ -73,6 +81,34 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                        oldItem.getCreationTime().equals(newItem.getCreationTime()) &&
                        isLastChatEquals;
             }
+
+            @Override
+            public Object getChangePayload(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
+                Bundle bundle = new Bundle();
+
+                if (oldItem.getType() == ConversationType.GROUP) {
+                    ConversationGroup oldGroup = oldItem.getGroup();
+                    ConversationGroup newGroup = newItem.getGroup();
+
+                    String oldGroupName = oldGroup.getName();
+                    String newGroupName = newGroup.getName();
+
+                    String oldGroupThumbnail = oldGroup.getThumbnail();
+                    String newGroupThumbnail = newGroup.getThumbnail();
+
+                    bundle.putBoolean(NAME_PAYLOAD, !oldGroupName.equals(newGroupName));
+                    bundle.putBoolean(THUMBNAIL_PAYLOAD, !Objects.equals(oldGroupThumbnail, newGroupThumbnail));
+                }
+
+                Chat oldRecentChat = oldItem.getLastChat();
+                Chat newRecentChat = newItem.getLastChat();
+
+                bundle.putBoolean(LAST_CHAT_PAYLOAD, !Objects.equals(oldRecentChat, newRecentChat));
+                bundle.putBoolean(LAST_CHAT_STATUS_PAYLOAD, !Objects.equals(oldRecentChat.getStatus(), newRecentChat.getStatus()));
+                bundle.putBoolean(LAST_CHAT_UNSENT_PAYLOAD, oldRecentChat.isUnsent() != newRecentChat.isUnsent());
+
+                return bundle;
+            }
         });
         mConversations = data;
         mContext = context;
@@ -95,8 +131,22 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position, @NonNull List<Object> payloads) {
         super.onBindViewHolder(holder, position, payloads);
 
-        if (!payloads.isEmpty() && payloads.get(0).equals("last_chat")) {
+        if (!payloads.isEmpty() && payloads.get(0).equals(LAST_CHAT_PAYLOAD)) {
             holder.bindRecentChat(mConversations.get(position));
+        } else if (!payloads.isEmpty() && payloads.get(0) instanceof Bundle) {
+            Bundle bundle = (Bundle) payloads.get(0);
+
+            if (bundle.getBoolean(NAME_PAYLOAD, false)) {
+                holder.bindConversationName(getItem(position));
+            } else if (bundle.getBoolean(THUMBNAIL_PAYLOAD, false)) {
+                holder.bindConversationThumbnail(getItem(position));
+            } else if (bundle.getBoolean(LAST_CHAT_PAYLOAD, false)) {
+                holder.bindRecentChat(getItem(position));
+            } else if (bundle.getBoolean(LAST_CHAT_STATUS_PAYLOAD, false)) {
+                holder.bindRecentChatStatus(getItem(position));
+            } else if (bundle.getBoolean(LAST_CHAT_UNSENT_PAYLOAD, false)) {
+                holder.bindUnsentMessage(getItem(position));
+            }
         }
     }
 
@@ -149,8 +199,37 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             });
         }
 
+        public void bindConversationName(Conversation item) {
+            mBinding.textTitleConversation.setText(item.getGroup().getName());
+        }
+
+        public void bindConversationThumbnail(Conversation item) {
+            loadImage(item.getGroup().getThumbnail(), mBinding.imageState);
+        }
+
+        public void bindUnsentMessage(Conversation item) {
+            Chat recentChat = item.getLastChat();
+            String textContent;
+
+            if (recentChat.getSenderId().equals(mCurrentUser.getUid())) {
+                textContent = mContext.getString(R.string.title_sender_chat_unsent);
+            } else {
+                User sender = item.getParticipants()
+                                  .stream()
+                                  .filter(u -> u.getUid().equals(recentChat.getSenderId()))
+                                  .findFirst()
+                                  .orElseThrow(IllegalStateException::new);
+                textContent = mContext.getString(R.string.title_receiver_chat_unsent, sender.getDisplayName());
+            }
+            mBinding.textContentConversation.setText(textContent);
+        }
+
+        public void bindRecentChatStatus(Conversation item) {
+            bindConversationStatus(item.getLastChat(), item.getParticipants(), item.getType());
+        }
+
         public void bindRecentChat(Conversation item) {
-            Chat recentChat = item.getChats().get(item.getChats().size() - 1);
+            Chat recentChat = item.getLastChat();
 
             if (recentChat.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
                 bindWelcomeChat(recentChat);
@@ -161,12 +240,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         }
 
         public void bind(Conversation item) {
-            List<Chat> sortedChat = item.getChats()
-                    .stream()
-                    .sorted(Comparator.comparing(Chat::getTimestamp))
-                    .collect(Collectors.toList());
-
-            Chat recentChat = sortedChat.get(sortedChat.size() - 1);
+            Chat recentChat = item.getLastChat();
 
             bindConversationStatus(recentChat, item.getParticipants(), item.getType());
 
