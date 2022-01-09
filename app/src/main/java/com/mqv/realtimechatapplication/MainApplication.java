@@ -26,23 +26,12 @@ import retrofit2.Retrofit;
 
 @HiltAndroidApp
 public class MainApplication extends Application implements Configuration.Provider{
-    @Inject
-    AppPreferences mPreferences;
-
-    @Inject
-    HiltWorkerFactory workerFactory;
-
-    @Inject
-    OkHttpClient okHttpClient;
-
-    @Inject
-    Gson gson;
-
-    @Inject
-    MyDatabase database;
-
-    @Inject
-    Retrofit retrofit;
+    @Inject AppPreferences    mPreferences;
+    @Inject HiltWorkerFactory workerFactory;
+    @Inject OkHttpClient      okHttpClient;
+    @Inject Gson              gson;
+    @Inject MyDatabase        database;
+    @Inject Retrofit          retrofit;
 
     private Activity activeActivity;
 
@@ -73,8 +62,8 @@ public class MainApplication extends Application implements Configuration.Provid
     @Override
     public Configuration getWorkManagerConfiguration() {
         return new Configuration.Builder()
-                .setWorkerFactory(workerFactory)
-                .build();
+                                .setWorkerFactory(workerFactory)
+                                .build();
     }
 
     private void setupActivityListener() {
