@@ -8,10 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.Data;
 
@@ -50,7 +51,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -69,7 +69,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private List<User> mConversationParticipants;
     private Conversation mConversation;
     private ChatListAdapter mChatListAdapter;
-    private LinearLayoutManager mLayoutManager;
+    private CustomLinearLayoutManager mLayoutManager;
     private User mCurrentUser;
 
     // Default color for the whole conversation
@@ -92,7 +92,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         @Override
         public void onItemRangeInserted(int positionStart, int itemCount) {
             if (mLayoutManager.findLastVisibleItemPosition() >= mChatListAdapter.getItemCount() - (itemCount + 1)) {
-                mLayoutManager.smoothScrollToPosition(mBinding.recyclerChatList, null, mChatListAdapter.getItemCount());
+                mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1);
             }
         }
     };
@@ -179,7 +179,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     mChatListAdapter.notifyItemRemoved(0);
                     mBinding.recyclerChatList.postDelayed(() -> mBinding.recyclerChatList.addOnScrollListener(mScrollListener), 500);
 
-                    if (result.getError() != -1) Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
+                    if (result.getError() != -1)
+                        Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
                     break;
                 case SUCCESS:
                     List<Chat> freshData = result.getSuccess();
@@ -292,10 +293,9 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             String content = mBinding.editTextContent.getText().toString();
             String conversationId = mConversation.getId();
 
-            mBinding.editTextContent.setText("");
+            mBinding.editTextContent.getText().clear();
 
             Chat chat = new Chat(UUID.randomUUID().toString(), senderId, content, conversationId, MessageType.GENERIC);
-            addNewChatToAdapter(chat);
             mViewModel.sendMessage(this, chat);
         });
         mBinding.buttonMore.setOnClickListener(v -> {
@@ -329,27 +329,14 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             }
         });
         mBinding.buttonScrollToBottom.setOnClickListener(v -> {
-            LinearLayoutManager llm = (LinearLayoutManager) mBinding.recyclerChatList.getLayoutManager();
-
-            if (llm == null) return;
-
-            int position = llm.findLastVisibleItemPosition();
+            int position = mLayoutManager.findLastVisibleItemPosition();
 
             if (mChatList.size() - position >= NUM_ITEM_TO_SCROLL_FAST_THRESHOLD) {
                 mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
             } else {
-                mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1);
+                mLayoutManager.smoothScrollToPosition(mBinding.recyclerChatList, false, mChatList.size() - 1);
             }
         });
-    }
-
-    private void addNewChatToAdapter(Chat chat) {
-        mChatListAdapter.addChat(chat);
-
-        if (mBinding != null)
-            mBinding.recyclerChatList.smoothScrollToPosition(mChatList.size() - 1);
-
-        isConversationUpdated = true;
     }
 
     private void setupColorUi() {
@@ -377,12 +364,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mCurrentUser,
                 mOtherUser);
 
-        mLayoutManager = new LinearLayoutManager(this);
+        mLayoutManager = new CustomLinearLayoutManager(this);
         mLayoutManager.setReverseLayout(false);
         mLayoutManager.setStackFromEnd(true);
 
-        mBinding.recyclerChatList.setItemAnimator(null); // Remove DefaultItemAnimator
-        mBinding.recyclerChatList.addItemDecoration(new CustomItemDecoration(this, mChatList, mCurrentUser));
+        mBinding.recyclerChatList.setItemAnimator(null);
+        mBinding.recyclerChatList.addItemDecoration(new CustomItemDecoration(this, mChatList));
         mBinding.recyclerChatList.setAdapter(mChatListAdapter);
         mBinding.recyclerChatList.setHasFixedSize(true);
         mBinding.recyclerChatList.setLayoutManager(mLayoutManager);
@@ -501,10 +488,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
     }
 
-    public Conversation currentConversation() {
-        return mConversation;
-    }
-
     @Override
     public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
         int     lastItem        = mLayoutManager.findLastCompletelyVisibleItemPosition();
@@ -517,20 +500,41 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         }
     }
 
-    static class CustomItemDecoration extends RecyclerView.ItemDecoration {
+    private static class CustomLinearLayoutManager extends LinearLayoutManager {
+        private static final float CUSTOM_SCROLL_DURATION = 300f;
+        private static final float DEFAULT_SCROLL_DURATION = 25f;
+
+        public CustomLinearLayoutManager(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
+            smoothScrollToPosition(recyclerView, true, position);
+        }
+
+        // This method is used by scroll to bottom button
+        public void smoothScrollToPosition(RecyclerView recyclerView, boolean isInserted, int position) {
+            final LinearSmoothScroller linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext()) {
+                @Override
+                protected float calculateSpeedPerPixel(DisplayMetrics displayMetrics) {
+                    return (isInserted ? CUSTOM_SCROLL_DURATION : DEFAULT_SCROLL_DURATION) / displayMetrics.densityDpi;
+                }
+            };
+
+            linearSmoothScroller.setTargetPosition(position);
+            startSmoothScroll(linearSmoothScroller);
+        }
+    }
+
+    private static class CustomItemDecoration extends RecyclerView.ItemDecoration {
         private static final int BOUND_DURATION_TIME = 10;
 
         private final List<Chat> mChatList;
-        private final User mCurrentUser;
         private final int mChatMargin;
-        private final int mChatCornerRadius;
-        private final int mChatCornerRadiusSmall;
 
-        public CustomItemDecoration(Context context, List<Chat> chatList, User currentUser) {
+        public CustomItemDecoration(Context context, List<Chat> chatList) {
             mChatList = chatList;
-            mCurrentUser = currentUser;
-            mChatCornerRadius = context.getResources().getDimensionPixelSize(R.dimen.chat_corner_radius);
-            mChatCornerRadiusSmall = context.getResources().getDimensionPixelSize(R.dimen.chat_corner_radius_normal);
             mChatMargin = context.getResources().getDimensionPixelSize(R.dimen.chat_margin);
         }
 
@@ -541,7 +545,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                                    @NonNull RecyclerView.State state) {
             int position = parent.getChildAdapterPosition(view);
             int prePosition = position - 1;
-            int nextPosition = position + 1;
 
             /*
              * Get a chain of item include:
@@ -551,45 +554,17 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
              * */
             Chat item = position >= 0 ? mChatList.get(position) : null;
             Chat preItem = prePosition >= 0 ? mChatList.get(prePosition) : null;
-            Chat nextItem = nextPosition < mChatList.size() ? mChatList.get(nextPosition) : null;
 
             if (item == null)
                 return;
 
-            RecyclerView.ViewHolder viewHolder = parent.getChildViewHolder(view);
             /*
              * Check if the preItem is the dummy chat or not.
              * If the preItem is the dummy chat so the current item will show normally.
              * */
             if (preItem == null ||
-                    preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) ||
-                    preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
-                if (viewHolder instanceof ChatListAdapter.ChatListViewHolder) {
-                    String senderId = item.getSenderId();
-
-                    if (senderId == null) return;
-
-                    if (nextItem != null && !shouldShowTimestamp(item, nextItem) && senderId.equals(nextItem.getSenderId())) {
-                        reformatCornerRadius((ChatListAdapter.ChatListViewHolder) viewHolder,
-                                item,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadiusSmall);
-                        if (shouldShowTimestamp(item, nextItem)) {
-                            ((ChatListAdapter.ChatListViewHolder) viewHolder).showIconReceiver();
-                        } else {
-                            ((ChatListAdapter.ChatListViewHolder) viewHolder).hiddenIconReceiver();
-                        }
-                    } else {
-                        reformatCornerRadius((ChatListAdapter.ChatListViewHolder) viewHolder,
-                                item,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius);
-                    }
-                }
+                preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) ||
+                preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
                 return;
             }
 
@@ -601,43 +576,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     outRect.top = mChatMargin;
                 }
             }
-
-            /*
-             * Section to render bunch of sender chat item.
-             * */
-            if (viewHolder instanceof ChatListAdapter.ChatListViewHolder) {
-                ChatListAdapter.ChatListViewHolder chatViewHolder = (ChatListAdapter.ChatListViewHolder) viewHolder;
-
-                if (isReceiveMoreThanTwo(item, nextItem)) {
-                    /*
-                     * Don't check the nextItem is null or not. Because isReceiveMoreThanTwo method did that.
-                     * */
-                    if (shouldShowTimestamp(item, nextItem)) {
-                        chatViewHolder.showIconReceiver();
-                    } else {
-                        chatViewHolder.hiddenIconReceiver();
-                    }
-                } else {
-                    chatViewHolder.showIconReceiver();
-                }
-
-                renderBunchOfChats(chatViewHolder, preItem, item, nextItem);
-                findLastSeenStatus(chatViewHolder, item);
-            }
-        }
-
-        /*
-         * Check the Current Chat vs Next Item is own by one user or not
-         * */
-        private boolean isReceiveMoreThanTwo(Chat item, Chat nextItem) {
-            if (nextItem == null)
-                return false;
-
-            String itemSenderId = item.getSenderId();
-            String nextItemSenderId = nextItem.getSenderId();
-            String currentUserId = mCurrentUser.getUid();
-
-            return itemSenderId.equals(nextItemSenderId) && !itemSenderId.equals(currentUserId);
         }
 
         /*
@@ -650,162 +588,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             long minuteDuration = ChronoUnit.MINUTES.between(from, to);
 
             return minuteDuration > BOUND_DURATION_TIME;
-        }
-
-        /*
-         * Render the bunch of chats with the dynamic corner radius of background
-         * */
-        private void renderBunchOfChats(ChatListAdapter.ChatListViewHolder vh,
-                                        Chat prev,
-                                        Chat cur,
-                                        Chat next) {
-            String preSenderId = prev.getSenderId();
-            String curSenderId = cur.getSenderId();
-
-            if (!preSenderId.equals(curSenderId)) {
-                if (next != null && curSenderId.equals(next.getSenderId()) && !shouldShowTimestamp(cur, next)) {
-                    reformatCornerRadius(vh, cur,
-                            mChatCornerRadius,
-                            mChatCornerRadius,
-                            mChatCornerRadius,
-                            mChatCornerRadiusSmall);
-                } else {
-                    reformatCornerRadius(vh, cur,
-                            mChatCornerRadius,
-                            mChatCornerRadius,
-                            mChatCornerRadius,
-                            mChatCornerRadius);
-                }
-            } else {
-                if (!shouldShowTimestamp(prev, cur)) {
-                    if (next != null) {
-                        if (shouldShowTimestamp(cur, next) || !curSenderId.equals(next.getSenderId())) {
-                            reformatCornerRadius(vh, cur,
-                                    mChatCornerRadiusSmall,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius);
-                        } else {
-                            reformatCornerRadius(vh, cur,
-                                    mChatCornerRadiusSmall,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadiusSmall);
-                        }
-                    } else {
-                        reformatCornerRadius(vh, cur,
-                                mChatCornerRadiusSmall,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius);
-                    }
-                } else {
-                    if (next != null) {
-                        if (shouldShowTimestamp(prev, cur) && shouldShowTimestamp(cur, next)) {
-                            reformatCornerRadius(vh, cur,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius);
-                            return;
-                        }
-
-                        if (!curSenderId.equals(next.getSenderId())) {
-                            reformatCornerRadius(vh, cur,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius,
-                                    mChatCornerRadius);
-                        } else {
-                            if (shouldShowTimestamp(prev, cur)) {
-                                reformatCornerRadius(vh, cur,
-                                        mChatCornerRadius,
-                                        mChatCornerRadius,
-                                        mChatCornerRadius,
-                                        mChatCornerRadiusSmall);
-                            } else {
-                                reformatCornerRadius(vh, cur,
-                                        mChatCornerRadiusSmall,
-                                        mChatCornerRadius,
-                                        mChatCornerRadius,
-                                        mChatCornerRadiusSmall);
-                            }
-                        }
-                    } else {
-                        reformatCornerRadius(vh, cur,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius,
-                                mChatCornerRadius);
-                    }
-                }
-            }
-        }
-
-        /*
-         * Set the corner radius of given drawable programmatically
-         * */
-        private void reformatCornerRadius(ChatListAdapter.ChatListViewHolder vh,
-                                          Chat item,
-                                          int topLeft,
-                                          int topRight,
-                                          int bottomRight,
-                                          int bottomLeft) {
-            if (item.getSenderId() == null)
-                return;
-
-            View v = vh.getBackground(item);
-
-            GradientDrawable drawable = (GradientDrawable) v.getBackground();
-
-            boolean isChatFromSender = item.getSenderId().equals(mCurrentUser.getUid());
-
-            if (isChatFromSender) {
-                topLeft = topLeft ^ topRight;
-                topRight = topLeft ^ topRight;
-                topLeft = topLeft ^ topRight;
-
-                bottomLeft = bottomLeft ^ bottomRight;
-                bottomRight = bottomLeft ^ bottomRight;
-                bottomLeft = bottomLeft ^ bottomRight;
-            }
-
-            drawable.setCornerRadii(new float[]{
-                    topLeft, topLeft,
-                    topRight, topRight,
-                    bottomRight, bottomRight,
-                    bottomLeft, bottomLeft
-            });
-
-            v.setBackground(drawable);
-        }
-
-        private void findLastSeenStatus(ChatListAdapter.ChatListViewHolder vh, Chat item) {
-            List<Chat> mSenderChatList = mChatList.stream()
-                                                  .filter(c -> c != null &&
-                                                          c.getSenderId() != null &&
-                                                          isSelf(c) &&
-                                                          hasSeen(c))
-                                                  .collect(Collectors.toList());
-
-            if (isSelf(item)) {
-                if (mSenderChatList.contains(item)) {
-                    vh.changeSeenStatusVisibility(mSenderChatList.indexOf(item) == mSenderChatList.size() - 1);
-                } else {
-                    if (hasSeen(item)) {
-                        mSenderChatList.add(item);
-                    }
-                    vh.changeSeenStatusVisibility(true);
-                }
-            }
-        }
-
-        private boolean isSelf(Chat item) {
-            return item.getSenderId().equals(mCurrentUser.getUid());
-        }
-
-        private boolean hasSeen(Chat item) {
-            return !item.getSeenBy().isEmpty();
         }
     }
 }

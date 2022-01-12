@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,11 +48,11 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private static final int VIEW_PROFILE_SELF = 0;
     private static final int VIEW_CHAT = 1;
     private static final int VIEW_LOAD_MORE = 2;
-    public static final String MESSAGE_STATUS_PAYLOAD = "message_status";
     public static final String PROFILE_USER_PAYLOAD = "profile_user";
-    public static final String ICON_RECEIVER_PAYLOAD = "icon_receiver";
     public static final String TIMESTAMP_MESSAGE_PAYLOAD = "timestamp";
+    public static final String MESSAGE_STATUS_PAYLOAD = "message_status";
     public static final String MESSAGE_UNSENT_PAYLOAD = "message_unsent";
+    public static final String MESSAGE_SHAPE_PAYLOAD = "message_shape";
 
     public ChatListAdapter(Context context,
                            List<Chat> chatList,
@@ -87,14 +88,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     public void addChat(Chat chat) {
         mChatList.add(chat);
 
+        if (mChatList.size() - 2 >= 0) {
+            notifyItemChanged(mChatList.size() - 2, MESSAGE_SHAPE_PAYLOAD);
+        }
         notifyItemInserted(mChatList.size() - 1);
-
-        if (mChatList.size() - 2 >= 0)
-            notifyItemChanged(mChatList.size() - 2);
-    }
-
-    public void changeChatStatus(Chat chat) {
-        notifyItemChanged(mChatList.indexOf(chat), MESSAGE_STATUS_PAYLOAD);
     }
 
     public void changeChatStatus(int position) {
@@ -158,12 +155,15 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
             if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_STATUS_PAYLOAD)) {
                 chatHolder.bindSenderMessageStatus(getItem(position));
-            } else if (!payloads.isEmpty() && payloads.get(0).equals(ICON_RECEIVER_PAYLOAD)) {
-                chatHolder.hiddenIconReceiver();
             } else if (!payloads.isEmpty() && payloads.get(0).equals(TIMESTAMP_MESSAGE_PAYLOAD)) {
-                chatHolder.shouldShowTimestamp(getItem(position - 1), getItem(position));
+                chatHolder.showTimestamp(getItem(position - 1), getItem(position));
             } else if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_UNSENT_PAYLOAD)) {
                 chatHolder.bindUnsentStatus(getItem(position));
+            } else if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_SHAPE_PAYLOAD)) {
+                Chat preItem = position - 1 >= 0 ? mChatList.get(position - 1) : null;
+                Chat item = position >= 0 ? mChatList.get(position) : null;
+                Chat nextItem = position + 1 < mChatList.size() ? mChatList.get(position + 1) : null;
+                chatHolder.bindMessageShape(preItem, item, nextItem);
             }
         } else if (holder instanceof ProfileViewHolder) {
             if (!payloads.isEmpty() && payloads.get(0).equals(PROFILE_USER_PAYLOAD)) {
@@ -219,6 +219,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         Drawable mNotReceivedIconDrawable;
         Drawable mSendingIconDrawable;
         Drawable mErrorIconDrawable;
+        private final int mChatCornerRadius;
+        private final int mChatCornerRadiusSmall;
 
         private static final String WEEK_PATTERN = "EEE hh:mm a";
         private static final String MONTH_PATTERN = "MMM dd hh:mm a";
@@ -250,19 +252,16 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mNotReceivedIconDrawable.setTintList(mBackgroundChatColor);
             mSendingIconDrawable.setTintList(mBackgroundChatColor);
             mErrorIconDrawable.setTintList(mErrorChatColor);
+
+            mChatCornerRadius = context.getResources().getDimensionPixelSize(R.dimen.chat_corner_radius);
+            mChatCornerRadiusSmall = context.getResources().getDimensionPixelSize(R.dimen.chat_corner_radius_normal);
         }
 
-        /*
-        * Used by Item Decorator
-        * */
-        public void hiddenIconReceiver() {
+        private void hiddenIconReceiver() {
             mBinding.imageReceiver.setVisibility(View.INVISIBLE);
         }
 
-        /*
-         * Used by Item Decorator
-         * */
-        public void showIconReceiver() {
+        private void showIconReceiver() {
             mBinding.imageReceiver.setVisibility(View.VISIBLE);
         }
 
@@ -272,7 +271,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mBinding.layoutReceiver.setVisibility(View.GONE);
         }
 
-        public View getBackground(Chat item) {
+        private View getBackground(Chat item) {
             if (item.getSenderId().equals(mUser.getUid())) {
                 return mBinding.senderChatBackground;
             } else {
@@ -378,6 +377,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 } else {
                     bindReceiverMessage(preItem, item);
                 }
+                bindMessageShape(preItem, item, nextItem);
             }
         }
 
@@ -395,7 +395,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
 
             bindSenderMessageStatus(item);
-            shouldShowTimestamp(preItem, item);
+            showTimestamp(preItem, item);
         }
 
         private void bindReceiverMessage(Chat preItem, Chat item) {
@@ -416,38 +416,234 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 renderUnsentMessage(mBinding.receiverChatBackground, mBinding.textReceiverContent, unsentContent);
             }
 
-            shouldShowTimestamp(preItem, item);
+            showTimestamp(preItem, item);
+        }
+
+        public void bindMessageShape(Chat preItem, Chat item, Chat nextItem) {
+            if (item == null)
+                return;
+
+            /*
+             * Check if the preItem is the dummy chat or not.
+             * If the preItem is the dummy chat so the current item will show normally.
+             * */
+            if (preItem == null ||
+                    preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) ||
+                    preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
+                String senderId = item.getSenderId();
+
+                if (senderId == null) return;
+
+                if (nextItem != null && !shouldShowTimestamp(item, nextItem) && senderId.equals(nextItem.getSenderId())) {
+                    reformatCornerRadius(item,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadiusSmall);
+                    if (shouldShowTimestamp(item, nextItem)) {
+                        showIconReceiver();
+                    } else {
+                        hiddenIconReceiver();
+                    }
+                } else {
+                    reformatCornerRadius(item,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius);
+                }
+                return;
+            }
+
+            /*
+             * Section to render bunch of sender chat item.
+             * */
+            if (isReceiveMoreThanTwo(item, nextItem)) {
+                /*
+                 * Don't check the nextItem is null or not. Because isReceiveMoreThanTwo method did that.
+                 * */
+                if (shouldShowTimestamp(item, nextItem)) {
+                    showIconReceiver();
+                } else {
+                    hiddenIconReceiver();
+                }
+            } else {
+                showIconReceiver();
+            }
+
+            renderBunchOfChats(preItem, item, nextItem);
+            findLastSeenStatus(item);
+        }
+
+        /*
+         * Check the Current Chat vs Next Item is own by one user or not
+         * */
+        private boolean isReceiveMoreThanTwo(Chat item, Chat nextItem) {
+            if (nextItem == null)
+                return false;
+
+            String itemSenderId = item.getSenderId();
+            String nextItemSenderId = nextItem.getSenderId();
+            String currentUserId = mUser.getUid();
+
+            return itemSenderId.equals(nextItemSenderId) && !itemSenderId.equals(currentUserId);
+        }
+
+        /*
+         * Render the bunch of chats with the dynamic corner radius of background
+         * */
+        private void renderBunchOfChats(Chat prev,
+                                        Chat cur,
+                                        Chat next) {
+            String preSenderId = prev.getSenderId();
+            String curSenderId = cur.getSenderId();
+
+            if (!preSenderId.equals(curSenderId)) {
+                if (next != null && curSenderId.equals(next.getSenderId()) && !shouldShowTimestamp(cur, next)) {
+                    reformatCornerRadius(cur,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadiusSmall);
+                } else {
+                    reformatCornerRadius(cur,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius,
+                            mChatCornerRadius);
+                }
+            } else {
+                if (!shouldShowTimestamp(prev, cur)) {
+                    if (next != null) {
+                        if (shouldShowTimestamp(cur, next) || !curSenderId.equals(next.getSenderId())) {
+                            reformatCornerRadius(cur,
+                                    mChatCornerRadiusSmall,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius);
+                        } else {
+                            reformatCornerRadius(cur,
+                                    mChatCornerRadiusSmall,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadiusSmall);
+                        }
+                    } else {
+                        reformatCornerRadius(cur,
+                                mChatCornerRadiusSmall,
+                                mChatCornerRadius,
+                                mChatCornerRadius,
+                                mChatCornerRadius);
+                    }
+                } else {
+                    if (next != null) {
+                        if (shouldShowTimestamp(prev, cur) && shouldShowTimestamp(cur, next)) {
+                            reformatCornerRadius(cur,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius);
+                            return;
+                        }
+
+                        if (!curSenderId.equals(next.getSenderId())) {
+                            reformatCornerRadius(cur,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius,
+                                    mChatCornerRadius);
+                        } else {
+                            if (shouldShowTimestamp(prev, cur)) {
+                                reformatCornerRadius(cur,
+                                        mChatCornerRadius,
+                                        mChatCornerRadius,
+                                        mChatCornerRadius,
+                                        mChatCornerRadiusSmall);
+                            } else {
+                                reformatCornerRadius(cur,
+                                        mChatCornerRadiusSmall,
+                                        mChatCornerRadius,
+                                        mChatCornerRadius,
+                                        mChatCornerRadiusSmall);
+                            }
+                        }
+                    } else {
+                        reformatCornerRadius(cur,
+                                mChatCornerRadius,
+                                mChatCornerRadius,
+                                mChatCornerRadius,
+                                mChatCornerRadius);
+                    }
+                }
+            }
+        }
+
+        private void reformatCornerRadius(Chat item,
+                                          int topLeft,
+                                          int topRight,
+                                          int bottomRight,
+                                          int bottomLeft) {
+            if (item.getSenderId() == null)
+                return;
+
+            View v = getBackground(item);
+
+            GradientDrawable drawable = (GradientDrawable) v.getBackground();
+
+            boolean isChatFromSender = item.getSenderId().equals(mUser.getUid());
+
+            if (isChatFromSender) {
+                topLeft = topLeft ^ topRight;
+                topRight = topLeft ^ topRight;
+                topLeft = topLeft ^ topRight;
+
+                bottomLeft = bottomLeft ^ bottomRight;
+                bottomRight = bottomLeft ^ bottomRight;
+                bottomLeft = bottomLeft ^ bottomRight;
+            }
+
+            drawable.setCornerRadii(new float[]{
+                    topLeft, topLeft,
+                    topRight, topRight,
+                    bottomRight, bottomRight,
+                    bottomLeft, bottomLeft
+            });
+
+            v.setBackground(drawable);
         }
 
         /*
          * The method to check the duration time of two chat in a row larger than 10 minutes or not.
          * */
-        private void shouldShowTimestamp(Chat preItem, Chat item) {
-            if (preItem == null) {
-                if (!item.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
-                    mBinding.textTimestamp.setVisibility(View.VISIBLE);
-                    mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
-                }
+        private void showTimestamp(Chat preItem, Chat item) {
+            if (preItem == null || preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
                 return;
             }
 
-            if (preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+            if (preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
                 mBinding.textTimestamp.setVisibility(View.VISIBLE);
                 mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
                 return;
             }
 
-            var from = preItem.getTimestamp();
-            var to = item.getTimestamp();
-            var minutesDuration = ChronoUnit.MINUTES.between(from, to);
-            var boundDurationTime = 10;
-
-            if (minutesDuration > boundDurationTime) {
+            if (shouldShowTimestamp(preItem, item)) {
                 mBinding.textTimestamp.setVisibility(View.VISIBLE);
                 mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
             } else {
                 mBinding.textTimestamp.setVisibility(View.GONE);
             }
+        }
+
+        /*
+         * The method to check the duration time of two chat in a row larger than 10 minutes or not.
+         * */
+        private boolean shouldShowTimestamp(Chat item, Chat nextItem) {
+            LocalDateTime from = item.getTimestamp();
+            LocalDateTime to = nextItem.getTimestamp();
+
+            long minuteDuration = ChronoUnit.MINUTES.between(from, to);
+
+            return minuteDuration > 10;
         }
 
         private void renderUnsentMessage(View background, TextView contentView, String content) {
@@ -495,7 +691,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
 
         private boolean isSelf(Chat item) {
-            return item.getSenderId().equals(mUser.getUid());
+            return item.getSenderId() != null && item.getSenderId().equals(mUser.getUid());
         }
     }
 

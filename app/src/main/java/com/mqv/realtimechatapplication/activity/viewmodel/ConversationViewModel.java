@@ -201,6 +201,12 @@ public class ConversationViewModel extends CurrentUserViewModel {
 
     //// Public method
     public void sendMessage(Context context, Chat chat) {
+        Disposable disposable = chatRepository.saveCached(chat)
+                                              .observeOn(AndroidSchedulers.mainThread())
+                                              .subscribe(() -> messageObserver.postValue(chat), t -> {});
+
+        cd.add(disposable);
+
         Data input = new Data.Builder()
                              .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, chat.getId())
                              .putString(SendMessageWorkWrapper.EXTRA_SENDER_ID, chat.getSenderId())
