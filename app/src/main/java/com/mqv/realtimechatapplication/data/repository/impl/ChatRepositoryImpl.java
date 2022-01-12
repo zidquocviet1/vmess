@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -40,11 +40,6 @@ public class ChatRepositoryImpl implements ChatRepository {
         this.user       = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> user = firebaseAuth.getCurrentUser());
-    }
-
-    @Override
-    public Flowable<List<Chat>> observeMessages(String conversationId, int size) {
-        return dao.observe(conversationId, size);
     }
 
     @Override
@@ -95,6 +90,13 @@ public class ChatRepositoryImpl implements ChatRepository {
     @Override
     public Single<Chat> fetchCached(String id) {
         return dao.findById(id);
+    }
+
+    @Override
+    public Completable saveCached(Chat chat) {
+        return dao.insert(chat)
+                  .subscribeOn(Schedulers.io())
+                  .observeOn(Schedulers.io());
     }
 
     @Override
