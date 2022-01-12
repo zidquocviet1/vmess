@@ -46,7 +46,7 @@ public abstract class BaseWorker implements WorkerProperty {
         }
     }
 
-    private UUID getWorkId() {
+    public UUID getWorkId() {
         return request.getId();
     }
 
