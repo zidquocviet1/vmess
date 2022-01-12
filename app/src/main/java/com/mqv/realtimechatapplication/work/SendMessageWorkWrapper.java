@@ -14,7 +14,6 @@ import androidx.work.rxjava3.RxWorker;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
@@ -22,12 +21,10 @@ import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 
 import java.security.SecureRandom;
-import java.util.Collections;
 import java.util.Objects;
 
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
-import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -73,19 +70,16 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
     @HiltWorker
     public static class SendMessageWorker extends RxWorker {
-        private final ChatDao         dao;
-        private final FirebaseUser    user;
+        private final FirebaseUser user;
         /**
          * @param appContext   The application {@link Context}
          * @param workerParams Parameters to setup the internal state of this worker
          */
         @AssistedInject
         public SendMessageWorker(@Assisted @NonNull Context appContext,
-                                 @Assisted @NonNull WorkerParameters workerParams,
-                                 ChatDao dao) {
+                                 @Assisted @NonNull WorkerParameters workerParams) {
             super(appContext, workerParams);
-            this.dao       = dao;
-            this.user      = FirebaseAuth.getInstance().getCurrentUser();
+            this.user = FirebaseAuth.getInstance().getCurrentUser();
         }
 
         @NonNull
@@ -95,12 +89,12 @@ public class SendMessageWorkWrapper extends BaseWorker {
         }
 
         private Chat parseChat() {
-            Data    data                = getInputData();
-            String  messageId           = data.getString(EXTRA_MESSAGE_ID);
-            String  senderId            = data.getString(EXTRA_SENDER_ID);
-            String  content             = data.getString(EXTRA_CONTENT);
-            String  conversationId      = data.getString(EXTRA_CONVERSATION_ID);
-            String  messageTypeString   = data.getString(EXTRA_MESSAGE_TYPE);
+            Data    data              = getInputData();
+            String  messageId         = data.getString(EXTRA_MESSAGE_ID);
+            String  senderId          = data.getString(EXTRA_SENDER_ID);
+            String  content           = data.getString(EXTRA_CONTENT);
+            String  conversationId    = data.getString(EXTRA_CONVERSATION_ID);
+            String  messageTypeString = data.getString(EXTRA_MESSAGE_TYPE);
 
             return new Chat(Objects.requireNonNull(messageId),
                             senderId,
@@ -112,8 +106,6 @@ public class SendMessageWorkWrapper extends BaseWorker {
         private Single<Result> sendRequest() {
             Chat chat = parseChat();
 
-            insertMessage(chat);
-
             WebSocketClient         webSocket = AppDependencies.getWebSocket();
             WebSocketRequestMessage request   = new WebSocketRequestMessage(new SecureRandom().nextLong(),
                                                                             WebSocketRequestMessage.Status.INCOMING_MESSAGE,
@@ -124,28 +116,10 @@ public class SendMessageWorkWrapper extends BaseWorker {
                             .observeOn(Schedulers.io())
                             .doOnError(t -> webSocket.notifyMessageError(request))
                             .flatMap(response -> {
-                                updateMessageStatus(response.getBody());
-
+                                AppDependencies.getIncomingMessageProcessor().process(response);
                                 return Single.just(Result.success());
                             })
                             .onErrorReturnItem(Result.failure());
-        }
-
-        private void insertMessage(Chat message) {
-            dao.insert(Collections.singletonList(message))
-               .subscribeOn(Schedulers.io())
-               .observeOn(Schedulers.io())
-               .onErrorComplete()
-               .subscribe();
-        }
-
-        private void updateMessageStatus(Chat message) {
-            dao.update(message)
-               .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver()
-                                                                    .notifyMessageUpdated(message.getConversationId(), message.getId())))
-               .subscribeOn(Schedulers.io())
-               .observeOn(Schedulers.io())
-               .subscribe();
         }
     }
 }
