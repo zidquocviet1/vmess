@@ -105,45 +105,13 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
             }
         });
 
-        mViewModel.getInboxConversation().observe(this, inbox -> {
-            if (inbox != null) {
-                mConversationList = inbox;
-                mConversationAdapter.submitList(new ArrayList<>(mConversationList));
-            }
-        });
-
-        mViewModel.getCachedConversation().observe(this, conversation -> {
-            if (conversation == null)
-                return;
-
-            onConversationUpdate(conversation);
-        });
-
         mViewModel.getRefreshConversationResult().observe(this, result -> {
-            if (result == null)
-                return;
+            if (result == null) return;
 
-            NetworkStatus status = result.getStatus();
+            mBinding.swipeMessages.setRefreshing(result.getStatus() == NetworkStatus.LOADING);
 
-            switch (status) {
-                case ERROR:
-                    mBinding.swipeMessages.setRefreshing(false);
-
-                    Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
-                    break;
-                case SUCCESS:
-                    List<Conversation> freshConversations = result.getSuccess();
-
-                    if (freshConversations != null) {
-                        mConversationList.removeAll(freshConversations);
-                        if (!freshConversations.isEmpty()) {
-                            mConversationList.addAll(0, freshConversations);
-                        }
-                        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
-                    }
-                case TERMINATE:
-                    mBinding.swipeMessages.setRefreshing(false);
-                    break;
+            if (result.getStatus() == NetworkStatus.ERROR) {
+                Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
             }
         });
 
