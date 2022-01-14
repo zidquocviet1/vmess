@@ -40,7 +40,6 @@ public interface UserService {
 
     @GET(value = "user/info")
     Observable<ApiResponse<User>> fetchUserFromRemote(@Header(Const.AUTHORIZATION) String token,
-                                                      @Header(Const.AUTHORIZER) String authorizer,
                                                       @Query("uid") String uid);
 
     @GET(value = "user/info")

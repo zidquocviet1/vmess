@@ -76,7 +76,7 @@ public class UserRepositoryImpl implements UserRepository {
                         String token = tokenOptional.get();
                         String bearerToken = Const.PREFIX_TOKEN + token;
 
-                        return userService.fetchUserFromRemote(bearerToken, Const.DEFAULT_AUTHORIZER, realUid);
+                        return userService.fetchUserFromRemote(bearerToken, realUid);
                     } else {
                         return Observable.create(emitter -> {
                             if (!emitter.isDisposed()) {
@@ -289,7 +289,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     private void handleCallRemoteUser(String token, String uid) {
-        cd.add(userService.fetchUserFromRemote(token, Const.DEFAULT_AUTHORIZER, uid)
+        cd.add(userService.fetchUserFromRemote(token, uid)
                 .subscribeOn(Schedulers.io())
                 .subscribe(response -> {
                     var code = response.getStatusCode();
