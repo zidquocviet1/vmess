@@ -2,10 +2,23 @@ package com.mqv.realtimechatapplication.data
 
 class DatabaseObserver {
     private var messageListener: MutableMap<String, MutableSet<MessageListener>> = HashMap()
+    private var conversationListener: MutableSet<ConversationListener> = HashSet()
+
+    interface ConversationListener {
+        fun onConversationInserted(conversationId: String)
+    }
 
     interface MessageListener {
         fun onMessageInserted(messageId: String)
         fun onMessageUpdated(messageId: String)
+    }
+
+    fun registerConversationListener(listener: ConversationListener) {
+        conversationListener.add(listener)
+    }
+
+    fun unregisterConversationListener(listener: ConversationListener) {
+        conversationListener.remove(listener)
     }
 
     fun registerMessageListener(conversationId: String, listener: MessageListener) {
@@ -14,6 +27,10 @@ class DatabaseObserver {
 
     fun unregisterMessageListener(listener: MessageListener) {
         unregisterMapListener(messageListener, listener)
+    }
+
+    fun notifyConversationInserted(conversationId: String) {
+        conversationListener.forEach { it.onConversationInserted(conversationId) }
     }
 
     fun notifyMessageInserted(conversationId: String, messageId: String) {
@@ -37,10 +54,5 @@ class DatabaseObserver {
         map.entries.forEach { entry ->
             entry.value.remove(listener)
         }
-    }
-
-    companion object {
-        @JvmStatic
-        val instance = DatabaseObserver()
     }
 }
