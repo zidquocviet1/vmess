@@ -16,6 +16,8 @@ import io.reactivex.rxjava3.core.Single;
 public interface ConversationRepository {
     Flowable<Map<Conversation, List<Chat>>> conversationListUpdateObserve();
 
+    Observable<ApiResponse<Conversation>> fetchById(String conversationId);
+
     Observable<ApiResponse<List<Conversation>>> fetchByUid(ConversationStatusType type, int page, int size);
 
     Observable<List<Conversation>> fetchByUidNBR(ConversationStatusType type, int page, int size, Runnable onDataChanged);

@@ -67,6 +67,13 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Observable<ApiResponse<Conversation>> fetchById(String conversationId) {
+        return getBearerTokenObservable()
+                .flatMapSingle(token -> service.findById(token, conversationId))
+                .subscribeOn(Schedulers.io());
+    }
+
+    @Override
     public Observable<ApiResponse<List<Conversation>>> fetchByUid(ConversationStatusType type, int page, int size) {
         return getBearerTokenObservable()
                 .flatMap(token -> service.fetchConversation(token, type, page, size))

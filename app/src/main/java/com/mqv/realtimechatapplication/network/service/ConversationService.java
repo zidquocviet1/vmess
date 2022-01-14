@@ -24,9 +24,6 @@ public interface ConversationService {
                                                                   @Query("page") int page,
                                                                   @Query("size") int size);
 
-    @GET("conversation/is_alive")
-    Observable<ApiResponse<Boolean>> isServerAlive();
-
     @GET("conversation/find_by_participant_id")
     Observable<ApiResponse<Conversation>> findNormalByParticipantId(@Header(AUTHORIZATION) String token,
                                                                     @Query("id") String otherId);
