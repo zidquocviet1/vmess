@@ -1,9 +1,7 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,12 +22,8 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
-import com.mqv.realtimechatapplication.activity.br.ConversationBroadcastReceiver;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
-import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
-import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
-import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
@@ -39,21 +33,15 @@ import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>
-        implements ConversationDialogFragment.ConversationOptionListener,
-                   ConversationBroadcastReceiver.OnConversationListener {
+        implements ConversationDialogFragment.ConversationOptionListener {
     private List<Conversation> mConversationList = new ArrayList<>();
 
     private ConversationListAdapter mConversationAdapter;
     private RankUserConversationAdapter mRankUserAdapter;
 
-    private boolean isNewConversationAdded = false;
-
-    private static final String FILE_MESSAGE_RINGTONE = "message_receive.mp3";
-    private static final String ACTION_NEW_CONVERSATION = "com.mqv.tac.NEW_CONVERSATION";
+    private static final String MESSAGE_RINGTONE = "message_receive.mp3";
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -69,11 +57,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Load more conversation when the user is current this stage. And got accepted friend request
-        BroadcastReceiver newConversationReceiver = new ConversationBroadcastReceiver(this);
-
-        requireContext().registerReceiver(newConversationReceiver, new IntentFilter(ACTION_NEW_CONVERSATION));
     }
 
     @Override
@@ -82,17 +65,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
         registerEvent();
 
         super.onViewCreated(view, savedInstanceState);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        if (isNewConversationAdded) {
-            RingtoneUtil.open(requireContext(), FILE_MESSAGE_RINGTONE);
-
-            isNewConversationAdded = false;
-        }
     }
 
     @Override
@@ -115,29 +87,17 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
             }
         });
 
-        mViewModel.getNewChatConversation().observe(this, chat -> {
-            if (chat != null) {
-                mConversationList.stream()
-                        .filter(c -> c.getId().equals(chat.getConversationId()))
-                        .findFirst()
-                        .ifPresent(c2 -> {
-                            Conversation conversation = new Conversation(c2);
-                            List<Chat> chats = conversation.getChats();
-
-                            if (!chats.contains(chat)) {
-                                chats.add(chat);
-                                onConversationUpdate(conversation);
-                            }
-                        });
-            }
-        });
-
         mViewModel.getConversationListObserver().observe(this, updatedList -> {
             if (updatedList == null) return;
 
-            mConversationList.removeAll(updatedList);
-            mConversationList.addAll(updatedList);
+            mConversationList = updatedList;
             mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+        });
+
+        mViewModel.getConversationInserted().observe(this, id -> {
+            if (id != null) {
+                RingtoneUtil.open(requireContext(), MESSAGE_RINGTONE);
+            }
         });
     }
 
@@ -205,10 +165,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
 
                 if (intent != null) {
                     Conversation updated = intent.getParcelableExtra(ConversationActivity.EXTRA_CONVERSATION);
-                    boolean isNewChatAdded = intent.getBooleanExtra(ConversationActivity.EXTRA_NEW_CHAT_ADDED, false);
-                    boolean isSeenChat = intent.getBooleanExtra(ConversationActivity.EXTRA_SEEN_CHAT, false);
 
-//                    mViewModel.fetchCachedConversation(updated);
                     mConversationList.set(mConversationList.indexOf(updated), updated);
                     mConversationAdapter.submitList(new ArrayList<>(mConversationList));
                 }
@@ -219,29 +176,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     private void onConversationLongClicked(Conversation conversation) {
         ConversationDialogFragment dialog = ConversationDialogFragment.newInstance(this, conversation);
         dialog.show(requireActivity().getSupportFragmentManager(), null);
-    }
-
-    private void onConversationUpdate(Conversation updatedConversation) {
-        int index = mConversationList.indexOf(updatedConversation);
-
-        if (index < 0 || index > mConversationList.size()) return;
-
-        // Get the to check last chat and sort by the last chat
-        List<Conversation> shouldSortList = mConversationList.subList(0, index);
-
-        if (shouldSortList.isEmpty()) {
-            mConversationList.set(0, updatedConversation);
-        } else {
-            shouldSortList.add(updatedConversation);
-            List<Conversation> sortedList = shouldSortList.stream()
-                                                          .sorted((o1, o2) -> o2.getLastChat()
-                                                                  .getTimestamp()
-                                                                  .compareTo(o1.getLastChat().getTimestamp()))
-                                                          .collect(Collectors.toList());
-            mConversationList.removeAll(sortedList);
-            mConversationList.addAll(0, sortedList);
-        }
-        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
     }
 
     @Override
@@ -294,60 +228,6 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     @Override
     public void onAddMember(Conversation conversation) {
 
-    }
-
-    @Override
-    public void onNewConversationReceive(Conversation conversation) {
-        mViewModel.submitConversation(conversation);
-        isNewConversationAdded = true;
-    }
-
-    @Override
-    public void onDeleteConversation(String unFriendUserId) {
-        User user = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
-        mViewModel.submitRemoveConversation(user.getUid(), unFriendUserId);
-    }
-
-    @Override
-    public void onConversationNewMessage(String newMessageId, Conversation conversation) {
-        // test
-        mViewModel.fetchChatRemoteById(newMessageId);
-
-//        List<String> chatIdList = conversation.getChats()
-//                                              .stream()
-//                                              .map(Chat::getId)
-//                                              .collect(Collectors.toList());
-//
-//        if (!chatIdList.contains(newMessageId)) {
-//            // Reload conversation from remote
-//            mViewModel.fetchChatRemoteById(newMessageId);
-//        } else {
-//            onConversationUpdate(conversation);
-//        }
-    }
-
-    @Override
-    public void onUnarchiveConversation(Conversation conversation) {
-        mConversationList.add(conversation);
-        List<Conversation> sortedList = sortConversationList(mConversationList);
-
-        mConversationList.clear();
-        mConversationList.addAll(sortedList);
-        mConversationAdapter.submitList(new ArrayList<>(mConversationList));
-    }
-
-    /*
-    * Sort new list with the last chat recent first
-    * */
-    private List<Conversation> sortConversationList(List<Conversation> oldList) {
-        if (oldList == null)
-            return new ArrayList<>();
-
-        return oldList.stream()
-                      .sorted((o1, o2) -> o2.getLastChat()
-                              .getTimestamp()
-                              .compareTo(o1.getLastChat().getTimestamp()))
-                      .collect(Collectors.toList());
     }
 
     private void removeConversationAdapterUI(Conversation conversation) {
