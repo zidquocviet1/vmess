@@ -7,9 +7,11 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel;
+import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.repository.ChatRepository;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -31,6 +33,8 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final ChatRepository                                    chatRepository;
     private final MutableLiveData<List<RemoteUser>>                 rankUser;
     private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
+    private final MutableLiveData<String>                           conversationInserted;
+    private final DatabaseObserver.ConversationListener             conversationObserver;
 
     public static final int                                         DEFAULT_PAGE_CHAT_LIST          = 0;
     public static final int                                         DEFAULT_SIZE_CHAT_LIST          = 40;
@@ -44,8 +48,11 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         this.chatRepository                 = chatRepository;
         this.refreshConversationResult      = new MutableLiveData<>();
         this.rankUser                       = new MutableLiveData<>();
+        this.conversationInserted           = new MutableLiveData<>();
+        this.conversationObserver           = conversationInserted::postValue;
 
         fetchAllConversation();
+        AppDependencies.getDatabaseObserver().registerConversationListener(conversationObserver);
     }
 
     public void onRefresh() {
@@ -74,10 +81,20 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         return conversationListObserver;
     }
 
+    public LiveData<String> getConversationInserted() {
+        return conversationInserted;
+    }
+
     private void fetchAllConversation() {
         Consumer<List<Conversation>> onReceiveData = data -> Logging.debug(TAG, "Receive fresh data");
         Consumer<Throwable>          onError       = Throwable::printStackTrace;
 
         initializeFetch(INBOX, onReceiveData, onError);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        AppDependencies.getDatabaseObserver().unregisterConversationListener(conversationObserver);
     }
 }

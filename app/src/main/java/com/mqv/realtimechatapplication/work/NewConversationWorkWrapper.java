@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.exception.FirebaseUnauthorizedException;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
@@ -149,7 +150,10 @@ public class NewConversationWorkWrapper extends BaseWorker {
 
                                                      conversation.setStatus(ConversationStatusType.INBOX);
 
-                                                     backgroundExecutor.execute(() -> mDao.saveConversationList(Collections.singletonList(conversation)));
+                                                     backgroundExecutor.execute(() -> {
+                                                         mDao.saveConversationList(Collections.singletonList(conversation));
+                                                         AppDependencies.getDatabaseObserver().notifyConversationInserted(conversation.getId());
+                                                     });
 
                                                      return Observable.just(conversation);
                                                  } else {
