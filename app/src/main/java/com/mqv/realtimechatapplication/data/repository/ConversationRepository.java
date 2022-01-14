@@ -22,7 +22,7 @@ public interface ConversationRepository {
 
     Single<List<Conversation>> fetchCached(ConversationStatusType type, int page, int size);
 
-    Observable<ApiResponse<Boolean>> isServerAlive();
+    Completable save(Conversation conversation);
 
     Completable saveAll(List<Conversation> freshData, ConversationStatusType type);
 
@@ -32,7 +32,7 @@ public interface ConversationRepository {
 
     void deleteConversationChatRemote(Conversation conversation);
 
-    Single<Conversation> fetchCachedById(Conversation conversation);
+    Single<Conversation> fetchCachedById(String conversationId);
 
     void deleteNormalByParticipantId(String userId, String otherUserId);
 

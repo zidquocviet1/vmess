@@ -104,8 +104,8 @@ public class ConversationListViewModel extends ViewModel {
         cd.add(disposable);
     }
 
-    protected void fetchCachedConversation(@NonNull Conversation conversation, Consumer<Conversation> onReceive) {
-        Disposable disposable = conversationRepository.fetchCachedById(conversation)
+    protected void fetchCachedConversation(@NonNull String conversationId, Consumer<Conversation> onReceive) {
+        Disposable disposable = conversationRepository.fetchCachedById(conversationId)
                                                       .subscribeOn(Schedulers.io())
                                                       .observeOn(AndroidSchedulers.mainThread())
                                                       .subscribe(onReceive, Throwable::printStackTrace);

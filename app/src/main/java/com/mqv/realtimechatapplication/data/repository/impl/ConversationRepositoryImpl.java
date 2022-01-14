@@ -4,6 +4,7 @@ import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.rxjava3.EmptyResultSetException;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
@@ -186,8 +187,8 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Observable<ApiResponse<Boolean>> isServerAlive() {
-        return service.isServerAlive().subscribeOn(Schedulers.io());
+    public Completable save(Conversation conversation) {
+        return Completable.fromAction(() -> dao.saveConversationList(Collections.singletonList(conversation)));
     }
 
     @Override
@@ -240,16 +241,22 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Single<Conversation> fetchCachedById(Conversation conversation) {
-        return dao.fetchById(conversation.getId())
+    public Single<Conversation> fetchCachedById(String conversationId) {
+        return dao.fetchById(conversationId)
                   .flatMap(map -> {
-                      List<Chat> chats = Retriever.getOrDefault(map.get(conversation), new ArrayList<>());
+                      Conversation result = null;
 
-                      Collections.reverse(chats);
+                      for (Map.Entry<Conversation, List<Chat>> entry : map.entrySet()) {
+                          if (entry.getKey().getId().equals(conversationId)) {
+                              List<Chat> chats = Retriever.getOrDefault(entry.getValue(), new ArrayList<>());
 
-                      conversation.setChats(chats);
+                              Collections.reverse(chats);
 
-                      return Single.just(conversation);
+                              result = entry.getKey();
+                              result.setChats(chats);
+                          }
+                      }
+                      return result != null ? Single.just(result) : Single.error(new EmptyResultSetException("not found"));
                   });
     }
 
