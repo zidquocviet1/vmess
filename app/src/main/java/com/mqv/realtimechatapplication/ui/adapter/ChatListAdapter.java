@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> {
@@ -285,20 +286,21 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
         private void findLastSeenStatus(Chat item) {
             List<Chat> mSenderChatList = mListItem.stream()
-                                                    .filter(c -> c != null &&
-                                                            c.getSenderId() != null &&
-                                                            isSelf(c) &&
-                                                            hasSeen(c))
-                                                    .collect(Collectors.toList());
+                                                  .filter(c -> c != null &&
+                                                          c.getSenderId() != null &&
+                                                          isSelf(c) &&
+                                                          hasSeen(c))
+                                                  .collect(Collectors.toList());
 
             if (isSelf(item)) {
                 if (mSenderChatList.contains(item)) {
                     changeSeenStatusVisibility(mSenderChatList.indexOf(item) == mSenderChatList.size() - 1);
                 } else {
-                    if (hasSeen(item)) {
-                        mSenderChatList.add(item);
-                    }
-                    changeSeenStatusVisibility(true);
+                    Optional<Chat> nextSeenChat = mSenderChatList.stream()
+                                                                 .filter(c -> c.getTimestamp().compareTo(item.getTimestamp()) >= 0)
+                                                                 .findFirst();
+
+                    changeSeenStatusVisibility(!nextSeenChat.isPresent());
                 }
             }
         }
