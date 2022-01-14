@@ -70,7 +70,12 @@ public class UserActivity extends ToolbarActivity<UserViewModel, ActivityUserBin
                    .listener(new RequestListener<>() {
                        @Override
                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                           fragment.setSignInIcon(null);
+                           if (url == null) {
+                               fragment.setSignInIcon(Picture.getDefaultUserAvatar(UserActivity.this));
+                               return false;
+                           }
+
+                           fragment.setSignInIcon(Picture.getErrorAvatarLoaded(UserActivity.this));
                            mBinding.imageAvatar.setImageDrawable(Picture.getErrorAvatarLoaded(UserActivity.this));
                            return true;
                        }

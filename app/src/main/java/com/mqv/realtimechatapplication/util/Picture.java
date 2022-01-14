@@ -19,17 +19,7 @@ import javax.annotation.Nullable;
 Util class to load picture with Glide and added some default drawable
 */
 public class Picture {
-    private static final String DEFAULT_USER_AVATAR = "user_circle";
-    private static final String RESOURCE_TYPE       = "drawable";
     private static final int    DEFAULT_LOAD_FAILED = R.color.base_background_color;
-
-    private static Drawable getPngDrawable(Context context) {
-        return ContextCompat.getDrawable(context, getPngDrawableId(context));
-    }
-
-    private static int getPngDrawableId(Context context) {
-        return context.getResources().getIdentifier(DEFAULT_USER_AVATAR, RESOURCE_TYPE, context.getPackageName());
-    }
 
     // Remove the host name of the photo URL
     private static String reformatUrl(@Nullable String photoUrl) {
@@ -42,7 +32,7 @@ public class Picture {
         return GlideApp.with(context)
                        .load(reformatUrl(url))
                        .error(getErrorAvatarLoaded(context))
-                       .fallback(getPngDrawable(context))
+                       .fallback(getDefaultUserAvatar(context))
                        .circleCrop()
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
     }
@@ -51,7 +41,7 @@ public class Picture {
         return GlideApp.with(context)
                        .load(reformatUrl(url))
                        .error(getErrorAvatarLoaded(context))
-                       .fallback(getPngDrawable(context))
+                       .fallback(getDefaultUserAvatar(context))
 //                       .transition(DrawableTransitionOptions.withCrossFade())
                        .circleCrop()
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
@@ -61,7 +51,7 @@ public class Picture {
         return GlideApp.with(context)
                        .load(reformatUrl(url))
                        .error(getErrorAvatarLoaded(context))
-                       .fallback(getPngDrawable(context))
+                       .fallback(getDefaultUserAvatar(context))
                        .circleCrop()
                        .placeholder(getDefaultCirclePlaceHolder(context))
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
@@ -78,5 +68,9 @@ public class Picture {
 
     public static Drawable getErrorAvatarLoaded(Context context) {
         return new ColorDrawable(ContextCompat.getColor(context, DEFAULT_LOAD_FAILED));
+    }
+
+    public static Drawable getDefaultUserAvatar(Context context) {
+        return ContextCompat.getDrawable(context, R.drawable.ic_default_user_avatar);
     }
 }

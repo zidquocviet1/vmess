@@ -5,14 +5,15 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.VectorDrawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.preference.Preference;
@@ -140,19 +141,34 @@ public class UserPreferencesFragment extends PreferenceFragmentCompat {
         Preference signedInPreference = category.findPreference(KEY_PREF_SIGNED_IN);
         if (signedInPreference != null) {
             if (resource != null) {
-                Bitmap sourceBitmap = ((BitmapDrawable) resource).getBitmap();
-                Bitmap destBitmap = Bitmap.createScaledBitmap(sourceBitmap, USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, true);
+                Bitmap destBitmap;
+
+                if (resource instanceof VectorDrawable) {
+                    destBitmap = createBitmapFromDrawable(resource);
+                } else if (resource instanceof ColorDrawable) {
+                    destBitmap = createBitmapFromDrawable(resource);
+                    RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(requireContext().getResources(), destBitmap);
+                    rbd.setCornerRadius(Math.max(destBitmap.getHeight(), destBitmap.getWidth()) / 2.0f);
+                    signedInPreference.setIcon(rbd);
+                    return;
+                } else {
+                    Bitmap sourceBitmap = ((BitmapDrawable) resource).getBitmap();
+                    destBitmap = Bitmap.createScaledBitmap(sourceBitmap, USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, true);
+                }
+
                 Drawable destDrawable = new BitmapDrawable(requireContext().getResources(), destBitmap);
                 signedInPreference.setIcon(destDrawable);
-            } else {
-                Bitmap bmp = Bitmap.createBitmap(USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bmp);
-                canvas.drawColor(ContextCompat.getColor(requireContext(), R.color.base_background_color));
-                RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(requireContext().getResources(), bmp);
-                rbd.setCornerRadius(Math.max(bmp.getHeight(), bmp.getWidth()) / 2.0f);
-
-                signedInPreference.setIcon(rbd);
             }
         }
+    }
+
+    private Bitmap createBitmapFromDrawable(Drawable d) {
+        Bitmap destBitmap = Bitmap.createBitmap(USER_AVATAR_WIDTH, USER_AVATAR_HEIGHT, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(destBitmap);
+
+        d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        d.draw(canvas);
+
+        return destBitmap;
     }
 }
