@@ -360,8 +360,9 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         private void setIconStatus(@DrawableRes int iconId, ColorStateList iconTint) {
             Drawable drawable = ContextCompat.getDrawable(mContext, iconId);
 
-            mBinding.imageState.setBackground(drawable);
-            mBinding.imageState.setBackgroundTintList(iconTint);
+            mBinding.imageState.setImageDrawable(drawable);
+            mBinding.imageState.setImageTintList(iconTint);
+            mBinding.imageState.setVisibility(View.VISIBLE);
         }
 
         private void markAsUnread(boolean isUnread) {
@@ -385,6 +386,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         }
 
         private void loadImage(@Nullable String url, ImageView container) {
+            container.setVisibility(View.VISIBLE);
             Picture.loadUserAvatar(mContext, url).into(container);
         }
 

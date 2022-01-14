@@ -48,7 +48,6 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
     @Override
     public WorkRequest createRequest() {
         return new OneTimeWorkRequest.Builder(PushMessageWorker.class)
-                                     .setConstraints(retrieveConstraint())
                                      .setInputData(mInputData)
                                      .build();
     }
@@ -107,7 +106,7 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
                           .flatMapSingle(c -> sendWebsocketRequest(WebSocketRequestMessage.Status.SEEN_MESSAGE, c))
                           .flatMapCompletable(response -> {
                               if (response.getStatus() == MARK_AS_READ_CODE) {
-                                  return chatDao.update(response.getBody());
+                                  return Completable.complete();
                               } else {
                                   return Completable.error(new IOException());
                               }
@@ -126,11 +125,23 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
             body.setStatus(MessageStatus.SEEN);
             body.getSeenBy().add(userId);
 
+            updateAndNotifyChanged(body);
+
             WebSocketRequestMessage request = new WebSocketRequestMessage(new SecureRandom().nextLong(),
                                                                           status,
                                                                           body,
                                                                           userId);
             return AppDependencies.getWebSocket().sendRequest(request);
+        }
+
+        private void updateAndNotifyChanged(Chat body) {
+            chatDao.update(body)
+                   .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver()
+                                                                        .notifyMessageUpdated(body.getConversationId(), body.getId())))
+                   .subscribeOn(Schedulers.io())
+                   .observeOn(Schedulers.io())
+                   .onErrorComplete()
+                   .subscribe();
         }
     }
 }
