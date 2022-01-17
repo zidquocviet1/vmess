@@ -51,23 +51,28 @@ public final class IncomingMessageProcessor {
             processMessageInternal(body, chatDao.insert(Collections.singletonList(body))
                                                 .andThen(Completable.fromAction(() ->
                                                          AppDependencies.getDatabaseObserver()
-                                                                        .notifyMessageInserted(body.getConversationId(), body.getId()))));
+                                                                        .notifyMessageInserted(body.getConversationId(), body.getId()))), false);
         } else if (message.getStatus() == RESPONSE_STATUS_MESSAGE) {
             processMessageInternal(body, chatDao.update(body)
                                                 .andThen(Completable.fromAction(() ->
                                                          AppDependencies.getDatabaseObserver()
-                                                                        .notifyMessageUpdated(body.getConversationId(), body.getId()))));
+                                                                        .notifyMessageUpdated(body.getConversationId(), body.getId()))), true);
         }
     }
 
-    private void processMessageInternal(Chat body, Completable action) {
+    private void processMessageInternal(Chat body, Completable action, boolean isUpdate) {
         fetchCacheConversation(body.getConversationId()).subscribeOn(Schedulers.computation())
                                                         .observeOn(Schedulers.computation())
                                                         .flatMapCompletable(optional -> {
                                                             if (optional.isPresent()) {
-                                                                return action.andThen(conversationDao.markConversationAsInbox(optional.get()))
-                                                                             .onErrorComplete()
-                                                                             .doOnError(t -> Logging.debug(TAG, "Insert incoming message failed: " + t));
+                                                                Completable newAction = action;
+
+                                                                if (!isUpdate) {
+                                                                    newAction = action.andThen(conversationDao.markConversationAsInbox(optional.get()));
+                                                                }
+
+                                                                return newAction.onErrorComplete()
+                                                                                .doOnError(t -> Logging.debug(TAG, "Insert incoming message failed: " + t));
                                                             } else {
                                                                 return fetchRemoteConversation(body.getConversationId(), body.getId());
                                                             }
