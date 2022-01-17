@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>
@@ -95,7 +96,8 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
             if (updatedList == null) return;
 
             mConversationList = updatedList;
-            mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+            mConversationAdapter.submitList(new ArrayList<>(mConversationList), () ->
+                    loadConversationPresenceStatus(Objects.requireNonNull(mViewModel.getPresenceUserList().getValue())));
         });
 
         mViewModel.getConversationInserted().observe(this, id -> {
@@ -104,22 +106,7 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
             }
         });
 
-        mViewModel.getPresenceUserList().observe(this, list -> {
-            if (list.isEmpty()) {
-                mConversationAdapter.notifyItemRangeChanged(0, mConversationList.size(), ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD);
-            } else {
-                List<User> onlineUsers = list.stream()
-                                             .map(User::new)
-                                             .collect(Collectors.toList());
-                mConversationList.stream()
-                                 .collect(Collectors.toMap(c -> mConversationList.indexOf(c), Conversation::getParticipants))
-                                 .forEach((index, users) -> {
-                                     boolean hasAny = !Collections.disjoint(users, new HashSet<>(onlineUsers));
-                                     String payload = hasAny ? ConversationListAdapter.PRESENCE_ONLINE_PAYLOAD : ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD;
-                                     mBinding.recyclerMessages.post(() -> mConversationAdapter.notifyItemChanged(index, payload));
-                                 });
-            }
-        });
+        mViewModel.getPresenceUserList().observe(this, this::loadConversationPresenceStatus);
     }
 
     @NonNull
@@ -254,5 +241,22 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
     private void removeConversationAdapterUI(Conversation conversation) {
         mConversationList.remove(conversation);
         mConversationAdapter.submitList(new ArrayList<>(mConversationList));
+    }
+
+    private void loadConversationPresenceStatus(List<String> onlineUser) {
+        if (onlineUser.isEmpty()) {
+            mConversationAdapter.notifyItemRangeChanged(0, mConversationList.size(), ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD);
+        } else {
+            List<User> onlineUsers = onlineUser.stream()
+                                               .map(User::new)
+                                               .collect(Collectors.toList());
+            mConversationList.stream()
+                             .collect(Collectors.toMap(c -> mConversationList.indexOf(c), Conversation::getParticipants))
+                             .forEach((index, users) -> {
+                                 boolean hasAny = !Collections.disjoint(users, new HashSet<>(onlineUsers));
+                                 String payload = hasAny ? ConversationListAdapter.PRESENCE_ONLINE_PAYLOAD : ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD;
+                                 mBinding.recyclerMessages.post(() -> mConversationAdapter.notifyItemChanged(index, payload));
+                             });
+        }
     }
 }
