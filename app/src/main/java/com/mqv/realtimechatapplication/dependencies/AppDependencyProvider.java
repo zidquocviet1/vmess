@@ -2,9 +2,13 @@ package com.mqv.realtimechatapplication.dependencies;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.MyDatabase;
+import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
+import com.mqv.realtimechatapplication.data.repository.impl.ConversationRepositoryImpl;
 import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
 import com.mqv.realtimechatapplication.network.service.ConversationService;
@@ -57,9 +61,13 @@ public class AppDependencyProvider implements AppDependencies.Provider {
 
     @Override
     public IncomingMessageProcessor provideIncomingMessageProcessor() {
+        ConversationRepository conversationRepository = new ConversationRepositoryImpl(retrofit.create(ConversationService.class),
+                                                                                       database.getConversationDao(),
+                                                                                       database.getChatDao());
         return new IncomingMessageProcessor(database.getChatDao(),
                                             database.getConversationDao(),
-                                            retrofit.create(ConversationService.class));
+                                            retrofit.create(ConversationService.class),
+                                            conversationRepository);
     }
 
     @Override
