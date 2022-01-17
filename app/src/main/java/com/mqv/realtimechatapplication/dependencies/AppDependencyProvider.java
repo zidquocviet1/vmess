@@ -76,6 +76,18 @@ public class AppDependencyProvider implements AppDependencies.Provider {
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {
-        return () -> new WebSocketConnection(okHttpClient, gson, monitor);
+        return new WebSocketFactory() {
+            @NonNull
+            @Override
+            public WebSocketConnection createWebSocket() {
+                return new WebSocketConnection(okHttpClient, gson, monitor, false);
+            }
+
+            @NonNull
+            @Override
+            public WebSocketConnection createPresenceWebSocket() {
+                return new WebSocketConnection(okHttpClient, gson, monitor, true);
+            }
+        };
     }
 }

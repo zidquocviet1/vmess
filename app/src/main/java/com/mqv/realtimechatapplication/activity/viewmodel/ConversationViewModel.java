@@ -37,9 +37,9 @@ import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -61,9 +61,9 @@ public class ConversationViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<List<Chat>>>           moreChatResult;
     private final MutableLiveData<Chat>                         messageObserver;
     private final MutableLiveData<Boolean>                      scrollButtonState;
+    private final MutableLiveData<Boolean>                      conversationActiveStatus;
     private final DatabaseObserver.MessageListener              messageListener;
 
-    private final Executor                                      seenMessageExecutors = Executors.newFixedThreadPool(5);
     private int                                                 currentChatPage      = DEFAULT_PAGE_CHAT_LIST;
 
     public static final String KEY_CONVERSATION_ID = "conversation";
@@ -74,15 +74,16 @@ public class ConversationViewModel extends CurrentUserViewModel {
                                  PeopleRepository peopleRepository,
                                  ChatRepository chatRepository,
                                  SavedStateHandle savedStateHandle) {
-        this.repository         = repository;
-        this.chatRepository     = chatRepository;
-        this.userRepository     = userRepository;
-        this.peopleRepository   = peopleRepository;
-        this.userDetail         = new MutableLiveData<>();
-        this.moreChatResult     = new MutableLiveData<>();
-        this.messageObserver    = new MutableLiveData<>();
-        this.scrollButtonState  = new MutableLiveData<>(false);
-        this.messageListener    = new DatabaseObserver.MessageListener() {
+        this.repository               = repository;
+        this.chatRepository           = chatRepository;
+        this.userRepository           = userRepository;
+        this.peopleRepository         = peopleRepository;
+        this.userDetail               = new MutableLiveData<>();
+        this.moreChatResult           = new MutableLiveData<>();
+        this.messageObserver          = new MutableLiveData<>();
+        this.scrollButtonState        = new MutableLiveData<>(false);
+        this.conversationActiveStatus = new MutableLiveData<>(false);
+        this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
             public void onMessageInserted(@NonNull String messageId) {
                 getCacheMessage(messageId);
@@ -101,6 +102,18 @@ public class ConversationViewModel extends CurrentUserViewModel {
         }
 
         AppDependencies.getDatabaseObserver().registerMessageListener(conversation.getId(), messageListener);
+
+        List<String> participants = conversation.getParticipants()
+                                                .stream()
+                                                .map(User::getUid)
+                                                .collect(Collectors.toList());
+
+        Disposable disposable = AppDependencies.getWebSocket()
+                                               .getPresenceUserList()
+                                               .onErrorComplete()
+                                               .map(list -> !list.isEmpty() && !Collections.disjoint(new HashSet<>(list), participants))
+                                               .subscribe(conversationActiveStatus::postValue);
+        cd.add(disposable);
     }
 
     //// Getter
@@ -128,6 +141,8 @@ public class ConversationViewModel extends CurrentUserViewModel {
     }
 
     public LiveData<Boolean> getShowScrollButton() { return Transformations.distinctUntilChanged(scrollButtonState); }
+
+    public LiveData<Boolean> getConversationActiveStatus() { return Transformations.distinctUntilChanged(conversationActiveStatus); }
 
     //// Private method
     private void fetchRemoteUser(@NonNull String uid) {

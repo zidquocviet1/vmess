@@ -49,7 +49,8 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public static final String LAST_CHAT_STATUS_PAYLOAD = "last_chat_status";
     public static final String LAST_CHAT_UNSENT_PAYLOAD = "last_chat_unsent";
     public static final String NAME_PAYLOAD = "name";
-    public static final String PRESENCE_PAYLOAD = "presence";
+    public static final String PRESENCE_OFFLINE_PAYLOAD = "presence_offline";
+    public static final String PRESENCE_ONLINE_PAYLOAD = "presence_online";
     public static final String THUMBNAIL_PAYLOAD = "avatar";
 
     public ConversationListAdapter(List<Conversation> data, Context context) {
@@ -133,6 +134,10 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
         if (!payloads.isEmpty() && payloads.get(0).equals(LAST_CHAT_PAYLOAD)) {
             holder.bindRecentChat(mConversations.get(position));
+        } else if (!payloads.isEmpty() && payloads.get(0).equals(PRESENCE_OFFLINE_PAYLOAD)) {
+            holder.bindPresence(false);
+        } else if (!payloads.isEmpty() && payloads.get(0).equals(PRESENCE_ONLINE_PAYLOAD)) {
+            holder.bindPresence(true);
         } else if (!payloads.isEmpty() && payloads.get(0) instanceof Bundle) {
             Bundle bundle = (Bundle) payloads.get(0);
 
@@ -197,6 +202,10 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                 }
                 return false;
             });
+        }
+
+        public void bindPresence(Boolean isOnline) {
+            mBinding.imageConversationActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
         }
 
         public void bindConversationName(Conversation item) {

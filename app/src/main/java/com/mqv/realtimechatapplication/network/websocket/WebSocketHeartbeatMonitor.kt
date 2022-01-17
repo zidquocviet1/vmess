@@ -64,6 +64,17 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
         }
     }
 
+    override fun onUserPresence(request: WebSocketRequestMessage) {
+        executor.execute {
+            // If request return ID = -1L, it's mean the user is offline otherwise online
+            if (request.id == -1L) {
+                webSocket?.postPresenceValue(request.from, false)
+            } else {
+                webSocket?.postPresenceValue(request.from, true)
+            }
+        }
+    }
+
     private fun retrySendingErrorMessage() {
         executor.execute {
             val iterator = pendingMessage.iterator()

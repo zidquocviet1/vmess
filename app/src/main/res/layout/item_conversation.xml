@@ -24,23 +24,13 @@
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_green_dot_wrapper"
+        android:id="@+id/image_conversation_active"
         android:layout_width="18dp"
         android:layout_height="18dp"
-        android:background="@color/white"
+        android:background="@drawable/ic_conversation_active"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/image_conversation"
         app:layout_constraintEnd_toEndOf="@id/image_conversation"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_green_dot"
-        android:layout_width="14dp"
-        android:layout_height="14dp"
-        android:background="@drawable/ic_green_dot"
-        app:layout_constraintBottom_toBottomOf="@id/image_green_dot_wrapper"
-        app:layout_constraintEnd_toEndOf="@id/image_green_dot_wrapper"
-        app:layout_constraintStart_toStartOf="@id/image_green_dot_wrapper"
-        app:layout_constraintTop_toTopOf="@id/image_green_dot_wrapper"
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
 
     <com.google.android.material.textview.MaterialTextView

@@ -24,6 +24,7 @@ import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
@@ -32,7 +33,10 @@ import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConversationListFragment extends BaseSwipeFragment<ConversationFragmentViewModel, FragmentConversationBinding>
         implements ConversationDialogFragment.ConversationOptionListener {
@@ -97,6 +101,23 @@ public class ConversationListFragment extends BaseSwipeFragment<ConversationFrag
         mViewModel.getConversationInserted().observe(this, id -> {
             if (id != null) {
                 RingtoneUtil.open(requireContext(), MESSAGE_RINGTONE);
+            }
+        });
+
+        mViewModel.getPresenceUserList().observe(this, list -> {
+            if (list.isEmpty()) {
+                mConversationAdapter.notifyItemRangeChanged(0, mConversationList.size(), ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD);
+            } else {
+                List<User> onlineUsers = list.stream()
+                                             .map(User::new)
+                                             .collect(Collectors.toList());
+                mConversationList.stream()
+                                 .collect(Collectors.toMap(c -> mConversationList.indexOf(c), Conversation::getParticipants))
+                                 .forEach((index, users) -> {
+                                     boolean hasAny = !Collections.disjoint(users, new HashSet<>(onlineUsers));
+                                     String payload = hasAny ? ConversationListAdapter.PRESENCE_ONLINE_PAYLOAD : ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD;
+                                     mBinding.recyclerMessages.post(() -> mConversationAdapter.notifyItemChanged(index, payload));
+                                 });
             }
         });
     }

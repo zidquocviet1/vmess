@@ -6,4 +6,5 @@ package com.mqv.realtimechatapplication.network.websocket
 interface HeartbeatMonitor {
     fun onKeepAliveResponse(sentTime: Long)
     fun onMessageError(request: WebSocketRequestMessage)
+    fun onUserPresence(request: WebSocketRequestMessage)
 }

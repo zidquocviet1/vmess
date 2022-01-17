@@ -61,6 +61,11 @@ public class User implements Parcelable {
         this.username = username;
     }
 
+    @Ignore
+    public User(String id) {
+        this.uid = id;
+    }
+
     // This constructor will create a new instance with the same value for update user request body
     @Ignore
     public User(User another){

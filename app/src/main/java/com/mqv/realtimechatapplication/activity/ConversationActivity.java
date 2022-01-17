@@ -135,7 +135,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     protected void onStart() {
         super.onStart();
 
-        isUserActiveNow();
         showUserUi();
     }
 
@@ -230,6 +229,11 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mBinding.buttonScrollToBottom.startAnimation(fadeAnimation);
                 mBinding.buttonScrollToBottom.setVisibility(View.GONE);
             }
+        });
+
+        mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
+            mBinding.toolbarSubtitle.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+            mBinding.imageConversationActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
         });
     }
 
@@ -447,10 +451,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 isSeenChat = true;
             }
         }
-    }
-
-    private void isUserActiveNow() {
-        mBinding.toolbarSubtitle.setVisibility(View.GONE);
     }
 
     private void showUserUi() {

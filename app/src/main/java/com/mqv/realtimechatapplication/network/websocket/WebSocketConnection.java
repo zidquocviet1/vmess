@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -44,7 +45,9 @@ import okhttp3.WebSocketListener;
 
 public class WebSocketConnection extends WebSocketListener {
     private static final String TAG = WebSocketConnection.class.getSimpleName();
+    private static final int    RESPONSE_PRESENCE_USER_LIST_MESSAGE = 205;
 
+    private final String                                    name;
     private final String                                    wsUri;
     private final Gson                                      gson;
     private final OkHttpClient                              okHttpClient;
@@ -57,11 +60,20 @@ public class WebSocketConnection extends WebSocketListener {
     private WebSocket    client;
     private FirebaseUser user;
 
-    public WebSocketConnection(OkHttpClient okHttpClient, Gson gson, WebSocketHeartbeatMonitor monitor) {
+    public WebSocketConnection(OkHttpClient okHttpClient,
+                               Gson gson,
+                               WebSocketHeartbeatMonitor monitor,
+                               boolean isPresence) {
         String uri = BuildConfig.SERVER_URL.replace("https://", "wss://")
                                            .replace("http://", "ws://");
 
-        this.wsUri          = uri + "/v1/websocket";
+        if (isPresence) {
+            this.wsUri = uri + "/v1/websocket/presence";
+            this.name  = "presence";
+        } else {
+            this.wsUri = uri + "/v1/websocket";
+            this.name  = "message";
+        }
         this.gson           = gson;
         this.webSocketState = BehaviorSubject.createDefault(DISCONNECTED);
         this.okHttpClient   = okHttpClient;
@@ -70,7 +82,7 @@ public class WebSocketConnection extends WebSocketListener {
 
     @WorkerThread
     public synchronized Observable<WebSocketConnectionState> connect(@NonNull FirebaseUser user) throws InterruptedException {
-        Logging.debug(TAG, "connect()");
+        log("connect()");
 
         if (client == null) {
             try {
@@ -100,7 +112,7 @@ public class WebSocketConnection extends WebSocketListener {
     }
 
     public synchronized void disconnect() {
-        Logging.debug(TAG, "disconnect()");
+        log("disconnect()");
 
         if (client != null) {
             client.close(1000, "OK");
@@ -169,7 +181,7 @@ public class WebSocketConnection extends WebSocketListener {
 
     public synchronized void sendPingMessage() throws IOException {
         if (client != null) {
-            Logging.debug(TAG, "Sending ping message...");
+            log("Sending ping message...");
 
             long                    id   = System.currentTimeMillis();
             WebSocketRequestMessage ping = new WebSocketRequestMessage(id,
@@ -193,19 +205,24 @@ public class WebSocketConnection extends WebSocketListener {
     @Override
     public synchronized void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
         if (client != null) {
-            Logging.debug(TAG, "onOpen() connected");
+            log("onOpen() connected");
             webSocketState.onNext(CONNECTED);
         }
     }
 
     @Override
     public synchronized void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-        Logging.debug(TAG, "onMessage(): " + text);
+        log("onMessage(): " + text);
 
         WebSocketMessage message = gson.fromJson(text, WebSocketMessage.class);
 
         if (message.getType() == WebSocketMessage.Type.REQUEST) {
-            incomingRequests.add(message.getRequest());
+            //noinspection ConstantConditions
+            if (message.getRequest().getStatus() == WebSocketRequestMessage.Status.UNKNOWN) {
+                monitor.onUserPresence(message.getRequest());
+            } else {
+                incomingRequests.add(message.getRequest());
+            }
         } else if (message.getType() == WebSocketMessage.Type.RESPONSE) {
             WebSocketResponseMessage response = message.getResponse();
             if (response != null) {
@@ -215,6 +232,13 @@ public class WebSocketConnection extends WebSocketListener {
                 } else if (pingRequests.remove(response.getId())) {
                     Logging.debug(TAG, "Receive pong message, sent time: " + response.getId());
                     monitor.onKeepAliveResponse(response.getId());
+                } else if (response.getStatus() == RESPONSE_PRESENCE_USER_LIST_MESSAGE) {
+                    // noinspection unchecked
+                    List<String> onlineUsers = gson.fromJson(response.getMessage(), List.class);
+
+                    for (String onlineUser : onlineUsers) {
+                        monitor.onUserPresence(new WebSocketRequestMessage(response.getId(), WebSocketRequestMessage.Status.UNKNOWN, new Chat(), onlineUser));
+                    }
                 }
             }
         }
@@ -223,7 +247,7 @@ public class WebSocketConnection extends WebSocketListener {
 
     @Override
     public synchronized void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-        Logging.debug(TAG, "onClosed()");
+        log("onClosed()");
         webSocketState.onNext(DISCONNECTED);
 
         cleanupAfterShutdown();
@@ -232,14 +256,14 @@ public class WebSocketConnection extends WebSocketListener {
 
     @Override
     public synchronized void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-        Logging.debug(TAG, "onClosing()");
+        log("onClosing()");
         webSocketState.onNext(DISCONNECTING);
         webSocket.close(1000, "OK");
     }
 
     @Override
     public synchronized void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, @Nullable Response response) {
-        Logging.debug(TAG, "onFailure(): " + t);
+        log("onFailure(): " + t);
 
         if (response != null && (response.code() == 401 || response.code() == 403)) {
             webSocketState.onNext(WebSocketConnectionState.AUTHENTICATION_FAILED);
@@ -261,7 +285,7 @@ public class WebSocketConnection extends WebSocketListener {
         }
 
         if (client != null) {
-            Logging.debug(TAG, "Client not null when closed!");
+            log("Client not null when closed!");
             client.close(1000, "OK");
             client = null;
         }
@@ -285,5 +309,9 @@ public class WebSocketConnection extends WebSocketListener {
         public void onError(Throwable t) {
             singleResponse.onError(t);
         }
+    }
+
+    private void log(String message) {
+        Logging.debug(TAG, "[" + name + "]: " + message);
     }
 }
