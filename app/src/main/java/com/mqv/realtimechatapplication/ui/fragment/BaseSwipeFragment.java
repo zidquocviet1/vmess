@@ -16,16 +16,18 @@ public abstract class BaseSwipeFragment<V extends ViewModel, B extends ViewBindi
     private SwipeRefreshLayout srl;
     private final int[] indicatorColorArr = {R.color.purple_500};
 
-    @NonNull
+    @Nullable
     public abstract SwipeRefreshLayout getSwipeLayout();
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        srl = getSwipeLayout();
-        srl.setOnRefreshListener(this);
-        srl.setColorSchemeResources(indicatorColorArr);
+        if (getSwipeLayout() != null) {
+            srl = getSwipeLayout();
+            srl.setOnRefreshListener(this);
+            srl.setColorSchemeResources(indicatorColorArr);
+        }
     }
 
     public void stopRefresh(){

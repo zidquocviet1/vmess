@@ -38,7 +38,7 @@ import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
 import com.mqv.realtimechatapplication.ui.adapter.ChatListAdapter;
-import com.mqv.realtimechatapplication.ui.fragment.ConversationListFragment;
+import com.mqv.realtimechatapplication.ui.fragment.ConversationListInboxFragment;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
@@ -141,7 +141,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     @Override
     public void finish() {
         if (isConversationUpdated) {
-            Intent resultIntent = new Intent(this, ConversationListFragment.class);
+            Intent resultIntent = new Intent(this, ConversationListInboxFragment.class);
             resultIntent.putExtra(EXTRA_CONVERSATION, mConversation);
             resultIntent.putExtra(EXTRA_SEEN_CHAT, isSeenChat);
             resultIntent.putExtra(EXTRA_NEW_CHAT_ADDED, isNewChatAdded);

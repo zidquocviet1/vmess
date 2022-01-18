@@ -271,15 +271,6 @@ public class ConversationViewModel extends CurrentUserViewModel {
         chatRepository.saveCached(Collections.singletonList(chat));
     }
 
-    public void seenMessage(List<Chat> chats) {
-        Observable.fromIterable(chats)
-                  .flatMap(chatRepository::seenMessage)
-                  .subscribeOn(Schedulers.from(seenMessageExecutors))
-                  .onErrorComplete()
-                  .observeOn(AndroidSchedulers.mainThread())
-                  .subscribe();
-    }
-
     public void seenWelcomeMessage(Chat chat) {
         updateChat(chat);
 

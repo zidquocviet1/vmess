@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
@@ -29,6 +30,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ConversationListViewModel extends ViewModel {
     private   final ConversationRepository              conversationRepository;
     protected final MutableLiveData<List<Conversation>> conversationListObserver;
+    protected final MutableLiveData<List<String>>       presenceUserListObserver;
     protected final CompositeDisposable                 cd;
 
     private static final int                    INITIALIZE_PAGE             = 0;
@@ -37,36 +39,43 @@ public class ConversationListViewModel extends ViewModel {
         this.conversationRepository   = conversationRepository;
         this.cd                       = new CompositeDisposable();
         this.conversationListObserver = new MutableLiveData<>();
+        this.presenceUserListObserver = new MutableLiveData<>(Collections.emptyList());
 
         //noinspection ResultOfMethodCallIgnored
         conversationRepository.conversationListUpdateObserve()
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(map -> {
-                                Iterator<Map.Entry<Conversation, List<Chat>>> iterator = map.entrySet().iterator();
-                                List<Conversation>                            result   = new ArrayList<>();
+                              .subscribeOn(Schedulers.io())
+                              .observeOn(AndroidSchedulers.mainThread())
+                              .subscribe(map -> {
+                                  Iterator<Map.Entry<Conversation, List<Chat>>> iterator = map.entrySet().iterator();
+                                  List<Conversation>                            result   = new ArrayList<>();
             
-                                while (iterator.hasNext()) {
-                                    Map.Entry<Conversation, List<Chat>> entry        = iterator.next();
-                                    Conversation                        conversation = entry.getKey();
+                                  while (iterator.hasNext()) {
+                                      Map.Entry<Conversation, List<Chat>> entry        = iterator.next();
+                                      Conversation                        conversation = entry.getKey();
 
-                                    if (conversation.getStatus() == status) {
-                                        List<Chat> chats = entry.getValue()
-                                                .stream()
-                                                .sorted((c1, c2) -> c2.getTimestamp().compareTo(c1.getTimestamp()))
-                                                .limit(40)
-                                                .collect(Collectors.toList());
-                                        Collections.reverse(chats);
-                                        conversation.setChats(chats);
-                                        result.add(conversation);
-                                    }
-                                }
-                                conversationListObserver.postValue(result.stream()
-                                        .sorted((o1, o2) -> o2.getLastChat()
-                                                .getTimestamp()
-                                                .compareTo(o1.getLastChat().getTimestamp()))
-                                        .collect(Collectors.toList()));
-                            }, t -> {});
+                                      if (conversation.getStatus() == status) {
+                                          List<Chat> chats = entry.getValue()
+                                                                  .stream()
+                                                                  .sorted((c1, c2) -> c2.getTimestamp().compareTo(c1.getTimestamp()))
+                                                                  .limit(40)
+                                                                  .collect(Collectors.toList());
+                                          Collections.reverse(chats);
+                                          conversation.setChats(chats);
+                                          result.add(conversation);
+                                      }
+                                  }
+                                  conversationListObserver.postValue(result.stream()
+                                                                           .sorted((o1, o2) -> o2.getLastChat()
+                                                                                   .getTimestamp()
+                                                                                   .compareTo(o1.getLastChat().getTimestamp()))
+                                                                           .collect(Collectors.toList()));
+                              }, t -> {});
+
+        Disposable disposable = AppDependencies.getWebSocket()
+                                               .getPresenceUserList()
+                                               .onErrorComplete()
+                                               .subscribe(presenceUserListObserver::postValue);
+        cd.add(disposable);
     }
 
     // Only call with the activity has swipe refresh layout
@@ -141,6 +150,14 @@ public class ConversationListViewModel extends ViewModel {
     }
 
     public void ignore(Conversation conversation) {
+
+    }
+
+    public void leaveGroup(Conversation conversation) {
+
+    }
+
+    public void addMember(Conversation conversation) {
 
     }
 

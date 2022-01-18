@@ -1,0 +1,183 @@
+package com.mqv.realtimechatapplication.ui.fragment
+
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.core.content.ContextCompat
+import androidx.viewbinding.ViewBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.mqv.realtimechatapplication.R
+import com.mqv.realtimechatapplication.activity.ConversationActivity
+import com.mqv.realtimechatapplication.activity.listener.ConversationListChanged
+import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel
+import com.mqv.realtimechatapplication.network.model.Conversation
+import com.mqv.realtimechatapplication.network.model.User
+import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType
+import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter
+import com.mqv.realtimechatapplication.util.MyActivityForResult
+import java.util.*
+import java.util.function.BiConsumer
+import java.util.stream.Collectors
+
+/*
+* Base class for all the Fragment related to conversation list
+* */
+abstract class ConversationListFragment<V : ConversationListViewModel, VB : ViewBinding> :
+    BaseSwipeFragment<V, VB>(),
+    ConversationListChanged,
+    ConversationDialogFragment.ConversationOptionListener {
+
+    internal open lateinit var mAdapter: ConversationListAdapter
+    internal open lateinit var mConversations: MutableList<Conversation>
+
+    private var activityResultLauncher: MyActivityForResult<Intent, ActivityResult> =
+        MyActivityForResult.registerActivityForResult(this, StartActivityForResult())
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initializeRecyclerview()
+        mAdapter.registerOnDataSizeChanged { onDataSizeChanged(it) }
+    }
+
+    abstract fun initializeRecyclerview()
+    abstract fun postToRecyclerview(runnable: Runnable)
+    abstract fun onDataSizeChanged(isEmpty: Boolean)
+    override fun onRefresh() {}
+
+    override fun onDelete(conversation: Conversation?) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.msg_delete_conversation_title)
+            .setMessage(R.string.msg_delete_conversation_message)
+            .setPositiveButton(R.string.action_delete) { dialog, _ ->
+                dialog.dismiss()
+                mViewModel.delete(conversation)
+                removeConversationUI(conversation!!)
+            }
+            .setNegativeButton(R.string.action_cancel, null)
+            .setBackground(
+                ContextCompat.getDrawable(
+                    requireContext(),
+                    R.drawable.background_alert_dialog_corner_radius
+                )
+            )
+            .create()
+            .show()
+    }
+
+    override fun onMuteNotification(conversation: Conversation?) {
+        mViewModel.muteNotification(conversation)
+    }
+
+    override fun onCreateGroup(conversation: Conversation?) {
+        mViewModel.createGroup(conversation)
+    }
+
+    override fun onLeaveGroup(conversation: Conversation?) {
+        mViewModel.leaveGroup(conversation)
+    }
+
+    override fun onAddMember(conversation: Conversation?) {
+        mViewModel.addMember(conversation)
+    }
+
+    override fun onMarkUnread(conversation: Conversation?) {
+        mViewModel.markAsUnread(conversation)
+    }
+
+    override fun onIgnore(conversation: Conversation?) {
+        mViewModel.ignore(conversation)
+    }
+
+    override fun onUnArchive(conversation: Conversation?) {
+        mViewModel.changeConversationStatusType(conversation, ConversationStatusType.INBOX)
+        removeConversationUI(conversation!!)
+    }
+
+    override fun onArchive(conversation: Conversation?) {
+        mViewModel.changeConversationStatusType(conversation, ConversationStatusType.ARCHIVED)
+        removeConversationUI(conversation!!)
+    }
+
+    override fun removeConversationUI(conversation: Conversation) {
+        mConversations.remove(conversation)
+        mAdapter.submitList(ArrayList(mConversations))
+    }
+
+    override fun bindPresenceConversation(onlineUsersId: List<String>) {
+        if (onlineUsersId.isEmpty()) {
+            mAdapter.notifyItemRangeChanged(
+                0,
+                mConversations.size,
+                ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD
+            )
+        } else {
+            val onlineUsers: List<User?> = onlineUsersId.stream()
+                .map { id: String? -> User(id) }
+                .collect(Collectors.toList())
+
+            mConversations.stream()
+                .collect(
+                    Collectors.toMap(
+                        { c -> mConversations.indexOf(c) },
+                        { obj -> obj.participants })
+                )
+                .forEach { (index, users) ->
+                    val hasAny = !Collections.disjoint(users, HashSet(onlineUsers))
+                    val payload =
+                        if (hasAny) ConversationListAdapter.PRESENCE_ONLINE_PAYLOAD else ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD
+                    postToRecyclerview {
+                        mAdapter.notifyItemChanged(
+                            index,
+                            payload
+                        )
+                    }
+                }
+        }
+    }
+
+    protected fun onConversationClick(): BiConsumer<Int, Boolean> = BiConsumer { pos, isLongClick ->
+        val conversation = mAdapter.currentList[pos]
+
+        if (isLongClick) {
+            openConversationOptionDialog(conversation)
+        } else {
+            openConversation(conversation)
+        }
+    }
+
+    private fun openConversationOptionDialog(conversation: Conversation?) {
+        val dialog = ConversationDialogFragment.newInstance(this, conversation)
+        dialog.show(parentFragmentManager, null)
+    }
+
+    private fun openConversation(conversation: Conversation?) {
+        val conversationIntent =
+            Intent(requireContext(), ConversationActivity::class.java).apply {
+                putExtra(ConversationActivity.EXTRA_CONVERSATION, conversation)
+            }
+
+        activityResultLauncher.launch(conversationIntent) { result: ActivityResult? ->
+            onConversationOpenResult(result)
+        }
+    }
+
+    protected open fun onConversationOpenResult(result: ActivityResult?) {
+        if (result != null && result.resultCode == Activity.RESULT_OK) {
+            val intent = result.data
+            if (intent != null) {
+                // Change the conversation status to INBOX if updated
+                val updated: Conversation =
+                    intent.getParcelableExtra(ConversationActivity.EXTRA_CONVERSATION)!!
+                mViewModel.changeConversationStatusType(
+                    updated,
+                    ConversationStatusType.INBOX
+                )
+                removeConversationUI(updated)
+            }
+        }
+    }
+}

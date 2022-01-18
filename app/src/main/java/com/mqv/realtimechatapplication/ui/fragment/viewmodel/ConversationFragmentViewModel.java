@@ -4,6 +4,7 @@ import static com.mqv.realtimechatapplication.network.model.type.ConversationSta
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel;
@@ -33,7 +34,6 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final ChatRepository                                    chatRepository;
     private final MutableLiveData<List<RemoteUser>>                 rankUser;
     private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
-    private final MutableLiveData<List<String>>                     presenceUser;
     private final MutableLiveData<String>                           conversationInserted;
     private final DatabaseObserver.ConversationListener             conversationObserver;
 
@@ -49,18 +49,11 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         this.chatRepository                 = chatRepository;
         this.refreshConversationResult      = new MutableLiveData<>();
         this.rankUser                       = new MutableLiveData<>();
-        this.presenceUser                   = new MutableLiveData<>();
         this.conversationInserted           = new MutableLiveData<>();
         this.conversationObserver           = conversationInserted::postValue;
 
         fetchAllConversation();
         AppDependencies.getDatabaseObserver().registerConversationListener(conversationObserver);
-
-        Disposable disposable = AppDependencies.getWebSocket()
-                                               .getPresenceUserList()
-                                               .onErrorComplete()
-                                               .subscribe(presenceUser::postValue);
-        cd.add(disposable);
     }
 
     public void onRefresh() {
@@ -90,11 +83,11 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     }
 
     public LiveData<String> getConversationInserted() {
-        return conversationInserted;
+        return Transformations.distinctUntilChanged(conversationInserted);
     }
 
     public LiveData<List<String>> getPresenceUserList() {
-        return presenceUser;
+        return presenceUserListObserver;
     }
 
     private void fetchAllConversation() {
