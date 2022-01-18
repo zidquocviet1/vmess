@@ -5,6 +5,7 @@ import androidx.annotation.MainThread;
 import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
+import com.mqv.realtimechatapplication.message.MessageSenderProcessor;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 
 /*
@@ -18,6 +19,7 @@ public class AppDependencies {
     private static volatile IncomingMessageObserver incomingMessageObserver;
     private static volatile IncomingMessageProcessor incomingMessageProcessor;
     private static volatile DatabaseObserver databaseObserver;
+    private static volatile MessageSenderProcessor messageSenderProcessor;
 
     private static Provider provider;
 
@@ -85,10 +87,22 @@ public class AppDependencies {
         }
     }
 
+    public static MessageSenderProcessor getMessageSenderProcessor() {
+        if (messageSenderProcessor == null) {
+            synchronized (LOCK) {
+                if (messageSenderProcessor == null) {
+                    messageSenderProcessor = provider.provideMessageSenderProcessor();
+                }
+            }
+        }
+        return messageSenderProcessor;
+    }
+
     public interface Provider {
         WebSocketClient provideWebSocket();
         IncomingMessageObserver provideIncomingMessageObserver();
         IncomingMessageProcessor provideIncomingMessageProcessor();
         DatabaseObserver provideDatabaseObserver();
+        MessageSenderProcessor provideMessageSenderProcessor();
     }
 }

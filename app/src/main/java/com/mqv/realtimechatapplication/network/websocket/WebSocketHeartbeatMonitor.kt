@@ -61,6 +61,7 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
     override fun onMessageError(request: WebSocketRequestMessage) {
         executor.execute {
             pendingMessage.add(request)
+            AppDependencies.getIncomingMessageProcessor().onMessageSendTimeout(request)
         }
     }
 
@@ -83,15 +84,15 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
                 val request = iterator.next()
                 Logging.debug(TAG, "Retry sending message id = ${request.id}")
 
-                webSocket!!.sendRequest(request)
+                val response = webSocket!!.sendRequest(request)
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .onErrorComplete()
-                    .subscribe { response ->
-                        iterator.remove()
+                    .blockingGet()
+                
+                iterator.remove()
 
-                        AppDependencies.getIncomingMessageProcessor().process(response)
-                    }
+                AppDependencies.getIncomingMessageProcessor().process(response)
             }
         }
     }

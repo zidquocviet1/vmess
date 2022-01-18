@@ -8,7 +8,7 @@ import com.mqv.realtimechatapplication.network.exception.ResourceNotFoundExcepti
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
-import com.mqv.realtimechatapplication.network.service.ConversationService;
+import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
 import com.mqv.realtimechatapplication.util.Logging;
 
@@ -35,7 +35,6 @@ public final class IncomingMessageProcessor {
 
     public IncomingMessageProcessor(ChatDao chatDao,
                                     ConversationDao conversationDao,
-                                    ConversationService conversationService,
                                     ConversationRepository conversationRepository) {
         this.chatDao = chatDao;
         this.conversationDao = conversationDao;
@@ -71,7 +70,8 @@ public final class IncomingMessageProcessor {
                                                                     newAction = action.andThen(conversationDao.markConversationAsInbox(optional.get()));
                                                                 }
 
-                                                                return newAction.onErrorComplete()
+                                                                return newAction.andThen(onMessageSendSuccess(body.getId()))
+                                                                                .onErrorComplete()
                                                                                 .doOnError(t -> Logging.debug(TAG, "Insert incoming message failed: " + t));
                                                             } else {
                                                                 return fetchRemoteConversation(body.getConversationId(), body.getId());
@@ -110,5 +110,19 @@ public final class IncomingMessageProcessor {
                                          return Completable.error(ResourceNotFoundException::new);
                                      })
                                      .onErrorComplete();
+    }
+
+    public void onMessageSendTimeout(WebSocketRequestMessage request) {
+        if (request.getStatus() == WebSocketRequestMessage.Status.INCOMING_MESSAGE) {
+            final Chat   body      = request.getBody();
+            final String messageId = body.getId();
+            final long   timestamp = System.currentTimeMillis();
+
+            AppDependencies.getMessageSenderProcessor().insertPendingMessage(messageId, timestamp);
+        }
+    }
+
+    private Completable onMessageSendSuccess(String messageId) {
+        return AppDependencies.getMessageSenderProcessor().deletePendingMessage(messageId);
     }
 }

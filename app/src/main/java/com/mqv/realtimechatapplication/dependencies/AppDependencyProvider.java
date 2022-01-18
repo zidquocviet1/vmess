@@ -11,6 +11,7 @@ import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.repository.impl.ConversationRepositoryImpl;
 import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
+import com.mqv.realtimechatapplication.message.MessageSenderProcessor;
 import com.mqv.realtimechatapplication.network.service.ConversationService;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketAlarmTimer;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
@@ -66,13 +67,17 @@ public class AppDependencyProvider implements AppDependencies.Provider {
                                                                                        database.getChatDao());
         return new IncomingMessageProcessor(database.getChatDao(),
                                             database.getConversationDao(),
-                                            retrofit.create(ConversationService.class),
                                             conversationRepository);
     }
 
     @Override
     public DatabaseObserver provideDatabaseObserver() {
         return new DatabaseObserver();
+    }
+
+    @Override
+    public MessageSenderProcessor provideMessageSenderProcessor() {
+        return new MessageSenderProcessor(context, database.getPendingMessageDao(), database.getChatDao());
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {
