@@ -38,12 +38,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ConversationListAdapter extends ListAdapter<Conversation, ConversationListAdapter.ConversationViewHolder> {
     private final List<Conversation> mConversations;
     private final Context mContext;
     private final FirebaseUser mCurrentUser;
     private BiConsumer<Integer, Boolean> conversationConsumer;
+    private Consumer<Boolean> onDataSizeChanged;
 
     public static final String LAST_CHAT_PAYLOAD = "last_chat";
     public static final String LAST_CHAT_STATUS_PAYLOAD = "last_chat_status";
@@ -120,6 +122,10 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         this.conversationConsumer = conversationConsumer;
     }
 
+    public void registerOnDataSizeChanged(Consumer<Boolean> listener) {
+        this.onDataSizeChanged = listener;
+    }
+
     @NonNull
     @Override
     public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -158,6 +164,13 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     @Override
     public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position) {
         holder.bind(getItem(position));
+    }
+
+    @Override
+    public void onCurrentListChanged(@NonNull List<Conversation> previousList, @NonNull List<Conversation> currentList) {
+        if (onDataSizeChanged != null) {
+            onDataSizeChanged.accept(currentList.isEmpty());
+        }
     }
 
     public static class ConversationViewHolder extends RecyclerView.ViewHolder {
