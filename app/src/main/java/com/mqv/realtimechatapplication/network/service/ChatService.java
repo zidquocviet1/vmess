@@ -22,21 +22,25 @@ public interface ChatService {
     Observable<ApiResponse<Chat>> fetchById(@Header(Const.AUTHORIZATION) String token,
                                             @Path("id") String id);
 
-    @POST("conversation/add_chat")
+    @POST(value = "chat/send")
     Observable<ApiResponse<Chat>> sendMessage(@Header(AUTHORIZATION) String token,
                                               @Body Chat chat);
 
-    @PUT("conversation")
+    @PUT(value = "chat")
     Observable<ApiResponse<Chat>> seenMessage(@Header(AUTHORIZATION) String token,
                                               @Body Chat chat);
 
-    @PUT("conversation/seen_welcome_chat")
+    @PUT(value = "chat/seen_welcome_chat")
     Observable<ApiResponse<Chat>> seenWelcomeMessage(@Header(AUTHORIZATION) String token,
                                                      @Body Chat chat);
 
-    @GET("conversation/chat/{conversationId}")
+    @GET(value = "chat/page/{conversationId}")
     Observable<ApiResponse<List<Chat>>> loadMoreChat(@Header(AUTHORIZATION) String token,
                                                      @Path("conversationId") String conversationId,
                                                      @Query("page") int page,
                                                      @Query("size") int size);
+
+    @PUT(value = "chat/receive")
+    Observable<ApiResponse<String>> notifyReceiveChat(@Header(AUTHORIZATION) String token,
+                                                      @Body Chat chat);
 }
