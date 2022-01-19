@@ -5,13 +5,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.content.ContextCompat
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mqv.realtimechatapplication.R
 import com.mqv.realtimechatapplication.activity.ConversationActivity
+import com.mqv.realtimechatapplication.activity.MainActivity
 import com.mqv.realtimechatapplication.activity.listener.ConversationListChanged
+import com.mqv.realtimechatapplication.activity.preferences.PreferenceArchivedConversationActivity
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel
 import com.mqv.realtimechatapplication.network.model.Conversation
 import com.mqv.realtimechatapplication.network.model.User
@@ -32,9 +33,6 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     internal open lateinit var mAdapter: ConversationListAdapter
     internal open lateinit var mConversations: MutableList<Conversation>
-
-    private var activityResultLauncher: MyActivityForResult<Intent, ActivityResult> =
-        MyActivityForResult.registerActivityForResult(this, StartActivityForResult())
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -160,8 +158,17 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                 putExtra(ConversationActivity.EXTRA_CONVERSATION, conversation)
             }
 
-        activityResultLauncher.launch(conversationIntent) { result: ActivityResult? ->
+        getLauncherByActivity()?.launch(conversationIntent) { result: ActivityResult? ->
             onConversationOpenResult(result)
+        }
+    }
+
+    // If new class extends this, it is need to be cast the Activity owner
+    private fun getLauncherByActivity(): MyActivityForResult<Intent, ActivityResult>? {
+        return when (requireActivity()) {
+            is MainActivity -> (requireActivity() as MainActivity).activityResultLauncher
+            is PreferenceArchivedConversationActivity -> (requireActivity() as PreferenceArchivedConversationActivity).activityResultLauncher
+            else -> null
         }
     }
 
