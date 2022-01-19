@@ -65,6 +65,8 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         mBinding.buttonNotificationSettings.setOnClickListener(this);
 
         registerFirebaseUserChange(user -> showUserImage(user == null ? null : user.getPhotoUrl()));
+
+        AppDependencies.getMessageSenderProcessor();
     }
 
     @Override
@@ -96,6 +98,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         if (id == mBinding.imageAvatar.getId()) {
             startActivity(UserActivity.class);
         } else if (id == mBinding.buttonAddConversation.getId()) {
+            startActivity(AddConversationActivity.class);
         } else if (id == mBinding.buttonQrScanner.getId()) {
             startActivity(ConnectPeopleActivity.class);
         } else if (id == mBinding.buttonAllPeople.getId()) {
@@ -146,11 +149,11 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
     @Override
     public void onAvailable() {
-        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.GONE));
+//        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.GONE));
     }
 
     @Override
     public void onLost() {
-        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.VISIBLE));
+//        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.VISIBLE));
     }
 }
