@@ -11,6 +11,7 @@ import androidx.hilt.work.HiltWorkerFactory;
 import androidx.work.Configuration;
 
 import com.google.gson.Gson;
+import com.mqv.realtimechatapplication.activity.br.AlarmSleepTimer;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.DarkMode;
 import com.mqv.realtimechatapplication.data.MyDatabase;
@@ -42,6 +43,7 @@ public class MainApplication extends Application implements Configuration.Provid
         setAppTheme(mPreferences.getDarkModeTheme());
         setupActivityListener();
         setupObserveIncomingMessage();
+        initializeAlarmSleepTimer();
     }
 
     private void setAppTheme(DarkMode mode){
@@ -111,5 +113,9 @@ public class MainApplication extends Application implements Configuration.Provid
 
     private void setupObserveIncomingMessage() {
         AppDependencies.getIncomingMessageObserver();
+    }
+
+    private void initializeAlarmSleepTimer() {
+        new AlarmSleepTimer(this).setRepeatingAlarm();
     }
 }

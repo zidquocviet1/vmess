@@ -31,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
@@ -200,6 +201,13 @@ public class WebSocketConnection extends WebSocketListener {
 
     public void notifyMessageError(WebSocketRequestMessage request) {
         monitor.onMessageError(request);
+    }
+
+    public List<String> getSeenMessagesNeedToPush() {
+        return monitor.getSeenMessage()
+                      .stream()
+                      .map(c -> c.getBody().getId())
+                      .collect(Collectors.toList());
     }
 
     @Override

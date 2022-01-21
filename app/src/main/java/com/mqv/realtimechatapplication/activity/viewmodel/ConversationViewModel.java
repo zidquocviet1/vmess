@@ -27,9 +27,11 @@ import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
+import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.realtimechatapplication.work.SendMessageWorkWrapper;
 import com.mqv.realtimechatapplication.work.WorkDependency;
 
@@ -267,10 +269,6 @@ public class ConversationViewModel extends CurrentUserViewModel {
         chatRepository.updateCached(chat);
     }
 
-    public void saveChat(Chat chat) {
-        chatRepository.saveCached(Collections.singletonList(chat));
-    }
-
     public void seenWelcomeMessage(Chat chat) {
         updateChat(chat);
 
@@ -279,6 +277,38 @@ public class ConversationViewModel extends CurrentUserViewModel {
                       .observeOn(Schedulers.io())
                       .onErrorComplete()
                       .subscribe();
+    }
+
+    public void postSeenMessageConversation(Context context, String conversationId, String userId) {
+        //noinspection ResultOfMethodCallIgnored
+        chatRepository.fetchUnreadChatByConversation(conversationId)
+                      .subscribeOn(Schedulers.io())
+                      .observeOn(Schedulers.io())
+                      .flattenAsObservable(list -> list)
+                      .map(c -> updateAndReturn(c, userId))
+                      .toList()
+                      .subscribe((list, t) -> sendSeenMessage(context, list));
+    }
+
+    private String updateAndReturn(Chat chat, String userId) {
+        chat.setStatus(MessageStatus.SEEN);
+        chat.getSeenBy().add(userId);
+
+        updateChat(chat);
+
+        return chat.getId();
+    }
+
+    private void sendSeenMessage(Context context, List<String> ids) {
+        if (!ids.isEmpty()) {
+            Data data = new Data.Builder()
+                                .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, ids.toArray(new String[0]))
+                                .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
+                                .build();
+            WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(context, data));
+        } else {
+            Logging.show("No need to push seen messages, because the list unread message is empty");
+        }
     }
 
     public void registerLoadMore(Conversation conversation) {

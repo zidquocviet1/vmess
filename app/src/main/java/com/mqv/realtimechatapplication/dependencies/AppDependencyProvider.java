@@ -77,7 +77,10 @@ public class AppDependencyProvider implements AppDependencies.Provider {
 
     @Override
     public MessageSenderProcessor provideMessageSenderProcessor() {
-        return new MessageSenderProcessor(context, database.getPendingMessageDao(), database.getChatDao());
+        return new MessageSenderProcessor(context,
+                                          database.getPendingMessageDao(),
+                                          database.getChatDao(),
+                                          database.getSeenMessageDao());
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

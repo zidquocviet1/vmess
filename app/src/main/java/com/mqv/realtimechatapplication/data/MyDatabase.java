@@ -21,9 +21,11 @@ import com.mqv.realtimechatapplication.data.dao.HistoryLoggedInUserDao;
 import com.mqv.realtimechatapplication.data.dao.NotificationDao;
 import com.mqv.realtimechatapplication.data.dao.PendingMessageDao;
 import com.mqv.realtimechatapplication.data.dao.PeopleDao;
+import com.mqv.realtimechatapplication.data.dao.SeenMessageDao;
 import com.mqv.realtimechatapplication.data.dao.UserDao;
 import com.mqv.realtimechatapplication.data.model.HistoryLoggedInUser;
 import com.mqv.realtimechatapplication.data.model.PendingMessage;
+import com.mqv.realtimechatapplication.data.model.SeenMessage;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.Notification;
@@ -36,8 +38,9 @@ import com.mqv.realtimechatapplication.ui.data.People;
                       Notification.class,
                       Conversation.class,
                       Chat.class,
-                      PendingMessage.class},
-        version = 15,
+                      PendingMessage.class,
+                      SeenMessage.class},
+        version = 16,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -64,4 +67,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract ChatDao getChatDao();
 
     public abstract PendingMessageDao getPendingMessageDao();
+
+    public abstract SeenMessageDao getSeenMessageDao();
 }

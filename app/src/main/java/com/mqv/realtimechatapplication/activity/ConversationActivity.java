@@ -24,7 +24,6 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.Data;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
@@ -43,8 +42,6 @@ import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.Picture;
-import com.mqv.realtimechatapplication.work.PushMessageAcknowledgeWorkWrapper;
-import com.mqv.realtimechatapplication.work.WorkDependency;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -481,11 +478,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     }
 
     private void postRequestSeenMessages() {
-        Data data = new Data.Builder()
-                            .putString(PushMessageAcknowledgeWorkWrapper.EXTRA_CONVERSATION_ID, mConversation.getId())
-                            .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
-                            .build();
-        WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
+        mViewModel.postSeenMessageConversation(this, mConversation.getId(), mCurrentUser.getUid());
     }
 
     @Override

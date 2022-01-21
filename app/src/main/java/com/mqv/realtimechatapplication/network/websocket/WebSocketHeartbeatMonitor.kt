@@ -15,6 +15,7 @@ private const val MAX_MESSAGE_ALLOWED_MISSING = 3L
 
 class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
     private val pendingMessage = HashSet<WebSocketRequestMessage>()
+    val seenMessage = HashSet<WebSocketRequestMessage>()
     private val executor = Executors.newSingleThreadExecutor()
     private var webSocket: WebSocketClient? = null
     private var sender: PingPongSender? = null
@@ -40,6 +41,7 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
 
             if (isPingPongNecessary) {
                 retrySendingErrorMessage()
+                retrySendingSeenErrorMessage()
             }
 
             if (sender == null && isPingPongNecessary) {
@@ -60,8 +62,17 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
 
     override fun onMessageError(request: WebSocketRequestMessage) {
         executor.execute {
-            pendingMessage.add(request)
-            AppDependencies.getIncomingMessageProcessor().onMessageSendTimeout(request)
+            when (request.status) {
+                WebSocketRequestMessage.Status.INCOMING_MESSAGE -> {
+                    pendingMessage.add(request)
+                    AppDependencies.getIncomingMessageProcessor().onMessageSendTimeout(request)
+                }
+                WebSocketRequestMessage.Status.SEEN_MESSAGE -> {
+                    seenMessage.add(request)
+                    AppDependencies.getIncomingMessageProcessor().onSeenMessageTimeout(request)
+                }
+                else -> {}
+            }
         }
     }
 
@@ -90,6 +101,26 @@ class WebSocketHeartbeatMonitor(private val timer: Timer) : HeartbeatMonitor {
                     .onErrorComplete()
                     .blockingGet()
                 
+                iterator.remove()
+
+                AppDependencies.getIncomingMessageProcessor().process(response)
+            }
+        }
+    }
+
+    private fun retrySendingSeenErrorMessage() {
+        executor.execute {
+            val iterator = seenMessage.iterator()
+
+            while (iterator.hasNext()) {
+                val request = iterator.next()
+                val response = webSocket!!.sendRequest(request)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .doOnSubscribe { Logging.debug(TAG, "Retry sending seen message id = ${request.id}") }
+                    .onErrorComplete()
+                    .blockingGet()
+
                 iterator.remove()
 
                 AppDependencies.getIncomingMessageProcessor().process(response)

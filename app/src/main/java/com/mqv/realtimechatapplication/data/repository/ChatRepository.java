@@ -12,6 +12,8 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 
 public interface ChatRepository {
+    Single<List<Chat>> fetchUnreadChatByConversation(String conversationId);
+
     Observable<ApiResponse<Chat>> fetchChatRemoteById(String id);
 
     Observable<ApiResponse<List<Chat>>> loadMoreChat(@NonNull String conversationId, int page, int size);

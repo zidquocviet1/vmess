@@ -4,9 +4,14 @@ import android.content.Context
 import androidx.work.Data
 import com.mqv.realtimechatapplication.data.dao.ChatDao
 import com.mqv.realtimechatapplication.data.dao.PendingMessageDao
+import com.mqv.realtimechatapplication.data.dao.SeenMessageDao
 import com.mqv.realtimechatapplication.data.model.PendingMessage
+import com.mqv.realtimechatapplication.data.model.SeenMessage
+import com.mqv.realtimechatapplication.dependencies.AppDependencies
+import com.mqv.realtimechatapplication.network.NetworkConstraint
 import com.mqv.realtimechatapplication.network.model.Chat
 import com.mqv.realtimechatapplication.util.Logging
+import com.mqv.realtimechatapplication.work.PushMessageAcknowledgeWorkWrapper
 import com.mqv.realtimechatapplication.work.SendMessageWorkWrapper
 import com.mqv.realtimechatapplication.work.WorkDependency
 import io.reactivex.rxjava3.core.Completable
@@ -25,11 +30,11 @@ private val TAG = MessageSenderProcessor::class.java.simpleName
 class MessageSenderProcessor(
     private val context: Context,
     private val pendingMessageDao: PendingMessageDao,
-    private val messageDao: ChatDao
+    private val messageDao: ChatDao,
+    private val seenMessageDao: SeenMessageDao
 ) {
     init {
         retrySendMessages()
-        retryPostSeenMessages()
     }
 
     private fun retrySendMessages() {
@@ -53,8 +58,37 @@ class MessageSenderProcessor(
             }
     }
 
-    private fun retryPostSeenMessages() {
+    fun shouldRetrySeenMessages() {
+        val listMessage = seenMessageDao.getAll()
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .blockingGet()
+        if (listMessage.isEmpty()) {
+            Logging.debug(TAG, "Have no any failure message need to retry seen.")
+        } else {
+            if (NetworkConstraint.isMet(context)) {
+                // Get the messages need to retry in the websocket monitor
+                val retrySeenMessages = AppDependencies.getWebSocket().seenMessagesNeedToPush
+                val messageIds = listMessage.stream()
+                    .map { it.id }
+                    .collect(Collectors.toList())
 
+                // Remove all the list message id in the websocket monitor.
+                // Because the monitor will automatically send messages when reconnected
+                messageIds.removeAll(retrySeenMessages)
+
+                Logging.debug(TAG, "Size of the seen failure message = ${messageIds.size}")
+
+                val data = Data.Builder()
+                    .putStringArray(
+                        PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID,
+                        messageIds.toTypedArray()
+                    )
+                    .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
+                    .build()
+                WorkDependency.enqueue(PushMessageAcknowledgeWorkWrapper(context, data))
+            }
+        }
     }
 
     private fun sendMessage(message: Chat) {
@@ -90,6 +124,27 @@ class MessageSenderProcessor(
             .observeOn(Schedulers.io())
             .doOnComplete {
                 Logging.info(TAG, "Delete pending message complete")
+            }
+    }
+
+    fun insertSeenMessage(messageId: String, timestamp: Long) {
+        val seenMessage = SeenMessage(messageId, timestamp)
+
+        seenMessageDao.insert(seenMessage)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .doOnComplete {
+                Logging.info(TAG, "Insert seen message complete")
+            }
+            .subscribe()
+    }
+
+    fun deleteSeenMessage(messageId: String): Completable {
+        return seenMessageDao.delete(messageId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .doOnComplete {
+                Logging.info(TAG, "Delete seen message complete")
             }
     }
 }

@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.message;
 
+import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
@@ -27,7 +28,8 @@ public final class IncomingMessageProcessor {
     private static final String TAG = IncomingMessageProcessor.class.getSimpleName();
 
     private static final int RESPONSE_INCOMING_MESSAGE = 200;
-    private static final int RESPONSE_STATUS_MESSAGE = 202;
+    private static final int RESPONSE_SEEN_MESSAGE = 201;
+    private static final int RESPONSE_ACCEPTED_MESSAGE = 202;
 
     private final ChatDao chatDao;
     private final ConversationDao conversationDao;
@@ -44,19 +46,29 @@ public final class IncomingMessageProcessor {
     public void process(WebSocketResponse message) {
         Logging.debug(TAG, "Receive new request message");
 
-        Chat body = message.getBody();
+        int              status           = message.getStatus();
+        Chat             body             = message.getBody();
+        String           conversationId   = body.getConversationId();
+        String           messageId        = body.getId();
+        DatabaseObserver databaseObserver = AppDependencies.getDatabaseObserver();
+        Completable      action;
 
-        if (message.getStatus() == RESPONSE_INCOMING_MESSAGE) {
-            processMessageInternal(body, chatDao.insert(Collections.singletonList(body))
-                                                .andThen(Completable.fromAction(() ->
-                                                         AppDependencies.getDatabaseObserver()
-                                                                        .notifyMessageInserted(body.getConversationId(), body.getId()))), false);
-        } else if (message.getStatus() == RESPONSE_STATUS_MESSAGE) {
-            processMessageInternal(body, chatDao.update(body)
-                                                .andThen(Completable.fromAction(() ->
-                                                         AppDependencies.getDatabaseObserver()
-                                                                        .notifyMessageUpdated(body.getConversationId(), body.getId()))), true);
+        if (status == RESPONSE_INCOMING_MESSAGE) {
+            action = chatDao.insert(Collections.singletonList(body))
+                            .andThen(Completable.fromAction(() -> databaseObserver.notifyMessageInserted(conversationId, messageId)));
+        } else if (status == RESPONSE_ACCEPTED_MESSAGE) {
+            action = chatDao.update(body)
+                            .andThen(Completable.fromAction(() -> databaseObserver.notifyMessageUpdated(conversationId, messageId)))
+                            .andThen(onMessageSendSuccess(messageId));
+        } else if (status == RESPONSE_SEEN_MESSAGE) {
+            action = chatDao.update(body)
+                            .andThen(Completable.fromAction(() -> databaseObserver.notifyMessageUpdated(conversationId, messageId)))
+                            .andThen(onSeenMessageSuccess(messageId));
+        } else {
+            action = Completable.complete();
         }
+
+        processMessageInternal(body, action, status != RESPONSE_INCOMING_MESSAGE);
     }
 
     private void processMessageInternal(Chat body, Completable action, boolean isUpdate) {
@@ -70,8 +82,7 @@ public final class IncomingMessageProcessor {
                                                                     newAction = action.andThen(conversationDao.markConversationAsInbox(optional.get()));
                                                                 }
 
-                                                                return newAction.andThen(onMessageSendSuccess(body.getId()))
-                                                                                .onErrorComplete()
+                                                                return newAction.onErrorComplete()
                                                                                 .doOnError(t -> Logging.debug(TAG, "Insert incoming message failed: " + t));
                                                             } else {
                                                                 return fetchRemoteConversation(body.getConversationId(), body.getId());
@@ -122,7 +133,21 @@ public final class IncomingMessageProcessor {
         }
     }
 
+    public void onSeenMessageTimeout(WebSocketRequestMessage request) {
+        if (request.getStatus() == WebSocketRequestMessage.Status.SEEN_MESSAGE) {
+            final Chat   body      = request.getBody();
+            final String messageId = body.getId();
+            final long   timestamp = System.currentTimeMillis();
+
+            AppDependencies.getMessageSenderProcessor().insertSeenMessage(messageId, timestamp);
+        }
+    }
+
     private Completable onMessageSendSuccess(String messageId) {
         return AppDependencies.getMessageSenderProcessor().deletePendingMessage(messageId);
+    }
+
+    private Completable onSeenMessageSuccess(String messageId) {
+        return AppDependencies.getMessageSenderProcessor().deleteSeenMessage(messageId);
     }
 }

@@ -185,6 +185,10 @@ public class WebSocketClient {
         }
     }
 
+    public List<String> getSeenMessagesNeedToPush() {
+        return webSocket.getSeenMessagesNeedToPush();
+    }
+
     public WebSocketResponse readMessage(long timeoutMillis)
             throws IOException, TimeoutException, InterruptedException {
         while (true) {

@@ -43,6 +43,11 @@ public class ChatRepositoryImpl implements ChatRepository {
     }
 
     @Override
+    public Single<List<Chat>> fetchUnreadChatByConversation(String conversationId) {
+        return dao.fetchUnreadChatByConversation(conversationId, user.getUid());
+    }
+
+    @Override
     public Observable<ApiResponse<Chat>> fetchChatRemoteById(String id) {
         return getBearerTokenObservable().flatMap(token -> service.fetchById(token, id));
     }
