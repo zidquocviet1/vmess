@@ -61,6 +61,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
     private final PeopleRepository                              peopleRepository;
     private final MutableLiveData<User>                         userDetail;
     private final MutableLiveData<Result<List<Chat>>>           moreChatResult;
+    private final MutableLiveData<List<Chat>>                   cacheChatResult;
     private final MutableLiveData<Chat>                         messageObserver;
     private final MutableLiveData<Boolean>                      scrollButtonState;
     private final MutableLiveData<Boolean>                      conversationActiveStatus;
@@ -82,6 +83,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
         this.peopleRepository         = peopleRepository;
         this.userDetail               = new MutableLiveData<>();
         this.moreChatResult           = new MutableLiveData<>();
+        this.cacheChatResult          = new MutableLiveData<>(Collections.emptyList());
         this.messageObserver          = new MutableLiveData<>();
         this.scrollButtonState        = new MutableLiveData<>(false);
         this.conversationActiveStatus = new MutableLiveData<>(false);
@@ -102,6 +104,16 @@ public class ConversationViewModel extends CurrentUserViewModel {
         if (conversation == null) {
             throw new IllegalArgumentException("Conversation can't be null");
         }
+
+        cd.add(chatRepository.pagingCachedByConversation(conversation.getId(),
+                                                         DEFAULT_PAGE_CHAT_LIST,
+                                                         Const.DEFAULT_CHAT_PAGING_SIZE)
+                             .subscribeOn(Schedulers.io())
+                             .observeOn(AndroidSchedulers.mainThread())
+                             .subscribe(list -> {
+                                 Collections.reverse(list);
+                                 cacheChatResult.postValue(list);
+                             }, t -> {}));
 
         AppDependencies.getDatabaseObserver().registerMessageListener(conversation.getId(), messageListener);
 
@@ -145,6 +157,10 @@ public class ConversationViewModel extends CurrentUserViewModel {
     public LiveData<Boolean> getShowScrollButton() { return Transformations.distinctUntilChanged(scrollButtonState); }
 
     public LiveData<Boolean> getConversationActiveStatus() { return Transformations.distinctUntilChanged(conversationActiveStatus); }
+
+    public LiveData<List<Chat>> getCacheChats() {
+        return cacheChatResult;
+    }
 
     //// Private method
     private void fetchRemoteUser(@NonNull String uid) {
@@ -219,8 +235,12 @@ public class ConversationViewModel extends CurrentUserViewModel {
     //// Public method
     public void sendMessage(Context context, Chat chat) {
         Disposable disposable = chatRepository.saveCached(chat)
+                                              .subscribeOn(Schedulers.io())
                                               .observeOn(AndroidSchedulers.mainThread())
-                                              .subscribe(() -> messageObserver.postValue(chat), t -> {});
+                                              .subscribe(() -> {
+                                                  messageObserver.postValue(chat);
+                                                  AppDependencies.getDatabaseObserver().notifyConversationUpdated(chat.getConversationId());
+                                              }, t -> {});
 
         cd.add(disposable);
 
@@ -287,7 +307,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
                       .flattenAsObservable(list -> list)
                       .map(c -> updateAndReturn(c, userId))
                       .toList()
-                      .subscribe((list, t) -> sendSeenMessage(context, list));
+                      .subscribe((list, t) -> sendSeenMessage(context, list, conversationId));
     }
 
     private String updateAndReturn(Chat chat, String userId) {
@@ -299,13 +319,15 @@ public class ConversationViewModel extends CurrentUserViewModel {
         return chat.getId();
     }
 
-    private void sendSeenMessage(Context context, List<String> ids) {
+    private void sendSeenMessage(Context context, List<String> ids, String conversationId) {
         if (!ids.isEmpty()) {
             Data data = new Data.Builder()
                                 .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, ids.toArray(new String[0]))
                                 .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
                                 .build();
             WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(context, data));
+
+            AppDependencies.getDatabaseObserver().notifyConversationUpdated(conversationId);
         } else {
             Logging.show("No need to push seen messages, because the list unread message is empty");
         }

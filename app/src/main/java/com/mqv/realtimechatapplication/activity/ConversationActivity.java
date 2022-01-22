@@ -5,7 +5,6 @@ import static com.mqv.realtimechatapplication.R.id.menu_phone_call;
 import static com.mqv.realtimechatapplication.R.id.menu_video_call;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -37,7 +36,6 @@ import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
 import com.mqv.realtimechatapplication.ui.adapter.ChatListAdapter;
-import com.mqv.realtimechatapplication.ui.fragment.ConversationListInboxFragment;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
@@ -45,6 +43,7 @@ import com.mqv.realtimechatapplication.util.Picture;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -56,8 +55,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         implements OnNetworkChangedListener,
                    View.OnLayoutChangeListener {
     public static final String EXTRA_CONVERSATION = "conversation";
-    public static final String EXTRA_SEEN_CHAT = "is_seen_chat";
-    public static final String EXTRA_NEW_CHAT_ADDED = "is_new_chat_added";
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
     private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
     private static final int FAST_DURATION = 200;
@@ -78,10 +75,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     @Nullable
     private User mOtherUser;
 
-    // Check whether the current conversation is updated or not
-    private boolean isConversationUpdated = false;
-    private boolean isNewChatAdded = false;
-    private boolean isSeenChat = false;
     private boolean isLoadMore = false;
 
     private RecyclerView.OnScrollListener mScrollListener;
@@ -110,7 +103,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
         mCurrentUser = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
         mConversation = getIntent().getParcelableExtra(EXTRA_CONVERSATION);
-        mChatList = mConversation.getChats();
         mConversationParticipants = mConversation.getParticipants();
         mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
 
@@ -124,7 +116,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         registerNetworkEventCallback(this);
         setupColorUi();
         setupRecyclerView();
-        seenWelcomeChat();
         postRequestSeenMessages();
     }
 
@@ -133,19 +124,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         super.onStart();
 
         showUserUi();
-    }
-
-    @Override
-    public void finish() {
-        if (isConversationUpdated) {
-            Intent resultIntent = new Intent(this, ConversationListInboxFragment.class);
-            resultIntent.putExtra(EXTRA_CONVERSATION, mConversation);
-            resultIntent.putExtra(EXTRA_SEEN_CHAT, isSeenChat);
-            resultIntent.putExtra(EXTRA_NEW_CHAT_ADDED, isNewChatAdded);
-            setResult(RESULT_OK, resultIntent);
-        }
-
-        super.finish();
     }
 
     @Override
@@ -197,10 +175,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mViewModel.getMessageObserver().observe(this, c -> {
             if (c == null) return;
 
-            isConversationUpdated = true;
-            isSeenChat = true;
-            isNewChatAdded = true;
-
             if (mChatList.contains(c)) {
                 int index = mChatList.indexOf(c);
                 Chat oldItem = mChatList.get(index);
@@ -231,6 +205,16 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
             mBinding.toolbarSubtitle.setVisibility(isOnline ? View.VISIBLE : View.GONE);
             mBinding.imageConversationActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+        });
+
+        // First load conversation cache messages if not load the messages from server
+        mViewModel.getCacheChats().observe(this, list -> {
+            if (!list.isEmpty()) {
+                mChatList.addAll(list);
+                mChatListAdapter.notifyItemRangeInserted(0, list.size());
+
+                onFirstLoadComplete();
+            }
         });
     }
 
@@ -358,6 +342,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     }
 
     private void setupRecyclerView() {
+        mChatList        = new ArrayList<>();
         mChatListAdapter = new ChatListAdapter(this,
                 mChatList,
                 mConversationParticipants,
@@ -396,6 +381,10 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.recyclerChatList.addOnScrollListener(mScrollListener);
 
         mChatListAdapter.submitList(mChatList);
+    }
+
+    private void onFirstLoadComplete() {
+        seenWelcomeChat();
         mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);
 
         mBinding.recyclerChatList
@@ -404,10 +393,10 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                     @Override
                     public void onGlobalLayout() {
                         /*
-                        * Check the first dummy Profile chat view type
-                        * If the layout can show the view completely then make the layout manager stackFromEnd = false
-                        * Otherwise true
-                        * */
+                         * Check the first dummy Profile chat view type
+                         * If the layout can show the view completely then make the layout manager stackFromEnd = false
+                         * Otherwise true
+                         * */
                         int firstItem = mLayoutManager.findFirstCompletelyVisibleItemPosition();
                         if (firstItem != -1) {
                             Chat chat = mChatList.get(firstItem);
@@ -435,7 +424,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     }
 
     private void seenWelcomeChat() {
-        // TODO: add seen chat to temp chat [SEEN_CHAT] when user offline or server not response
         if (mChatList.size() == 2) {
             Chat welcomeChat = mChatList.get(1);
 
@@ -443,9 +431,6 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 welcomeChat.getSeenBy().add(mCurrentUser.getUid());
 
                 mViewModel.seenWelcomeMessage(welcomeChat);
-
-                isConversationUpdated = true;
-                isSeenChat = true;
             }
         }
     }
