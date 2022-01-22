@@ -6,6 +6,7 @@ class DatabaseObserver {
 
     interface ConversationListener {
         fun onConversationInserted(conversationId: String)
+        fun onConversationUpdated(conversationId: String)
     }
 
     interface MessageListener {
@@ -31,6 +32,10 @@ class DatabaseObserver {
 
     fun notifyConversationInserted(conversationId: String) {
         conversationListener.forEach { it.onConversationInserted(conversationId) }
+    }
+
+    fun notifyConversationUpdated(conversationId: String) {
+        conversationListener.forEach { it.onConversationUpdated(conversationId) }
     }
 
     fun notifyMessageInserted(conversationId: String, messageId: String) {
