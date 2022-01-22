@@ -31,12 +31,19 @@ import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public abstract class ConversationDao {
-    @Query("select * from conversation co \n" +
-            "join chat ch on ch.chat_conversation_id = co.conversation_id")
-    public abstract Flowable<Map<Conversation, List<Chat>>> observe();
+    @Query("select * from conversation\n" +
+            "inner join chat on chat_conversation_id = conversation_id and conversation_status = :statusType\n" +
+            "group by conversation_id\n" +
+            "order by max(chat_timestamp) desc\n" +
+            "limit 20")
+    public abstract Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType);
 
-    @Insert(onConflict = REPLACE)
-    public abstract Completable saveAll(List<Conversation> data);
+    @Query("select * from conversation\n" +
+            "inner join chat " +
+            "on chat_conversation_id = conversation_id and conversation_status = :statusType and conversation_id = :conversationId\n" +
+            "group by conversation_id\n" +
+            "order by max(chat_timestamp) desc")
+    public abstract Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);
 
     @Insert
     public abstract Completable save(Conversation data);
@@ -116,11 +123,6 @@ public abstract class ConversationDao {
            " limit :size" +
            " offset :page")
     public abstract Single<List<Conversation>> fetchAllByStatus(ConversationStatusType status, int page, int size);
-
-    @Query("select * from conversation co \n" +
-            "join chat ch on ch.chat_conversation_id = co.conversation_id \n" +
-            "where co.conversation_status = :status")
-    public abstract Map<Conversation, List<Chat>> fetchAllRelationStatus(ConversationStatusType status);
 
     @Query(" select * from conversation co \n" +
            " join chat ch on ch.chat_conversation_id = co.conversation_id" +

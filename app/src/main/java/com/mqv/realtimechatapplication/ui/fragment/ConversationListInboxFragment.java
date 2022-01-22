@@ -1,6 +1,5 @@
 package com.mqv.realtimechatapplication.ui.fragment;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,11 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.mqv.realtimechatapplication.activity.ConversationActivity;
 import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
-import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
@@ -143,16 +140,6 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
     @Override
     protected void onConversationOpenResult(@Nullable ActivityResult result) {
-        if (result != null && result.getResultCode() == Activity.RESULT_OK) {
-            Intent intent = result.getData();
-
-            if (intent != null) {
-                Conversation updated = intent.getParcelableExtra(ConversationActivity.EXTRA_CONVERSATION);
-
-                mConversations.set(mConversations.indexOf(updated), updated);
-                mAdapter.submitList(new ArrayList<>(mConversations));
-            }
-        }
     }
 
     private void registerEvent() {

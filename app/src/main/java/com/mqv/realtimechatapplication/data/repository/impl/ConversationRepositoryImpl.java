@@ -62,8 +62,13 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Flowable<Map<Conversation, List<Chat>>> conversationListUpdateObserve() {
-        return dao.observe();
+    public Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType) {
+        return dao.conversationAndLastChat(statusType);
+    }
+
+    @Override
+    public Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType) {
+        return dao.conversationAndLastChat(conversationId, statusType);
     }
 
     @Override

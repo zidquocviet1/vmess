@@ -1,6 +1,5 @@
 package com.mqv.realtimechatapplication.ui.fragment
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -173,18 +172,5 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     protected open fun onConversationOpenResult(result: ActivityResult?) {
-        if (result != null && result.resultCode == Activity.RESULT_OK) {
-            val intent = result.data
-            if (intent != null) {
-                // Change the conversation status to INBOX if updated
-                val updated: Conversation =
-                    intent.getParcelableExtra(ConversationActivity.EXTRA_CONVERSATION)!!
-                mViewModel.changeConversationStatusType(
-                    updated,
-                    ConversationStatusType.INBOX
-                )
-                removeConversationUI(updated)
-            }
-        }
     }
 }

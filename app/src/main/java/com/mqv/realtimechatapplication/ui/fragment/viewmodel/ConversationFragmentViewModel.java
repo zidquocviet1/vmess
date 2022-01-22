@@ -2,6 +2,7 @@ package com.mqv.realtimechatapplication.ui.fragment.viewmodel;
 
 import static com.mqv.realtimechatapplication.network.model.type.ConversationStatusType.INBOX;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
@@ -13,18 +14,23 @@ import com.mqv.realtimechatapplication.data.repository.ChatRepository;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.dependencies.AppDependencies;
+import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class ConversationFragmentViewModel extends ConversationListViewModel {
@@ -50,7 +56,22 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         this.refreshConversationResult      = new MutableLiveData<>();
         this.rankUser                       = new MutableLiveData<>();
         this.conversationInserted           = new MutableLiveData<>();
-        this.conversationObserver           = conversationInserted::postValue;
+        this.conversationObserver           = new DatabaseObserver.ConversationListener() {
+            @Override
+            public void onConversationInserted(@NonNull String conversationId) {
+                conversationInserted.postValue(conversationId);
+            }
+
+            @Override
+            public void onConversationUpdated(@NonNull String conversationId) {
+                //noinspection ResultOfMethodCallIgnored
+                conversationRepository.conversationAndLastChat(conversationId, INBOX)
+                                      .subscribeOn(Schedulers.io())
+                                      .observeOn(AndroidSchedulers.mainThread())
+                                      .onErrorComplete()
+                                      .subscribe(map -> notifyConversationLastChatUpdate(map, conversationId));
+            }
+        };
 
         fetchAllConversation();
         AppDependencies.getDatabaseObserver().registerConversationListener(conversationObserver);
@@ -88,6 +109,29 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
 
     public LiveData<List<String>> getPresenceUserList() {
         return presenceUserListObserver;
+    }
+
+    private void notifyConversationLastChatUpdate(Map<Conversation, Chat> map, String conversationId) {
+        if (!map.isEmpty()) {
+            mapToListConversation(map).stream()
+                                      .filter(c -> c.getId().equals(conversationId))
+                                      .findFirst()
+                                      .ifPresent(c2 -> {
+                                          List<Conversation> conversations;
+
+                                          if (conversationListObserver.getValue() == null) {
+                                              conversations = new ArrayList<>();
+                                          } else {
+                                              conversations = new ArrayList<>(conversationListObserver.getValue());
+                                          }
+
+                                          int index = conversations.indexOf(c2);
+                                          if (index != -1) {
+                                              conversations.set(index, c2);
+                                              conversationListObserver.postValue(conversations);
+                                          }
+                                      });
+        }
     }
 
     private void fetchAllConversation() {
