@@ -5,7 +5,6 @@ import static com.mqv.realtimechatapplication.network.model.type.ConversationSta
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Transformations;
 
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel;
@@ -42,7 +41,7 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final MutableLiveData<List<RemoteUser>>                 rankUser;
     private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
     private final MutableLiveData<Event<Integer>>                   refreshFailureResult;
-    private final MutableLiveData<String>                           conversationInserted;
+    private final MutableLiveData<Event<String>>                    conversationInserted;
     private final DatabaseObserver.ConversationListener             conversationObserver;
 
     public static final int                                         DEFAULT_PAGE_CHAT_LIST          = 0;
@@ -62,7 +61,7 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         this.conversationObserver           = new DatabaseObserver.ConversationListener() {
             @Override
             public void onConversationInserted(@NonNull String conversationId) {
-                conversationInserted.postValue(conversationId);
+                conversationInserted.postValue(new Event<>(conversationId));
             }
 
             @Override
@@ -110,8 +109,8 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         return conversationListObserver;
     }
 
-    public LiveData<String> getConversationInserted() {
-        return Transformations.distinctUntilChanged(conversationInserted);
+    public LiveData<Event<String>> getConversationInserted() {
+        return conversationInserted;
     }
 
     public LiveData<List<String>> getPresenceUserListObserver() {

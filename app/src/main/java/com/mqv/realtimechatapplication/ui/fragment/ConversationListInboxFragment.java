@@ -90,8 +90,8 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
             });
         });
 
-        mViewModel.getConversationInserted().observe(this, id -> {
-            if (id != null) {
+        mViewModel.getConversationInserted().observe(this, event -> {
+            if (event != null && event.getContentIfNotHandled() != null) {
                 RingtoneUtil.open(requireContext(), MESSAGE_RINGTONE);
             }
         });
