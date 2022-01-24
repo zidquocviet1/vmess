@@ -37,6 +37,10 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
         return getPresenceUserListObserverDistinct();
     }
 
+    public List<String> getPresenceUserListValue() {
+        return getPresenceUserList();
+    }
+
     private void fetchArchivedChat() {
         Consumer<List<Conversation>> onReceiveData = data -> {};
         Consumer<Throwable>          onError       = Throwable::printStackTrace;

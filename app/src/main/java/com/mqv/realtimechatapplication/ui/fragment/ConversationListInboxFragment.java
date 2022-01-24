@@ -82,7 +82,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
             mConversations = updatedList;
             mAdapter.submitList(new ArrayList<>(mConversations), () -> {
-                List<String> onlineUsers = mViewModel.getPresenceUserList().getValue();
+                List<String> onlineUsers = mViewModel.getPresenceUserListValue();
 
                 if (onlineUsers != null) {
                     bindPresenceConversation(onlineUsers);
@@ -96,7 +96,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
             }
         });
 
-        mViewModel.getPresenceUserList().observe(this, this::bindPresenceConversation);
+        mViewModel.getPresenceUserListObserver().observe(this, this::bindPresenceConversation);
     }
 
     @NonNull

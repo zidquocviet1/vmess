@@ -13,6 +13,7 @@ import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
+import com.mqv.realtimechatapplication.util.Retriever;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,6 +65,10 @@ public class ConversationListViewModel extends ViewModel {
 
             return newList.containsAll(oldList) && oldList.containsAll(newList);
         });
+    }
+
+    protected List<String> getPresenceUserList() {
+        return Retriever.getOrDefault(presenceUserListObserver.getValue(), Collections.emptyList());
     }
 
     protected List<Conversation> mapToListConversation(Map<Conversation, Chat> map) {

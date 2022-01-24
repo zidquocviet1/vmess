@@ -114,8 +114,12 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         return Transformations.distinctUntilChanged(conversationInserted);
     }
 
-    public LiveData<List<String>> getPresenceUserList() {
+    public LiveData<List<String>> getPresenceUserListObserver() {
         return getPresenceUserListObserverDistinct();
+    }
+
+    public List<String> getPresenceUserListValue() {
+        return getPresenceUserList();
     }
 
     private void notifyConversationLastChatUpdate(Map<Conversation, Chat> map, String conversationId) {
