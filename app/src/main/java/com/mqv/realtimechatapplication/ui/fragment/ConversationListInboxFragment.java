@@ -64,9 +64,16 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
             if (result == null) return;
 
             mBinding.swipeMessages.setRefreshing(result.getStatus() == NetworkStatus.LOADING);
+        });
 
-            if (result.getStatus() == NetworkStatus.ERROR) {
-                Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
+        mViewModel.getRefreshFailureResult().observe(this, event -> {
+            if (event == null) return;
+
+            Integer error = event.getContentIfNotHandled();
+
+            if (error != null) {
+                mBinding.swipeMessages.setRefreshing(false);
+                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
             }
         });
 

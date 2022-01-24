@@ -17,6 +17,7 @@ import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
+import com.mqv.realtimechatapplication.util.Event;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
@@ -40,6 +41,7 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final ChatRepository                                    chatRepository;
     private final MutableLiveData<List<RemoteUser>>                 rankUser;
     private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
+    private final MutableLiveData<Event<Integer>>                   refreshFailureResult;
     private final MutableLiveData<String>                           conversationInserted;
     private final DatabaseObserver.ConversationListener             conversationObserver;
 
@@ -54,6 +56,7 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         this.conversationRepository         = conversationRepository;
         this.chatRepository                 = chatRepository;
         this.refreshConversationResult      = new MutableLiveData<>();
+        this.refreshFailureResult           = new MutableLiveData<>();
         this.rankUser                       = new MutableLiveData<>();
         this.conversationInserted           = new MutableLiveData<>();
         this.conversationObserver           = new DatabaseObserver.ConversationListener() {
@@ -86,7 +89,7 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
                                                         saveCallResult(freshConversationList, INBOX, () ->
                                                                 refreshConversationResult.setValue(Result.Success(freshConversationList)));
                                                     }
-                                                }, t -> refreshConversationResult.setValue(Result.Fail(R.string.error_connect_server_fail)));
+                                                }, t -> refreshFailureResult.setValue(new Event<>(R.string.error_connect_server_fail)));
 
         cd.add(disposable);
     }
@@ -97,6 +100,10 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
 
     public LiveData<Result<List<Conversation>>> getRefreshConversationResult() {
         return refreshConversationResult;
+    }
+
+    public LiveData<Event<Integer>> getRefreshFailureResult() {
+        return refreshFailureResult;
     }
 
     public LiveData<List<Conversation>> getConversationListObserver() {
