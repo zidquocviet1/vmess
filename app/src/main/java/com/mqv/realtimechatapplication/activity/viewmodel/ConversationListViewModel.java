@@ -1,6 +1,7 @@
 package com.mqv.realtimechatapplication.activity.viewmodel;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -11,6 +12,7 @@ import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.LiveDataUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +54,16 @@ public class ConversationListViewModel extends ViewModel {
                                                .onErrorComplete()
                                                .subscribe(presenceUserListObserver::postValue);
         cd.add(disposable);
+    }
+
+    protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
+        return LiveDataUtil.distinctUntilChanged(presenceUserListObserver, (oldList, newList) -> {
+            if (newList == null) return false;
+            if (oldList.isEmpty() && !newList.isEmpty()) return false;
+            if (!oldList.isEmpty() && newList.isEmpty()) return false;
+
+            return newList.containsAll(oldList) && oldList.containsAll(newList);
+        });
     }
 
     protected List<Conversation> mapToListConversation(Map<Conversation, Chat> map) {

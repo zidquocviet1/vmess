@@ -31,7 +31,9 @@ class ConversationListArchivedFragment :
         mViewModel.listObserver.observe(viewLifecycleOwner) { list ->
             mConversations = list
             mAdapter.submitList(ArrayList<Conversation>(mConversations)) {
-                bindPresenceConversation(mViewModel.presenceUserListObserver.value!!)
+                mViewModel.presenceUserListObserver.value?.let {
+                    bindPresenceConversation(it)
+                }
             }
         }
 

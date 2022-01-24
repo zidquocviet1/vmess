@@ -34,7 +34,7 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
     }
 
     public LiveData<List<String>> getPresenceUserListObserver() {
-        return presenceUserListObserver;
+        return getPresenceUserListObserverDistinct();
     }
 
     private void fetchArchivedChat() {

@@ -26,7 +26,7 @@ import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
 import java.util.ArrayList;
-import java.util.Objects;
+import java.util.List;
 
 public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
     private RankUserConversationAdapter mRankUserAdapter;
@@ -74,8 +74,13 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
             if (updatedList == null) return;
 
             mConversations = updatedList;
-            mAdapter.submitList(new ArrayList<>(mConversations), () ->
-                    bindPresenceConversation(Objects.requireNonNull(mViewModel.getPresenceUserList().getValue())));
+            mAdapter.submitList(new ArrayList<>(mConversations), () -> {
+                List<String> onlineUsers = mViewModel.getPresenceUserList().getValue();
+
+                if (onlineUsers != null) {
+                    bindPresenceConversation(onlineUsers);
+                }
+            });
         });
 
         mViewModel.getConversationInserted().observe(this, id -> {
