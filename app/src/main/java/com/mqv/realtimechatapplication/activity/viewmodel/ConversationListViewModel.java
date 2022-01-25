@@ -50,11 +50,11 @@ public class ConversationListViewModel extends ViewModel {
                               .map(this::mapToListConversation)
                               .subscribe(conversationListObserver::postValue);
 
-        Disposable disposable = AppDependencies.getWebSocket()
-                                               .getPresenceUserList()
-                                               .onErrorComplete()
-                                               .subscribe(presenceUserListObserver::postValue);
-        cd.add(disposable);
+        //noinspection ResultOfMethodCallIgnored
+        AppDependencies.getWebSocket()
+                       .getPresenceUserList()
+                       .onErrorComplete()
+                       .subscribe(presenceUserListObserver::postValue);
     }
 
     protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
