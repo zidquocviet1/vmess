@@ -15,6 +15,7 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.ImageViewCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -409,6 +410,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
         private void loadImage(@Nullable String url, ImageView container) {
             container.setVisibility(View.VISIBLE);
+            ImageViewCompat.setImageTintList(container, null);
             Picture.loadUserAvatar(mContext, url).into(container);
         }
 
