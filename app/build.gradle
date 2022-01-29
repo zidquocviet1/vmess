@@ -68,7 +68,7 @@ dependencies {
     implementation 'androidx.hilt:hilt-work:1.0.0'
     implementation 'androidx.core:core:1.7.0'
 
-    def room_version = "2.4.0-beta01"
+    def room_version = "2.4.1"
     implementation "io.reactivex.rxjava3:rxjava:3.0.13"
     implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'
     implementation "androidx.room:room-runtime:$room_version"
