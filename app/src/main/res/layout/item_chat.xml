@@ -84,7 +84,8 @@
             android:src="@drawable/ic_round_error"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/text_sender_content"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
