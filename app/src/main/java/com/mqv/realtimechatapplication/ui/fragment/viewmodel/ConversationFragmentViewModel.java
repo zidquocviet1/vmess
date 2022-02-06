@@ -16,10 +16,10 @@ import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.RemoteUser;
+import com.mqv.realtimechatapplication.reactive.RxHelper;
 import com.mqv.realtimechatapplication.util.Event;
 import com.mqv.realtimechatapplication.util.Logging;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,15 +81,9 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
 
     public void onRefresh() {
         Disposable disposable = onRefresh(INBOX).doOnDispose(() -> refreshConversationResult.setValue(Result.Terminate()))
-                                                .subscribe(response -> {
-                                                    if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                                                        List<Conversation> freshConversationList = response.getSuccess();
-
-                                                        saveCallResult(freshConversationList, INBOX, () ->
-                                                                refreshConversationResult.setValue(Result.Success(freshConversationList)));
-                                                    }
-                                                }, t -> refreshFailureResult.setValue(new Event<>(R.string.error_connect_server_fail)));
-
+                                                .compose(RxHelper.parseResponseData())
+                                                .subscribe(data -> saveCallResult(data, INBOX, () -> refreshConversationResult.setValue(Result.Success(data))),
+                                                           t -> refreshFailureResult.setValue(new Event<>(R.string.error_connect_server_fail)));
         cd.add(disposable);
     }
 

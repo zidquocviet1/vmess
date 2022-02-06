@@ -11,6 +11,7 @@ import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.reactive.RxHelper;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
 import com.mqv.realtimechatapplication.util.Retriever;
@@ -21,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -45,8 +45,7 @@ public class ConversationListViewModel extends ViewModel {
 
         //noinspection ResultOfMethodCallIgnored
         conversationRepository.conversationAndLastChat(status)
-                              .subscribeOn(Schedulers.io())
-                              .observeOn(AndroidSchedulers.mainThread())
+                              .compose(RxHelper.applyFlowableSchedulers())
                               .map(this::mapToListConversation)
                               .subscribe(conversationListObserver::postValue);
 
@@ -79,10 +78,7 @@ public class ConversationListViewModel extends ViewModel {
             Map.Entry<Conversation, Chat> entry        = iterator.next();
             Conversation                  conversation = entry.getKey();
 
-            List<Chat> chats = new ArrayList<>(){{
-                add(entry.getValue());
-            }};
-            conversation.setChats(chats);
+            conversation.setChats(Collections.singletonList(entry.getValue()));
             result.add(conversation);
         }
         return result;
@@ -91,8 +87,7 @@ public class ConversationListViewModel extends ViewModel {
     // Only call with the activity has swipe refresh layout
     public Observable<ApiResponse<List<Conversation>>> onRefresh(ConversationStatusType type) {
         return conversationRepository.fetchByUid(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
-                                     .subscribeOn(Schedulers.io())
-                                     .observeOn(AndroidSchedulers.mainThread());
+                                     .compose(RxHelper.applyObservableSchedulers());
     }
 
     protected void initializeFetch(ConversationStatusType type,
@@ -100,15 +95,13 @@ public class ConversationListViewModel extends ViewModel {
                                    Consumer<Throwable> onError) {
         Runnable onDataChanged = () -> {
             Disposable cacheDisposable = conversationRepository.fetchCached(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
-                                                               .subscribeOn(Schedulers.io())
-                                                               .observeOn(AndroidSchedulers.mainThread())
+                                                               .compose(RxHelper.applySingleSchedulers())
                                                                .subscribe(onReceiveData, onError);
             cd.add(cacheDisposable);
         };
 
         Disposable disposable = conversationRepository.fetchByUidNBR(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE, onDataChanged)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
+                                                      .compose(RxHelper.applyObservableSchedulers())
                                                       .subscribe(onReceiveData, onError);
 
         cd.add(disposable);
@@ -117,16 +110,14 @@ public class ConversationListViewModel extends ViewModel {
     // Save new refresh conversation list and notify on data save successfully
     protected void saveCallResult(List<Conversation> conversations, ConversationStatusType type, Action onSaveSuccess) {
         Disposable disposable = conversationRepository.saveAll(conversations, type)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
+                                                      .compose(RxHelper.applyCompleteSchedulers())
                                                       .subscribe(onSaveSuccess);
         cd.add(disposable);
     }
 
     protected void fetchCachedConversation(@NonNull String conversationId, Consumer<Conversation> onReceive) {
         Disposable disposable = conversationRepository.fetchCachedById(conversationId)
-                                                      .subscribeOn(Schedulers.io())
-                                                      .observeOn(AndroidSchedulers.mainThread())
+                                                      .compose(RxHelper.applySingleSchedulers())
                                                       .subscribe(onReceive, Throwable::printStackTrace);
 
         cd.add(disposable);
