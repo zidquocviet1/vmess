@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/all_margin_top_soft"
             android:drawablePadding="@dimen/all_padding_default"
-            android:text="Link your own social media into your profile to make everyone know more about you."
+            android:text="@string/msg_edit_profile_social_link_explain"
             android:textSize="14sp"
             app:drawableStartCompat="@drawable/ic_public"
             app:layout_constraintTop_toBottomOf="@id/included_appbar" />

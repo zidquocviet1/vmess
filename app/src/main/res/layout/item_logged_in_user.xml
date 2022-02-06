@@ -57,7 +57,7 @@
             android:layout_alignStart="@android:id/title"
             android:layout_gravity="start"
             android:maxLines="10"
-            android:text="Signed in"
+            android:text="@string/title_preference_item_manage_accounts_summary"
             android:textAlignment="viewStart"
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="12sp" />

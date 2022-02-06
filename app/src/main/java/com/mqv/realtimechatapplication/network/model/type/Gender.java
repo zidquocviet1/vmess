@@ -1,24 +1,26 @@
 package com.mqv.realtimechatapplication.network.model.type;
 
+import android.content.Context;
 import android.util.SparseArray;
 
 import com.google.gson.annotations.SerializedName;
+import com.mqv.realtimechatapplication.R;
 
 public enum Gender {
     @SerializedName("male")
-    MALE("Male", 1),
+    MALE(R.string.title_male, 1),
     @SerializedName("female")
-    FEMALE("Female", 2),
+    FEMALE(R.string.title_female, 2),
     @SerializedName("nonBinary")
-    NON_BINARY("Non-binary", 3),
+    NON_BINARY(R.string.title_non_binary, 3),
     @SerializedName("transgender")
-    TRANSGENDER("Transgender", 4),
+    TRANSGENDER(R.string.title_transgender, 4),
     @SerializedName("intersex")
-    INTERSEX("Intersex", 5),
+    INTERSEX(R.string.title_intersex, 5),
     @SerializedName("preferNotToSay")
-    PREFER_NOT_TO_SAY("Prefer not to say", 6);
+    PREFER_NOT_TO_SAY(R.string.title_prefer_not_to_say, 6);
 
-    private final String value;
+    private final int res;
     private final int key;
     private static final SparseArray<Gender> array = new SparseArray<>();
     static {
@@ -30,13 +32,13 @@ public enum Gender {
         array.put(6, PREFER_NOT_TO_SAY);
     }
 
-    Gender(String value, int key) {
-        this.value = value;
+    Gender(int res, int key) {
+        this.res = res;
         this.key = key;
     }
 
-    public String getValue() {
-        return value;
+    public String getValue(Context context) {
+        return context.getString(res);
     }
 
     public int getKey(){

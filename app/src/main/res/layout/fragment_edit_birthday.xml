@@ -12,7 +12,7 @@
         android:id="@+id/text1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="This should be your date of birth. Your can change twice in 14 days."
+        android:text="@string/msg_edit_birthday_explain_1"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -20,8 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin"
-        android:text="Set your birthday to make everyone know more about you."
-        android:visibility="gone"
+        android:text="@string/msg_edit_birthday_explain_2"
         app:layout_constraintTop_toBottomOf="@id/text1" />
 
     <com.google.android.material.textfield.TextInputLayout

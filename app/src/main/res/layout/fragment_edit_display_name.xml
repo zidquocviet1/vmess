@@ -37,7 +37,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin"
-        android:text="Help people discover your account by using the name you're known by either your fullname, nickname, or business name."
+        android:text="@string/msg_edit_display_name_explain_1"
         app:layout_constraintEnd_toEndOf="@id/text_layout_display_name"
         app:layout_constraintStart_toStartOf="@id/text_layout_display_name"
         app:layout_constraintTop_toBottomOf="@id/text_layout_display_name" />
@@ -47,7 +47,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin"
-        android:text="You can only change your name twice within 14 days."
+        android:text="@string/msg_edit_display_name_explain_2"
         app:layout_constraintEnd_toEndOf="@id/text1"
         app:layout_constraintStart_toStartOf="@id/text1"
         app:layout_constraintTop_toBottomOf="@id/text1" />

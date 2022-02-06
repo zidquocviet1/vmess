@@ -6,12 +6,12 @@
     // msg_
     // title_
     // action_
-    <string name="app_name">TAC</string>
-    <string name="author_app_first_name">Viet</string>
-    <string name="author_app_last_name">Mai</string>
-    <string name="author_app_full_name">Mai Quoc Viet</string>
-    <string name="dummy_chat_sender">I\'v created this application since i was 21 years old</string>
-    <string name="dummy_chat_receiver">When were you create this app?</string>
+    <string name="app_name" translatable="false">TAC</string>
+    <string name="author_app_first_name" translatable="false">Viet</string>
+    <string name="author_app_last_name" translatable="false">Mai</string>
+    <string name="author_app_full_name" translatable="false">Mai Quoc Viet</string>
+    <string name="dummy_chat_sender" translatable="false">I\'v created this application since i was 21 years old</string>
+    <string name="dummy_chat_receiver" translatable="false">When were you create this app?</string>
     <string name="dummy_first_chat">You have connected to this person. Text something to share your story.</string>
 
     // activity label
@@ -38,17 +38,21 @@
     <string name="label_conversation_ignore_messages">Ignore messages</string>
     <string name="label_conversation_add_members">Add members</string>
     <string name="label_conversation_leave_group">Leave group</string>
+    <string name="label_off">Off</string>
+    <string name="label_on">On</string>
+    <string name="label_system">System</string>
+    <string name="label_dark_mode_explain">If system is selected, TAC will automatically adjust your appearance based on your device\'s system settings</string>
 
-    <string name="title_brand_name_short">TAC</string>
-    <string name="title_brand_name">Take a Conversation</string>
+    <string name="title_brand_name_short" translatable="false">TAC</string>
+    <string name="title_brand_name" translatable="false">Take a Conversation</string>
     <string name="title_copyright_name">Made by MQV Inc.</string>
     <string name="title_chat">Chats</string>
     <string name="title_people">People</string>
     <string name="title_notification">Notification</string>
     <string name="title_active_people">Active people</string>
-    <string name="title_conversation_dummy">Conversation Title</string>
-    <string name="title_conversation_timestamp">\u0020 \u2022 %1$s</string>
-    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_conversation_dummy" translatable="false">Conversation Title</string>
+    <string name="title_conversation_timestamp" translatable="false">\u0020 \u2022 %1$s</string>
+    <string name="title_activity_login" translatable="false">LoginActivity</string>
     <string name="title_login_with_phone">Login with phone number</string>
     <string name="title_login_with_facebook">Login with facebook</string>
     <string name="title_login_with_google">Login with google</string>
@@ -112,6 +116,8 @@
     <string name="title_sender_chat_unsent">You unsent a message</string>
     <string name="title_receiver_chat_unsent">%1$s unsent a message</string>
     <string name="title_just_you">Just you</string>
+    <string name="title_add_account">Add account</string>
+    <string name="title_notification_earlier">Earlier</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -151,13 +157,13 @@
     <string name="action_un_friend">Unfriend</string>
     <string name="action_view_profile">View Profile</string>
     <!--The action to open activity in the preference screen-->
-    <string name="action_pref_manage_accounts">com.tac.open.manage.accounts</string>
-    <string name="action_pref_dark_mode">com.tac.open.dark.mode</string>
-    <string name="action_pref_edit_profile">com.tac.open.edit.profile</string>
-    <string name="action_pref_account_settings">com.tac.open.account.settings</string>
-    <string name="action_pref_friend_request">com.tac.open.friend.request</string>
+    <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
+    <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
+    <string name="action_pref_edit_profile" translatable="false">com.tac.open.edit.profile</string>
+    <string name="action_pref_account_settings" translatable="false">com.tac.open.account.settings</string>
+    <string name="action_pref_friend_request" translatable="false">com.tac.open.friend.request</string>
 
-    <string name="msg_conversation_content_dummy">You: text a new message here</string>
+    <string name="msg_conversation_content_dummy" translatable="false">You: text a new message here</string>
     <string name="msg_forgot_password"><u>Forgot password?</u></string>
     <string name="msg_login_failed">Login failed. Your email or password is incorrect</string>
     <string name="msg_login_successfully">Login successfully</string>
@@ -165,8 +171,7 @@
     <string name="msg_register_successfully">Register successfully</string>
     <string name="msg_generate_otp_title_dummy">Enter your phone number in the box below.</string>
     <string name="msg_generate_otp_detail_dummy">We will send you a SMS to verify your account</string>
-    <string name="msg_verify_otp_title_dummy"><![CDATA[Enter the verification code we just sent you via SMS. The code
-    will be expired in <font color=\'#6200EE\'>%d</font> seconds.]]></string>
+    <string name="msg_verify_otp_title_dummy"><![CDATA[Enter the verification code we just sent you via SMS. The code     will be expired in <font color=\'#6200EE\'>%d</font> seconds.]]></string>
     <string name="msg_verify_otp_not_receiver">If you didn\'t receive a code!</string>
     <string name="msg_verification_code_not_available">Your verification code is not available right now.</string>
     <string name="msg_cancel_uploading_photo">Cancel uploading a new photo successfully</string>
@@ -198,6 +203,11 @@
     <string name="msg_owner_chat">You:\u0020</string>
     <string name="msg_delete_conversation_title">Delete this entire conversation?</string>
     <string name="msg_delete_conversation_message">Once you delete this conversation, the entire chats will be deleted and it can\'t be undone.</string>
+    <string name="msg_edit_display_name_explain_1">Help people discover your account by using the name you\'re known by either your fullname, nickname, or business name.</string>
+    <string name="msg_edit_display_name_explain_2">You can only change your name twice within 14 days.</string>
+    <string name="msg_edit_birthday_explain_1">This should be your date of birth. Your can change twice in 14 days.</string>
+    <string name="msg_edit_birthday_explain_2">Set your birthday to make everyone know more about you.</string>
+    <string name="msg_edit_profile_social_link_explain">Link your own social media into your profile to make everyone know more about you.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -223,7 +233,7 @@
     <string name="prompt_password">Password</string>
     <string name="prompt_display_name">Display Name</string>
     <string name="prompt_re_password">Re-password</string>
-    <string name="prompt_bio_length">%1$d / %2$d</string>
+    <string name="prompt_bio_length" translatable="false">%1$d / %2$d</string>
     <string name="prompt_account_name">Account Name</string>
     <string name="prompt_enter_otp">Enter your verification code here.</string>
     <string name="prompt_new_username">New username</string>
@@ -238,25 +248,25 @@
     <string name="invalid_display_name">Display name doesn\'t allowed empty</string>
     <string name="invalid_phone_format">The phone number is invalid</string>
 
-    <string name="key_pref_category_accounts">key_pref_category_accounts</string>
-    <string name="key_pref_manage_accounts">key_pref_manage_accounts</string>
-    <string name="key_pref_dark_mode">key_pref_dark_mode</string>
-    <string name="key_pref_messages_requests">key_pref_messages_requests</string>
-    <string name="key_pref_active_status">key_pref_active_status</string>
-    <string name="key_pref_username">key_pref_username</string>
-    <string name="key_pref_qr_code">key_pref_qr_code</string>
-    <string name="key_pref_privacy">key_pref_privacy</string>
-    <string name="key_pref_story">key_pref_story</string>
-    <string name="key_pref_notifications_and_sounds">key_pref_notifications_and_sounds</string>
-    <string name="key_pref_archived_chats">key_pref_archived_chats</string>
-    <string name="key_pref_phone_contacts">key_pref_phone_contacts</string>
-    <string name="key_pref_photos_and_media">key_pref_photos_and_media</string>
-    <string name="key_pref_account_settings">key_pref_account_settings</string>
-    <string name="key_pref_report_problem">key_pref_report_problem</string>
-    <string name="key_pref_help">key_pref_help</string>
-    <string name="key_pref_legal_and_policies">key_pref_legal_and_policies</string>
-    <string name="key_pref_edit_profile">key_pref_edit_profile</string>
-    <string name="key_pref_friend_request">key_pref_friend_request</string>
+    <string name="key_pref_category_accounts" translatable="false">key_pref_category_accounts</string>
+    <string name="key_pref_manage_accounts" translatable="false">key_pref_manage_accounts</string>
+    <string name="key_pref_dark_mode" translatable="false">key_pref_dark_mode</string>
+    <string name="key_pref_messages_requests" translatable="false">key_pref_messages_requests</string>
+    <string name="key_pref_active_status" translatable="false">key_pref_active_status</string>
+    <string name="key_pref_username" translatable="false">key_pref_username</string>
+    <string name="key_pref_qr_code" translatable="false">key_pref_qr_code</string>
+    <string name="key_pref_privacy" translatable="false">key_pref_privacy</string>
+    <string name="key_pref_story" translatable="false">key_pref_story</string>
+    <string name="key_pref_notifications_and_sounds" translatable="false">key_pref_notifications_and_sounds</string>
+    <string name="key_pref_archived_chats" translatable="false">key_pref_archived_chats</string>
+    <string name="key_pref_phone_contacts" translatable="false">key_pref_phone_contacts</string>
+    <string name="key_pref_photos_and_media" translatable="false">key_pref_photos_and_media</string>
+    <string name="key_pref_account_settings" translatable="false">key_pref_account_settings</string>
+    <string name="key_pref_report_problem" translatable="false">key_pref_report_problem</string>
+    <string name="key_pref_help" translatable="false">key_pref_help</string>
+    <string name="key_pref_legal_and_policies" translatable="false">key_pref_legal_and_policies</string>
+    <string name="key_pref_edit_profile" translatable="false">key_pref_edit_profile</string>
+    <string name="key_pref_friend_request" translatable="false">key_pref_friend_request</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hello_blank_fragment" translatable="false">Hello blank fragment</string>
 </resources>

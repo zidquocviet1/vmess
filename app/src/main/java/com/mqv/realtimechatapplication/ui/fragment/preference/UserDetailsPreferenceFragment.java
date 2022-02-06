@@ -107,7 +107,7 @@ public class UserDetailsPreferenceFragment extends PreferenceFragmentCompat {
             var genderType = user.getGender();
             if (genderType != null) {
                 var genderIcon = GENDER_ARRAY.get(genderType.getKey());
-                var prefGender = createPreference(genderType.getValue(), genderIcon);
+                var prefGender = createPreference(genderType.getValue(requireContext()), genderIcon);
                 preferenceScreen.addPreference(prefGender);
             }
 

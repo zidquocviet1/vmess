@@ -87,7 +87,7 @@ public class UserEditDetailsFragment extends BaseFragment<EditDetailsViewModel, 
     private void showLoggedInUserUi(User user){
         if (user == null) return;
 
-        edtGender.setText(user.getGender() != null ? user.getGender().getValue() : "");
+        edtGender.setText(user.getGender() != null ? user.getGender().getValue(requireContext()) : "");
         edtCurrentAddress.setText("Not yet handled");
         edtFrom.setText("Not yet handled");
         edtBirthday.setText(user.getBirthday() != null ? user.getBirthday().format(NORMAL_FORMATTER) : "");

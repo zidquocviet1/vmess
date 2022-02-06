@@ -30,26 +30,26 @@
                 android:id="@+id/radio_off"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Off" />
+                android:text="@string/label_off" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/radio_on"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="On" />
+                android:text="@string/label_on" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/radio_system"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="System" />
+                android:text="@string/label_system" />
         </RadioGroup>
 
         <com.google.android.material.textview.MaterialTextView
             android:layout_marginStart="6dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="If system is selected, TAC will automatically adjust your appearance based on your device's system settings" />
+            android:text="@string/label_dark_mode_explain" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
