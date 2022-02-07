@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.google.android.gms.tasks.Tasks;
-import com.google.common.net.HttpHeaders;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
@@ -99,7 +98,7 @@ public class WebSocketConnection extends WebSocketListener {
 
                     Request.Builder requestBuilder = new Request.Builder()
                                                                 .url(wsUri)
-                                                                .addHeader(HttpHeaders.AUTHORIZATION, bearerToken);
+                                                                .addHeader(Const.AUTHORIZATION, bearerToken);
 
                     webSocketState.onNext(CONNECTING);
 
