@@ -63,6 +63,7 @@ dependencies {
     implementation libs.rxjava3.rxandroid
     implementation libs.room.runtime
     implementation libs.room.rxjava3
+    implementation libs.room.guava
     implementation libs.gson
     implementation libs.retrofit2.retrofit
     implementation libs.retrofit2.converter.gson
@@ -77,6 +78,7 @@ dependencies {
     implementation libs.glide.okhttp3.integration
     implementation libs.commons.codec
     implementation libs.zxing.android.embedded
+    implementation libs.google.guava
 
     annotationProcessor libs.glide.compiler
     annotationProcessor libs.room.compiler

@@ -7,7 +7,7 @@ dependencyResolutionManagement {
             version('room', '2.4.1')
             version('paging', '3.0.1')
             version('retrofit', '2.9.0')
-            version('work-manager', '2.7.1')
+            version('work-manager', '2.7.0')
 
             // AndroidX
             alias('android-material').to('com.google.android.material:material:1.4.0')
@@ -20,8 +20,8 @@ dependencyResolutionManagement {
             alias('androidx-swiperefreshlayout').to('androidx.swiperefreshlayout:swiperefreshlayout:1.1.0')
             alias('androidx-navigation-fragment').to('androidx.navigation', 'navigation-fragment').versionRef('navigation')
             alias('androidx-navigation-ui').to('androidx.navigation', 'navigation-ui').versionRef('navigation')
-            alias('androidx-paging-runtime').to('androidx-paging', 'paging-runtime').versionRef('paging')
-            alias('androidx-paging-rxjava3').to('androidx-paging', 'paging-rxjava3').versionRef('paging')
+            alias('androidx-paging-runtime').to('androidx.paging', 'paging-runtime').versionRef('paging')
+            alias('androidx-paging-rxjava3').to('androidx.paging', 'paging-rxjava3').versionRef('paging')
             alias('androidx-preference').to('androidx.preference:preference:1.2.0')
             alias('androidx-work-runtime').to('androidx.work', 'work-runtime').versionRef('work-manager')
             alias('androidx-work-rxjava3').to('androidx.work', 'work-rxjava3').versionRef('work-manager')
@@ -38,6 +38,7 @@ dependencyResolutionManagement {
             alias('room-runtime').to('androidx.room', 'room-runtime').versionRef('room')
             alias('room-compiler').to('androidx.room', 'room-compiler').versionRef('room')
             alias('room-rxjava3').to('androidx.room', 'room-rxjava3').versionRef('room')
+            alias('room-guava').to('androidx.room', 'room-guava').versionRef('room')
 
             // Firebase
             alias('firebase-messaging').to('com.google.firebase:firebase-messaging:23.0.0')
@@ -59,6 +60,7 @@ dependencyResolutionManagement {
             alias('glide-okhttp3-integration').to('com.github.bumptech.glide:okhttp3-integration:4.4.0')
             alias('commons-codec').to('commons-codec:commons-codec:1.10')
             alias('zxing-android-embedded').to('com.journeyapps:zxing-android-embedded:4.2.0')
+            alias('google-guava').to('com.google.guava:guava:29.0-android')
         }
 
         testLibs {
