@@ -9,6 +9,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -304,7 +305,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
             @Override
             public void afterTextChanged(Editable s) {
-                if (s.length() == 0) {
+                if (s.length() == 0 || TextUtils.isEmpty(s.toString().replace(" ", ""))) {
                     mBinding.buttonMore.setVisibility(View.VISIBLE);
                     mBinding.buttonSendMessage.setVisibility(View.GONE);
                 } else {
