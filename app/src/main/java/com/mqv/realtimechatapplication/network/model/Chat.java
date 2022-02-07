@@ -12,7 +12,6 @@ import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-import com.google.firebase.firestore.PropertyName;
 import com.google.gson.annotations.SerializedName;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
@@ -34,13 +33,11 @@ public class Chat implements Parcelable {
     @ColumnInfo(name = "chat_id")
     private String id;
 
-    @PropertyName("sender")
     @SerializedName("sender")
     @ColumnInfo(name = "chat_sender_id")
     private String senderId;
 
     @SerializedName("conversation")
-    @PropertyName("conversation")
     @ColumnInfo(index = true, name = "chat_conversation_id")
     private String conversationId;
 
@@ -69,7 +66,6 @@ public class Chat implements Parcelable {
 
     @ColumnInfo(name = "chat_is_unsent")
     @SerializedName("unsent")
-    @PropertyName("unsent")
     private Boolean isUnsent;
 
     @Ignore
