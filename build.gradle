@@ -16,6 +16,14 @@ buildscript {
     }
 }
 
+ext {
+    COMPILE_SDK = 31
+    TARGET_SDK = 31
+    MIN_SDK = 26
+
+    JAVA_VERSION = JavaVersion.VERSION_11
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
