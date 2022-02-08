@@ -25,10 +25,10 @@ import com.mqv.realtimechatapplication.databinding.ItemChatProfileBinding;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.DateTimeHelper;
 import com.mqv.realtimechatapplication.util.Picture;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -222,9 +222,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         Drawable mErrorIconDrawable;
         private final int mChatCornerRadius;
         private final int mChatCornerRadiusSmall;
-
-        private static final String WEEK_PATTERN = "EEE hh:mm a";
-        private static final String MONTH_PATTERN = "MMM dd hh:mm a";
 
         public ChatListViewHolder(@NonNull ItemChatBinding binding,
                                   @NonNull Context context,
@@ -624,13 +621,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
             if (preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
                 mBinding.textTimestamp.setVisibility(View.VISIBLE);
-                mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
+                mBinding.textTimestamp.setText(DateTimeHelper.getMessageDateTimeFormatted(mContext, item.getTimestamp()));
                 return;
             }
 
             if (shouldShowTimestamp(preItem, item)) {
                 mBinding.textTimestamp.setVisibility(View.VISIBLE);
-                mBinding.textTimestamp.setText(getReadableTime(item.getTimestamp()));
+                mBinding.textTimestamp.setText(DateTimeHelper.getMessageDateTimeFormatted(mContext, item.getTimestamp()));
             } else {
                 mBinding.textTimestamp.setVisibility(View.GONE);
             }
@@ -662,34 +659,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
         private void renderImage(String url, ImageView container) {
             Picture.loadUserAvatar(mContext, url).into(container);
-        }
-
-        private String getReadableTime(LocalDateTime from) {
-            var now = LocalDateTime.now();
-
-            var day = ChronoUnit.DAYS.between(from, now);
-
-            if (day < 1) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return arr[1] + " " + arr[2];
-            }
-
-            if (day == 1) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_yesterday, arr[1] + " " + arr[2]);
-            }
-
-            if (day <= 7) {
-                var arr = from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_week, arr[0], arr[1] + " " + arr[2]);
-            } else {
-                var arr = from.format(DateTimeFormatter.ofPattern(MONTH_PATTERN)).split(" ");
-
-                return mContext.getString(R.string.msg_notification_month, arr[0], arr[1], arr[2] + " " + arr[3]);
-            }
         }
 
         private boolean isSelf(Chat item) {

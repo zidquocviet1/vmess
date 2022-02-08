@@ -30,13 +30,10 @@ import com.mqv.realtimechatapplication.network.model.ConversationGroup;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.DateTimeHelper;
 import com.mqv.realtimechatapplication.util.Picture;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -183,15 +180,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         private final int mTextUnreadColor;
         private final int mDefaultTextViewColor;
 
-        private static final String DAY_PATTERN = "hh:mm a";
-        private static final String WEEK_PATTERN = "EEE";
-        private static final String MONTH_PATTERN = "MMM dd";
-        private static final String YEAR_PATTERN = "MMM dd, yyyy";
-
-        private static final int MONTH_INTERVAL = 6;
-        private static final int WEEK_INTERVAL = 1;
-        private static final int DAY_INTERVAL = 1;
-
         public ConversationViewHolder(@NonNull View itemView,
                                       Context context,
                                       FirebaseUser user,
@@ -298,8 +286,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                         showRecentChat(recentChat);
 
                         mBinding.textTitleConversation.setText(user.getDisplayName());
-                        // Not complete
-                        String timestamp = mContext.getString(R.string.title_conversation_timestamp, getReadableTime(recentChat.getTimestamp()));
+                        String timestamp = mContext.getString(R.string.title_conversation_timestamp, DateTimeHelper.getMessageDateTimeFormatted(mContext, recentChat.getTimestamp(), true));
                         mBinding.textCreatedAt.setText(timestamp);
                     });
         }
@@ -412,20 +399,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             container.setVisibility(View.VISIBLE);
             ImageViewCompat.setImageTintList(container, null);
             Picture.loadUserAvatar(mContext, url).into(container);
-        }
-
-        private String getReadableTime(LocalDateTime from) {
-            var now = LocalDateTime.now();
-
-            var day = ChronoUnit.DAYS.between(from, now);
-            var week = ChronoUnit.WEEKS.between(from, now);
-            var month = ChronoUnit.MONTHS.between(from, now);
-            var defaultLocale = Locale.getDefault();
-
-            if (month >= MONTH_INTERVAL) return from.format(DateTimeFormatter.ofPattern(YEAR_PATTERN, defaultLocale));
-            if (week >= WEEK_INTERVAL) return from.format(DateTimeFormatter.ofPattern(MONTH_PATTERN, defaultLocale));
-            if (day < DAY_INTERVAL) return from.format(DateTimeFormatter.ofPattern(DAY_PATTERN, defaultLocale));
-            return from.format(DateTimeFormatter.ofPattern(WEEK_PATTERN, defaultLocale));
         }
     }
 }
