@@ -87,6 +87,10 @@ dependencies {
 
     testImplementation testLibs.junit.jupiter.api
     testImplementation testLibs.junit.junit
+    testImplementation testLibs.mockito.core
+    testImplementation testLibs.androidx.test.core
+    testImplementation testLibs.androidx.test.ext
+    testImplementation testLibs.com.google.truth
 
     androidTestImplementation testLibs.androidx.test.ext.junit
     androidTestImplementation testLibs.espresso.core
