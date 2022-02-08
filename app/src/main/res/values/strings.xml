@@ -185,13 +185,13 @@
     <string name="msg_qr_code">Your <b>QR Code</b> here. Using this code to let people connect with you to make a conversation with each other.</string>
     <string name="msg_friend_request_empty_list">You don\'t have any friend request. Share your <b>Qr Code</b> or <b>Username</b> to make people have accessibility with you.</string>
     <string name="msg_notification_empty_list">You don\'t have any notification.</string>
-    <string name="msg_archived_chats_empty_list">Empty folder... This place will store all the archived chats which you don\'t want to see more.</string>
+    <string name="msg_archived_chats_empty_list">Empty folder… This place will store all the archived chats which you don\'t want to see more.</string>
     <string name="msg_oop_something_when_wrong">Oops! Something when wrong with the server. Try later</string>
     <string name="msg_add_qr_from_gallery">Add code from gallery</string>
     <string name="msg_camera_permission">The app needs access to your camera to run this feature.</string>
     <string name="msg_enable_camera_access">Enable camera access</string>
     <string name="msg_request_yourself">Can\'t request to find yourself</string>
-    <string name="msg_loading">Loading...</string>
+    <string name="msg_loading">Loading…</string>
     <string name="msg_new_friend_request_notification_fragment"><![CDATA[<b>%1$s</b> sent you a friend request.]]></string>
     <string name="msg_accepted_friend_request_notification_fragment"><![CDATA[<b>%1$s</b> accepted your friend request.]]></string>
     <string name="msg_notification_now">Just now</string>
@@ -208,6 +208,8 @@
     <string name="msg_edit_birthday_explain_1">This should be your date of birth. Your can change twice in 14 days.</string>
     <string name="msg_edit_birthday_explain_2">Set your birthday to make everyone know more about you.</string>
     <string name="msg_edit_profile_social_link_explain">Link your own social media into your profile to make everyone know more about you.</string>
+    <string name="msg_at_date_time">at</string>
+    <string name="msg_yesterday_date_time">Yesterday</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
