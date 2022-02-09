@@ -4,6 +4,7 @@ plugins {
     id 'com.google.gms.google-services'
     id "androidx.navigation.safeargs"
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -80,10 +81,10 @@ dependencies {
     implementation libs.zxing.android.embedded
     implementation libs.google.guava
 
-    annotationProcessor libs.glide.compiler
-    annotationProcessor libs.room.compiler
-    annotationProcessor libs.hilt.compiler
-    annotationProcessor libs.androidx.hilt.compiler
+    kapt libs.glide.compiler
+    kapt libs.room.compiler
+    kapt libs.hilt.compiler
+    kapt libs.androidx.hilt.compiler
 
     testImplementation testLibs.junit.jupiter.api
     testImplementation testLibs.junit.junit
