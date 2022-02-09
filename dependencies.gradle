@@ -2,8 +2,8 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             version('lifecycle', '2.4.0')
-            version('navigation', '2.5.0-alpha01')
-            version('hilt', '2.36')
+            version('navigation', '2.4.0-alpha01')
+            version('hilt', '2.40.5')
             version('room', '2.4.1')
             version('paging', '3.0.1')
             version('retrofit', '2.9.0')
