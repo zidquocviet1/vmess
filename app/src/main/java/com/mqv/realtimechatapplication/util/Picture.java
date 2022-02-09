@@ -1,10 +1,14 @@
 package com.mqv.realtimechatapplication.util;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.RoundedBitmapDrawable;
+import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
@@ -20,6 +24,8 @@ Util class to load picture with Glide and added some default drawable
 */
 public class Picture {
     private static final int    DEFAULT_LOAD_FAILED = R.color.base_background_color;
+    public static final int DEFAULT_IMAGE_HEIGHT = 88;
+    public static final int DEFAULT_IMAGE_WIDTH = 88;
 
     // Remove the host name of the photo URL
     private static String reformatUrl(@Nullable String photoUrl) {
@@ -72,5 +78,22 @@ public class Picture {
 
     public static Drawable getDefaultUserAvatar(Context context) {
         return ContextCompat.getDrawable(context, R.drawable.ic_default_user_avatar);
+    }
+
+    public static Bitmap createBitmapFromDrawable(Drawable d, int width, int height) {
+        Bitmap destBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(destBitmap);
+
+        d.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        d.draw(canvas);
+
+        return destBitmap;
+    }
+
+    public static Drawable createRoundedDrawable(Context context, Drawable resource, int width, int height) {
+        Bitmap destBitmap = createBitmapFromDrawable(resource, width, height);
+        RoundedBitmapDrawable rbd = RoundedBitmapDrawableFactory.create(context.getResources(), destBitmap);
+        rbd.setCornerRadius(Math.max(destBitmap.getHeight(), destBitmap.getWidth()) / 2.0f);
+        return rbd;
     }
 }
