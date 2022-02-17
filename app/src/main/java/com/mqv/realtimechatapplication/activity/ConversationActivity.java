@@ -13,9 +13,11 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.View;
+import android.view.ViewStub;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,10 +31,11 @@ import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityConversationBinding;
+import com.mqv.realtimechatapplication.databinding.ItemImageGroupBinding;
+import com.mqv.realtimechatapplication.databinding.ItemUserAvatarBinding;
 import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
-import com.mqv.realtimechatapplication.network.model.ConversationGroup;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.network.model.type.MessageType;
@@ -52,9 +55,12 @@ import java.util.UUID;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class ConversationActivity extends BaseActivity<ConversationViewModel, ActivityConversationBinding>
-        implements OnNetworkChangedListener,
-                   View.OnLayoutChangeListener {
+public class ConversationActivity
+       extends BaseActivity<ConversationViewModel, ActivityConversationBinding>
+       implements OnNetworkChangedListener,
+                  View.OnLayoutChangeListener,
+                  ViewStub.OnInflateListener,
+                  ChatListAdapter.ConversationGroupOption {
     public static final String EXTRA_CONVERSATION = "conversation";
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
     private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
@@ -72,11 +78,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
     private Animation slideUpAnimation;
     private Animation fadeAnimation;
 
-    // Only NonNull when the conversation type NORMAL or SELF
-    @Nullable
-    private User mOtherUser;
-
     private boolean isLoadMore = false;
+    private boolean isActive = false;
 
     private RecyclerView.OnScrollListener mScrollListener;
     private final RecyclerView.AdapterDataObserver mAdapterObserver = new RecyclerView.AdapterDataObserver() {
@@ -87,6 +90,9 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             }
         }
     };
+
+    private ItemUserAvatarBinding avatarNormalStubBinding;
+    private ItemImageGroupBinding avatarGroupStubBinding;
 
     @Override
     public void binding() {
@@ -112,19 +118,12 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         slideUpAnimation.setDuration(FAST_DURATION);
         fadeAnimation.setDuration(FAST_DURATION);
 
-        checkConversationType(mConversation);
+        setupConversation(mConversation);
         registerEventClick();
         registerNetworkEventCallback(this);
         setupColorUi();
         setupRecyclerView();
         postRequestSeenMessages();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        showUserUi();
     }
 
     @Override
@@ -204,8 +203,14 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         });
 
         mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
+            isActive = isOnline;
             mBinding.toolbarSubtitle.setVisibility(isOnline ? View.VISIBLE : View.GONE);
-            mBinding.imageConversationActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+            if (avatarNormalStubBinding != null) {
+                avatarNormalStubBinding.imageActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+            }
+            if (avatarGroupStubBinding != null) {
+                avatarGroupStubBinding.imageActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+            }
         });
 
         // First load conversation cache messages if not load the messages from server
@@ -215,6 +220,25 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mChatListAdapter.notifyItemRangeInserted(0, list.size());
 
                 onFirstLoadComplete();
+            }
+        });
+
+        mViewModel.getConversationMetadata().observe(this, metadata -> {
+            mChatListAdapter.setConversationMetadata(metadata);
+
+            setToolbarTitle(metadata.getConversationName());
+
+            List<String> conversationThumbnail = metadata.getConversationThumbnail();
+
+            if (conversationThumbnail.size() > 1) {
+                loadImage(conversationThumbnail.get(0), avatarGroupStubBinding.avatarUser1);
+                loadImage(conversationThumbnail.get(1), avatarGroupStubBinding.avatarUser2);
+            } else {
+                loadImage(conversationThumbnail.get(0), avatarNormalStubBinding.imageAvatar);
+            }
+
+            if (metadata.getType() == ConversationType.NORMAL) {
+                mViewModel.loadUserDetail(metadata.getOtherUid());
             }
         });
     }
@@ -233,22 +257,17 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         }
     }
 
-    private void checkConversationType(Conversation conversation) {
-        if (conversation.getId().startsWith("NEW_CONVERSATION")) {
+    private void setupConversation(Conversation conversation) {
+        mBinding.viewStubImageGroup.setOnInflateListener(this);
+        mBinding.viewStubImageAvatar.setOnInflateListener(this);
+
+        if (conversation.getId().startsWith("-1")) {
             // The new conversation when user request a new message but have not friend relationship
         } else {
-            List<User> participants = conversation.getParticipants();
-
-            if (conversation.getType() == ConversationType.SELF) {
-                mOtherUser = participants.get(0);
-            } else if (conversation.getType() == ConversationType.NORMAL) {
-                participants.stream()
-                        .filter(u -> !u.getUid().equals(mCurrentUser.getUid()))
-                        .findFirst()
-                        .ifPresent(u2 -> {
-                            mOtherUser = u2;
-                            mViewModel.loadUserDetail(u2.getUid());
-                        });
+            if (conversation.getType() == ConversationType.SELF || conversation.getType() == ConversationType.NORMAL) {
+                mBinding.viewStubImageAvatar.inflate();
+            } else {
+                mBinding.viewStubImageGroup.inflate();
             }
         }
     }
@@ -349,7 +368,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
                 mConversationParticipants,
                 mDefaultColorStateList,
                 mCurrentUser,
-                mOtherUser);
+                mConversation.getType());
 
         mLayoutManager = new CustomLinearLayoutManager(this);
         mLayoutManager.setReverseLayout(false);
@@ -368,6 +387,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
+                shouldShowHeader();
+
                 if (mChatList.size() <= 2) {
                     return;
                 }
@@ -382,6 +403,7 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         mBinding.recyclerChatList.addOnScrollListener(mScrollListener);
 
         mChatListAdapter.submitList(mChatList);
+        mChatListAdapter.registerConversationOption(this);
     }
 
     private void onFirstLoadComplete() {
@@ -436,27 +458,8 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         }
     }
 
-    private void showUserUi() {
-        switch (mConversation.getType()) {
-            case SELF:
-                setToolbarTitle(getString(R.string.title_just_you));
-                loadImage(mCurrentUser.getPhotoUrl());
-                break;
-            case GROUP:
-                ConversationGroup group = mConversation.getGroup();
-
-                setToolbarTitle(group.getName());
-                loadImage(group.getThumbnail());
-                break;
-            case NORMAL:
-                setToolbarTitle(Objects.requireNonNull(mOtherUser).getDisplayName());
-                loadImage(mOtherUser.getPhotoUrl());
-                break;
-        }
-    }
-
-    private void loadImage(@Nullable String url) {
-        Picture.loadUserAvatar(this, url).into(mBinding.imageAvatar);
+    private void loadImage(@Nullable String url, ImageView container) {
+        Picture.loadUserAvatar(this, url).into(container);
     }
 
     private void setToolbarTitle(String title) {
@@ -465,6 +468,23 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
 
     private void postRequestSeenMessages() {
         mViewModel.postSeenMessageConversation(this, mConversation.getId(), mCurrentUser.getUid());
+    }
+
+    private void shouldShowHeader() {
+        int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
+        if (firstItemPosition != -1) {
+            Chat firstVisible = mChatList.get(firstItemPosition);
+            boolean shouldShowHeader = !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
+            boolean isGroup = mConversation.getGroup() != null;
+
+            if (isGroup) {
+                mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+            } else {
+                mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+            }
+            mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
+            mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+        }
     }
 
     @Override
@@ -477,6 +497,32 @@ public class ConversationActivity extends BaseActivity<ConversationViewModel, Ac
         if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
             mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
         }
+    }
+
+    @Override
+    public void onInflate(ViewStub viewStub, View view) {
+        int id = viewStub.getInflatedId();
+
+        if (id == R.id.inflated_image_normal) {
+            avatarNormalStubBinding = ItemUserAvatarBinding.bind(view);
+        } else if (id == R.id.inflated_image_group) {
+            avatarGroupStubBinding = ItemImageGroupBinding.bind(view);
+        }
+    }
+
+    @Override
+    public void addMember() {
+        Logging.show("Add new member to this group");
+    }
+
+    @Override
+    public void changeGroupName() {
+        Logging.show("Change the name of this group");
+    }
+
+    @Override
+    public void viewGroupMember() {
+        Logging.show("View all group members");
     }
 
     private static class CustomLinearLayoutManager extends LinearLayoutManager {

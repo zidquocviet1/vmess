@@ -28,7 +28,6 @@ public class Conversation implements Parcelable {
     private List<User> participants;
     @Ignore
     private List<Chat> chats;
-    @Ignore
     private ConversationGroup group;
     @ColumnInfo(name = "conversation_type")
     private ConversationType type;
@@ -102,6 +101,7 @@ public class Conversation implements Parcelable {
         id = in.readString();
         participants = in.createTypedArrayList(User.CREATOR);
         chats = in.createTypedArrayList(Chat.CREATOR);
+        group = in.readTypedObject(ConversationGroup.CREATOR);
         type = (ConversationType) in.readSerializable();
         status = (ConversationStatusType) in.readSerializable();
         creationTime = (LocalDateTime) in.readSerializable();
@@ -195,6 +195,7 @@ public class Conversation implements Parcelable {
         dest.writeString(id);
         dest.writeTypedList(participants);
         dest.writeTypedList(chats);
+        dest.writeTypedObject(group, flags);
         dest.writeSerializable(type);
         dest.writeSerializable(status);
         dest.writeSerializable(creationTime);

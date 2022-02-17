@@ -13,6 +13,7 @@
     <string name="dummy_chat_sender" translatable="false">I\'v created this application since i was 21 years old</string>
     <string name="dummy_chat_receiver" translatable="false">When were you create this app?</string>
     <string name="dummy_first_chat">You have connected to this person. Text something to share your story.</string>
+    <string name="dummy_first_chat_group">%1$s has created this group. Add new member to this group to share the story.</string>
 
     // activity label
     <string name="label_switch_accounts">Switch Accounts</string>
@@ -42,6 +43,11 @@
     <string name="label_on">On</string>
     <string name="label_system">System</string>
     <string name="label_dark_mode_explain">If system is selected, TAC will automatically adjust your appearance based on your device\'s system settings</string>
+    <string name="label_suggested">Suggested</string>
+    <string name="label_who_create_this_group">%1$s created this group.</string>
+    <string name="label_name">Name</string>
+    <string name="label_members">Members</string>
+    <string name="label_text_more_number" translatable="false">+%1$d</string>
 
     <string name="title_brand_name_short" translatable="false">TAC</string>
     <string name="title_brand_name" translatable="false">Take a Conversation</string>
@@ -118,6 +124,7 @@
     <string name="title_just_you">Just you</string>
     <string name="title_add_account">Add account</string>
     <string name="title_notification_earlier">Earlier</string>
+    <string name="title_add_group_conversation">Add Participants</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -144,6 +151,7 @@
     </array>
     <string name="action_uploading_photo">Uploading photo…</string>
     <string name="action_loading">Loading…</string>
+    <string name="action_creating_3_dot">Creating…</string>
     <string name="action_switching_account">Switching account…</string>
     <string name="action_creating">Creating account</string>
     <string name="action_add_social_link">Add Social Link</string>
@@ -156,6 +164,8 @@
     <string name="action_add_friend">Add Friend</string>
     <string name="action_un_friend">Unfriend</string>
     <string name="action_view_profile">View Profile</string>
+    <string name="action_clear_all">Clear all</string>
+    <string name="action_add">Add</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -203,7 +213,7 @@
     <string name="msg_owner_chat">You:\u0020</string>
     <string name="msg_delete_conversation_title">Delete this entire conversation?</string>
     <string name="msg_delete_conversation_message">Once you delete this conversation, the entire chats will be deleted and it can\'t be undone.</string>
-    <string name="msg_edit_display_name_explain_1">Help people discover your account by using the name you\'re known by either your fullname, nickname, or business name.</string>
+    <string name="msg_edit_display_name_explain_1">Help people discover your account by using the name you\'re known by either your full name, nickname, or business name.</string>
     <string name="msg_edit_display_name_explain_2">You can only change your name twice within 14 days.</string>
     <string name="msg_edit_birthday_explain_1">This should be your date of birth. Your can change twice in 14 days.</string>
     <string name="msg_edit_birthday_explain_2">Set your birthday to make everyone know more about you.</string>
@@ -228,6 +238,7 @@
     <string name="error_response_request_conflict">Can\'t confirm your request</string>
     <string name="error_qr_code_not_found">This qr code is not available</string>
     <string name="error_user_not_in_conversation">You not belong to this conversation. Permission denied!</string>
+    <string name="error_create_group_conversation_fail">Something wrong when create a new group. Try again</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -269,6 +280,4 @@
     <string name="key_pref_legal_and_policies" translatable="false">key_pref_legal_and_policies</string>
     <string name="key_pref_edit_profile" translatable="false">key_pref_edit_profile</string>
     <string name="key_pref_friend_request" translatable="false">key_pref_friend_request</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment" translatable="false">Hello blank fragment</string>
 </resources>

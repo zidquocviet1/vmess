@@ -19,6 +19,9 @@ public interface PeopleDao {
     @Query("select * from people")
     Flowable<List<People>> getAll();
 
+    @Query("select * from people limit 30")
+    Single<List<People>> getSuggestionList();
+
     @Query("select * from people where uid = :uid")
     Single<People> getByUid(String uid);
 

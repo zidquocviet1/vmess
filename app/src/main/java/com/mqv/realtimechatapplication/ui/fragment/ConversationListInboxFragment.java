@@ -16,12 +16,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.activity.SearchConversationActivity;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBinding;
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter;
 import com.mqv.realtimechatapplication.ui.adapter.RankUserConversationAdapter;
 import com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel;
+import com.mqv.realtimechatapplication.util.LoadingDialog;
 import com.mqv.realtimechatapplication.util.NetworkStatus;
 import com.mqv.realtimechatapplication.util.RingtoneUtil;
 
@@ -97,6 +99,24 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
         });
 
         mViewModel.getPresenceUserListObserver().observe(this, this::bindPresenceConversation);
+
+        mViewModel.getOneTimeLoadingObserver().observe(this, isLoading -> {
+            if (isLoading) {
+                LoadingDialog.startLoadingDialog(requireContext(), requireActivity().getLayoutInflater(), R.string.action_creating_3_dot);
+            } else {
+                LoadingDialog.finishLoadingDialog();
+            }
+        });
+
+        mViewModel.getOneTimeErrorObserver().observe(this, event -> {
+            if (event == null) return;
+
+            Integer content = event.getContentIfNotHandled();
+
+            if (content != null) {
+                Toast.makeText(requireContext(), content, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @NonNull
@@ -126,7 +146,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
     public void initializeRecyclerview() {
         mConversations = new ArrayList<>();
         mRankUserAdapter = new RankUserConversationAdapter(getContext());
-        mAdapter = new ConversationListAdapter(mConversations, getContext());
+        mAdapter = new ConversationListAdapter(getContext());
         mAdapter.registerOnConversationClick(onConversationClick());
 
         mBinding.recyclerMessages.setAdapter(mAdapter);

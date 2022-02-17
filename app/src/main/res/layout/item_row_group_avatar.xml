@@ -1,0 +1,58 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_group_status"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layoutDirection="rtl"
+    android:orientation="horizontal"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
+
+    <LinearLayout
+        android:id="@+id/layout_avatar_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="-8dp"
+        android:background="@drawable/avatar_stroke_ripple"
+        android:padding="3dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_avatar_1"
+            android:layout_width="@dimen/image_avatar_chat_status"
+            android:layout_height="@dimen/image_avatar_chat_status"
+            android:src="@drawable/ic_default_user_avatar"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_avatar_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="-8dp"
+        android:background="@drawable/avatar_stroke_ripple"
+        android:padding="3dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_avatar_2"
+            android:layout_width="@dimen/image_avatar_chat_status"
+            android:layout_height="@dimen/image_avatar_chat_status"
+            android:src="@drawable/ic_default_user_avatar"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_avatar_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/avatar_stroke_ripple"
+        android:padding="3dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_avatar_3"
+            android:layout_width="@dimen/image_avatar_chat_status"
+            android:layout_height="@dimen/image_avatar_chat_status"
+            android:src="@drawable/ic_default_user_avatar"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    </LinearLayout>
+</LinearLayout>

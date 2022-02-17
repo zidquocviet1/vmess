@@ -12,7 +12,9 @@
     <dimen name="text_title_size">24sp</dimen>
     <dimen name="text_appearance_margin">10dp</dimen>
 
+    <dimen name="image_avatar_chat_status">16dp</dimen>
     <dimen name="image_conversation">60dp</dimen>
+    <dimen name="image_conversation_group">50dp</dimen>
     <dimen name="image_icon_size">48dp</dimen>
     <dimen name="image_user_avatar_extra_small">24dp</dimen>
     <dimen name="image_user_avatar_small">34dp</dimen>

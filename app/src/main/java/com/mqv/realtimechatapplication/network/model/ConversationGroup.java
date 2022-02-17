@@ -1,19 +1,35 @@
 package com.mqv.realtimechatapplication.network.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.PrimaryKey;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class ConversationGroup {
+public class ConversationGroup implements Parcelable {
+    @PrimaryKey
+    @NonNull
     private String id;
     private String name;
+    @ColumnInfo(name = "creator_id")
     private String creatorId;
+    @ColumnInfo(name = "group_conversation_id")
+    private String conversationId;
+    @ColumnInfo(name = "admin_id")
     private String adminId;
     private String thumbnail;
+    @ColumnInfo(name = "creation_timestamp")
     private LocalDateTime creationTimestamp;
-    private String modifiedBy;
+    @ColumnInfo(name = "last_modified_by")
+    private String lastModifiedBy;
+    @ColumnInfo(name = "last_modified")
     private LocalDateTime lastModified;
 
-    public ConversationGroup(String id,
+    public ConversationGroup(@NonNull String id,
                              String name,
                              String creatorId,
                              String adminId,
@@ -27,15 +43,38 @@ public class ConversationGroup {
         this.adminId = adminId;
         this.thumbnail = thumbnail;
         this.creationTimestamp = creationTimestamp;
-        this.modifiedBy = modifiedBy;
+        this.lastModifiedBy = modifiedBy;
         this.lastModified = lastModified;
     }
 
+    protected ConversationGroup(Parcel in) {
+        id = in.readString();
+        name = in.readString();
+        creatorId = in.readString();
+        conversationId = in.readString();
+        adminId = in.readString();
+        thumbnail = in.readString();
+        lastModifiedBy = in.readString();
+    }
+
+    public static final Creator<ConversationGroup> CREATOR = new Creator<ConversationGroup>() {
+        @Override
+        public ConversationGroup createFromParcel(Parcel in) {
+            return new ConversationGroup(in);
+        }
+
+        @Override
+        public ConversationGroup[] newArray(int size) {
+            return new ConversationGroup[size];
+        }
+    };
+
+    @NonNull
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(@NonNull String id) {
         this.id = id;
     }
 
@@ -79,12 +118,12 @@ public class ConversationGroup {
         this.creationTimestamp = creationTimestamp;
     }
 
-    public String getModifiedBy() {
-        return modifiedBy;
+    public String getLastModifiedBy() {
+        return lastModifiedBy;
     }
 
-    public void setModifiedBy(String modifiedBy) {
-        this.modifiedBy = modifiedBy;
+    public void setLastModifiedBy(String lastModifiedBy) {
+        this.lastModifiedBy = lastModifiedBy;
     }
 
     public LocalDateTime getLastModified() {
@@ -106,5 +145,21 @@ public class ConversationGroup {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(id);
+        parcel.writeString(name);
+        parcel.writeString(creatorId);
+        parcel.writeString(conversationId);
+        parcel.writeString(adminId);
+        parcel.writeString(thumbnail);
+        parcel.writeString(lastModifiedBy);
     }
 }

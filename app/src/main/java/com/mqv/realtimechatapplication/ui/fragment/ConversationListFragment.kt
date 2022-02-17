@@ -1,5 +1,6 @@
 package com.mqv.realtimechatapplication.ui.fragment
 
+import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -8,15 +9,18 @@ import androidx.core.content.ContextCompat
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mqv.realtimechatapplication.R
+import com.mqv.realtimechatapplication.activity.AddGroupConversationActivity
 import com.mqv.realtimechatapplication.activity.ConversationActivity
 import com.mqv.realtimechatapplication.activity.MainActivity
 import com.mqv.realtimechatapplication.activity.listener.ConversationListChanged
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceArchivedConversationActivity
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationListViewModel
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager
 import com.mqv.realtimechatapplication.network.model.Conversation
 import com.mqv.realtimechatapplication.network.model.User
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType
 import com.mqv.realtimechatapplication.ui.adapter.ConversationListAdapter
+import com.mqv.realtimechatapplication.ui.data.UserSelection
 import com.mqv.realtimechatapplication.util.MyActivityForResult
 import java.util.*
 import java.util.function.BiConsumer
@@ -69,8 +73,34 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         mViewModel.muteNotification(conversation)
     }
 
-    override fun onCreateGroup(conversation: Conversation?) {
-        mViewModel.createGroup(conversation)
+    override fun onCreateGroup(conversation: Conversation?, whoCreateWith: User) {
+        val intent = Intent(requireContext(), AddGroupConversationActivity::class.java).apply {
+            putExtra(EXTRA_USER, whoCreateWith)
+        }
+        getLauncherByActivity()?.launch(intent) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.let { intent ->
+                    val userSelectedList =
+                        intent.getParcelableArrayListExtra<UserSelection>(EXTRA_GROUP_PARTICIPANTS)
+
+                    userSelectedList?.let {
+                        val userParticipants = it.stream()
+                            .map { us ->
+                                with(us) {
+                                    return@with User.Builder()
+                                        .setUid(uid)
+                                        .setDisplayName(displayName)
+                                        .setPhotoUrl(photoUrl)
+                                        .create()
+                                }
+                            }
+                            .collect(Collectors.toList())
+
+                        mViewModel.createGroup(LoggedInUserManager.getInstance().loggedInUser, userParticipants)
+                    }
+                }
+            }
+        }
     }
 
     override fun onLeaveGroup(conversation: Conversation?) {
@@ -172,5 +202,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     protected open fun onConversationOpenResult(result: ActivityResult?) {
+    }
+
+    companion object {
+        const val EXTRA_USER = "user"
+        const val EXTRA_GROUP_PARTICIPANTS = "group_participants"
     }
 }

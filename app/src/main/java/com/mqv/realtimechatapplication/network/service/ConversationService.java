@@ -10,9 +10,11 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -40,4 +42,8 @@ public interface ConversationService {
     @DELETE("conversation/{id}")
     Observable<ApiResponse<String>> deleteConversationChat(@Header(AUTHORIZATION) String token,
                                                            @Path("id") String conversationId);
+
+    @POST("conversation/")
+    Observable<ApiResponse<Conversation>> createGroup(@Header(AUTHORIZATION) String token,
+                                                      @Body Conversation conversation);
 }

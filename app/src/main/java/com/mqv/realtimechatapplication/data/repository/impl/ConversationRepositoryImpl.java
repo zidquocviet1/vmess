@@ -282,6 +282,13 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         dao.deleteByParticipantId(userId, otherUserId);
     }
 
+    @Override
+    public Observable<ApiResponse<Conversation>> createGroup(Conversation conversation) {
+        return getBearerTokenObservable()
+                .flatMap(token -> service.createGroup(token, conversation))
+                .subscribeOn(Schedulers.io());
+    }
+
     private Observable<String> getBearerTokenObservable() {
         return Observable.fromCallable(() -> {
                             try {

@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.mqv.realtimechatapplication.data.converter.ConversationChatConverter;
+import com.mqv.realtimechatapplication.data.converter.ConversationGroupConverter;
 import com.mqv.realtimechatapplication.data.converter.ConversationParticipantsConverter;
 import com.mqv.realtimechatapplication.data.converter.ConversationStatusConverter;
 import com.mqv.realtimechatapplication.data.converter.ConversationTypeConverter;
@@ -40,7 +41,7 @@ import com.mqv.realtimechatapplication.ui.data.People;
                       Chat.class,
                       PendingMessage.class,
                       SeenMessage.class},
-        version = 16,
+        version = 17,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -52,7 +53,8 @@ import com.mqv.realtimechatapplication.ui.data.People;
                          ConversationStatusConverter.class,
                          MessageTypeConverter.class,
                          MessageStatusConverter.class,
-                         MessageSeenByConverter.class})
+                         MessageSeenByConverter.class,
+                         ConversationGroupConverter.class})
 public abstract class MyDatabase extends RoomDatabase {
     public abstract UserDao getUserDao();
 

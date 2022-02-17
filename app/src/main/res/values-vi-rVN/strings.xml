@@ -212,4 +212,14 @@
     <string name="title_notification_earlier">Sớm hơn</string>
     <string name="msg_at_date_time">lúc</string>
     <string name="msg_yesterday_date_time">Hôm qua</string>
+    <string name="title_add_group_conversation">Thêm bạn bè</string>
+    <string name="label_suggested">Đề xuất</string>
+    <string name="action_clear_all">Xóa tất cả</string>
+    <string name="action_creating_3_dot">Đang tạo…</string>
+    <string name="error_create_group_conversation_fail">Đã xảy ra lỗi khi tạo nhóm. Vui lòng thử lại</string>
+    <string name="label_who_create_this_group">%1$s đã tạo nhóm này.</string>
+    <string name="label_name">Tên</string>
+    <string name="label_members">Thành viên</string>
+    <string name="action_add">Thêm</string>
+    <string name="dummy_first_chat_group">%1$s đã tạo nhóm. Thêm thành viên vào nhóm để có thể chia sẻ thêm nhiều câu chuyện mới.</string>
 </resources>

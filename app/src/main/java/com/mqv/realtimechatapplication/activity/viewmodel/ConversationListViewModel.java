@@ -5,23 +5,30 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.repository.ConversationRepository;
 import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.ApiResponse;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.ConversationGroup;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
+import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 import com.mqv.realtimechatapplication.reactive.RxHelper;
 import com.mqv.realtimechatapplication.util.Const;
+import com.mqv.realtimechatapplication.util.Event;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
 import com.mqv.realtimechatapplication.util.Retriever;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
@@ -33,6 +40,8 @@ public class ConversationListViewModel extends ViewModel {
     private   final ConversationRepository              conversationRepository;
     protected final MutableLiveData<List<Conversation>> conversationListObserver;
     protected final MutableLiveData<List<String>>       presenceUserListObserver;
+    protected final MutableLiveData<Boolean>            oneTimeLoadingResult;
+    protected final MutableLiveData<Event<Integer>>     errorEmitter;
     protected final CompositeDisposable                 cd;
 
     private static final int INITIALIZE_PAGE = 0;
@@ -42,6 +51,8 @@ public class ConversationListViewModel extends ViewModel {
         this.cd                       = new CompositeDisposable();
         this.conversationListObserver = new MutableLiveData<>();
         this.presenceUserListObserver = new MutableLiveData<>(Collections.emptyList());
+        this.oneTimeLoadingResult     = new MutableLiveData<>();
+        this.errorEmitter             = new MutableLiveData<>();
 
         //noinspection ResultOfMethodCallIgnored
         conversationRepository.conversationAndLastChat(status)
@@ -54,6 +65,10 @@ public class ConversationListViewModel extends ViewModel {
                        .getPresenceUserList()
                        .onErrorComplete()
                        .subscribe(presenceUserListObserver::postValue);
+    }
+
+    public LiveData<Event<Integer>> getOneTimeErrorObserver() {
+        return errorEmitter;
     }
 
     protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
@@ -88,6 +103,10 @@ public class ConversationListViewModel extends ViewModel {
     public Observable<ApiResponse<List<Conversation>>> onRefresh(ConversationStatusType type) {
         return conversationRepository.fetchByUid(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
                                      .compose(RxHelper.applyObservableSchedulers());
+    }
+
+    public void emitterOneTimeErrorToast(int errorRes) {
+        errorEmitter.postValue(new Event<>(errorRes));
     }
 
     protected void initializeFetch(ConversationStatusType type,
@@ -142,8 +161,47 @@ public class ConversationListViewModel extends ViewModel {
 
     }
 
-    public void createGroup(Conversation conversation) {
+    public void createGroup(@NonNull User creator, @NonNull List<User> participants) {
+        LocalDateTime now = LocalDateTime.now();
+        String        id  = "-1";
 
+        ConversationGroup group = new ConversationGroup(id,
+                                                        null,
+                                                        creator.getUid(),
+                                                        creator.getUid(),
+                                                        null,
+                                                        now,
+                                                        creator.getUid(),
+                                                        now);
+        Conversation conversation = new Conversation(id,
+                                                     participants,
+                                                     ConversationType.GROUP,
+                                                     ConversationStatusType.INBOX,
+                                                     now);
+        conversation.setGroup(group);
+
+        Disposable disposable = conversationRepository.createGroup(conversation)
+                                                      .compose(RxHelper.applyObservableSchedulers())
+                                                      .startWith(Completable.fromAction(() ->
+                                                              oneTimeLoadingResult.postValue(true)))
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .subscribe(data -> {
+                                                          oneTimeLoadingResult.postValue(false);
+
+                                                          data.setStatus(ConversationStatusType.INBOX);
+
+                                                          conversationRepository.save(data)
+                                                                                .compose(RxHelper.applyCompleteSchedulers())
+                                                                                .onErrorComplete()
+                                                                                .subscribe();
+
+                                                          AppDependencies.getDatabaseObserver().notifyConversationInserted(data.getId());
+                                                      }, t -> {
+                                                          oneTimeLoadingResult.postValue(false);
+                                                          emitterOneTimeErrorToast(R.string.error_create_group_conversation_fail);
+                                                      });
+
+        cd.add(disposable);
     }
 
     public void markAsUnread(Conversation conversation) {

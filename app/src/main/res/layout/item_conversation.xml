@@ -12,26 +12,26 @@
     android:paddingEnd="@dimen/all_padding_common"
     android:paddingBottom="6dp">
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_conversation"
+    <include
+        android:id="@+id/included_image_avatar"
+        layout="@layout/item_user_avatar"
         android:layout_width="@dimen/image_conversation"
         android:layout_height="@dimen/image_conversation"
-        android:src="@drawable/ic_round_account"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_conversation_active"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:background="@drawable/ic_conversation_active"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/image_conversation"
-        app:layout_constraintEnd_toEndOf="@id/image_conversation"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    <include
+        android:id="@+id/image_conversation_group"
+        layout="@layout/item_image_group"
+        android:layout_width="@dimen/image_conversation"
+        android:layout_height="@dimen/image_conversation"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title_conversation"
@@ -45,8 +45,8 @@
         app:layout_constraintBottom_toBottomOf="@id/guide_line"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintStart_toEndOf="@id/image_conversation"
-        app:layout_constraintTop_toTopOf="@id/image_conversation"
+        app:layout_constraintStart_toEndOf="@id/included_image_avatar"
+        app:layout_constraintTop_toTopOf="@id/included_image_avatar"
         app:layout_constraintVertical_bias="1"
         app:layout_constraintWidth_percent="0.65" />
 
@@ -66,7 +66,7 @@
         android:text="@string/msg_conversation_content_dummy"
         android:textSize="14sp"
         app:layout_constrainedWidth="true"
-        app:layout_constraintBottom_toBottomOf="@id/image_conversation"
+        app:layout_constraintBottom_toBottomOf="@id/included_image_avatar"
         app:layout_constraintEnd_toStartOf="@id/text_created_at"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
@@ -84,17 +84,35 @@
         android:textSize="14sp"
         app:layout_constrainedWidth="true"
         app:layout_constraintBottom_toBottomOf="@id/text_content_conversation"
-        app:layout_constraintEnd_toStartOf="@id/image_state"
+        app:layout_constraintEnd_toStartOf="@id/layout_status"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@id/text_content_conversation"
         app:layout_constraintTop_toTopOf="@id/text_content_conversation" />
 
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/image_state"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ViewStub
+            android:id="@+id/status_normal_viewstub"
+            android:layout_width="@dimen/image_avatar_chat_status"
+            android:layout_height="@dimen/image_avatar_chat_status"
+            android:layout="@layout/item_user_avatar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ViewStub
+            android:id="@+id/status_group_viewstub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout="@layout/item_row_group_avatar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

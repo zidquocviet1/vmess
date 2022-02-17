@@ -3,11 +3,13 @@ package com.mqv.realtimechatapplication.activity.viewmodel;
 import static com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel.DEFAULT_PAGE_CHAT_LIST;
 import static com.mqv.realtimechatapplication.ui.fragment.viewmodel.ConversationFragmentViewModel.DEFAULT_SIZE_CHAT_LIST;
 
+import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -24,10 +26,13 @@ import com.mqv.realtimechatapplication.data.repository.PeopleRepository;
 import com.mqv.realtimechatapplication.data.repository.UserRepository;
 import com.mqv.realtimechatapplication.data.result.Result;
 import com.mqv.realtimechatapplication.dependencies.AppDependencies;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.MessageStatus;
+import com.mqv.realtimechatapplication.ui.data.ConversationMapper;
+import com.mqv.realtimechatapplication.ui.data.ConversationMetadata;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.LiveDataUtil;
 import com.mqv.realtimechatapplication.util.Logging;
@@ -41,6 +46,7 @@ import java.net.SocketTimeoutException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -49,25 +55,27 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 import dagger.internal.Preconditions;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.HttpException;
 
 @HiltViewModel
-public class ConversationViewModel extends CurrentUserViewModel {
-    private final ConversationRepository                        repository;
-    private final ChatRepository                                chatRepository;
-    private final UserRepository                                userRepository;
-    private final PeopleRepository                              peopleRepository;
-    private final MutableLiveData<User>                         userDetail;
-    private final MutableLiveData<Result<List<Chat>>>           moreChatResult;
-    private final MutableLiveData<List<Chat>>                   cacheChatResult;
-    private final MutableLiveData<Chat>                         messageObserver;
-    private final MutableLiveData<Boolean>                      scrollButtonState;
-    private final MutableLiveData<Boolean>                      conversationActiveStatus;
-    private final DatabaseObserver.MessageListener              messageListener;
+public class ConversationViewModel extends AndroidViewModel {
+    private final ChatRepository                        chatRepository;
+    private final UserRepository                        userRepository;
+    private final PeopleRepository                      peopleRepository;
+    private final MutableLiveData<User>                 userDetail;
+    private final MutableLiveData<Result<List<Chat>>>   moreChatResult;
+    private final MutableLiveData<List<Chat>>           cacheChatResult;
+    private final MutableLiveData<Chat>                 messageObserver;
+    private final MutableLiveData<Boolean>              scrollButtonState;
+    private final MutableLiveData<Boolean>              conversationActiveStatus;
+    private final MutableLiveData<ConversationMetadata> conversationMetadata;
+    private final DatabaseObserver.MessageListener      messageListener;
+    private final CompositeDisposable                   cd;
 
-    private int                                                 currentChatPage      = DEFAULT_PAGE_CHAT_LIST;
+    private int currentChatPage = DEFAULT_PAGE_CHAT_LIST;
 
     public static final String KEY_CONVERSATION_ID = "conversation";
 
@@ -76,8 +84,10 @@ public class ConversationViewModel extends CurrentUserViewModel {
                                  UserRepository userRepository,
                                  PeopleRepository peopleRepository,
                                  ChatRepository chatRepository,
-                                 SavedStateHandle savedStateHandle) {
-        this.repository               = repository;
+                                 SavedStateHandle savedStateHandle,
+                                 Application application) {
+        super(application);
+
         this.chatRepository           = chatRepository;
         this.userRepository           = userRepository;
         this.peopleRepository         = peopleRepository;
@@ -87,6 +97,8 @@ public class ConversationViewModel extends CurrentUserViewModel {
         this.messageObserver          = new MutableLiveData<>();
         this.scrollButtonState        = new MutableLiveData<>(false);
         this.conversationActiveStatus = new MutableLiveData<>(false);
+        this.conversationMetadata     = new MutableLiveData<>();
+        this.cd                       = new CompositeDisposable();
         this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
             public void onMessageInserted(@NonNull String messageId) {
@@ -104,6 +116,7 @@ public class ConversationViewModel extends CurrentUserViewModel {
         if (conversation == null) {
             throw new IllegalArgumentException("Conversation can't be null");
         }
+        setupConversationName(conversation);
 
         cd.add(chatRepository.pagingCachedByConversation(conversation.getId(),
                                                          DEFAULT_PAGE_CHAT_LIST,
@@ -160,6 +173,10 @@ public class ConversationViewModel extends CurrentUserViewModel {
 
     public LiveData<List<Chat>> getCacheChats() {
         return cacheChatResult;
+    }
+
+    public LiveData<ConversationMetadata> getConversationMetadata() {
+        return Transformations.distinctUntilChanged(conversationMetadata);
     }
 
     //// Private method
@@ -232,6 +249,14 @@ public class ConversationViewModel extends CurrentUserViewModel {
         cd.add(disposable);
     }
 
+    private void setupConversationName(Conversation conversation) {
+        User                 currentUser = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
+        ConversationMetadata metadata    = ConversationMapper.mapToMetadata(conversation,
+                                                                            currentUser,
+                                                                            getApplication().getApplicationContext());
+
+        conversationMetadata.postValue(metadata);
+    }
     //// Public method
     public void sendMessage(Context context, Chat chat) {
         Disposable disposable = chatRepository.saveCached(chat)

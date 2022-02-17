@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.AddGroupConversationActivity">
+
+    <include
+        android:id="@+id/included_appbar"
+        layout="@layout/custom_appbar" />
+
+    <include
+        android:id="@+id/included_search_bar"
+        layout="@layout/item_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        app:layout_constraintTop_toBottomOf="@id/included_appbar" />
+
+    <HorizontalScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/included_search_bar">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_user_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/all_padding_common"
+                android:paddingEnd="@dimen/all_padding_common" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_user_group_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/all_padding_common"
+                android:paddingEnd="@dimen/all_padding_common" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_suggested_friend"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/scroll_view" />
+</androidx.constraintlayout.widget.ConstraintLayout>

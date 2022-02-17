@@ -115,6 +115,10 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         return getPresenceUserList();
     }
 
+    public LiveData<Boolean> getOneTimeLoadingObserver() {
+        return oneTimeLoadingResult;
+    }
+
     private void notifyConversationLastChatUpdate(Map<Conversation, Chat> map, String conversationId) {
         if (!map.isEmpty()) {
             mapToListConversation(map).stream()

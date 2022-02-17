@@ -16,6 +16,8 @@ import io.reactivex.rxjava3.core.Single;
 public interface PeopleRepository {
     Flowable<List<People>> getAll();
 
+    Single<List<People>> getSuggestionList();
+
     Single<People> getCachedByUid(@NonNull String uid);
 
     Completable save(People people);

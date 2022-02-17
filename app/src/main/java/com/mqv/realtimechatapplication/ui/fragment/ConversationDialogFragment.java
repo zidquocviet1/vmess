@@ -19,12 +19,15 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.FragmentConversationBottomDialogBinding;
 import com.mqv.realtimechatapplication.databinding.ItemPreferenceContentBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
 
 public class ConversationDialogFragment extends BottomSheetDialogFragment {
     private FragmentConversationBottomDialogBinding mBinding;
     private Conversation mConversation;
+    private User mUser;
     private final ConversationOptionListener mListener;
     private static final String EXTRA_CONVERSATION = "extra_conversation";
 
@@ -39,7 +42,7 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
 
         void onMuteNotification(Conversation conversation);
 
-        void onCreateGroup(Conversation conversation);
+        void onCreateGroup(Conversation conversation, User whoCreateWith);
 
         void onLeaveGroup(Conversation conversation);
 
@@ -74,6 +77,12 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             mConversation = args.getParcelable(EXTRA_CONVERSATION);
         } else {
             throw new IllegalArgumentException("The conversation must not be null");
+        }
+
+        if (LoggedInUserManager.getInstance().getLoggedInUser() == null) {
+            throw new IllegalArgumentException("The user must not be null");
+        } else {
+            mUser = LoggedInUserManager.getInstance().getLoggedInUser();
         }
     }
 
@@ -125,7 +134,7 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
 
     private void bindNormal() {
         bindItem(mBinding.itemIgnore, R.string.label_conversation_ignore_messages, R.drawable.ic_round_disabled_visible);
-        bindItem(mBinding.itemCreateGroup, requireContext().getString(R.string.label_conversation_create_group, "Admin"), R.drawable.ic_round_groups);
+        bindItem(mBinding.itemCreateGroup, requireContext().getString(R.string.label_conversation_create_group, getAnotherUser().getDisplayName()), R.drawable.ic_round_groups);
         mBinding.itemLeaveGroup.getRoot().setVisibility(View.GONE);
         mBinding.itemAddMembers.getRoot().setVisibility(View.GONE);
         mBinding.itemCreateGroup.getRoot().setVisibility(View.VISIBLE);
@@ -163,7 +172,7 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             dismiss();
         });
         mBinding.itemCreateGroup.getRoot().setOnClickListener(v -> {
-            mListener.onCreateGroup(mConversation);
+            mListener.onCreateGroup(mConversation, getAnotherUser());
             dismiss();
         });
         mBinding.itemLeaveGroup.getRoot().setOnClickListener(v -> {
@@ -183,4 +192,12 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             dismiss();
         });
     }
+
+    private User getAnotherUser() {
+        return mConversation.getParticipants()
+                            .stream()
+                            .filter(u -> !u.getUid().equals(mUser.getUid()))
+                            .findFirst()
+                            .orElseThrow(IllegalArgumentException::new);
+        }
 }

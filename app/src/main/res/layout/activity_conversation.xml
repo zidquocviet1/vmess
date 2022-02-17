@@ -41,23 +41,23 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="10dp">
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/image_avatar"
+                    <ViewStub
+                        android:id="@+id/view_stub_image_avatar"
                         android:layout_width="@dimen/image_user_avatar_small"
                         android:layout_height="@dimen/image_user_avatar_small"
-                        android:src="@drawable/ic_round_account"
+                        android:inflatedId="@+id/inflated_image_normal"
+                        android:layout="@layout/item_user_avatar"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/image_conversation_active"
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:background="@drawable/ic_conversation_active"
-                        app:layout_constraintBottom_toBottomOf="@id/image_avatar"
-                        app:layout_constraintEnd_toEndOf="@id/image_avatar"
-                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+                    <ViewStub
+                        android:id="@+id/view_stub_image_group"
+                        android:layout_width="@dimen/image_conversation_group"
+                        android:layout_height="@dimen/image_conversation_group"
+                        android:inflatedId="@+id/inflated_image_group"
+                        android:layout="@layout/item_image_group"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <com.google.android.material.appbar.MaterialToolbar
@@ -79,9 +79,9 @@
                             android:id="@+id/toolbar_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/author_app_full_name"
                             android:ellipsize="end"
                             android:maxLines="1"
+                            android:text="@string/author_app_full_name"
                             android:textAppearance="@style/ToolbarTitleTextAppearance" />
 
                         <TextView

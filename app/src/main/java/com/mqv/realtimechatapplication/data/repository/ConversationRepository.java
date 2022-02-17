@@ -42,6 +42,11 @@ public interface ConversationRepository {
 
     void deleteByParticipantId(String userId, String otherUserId);
 
+    /*
+    * Throws: 404, 409, 403
+    * */
+    Observable<ApiResponse<Conversation>> createGroup(Conversation conversation);
+
     /////// Conversation changes option
     Completable changeConversationStatus(Conversation conversation);
 

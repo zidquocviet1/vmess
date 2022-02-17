@@ -44,12 +44,16 @@ public abstract class ToolbarActivity<V extends ViewModel, B extends ViewBinding
 
     //Make the save button visible and handle onClick method
     public void enableSaveButton(View.OnClickListener callback) {
-        mButtonSave = (MaterialButton) findViewById(R.id.button_save);
+        mButtonSave = findViewById(R.id.button_save);
         mButtonSave.setVisibility(View.VISIBLE);
         mButtonSave.setOnClickListener(callback);
     }
 
     public void makeButtonEnable(boolean isEnable){
         mButtonSave.setEnabled(isEnable);
+    }
+
+    public Button getToolbarButton() {
+        return mButtonSave;
     }
 }

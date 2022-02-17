@@ -49,6 +49,11 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
+    public Single<List<People>> getSuggestionList() {
+        return peopleDao.getSuggestionList();
+    }
+
+    @Override
     public Single<People> getCachedByUid(@NonNull String uid) {
         return peopleDao.getByUid(uid);
     }
