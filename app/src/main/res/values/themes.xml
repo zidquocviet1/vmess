@@ -166,4 +166,15 @@
     <style name="ToolbarSubtitleTextAppearance" parent="TextAppearance.AppCompat.Widget.ActionMode.Subtitle">
         <item name="android:textSize">12sp</item>
     </style>
+
+    <style name="PrefTitleCategory">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingBottom">@dimen/all_padding_default</item>
+        <item name="android:paddingTop">@dimen/all_padding_default</item>
+        <item name="android:paddingStart">@dimen/all_padding_common</item>
+        <item name="android:paddingEnd">@dimen/all_padding_common</item>
+        <item name="android:textColor">@color/color_preference_category</item>
+    </style>
 </resources>
