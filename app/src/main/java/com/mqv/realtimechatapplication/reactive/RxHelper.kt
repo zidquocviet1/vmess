@@ -1,6 +1,8 @@
 package com.mqv.realtimechatapplication.reactive
 
 import com.mqv.realtimechatapplication.network.ApiResponse
+import com.mqv.realtimechatapplication.network.exception.BadRequestException
+import com.mqv.realtimechatapplication.network.exception.ResourceConflictException
 import com.mqv.realtimechatapplication.network.exception.ResourceNotFoundException
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.*
@@ -67,7 +69,9 @@ object RxHelper {
 
     private fun <T : Any> handleError(statusCode: Int): Observable<T> {
         return when (statusCode) {
-            401 -> Observable.error(ResourceNotFoundException())
+            403 -> Observable.error(BadRequestException())
+            404 -> Observable.error(ResourceNotFoundException())
+            409 -> Observable.error(ResourceConflictException())
             else -> Observable.error(IllegalStateException())
         }
     }
