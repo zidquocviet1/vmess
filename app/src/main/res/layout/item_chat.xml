@@ -89,8 +89,8 @@
                 android:id="@+id/layout_image_status_more"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
-                android:visibility="visible"
-                android:layout_marginEnd="0dp">
+                android:layout_marginEnd="0dp"
+                android:visibility="visible">
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/image_more_message_status"
@@ -129,6 +129,22 @@
         android:layout_height="match_parent"
         app:layout_constraintTop_toBottomOf="@id/layout_common">
 
+        <TextView
+            android:id="@+id/text_receiver_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:ellipsize="end"
+            android:lines="1"
+            android:text="@string/author_app_first_name"
+            android:textSize="12sp"
+            android:alpha="0.7"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="@id/guide_line_2"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toStartOf="@id/text_receiver_content"
+            app:layout_constraintTop_toTopOf="parent" />
+
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guide_line_2"
             android:layout_width="wrap_content"
@@ -157,11 +173,13 @@
             android:textAlignment="viewStart"
             android:textColor="@color/black"
             android:textSize="16sp"
+            android:layout_marginTop="4dp"
+            app:layout_goneMarginTop="0dp"
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="@id/guide_line_2"
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintStart_toEndOf="@id/image_receiver"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/text_receiver_name" />
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/image_receiver"

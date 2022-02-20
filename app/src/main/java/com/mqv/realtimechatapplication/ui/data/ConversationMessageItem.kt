@@ -16,6 +16,7 @@ import com.mqv.realtimechatapplication.ui.ImageAvatarView
 import com.mqv.realtimechatapplication.util.Const
 import com.mqv.realtimechatapplication.util.DateTimeHelper.getMessageDateTimeFormatted
 import java.time.temporal.ChronoUnit
+import java.util.*
 import java.util.stream.Collectors
 
 class ConversationMessageItem(
@@ -281,13 +282,21 @@ class ConversationMessageItem(
     }
 
     private fun changeSeenStatusVisibility(shouldShow: Boolean) {
-        if (mMetadata.type != ConversationType.GROUP) {
-            mBinding.imageMessageStatus.visibility =
-                if (shouldShow) View.VISIBLE else View.INVISIBLE
-        } else {
-//            mStatusGroupBinding!!.layoutAvatar1.visibility =
-//                if (shouldShow) View.VISIBLE else View.INVISIBLE
+        mBinding.imageMessageStatus.visibility =
+            if (shouldShow) View.VISIBLE else View.INVISIBLE
+
+        if (isGroup()) {
+//            mBinding.layoutImageStatusMore.visibility =
+//                if (shouldShow) View.VISIBLE else View.GONE
         }
+
+//        if (mMetadata.type != ConversationType.GROUP) {
+////            mBinding.imageMessageStatus.visibility =
+////                if (shouldShow) View.VISIBLE else View.INVISIBLE
+//        } else {
+//            mBinding.layoutImageStatusMore.visibility =
+//                if (shouldShow) View.VISIBLE else View.INVISIBLE
+//        }
     }
 
     private fun hiddenIconReceiver() {
@@ -452,7 +461,12 @@ class ConversationMessageItem(
             bottomLeft = bottomLeft xor bottomRight
             bottomRight = bottomLeft xor bottomRight
             bottomLeft = bottomLeft xor bottomRight
+        } else if (isStartOfClusterOrSingleMessage(topLeft, topRight, bottomRight, bottomLeft)){
+            showSenderName(item)
+        } else {
+            mBinding.textReceiverName.visibility = View.GONE
         }
+
         drawable.cornerRadii = floatArrayOf(
             topLeft.toFloat(), topLeft.toFloat(),
             topRight.toFloat(), topRight.toFloat(),
@@ -479,5 +493,35 @@ class ConversationMessageItem(
         val nextItem = if (position + 1 < mMessages.size) mMessages[position + 1] else null
 
         return Pair(preItem, nextItem)
+    }
+
+    private fun showSenderName(message: Chat) {
+        if (isGroup()) {
+            getSenderFromChat(message)?.let { u ->
+                with(mBinding.textReceiverName) {
+                    text = u.displayName
+                    visibility = View.VISIBLE
+                }
+            }
+        } else {
+            mBinding.textReceiverName.visibility = View.GONE
+        }
+    }
+
+    private fun isGroup() = mMetadata.type == ConversationType.GROUP
+
+    /*
+    * Detect the incoming message by shape itself
+    * */
+    private fun isStartOfClusterOrSingleMessage(
+        topLeft: Int,
+        topRight: Int,
+        bottomRight: Int,
+        bottomLeft: Int
+    ): Boolean {
+        val arr = intArrayOf(topLeft, topRight, bottomLeft, bottomRight)
+        val max = Arrays.stream(arr).summaryStatistics().max
+
+        return (topLeft == max) || arr.distinct().size == 1
     }
 }

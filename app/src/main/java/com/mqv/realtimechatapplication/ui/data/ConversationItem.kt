@@ -86,6 +86,7 @@ abstract class ConversationItem<T>(
                                         target[currentImageIndex].avatarView
                                     )
                                     target[currentImageIndex].parentLayout.visibility = View.VISIBLE
+                                    target[currentImageIndex].parentLayout.background = ContextCompat.getDrawable(mContext, R.drawable.avatar_stroke_ripple)
 
                                     currentImageIndex += 1
                                     availableImageSlot -= 1
@@ -117,6 +118,7 @@ abstract class ConversationItem<T>(
                 ConversationType.GROUP -> {
                     if (getBindFor() == BindSource.CONVERSATION_LIST) {
                         target[0].parentLayout.setPadding(0, 0, 0, 0)
+                        target[0].parentLayout.background = null
                         target[1].parentLayout.visibility = View.GONE
                         target[2].parentLayout.visibility = View.GONE
                     } else {
