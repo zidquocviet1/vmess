@@ -27,13 +27,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.activity.listener.OnNetworkChangedListener;
 import com.mqv.realtimechatapplication.activity.viewmodel.ConversationViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityConversationBinding;
 import com.mqv.realtimechatapplication.databinding.ItemImageGroupBinding;
 import com.mqv.realtimechatapplication.databinding.ItemUserAvatarBinding;
-import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -71,7 +72,7 @@ public class ConversationActivity
     private Conversation mConversation;
     private ChatListAdapter mChatListAdapter;
     private CustomLinearLayoutManager mLayoutManager;
-    private User mCurrentUser;
+    private FirebaseUser mCurrentUser;
 
     // Default color for the whole conversation
     private ColorStateList mDefaultColorStateList;
@@ -108,7 +109,7 @@ public class ConversationActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mCurrentUser = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
+        mCurrentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
         mConversation = getIntent().getParcelableExtra(EXTRA_CONVERSATION);
         mConversationParticipants = mConversation.getParticipants();
         mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
@@ -204,12 +205,12 @@ public class ConversationActivity
 
         mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
             isActive = isOnline;
-            mBinding.toolbarSubtitle.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+            mBinding.toolbarSubtitle.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
             if (avatarNormalStubBinding != null) {
-                avatarNormalStubBinding.imageActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+                avatarNormalStubBinding.imageActive.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
             }
             if (avatarGroupStubBinding != null) {
-                avatarGroupStubBinding.imageActive.setVisibility(isOnline ? View.VISIBLE : View.GONE);
+                avatarGroupStubBinding.imageActive.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
             }
         });
 
@@ -255,6 +256,10 @@ public class ConversationActivity
         if (mBinding != null) {
             runOnUiThread(() -> mBinding.textNetworkError.setVisibility(View.VISIBLE));
         }
+    }
+
+    public String getExtraConversationId() {
+        return mConversation.getId();
     }
 
     private void setupConversation(Conversation conversation) {
@@ -387,7 +392,7 @@ public class ConversationActivity
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
-                shouldShowHeader();
+                checkForShowHeader();
 
                 if (mChatList.size() <= 2) {
                     return;
@@ -470,21 +475,40 @@ public class ConversationActivity
         mViewModel.postSeenMessageConversation(this, mConversation.getId(), mCurrentUser.getUid());
     }
 
-    private void shouldShowHeader() {
+    private void checkForShowHeader() {
+//        int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
+//        if (firstItemPosition != -1) {
+//            Chat firstVisible = mChatList.get(firstItemPosition);
+//            boolean shouldShowHeader = !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
+//            boolean isGroup = mConversation.getGroup() != null;
+//
+//            if (isGroup) {
+//                mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+//            } else {
+//                mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+//            }
+//            mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
+//            mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+//        }
+        boolean shouldShowHeader = shouldShowHeader();
+        boolean isGroup = mConversation.getGroup() != null;
+
+        if (isGroup) {
+            mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+        } else {
+            mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+        }
+        mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
+        mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    private boolean shouldShowHeader() {
         int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
         if (firstItemPosition != -1) {
             Chat firstVisible = mChatList.get(firstItemPosition);
-            boolean shouldShowHeader = !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
-            boolean isGroup = mConversation.getGroup() != null;
-
-            if (isGroup) {
-                mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-            } else {
-                mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-            }
-            mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
-            mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+            return !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
         }
+        return false;
     }
 
     @Override

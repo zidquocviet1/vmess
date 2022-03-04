@@ -6,9 +6,10 @@ import java.nio.charset.StandardCharsets;
 
 public final class Const {
     private static final int PORT = 443; // 443 for Https and 8080 or 80 for Http
-    public static final String BASE_IP = "192.168.100.15";
+    public static final String BASE_IP = "192.168.100.25";
+//    public static final String BASE_IP = "192.168.240.109";
     public static final String BASE_URL = "https://" + BASE_IP + ":" + PORT + "/api/v1/";
-    public static final Long NETWORK_TIME_OUT = 7000L;
+    public static final Long NETWORK_TIME_OUT = 15L;
     public static final String CONTENT_TYPE = "application/json";
     public static final String PHONE_REGEX_PATTERN = "(84|0[3|5|7|8|9])+([0-9]{8})\\b";
     public static final String PASSWORD_REGEX_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{8,20}$";
@@ -22,10 +23,13 @@ public final class Const {
     public static final String WELCOME_CHAT_PREFIX = "WELCOME_CHAT";
 
     // Preference Key
-    public static final String KEY_FCM_TOKEN = "fcm_token";
+    public static final String KEY_PREF_FCM_TOKEN = "fcm_token";
+    public static final String KEY_PREF_NOTIFICATION_STATUS = "pref_notification_status";
 
     // DATABASE
     public static final String DATABASE_NAME = "tac_database";
+    public static final int DEFAULT_CHAT_PAGING_SIZE = 40;
+    public static final int DEFAULT_CONVERSATION_PAGING_SIZE = 20;
 
     // OTP Activity
     public static final String EXTRA_VERIFICATION_ID = "verification_id";
@@ -35,6 +39,9 @@ public final class Const {
 
     // Main Activity
     public static final String EXTRA_USER_INFO = "user_info";
+
+    public static final String GROUP_KEY_SENT_FRIEND_NOTIFICATION = "com.mqv.tac.group.SENT_FRIEND";
+    public static final String GROUP_KEY_ACCEPT_FRIEND_NOTIFICATION = "com.mqv.tac.group.ACCEPT_FRIEND";
 
     // Notification KEY data payload
     public static final String KEY_TITLE = "title";
@@ -47,6 +54,10 @@ public final class Const {
     public static final String KEY_AGENT_ID = "agent_id";
     public static final String DEFAULT_NEW_FRIEND_REQUEST = "newFriendRequest";
     public static final String DEFAULT_ACCEPTED_FRIEND_REQUEST = "acceptedFriendRequest";
+
+    // Conversation notification channel config
+    public static final String CONVERSATION_CHANNEL_ID = "conversation";
+    public static final String CONVERSATION_CHANNEL_NAME = "Conversation Notification";
 
     private static final String DUMMIES_IMAGES_DOMAIN = BASE_URL + "user/photo/";
     public static final String[] DUMMIES_IMAGES_URL = new String[]{

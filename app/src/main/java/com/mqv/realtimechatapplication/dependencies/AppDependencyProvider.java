@@ -18,6 +18,8 @@ import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketConnection;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketFactory;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketHeartbeatMonitor;
+import com.mqv.realtimechatapplication.notification.NotificationEntry;
+import com.mqv.realtimechatapplication.notification.NotificationHandler;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -81,6 +83,11 @@ public class AppDependencyProvider implements AppDependencies.Provider {
                                           database.getPendingMessageDao(),
                                           database.getChatDao(),
                                           database.getSeenMessageDao());
+    }
+
+    @Override
+    public NotificationEntry provideNotificationEntry() {
+        return new NotificationHandler(context, database, retrofit.create(ConversationService.class));
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

@@ -1,9 +1,11 @@
 package com.mqv.realtimechatapplication.reactive
 
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseUser
+import com.mqv.realtimechatapplication.reactive.ReactiveExtension.toSingle
 import io.reactivex.rxjava3.core.Single
 
-class ReactiveExtension {
+object ReactiveExtension {
     fun <T : Any> Task<T>.toSingle(): Single<T> {
         return Single.create { emitter ->
             addOnCompleteListener { task ->
@@ -14,5 +16,11 @@ class ReactiveExtension {
                 }
             }
         }
+    }
+
+    fun FirebaseUser.authorizeToken(): Single<String> {
+        return this.getIdToken(true)
+            .toSingle()
+            .compose(RxHelper.authorizeUser())
     }
 }

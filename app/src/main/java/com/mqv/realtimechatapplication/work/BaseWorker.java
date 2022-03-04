@@ -10,6 +10,8 @@ import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.UUID;
 
 public abstract class BaseWorker implements WorkerProperty {
@@ -50,7 +52,11 @@ public abstract class BaseWorker implements WorkerProperty {
         return request.getId();
     }
 
-    public LiveData<WorkInfo> getWorkInfo() {
+    public LiveData<WorkInfo> getWorkInfoLiveData() {
         return WorkManager.getInstance(context).getWorkInfoByIdLiveData(getWorkId());
+    }
+
+    public ListenableFuture<WorkInfo> getWorkInfo() {
+        return WorkManager.getInstance(context).getWorkInfoById(getWorkId());
     }
 }

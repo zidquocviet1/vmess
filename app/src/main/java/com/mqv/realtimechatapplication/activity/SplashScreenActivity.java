@@ -32,7 +32,7 @@ public class SplashScreenActivity extends BaseActivity<AndroidViewModel, Activit
         if (user != null){
             // TODO: check user login session
 
-            reloadFirebaseUser();
+//            reloadFirebaseUser();
 
             var intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);

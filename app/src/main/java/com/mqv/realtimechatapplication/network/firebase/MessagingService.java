@@ -11,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.provider.Settings;
 import android.text.Html;
@@ -29,8 +28,6 @@ import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -39,21 +36,32 @@ import com.mqv.realtimechatapplication.activity.ConnectPeopleActivity;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferences;
 import com.mqv.realtimechatapplication.activity.preferences.AppPreferencesImpl;
 import com.mqv.realtimechatapplication.activity.preferences.PreferenceFriendRequestActivity;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.di.GlideApp;
+import com.mqv.realtimechatapplication.notification.NotificationPayload;
 import com.mqv.realtimechatapplication.util.Const;
 import com.mqv.realtimechatapplication.util.Logging;
 import com.mqv.realtimechatapplication.work.BaseWorker;
+import com.mqv.realtimechatapplication.work.ConversationNotificationWorkWrapper;
 import com.mqv.realtimechatapplication.work.FetchNotificationWorker;
 import com.mqv.realtimechatapplication.work.NewConversationWorkWrapper;
 import com.mqv.realtimechatapplication.work.WorkDependency;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
+import dagger.hilt.android.AndroidEntryPoint;
+
+@AndroidEntryPoint
 public class MessagingService extends FirebaseMessagingService {
+    // Friend notification key data
     public static final String EXTRA_KEY = "notification_key";
     public static final String EXTRA_ACTION_NEW_FRIEND = "new_friend_request";
     public static final String EXTRA_ACTION_ACCEPTED = "accepted_friend";
 
+    private static final String TAG = MessagingService.class.getSimpleName();
     @Override
     public void onNewToken(@NonNull String s) {
         super.onNewToken(s);
@@ -73,7 +81,7 @@ public class MessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        Logging.show(String.format(Locale.getDefault(),
+        Logging.debug(TAG, String.format(Locale.getDefault(),
                 "onMessageReceived() ID: %s, Delay: %d, Priority: %d, Original Priority: %d",
                 remoteMessage.getMessageId(),
                 (System.currentTimeMillis() - remoteMessage.getSentTime()),
@@ -82,55 +90,22 @@ public class MessagingService extends FirebaseMessagingService {
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
-            startWorkFetchNotification();
+            Map<String, String> data    = remoteMessage.getData();
+            NotificationPayload payload = NotificationPayload.handleRawPayload(data);
 
-            var data = remoteMessage.getData();
+            Logging.debug(TAG, "Receive notification payload: " + payload);
 
-            Logging.show("Message data payload: " + data);
+            AppDependencies.getNotificationEntry().handleNotificationPayload(payload);
 
-            var title = data.get(Const.KEY_TITLE);
-            var body = data.get(Const.KEY_BODY);
-            var channelId = data.get(Const.KEY_CHANNEL_ID);
-            var channelName = data.get(Const.KEY_CHANNEL_NAME);
-            var actionClick = data.get(Const.KEY_ACTION_CLICK);
-            var imageUrl = data.get(Const.KEY_IMAGE_URL);
-            var uid = data.get(Const.KEY_UID);
-            var agentId = data.get(Const.KEY_AGENT_ID);
-
-            // Start worker to retrieve new conversation if the app is foreground
-            if (actionClick != null && actionClick.equals(Const.DEFAULT_ACCEPTED_FRIEND_REQUEST)) {
-                Data workData = new Data.Builder()
-                                        .putString("otherId", agentId)
-                                        .putBoolean("from_notification", true)
-                                        .build();
-
-                BaseWorker worker = new NewConversationWorkWrapper(this, workData);
-
-                WorkDependency.enqueue(worker);
-            }
-
-            var intent = getIntentByAction(actionClick, uid, agentId, imageUrl);
-
-            if (intent == null) {
-                Logging.show("Intent must not be null");
-                return;
-            }
-
-            PendingIntent pendingIntent;
-
-            if (isAppForeground()) {
-                pendingIntent = PendingIntent.getActivity(getApplicationContext(),
-                        0,
-                        intent,
-                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-            } else {
-                var stackBuilder = TaskStackBuilder.create(getApplicationContext());
-                stackBuilder.addNextIntentWithParentStack(intent);
-
-                pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-            }
-
-            loadImageAndPushNotification(channelId, channelName, title, body, pendingIntent, imageUrl);
+//            var conversationId = data.get(KEY_CONVERSATION_ID);
+//
+//            if (conversationId == null) {
+//                startWorkFetchNotification();
+//
+//                fetchFriendNotification(data);
+//            } else {
+//                fetchConversationNotification(data);
+//            }
         }
     }
 
@@ -151,34 +126,86 @@ public class MessagingService extends FirebaseMessagingService {
         Logging.show("onSendError()" + s);
     }
 
+    private void fetchFriendNotification(Map<String, String> data) {
+        var title = data.get(Const.KEY_TITLE);
+        var body = data.get(Const.KEY_BODY);
+        var channelId = data.get(Const.KEY_CHANNEL_ID);
+        var channelName = data.get(Const.KEY_CHANNEL_NAME);
+        var actionClick = data.get(Const.KEY_ACTION_CLICK);
+        var imageUrl = data.get(Const.KEY_IMAGE_URL);
+        var uid = data.get(Const.KEY_UID);
+        var agentId = data.get(Const.KEY_AGENT_ID);
+
+        // Start worker to retrieve new conversation if the app is foreground
+        if (actionClick != null && actionClick.equals(Const.DEFAULT_ACCEPTED_FRIEND_REQUEST)) {
+            Data workData = new Data.Builder()
+                    .putString("otherId", agentId)
+                    .putBoolean("from_notification", true)
+                    .build();
+
+            BaseWorker worker = new NewConversationWorkWrapper(this, workData);
+
+            WorkDependency.enqueue(worker);
+        }
+
+        var intent = getIntentByAction(actionClick, uid, agentId, imageUrl);
+
+        if (intent == null) {
+            Logging.show("Intent must not be null");
+            return;
+        }
+
+        PendingIntent pendingIntent;
+
+        if (isAppForeground()) {
+            pendingIntent = PendingIntent.getActivity(getApplicationContext(),
+                    0,
+                    intent,
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            var stackBuilder = TaskStackBuilder.create(getApplicationContext());
+            stackBuilder.addNextIntentWithParentStack(intent);
+
+            pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+
+        loadImageAndPushNotification(channelId, channelName, title, body, pendingIntent, imageUrl, actionClick);
+    }
+
+    private void fetchConversationNotification(Map<String, String> data) {
+        var workerData = new Data.Builder()
+                                        .putAll(new HashMap<>(data))
+                                        .build();
+
+        WorkDependency.enqueue(new ConversationNotificationWorkWrapper(this, workerData));
+    }
+
     private void loadImageAndPushNotification(String channelId, String channelName,
                                               String title, String body, PendingIntent pendingIntent,
-                                              @Nullable String imageUrl) {
-        var glideRequest = GlideApp.with(this);
+                                              @Nullable String imageUrl, String action) {
+        var photoUrl = (imageUrl == null || imageUrl.equals("")) ? null : imageUrl.replace("localhost", Const.BASE_IP);
 
-        var photoUrl = imageUrl == null ? null : imageUrl.replace("localhost", Const.BASE_IP);
+        Bitmap bitmap;
 
-        glideRequest.asBitmap()
-                .load(photoUrl)
-                .error(R.drawable.ic_account_undefined)
-                .fallback(R.drawable.ic_round_account)
-                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                .into(new CustomTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                        showNotification(channelId, channelName, title, body, pendingIntent, resource);
-                    }
+        try {
+            bitmap = GlideApp.with(this)
+                             .asBitmap()
+                             .load(photoUrl)
+                             .error(R.drawable.ic_account_undefined)
+                             .fallback(R.drawable.ic_round_account)
+                             .diskCacheStrategy(DiskCacheStrategy.ALL)
+                             .submit()
+                             .get();
+        } catch (ExecutionException | InterruptedException e) {
+            bitmap = null;
+        }
 
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {
-
-                    }
-                });
+        showNotification(channelId, channelName, title, body, pendingIntent, bitmap, action);
     }
 
     private void showNotification(String channelId, String channelName,
                                   String title, String body, PendingIntent pendingIntent,
-                                  @Nullable Bitmap bitmap) {
+                                  @Nullable Bitmap bitmap, String action) {
 
         var formatBody = Html.fromHtml(body, Html.FROM_HTML_MODE_COMPACT);
 
@@ -189,6 +216,7 @@ public class MessagingService extends FirebaseMessagingService {
                 .setAutoCancel(true) // Remove notification when user clicked
                 .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
                 .setContentIntent(pendingIntent)
+                .setGroup(action.equals(Const.DEFAULT_ACCEPTED_FRIEND_REQUEST) ? Const.GROUP_KEY_ACCEPT_FRIEND_NOTIFICATION : Const.GROUP_KEY_SENT_FRIEND_NOTIFICATION)
                 .setSmallIcon(R.drawable.ic_launcher_foreground);
 
         var notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);

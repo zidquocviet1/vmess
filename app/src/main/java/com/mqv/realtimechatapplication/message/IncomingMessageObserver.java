@@ -13,6 +13,7 @@ import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketUnavailableException;
 import com.mqv.realtimechatapplication.util.Logging;
+import com.mqv.realtimechatapplication.work.LifecycleUtil;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +73,10 @@ public class IncomingMessageObserver {
     private boolean isConnectionNecessary() {
         boolean registered = FirebaseAuth.getInstance().getCurrentUser() != null;
         boolean hasNetwork = NetworkConstraint.isMet(context);
+        boolean isVisible  = LifecycleUtil.isAppForeground();
+
+        Logging.debug(TAG, String.format("The connection details: isRegistered: %s, hasNetwork: %s, isVisible: %s",
+                registered, hasNetwork, isVisible));
 
         return registered && hasNetwork;
     }

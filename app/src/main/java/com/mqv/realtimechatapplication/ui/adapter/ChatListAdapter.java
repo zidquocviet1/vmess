@@ -12,10 +12,12 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.databinding.ItemChatBinding;
 import com.mqv.realtimechatapplication.databinding.ItemChatProfileBinding;
 import com.mqv.realtimechatapplication.databinding.ItemChatProfileGroupBinding;
+import com.mqv.realtimechatapplication.manager.LoggedInUserManager;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
@@ -63,7 +65,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                            List<Chat> chatList,
                            List<User> participants,
                            ColorStateList chatColorStateList,
-                           @NonNull User user,
+                           @NonNull FirebaseUser user,
                            ConversationType type) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
@@ -84,7 +86,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         });
         mContext = context;
         mChatColorStateList = chatColorStateList;
-        mCurrentUser = user;
+        mCurrentUser = LoggedInUserManager.getInstance().parseFirebaseUser(user);
         mConversationType = type;
         mChatList = chatList;
         mParticipants = participants;

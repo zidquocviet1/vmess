@@ -18,6 +18,8 @@ import androidx.room.rxjava3.EmptyResultSetException;
 import androidx.work.Data;
 
 import com.google.firebase.FirebaseNetworkException;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.repository.ChatRepository;
@@ -250,10 +252,11 @@ public class ConversationViewModel extends AndroidViewModel {
     }
 
     private void setupConversationName(Conversation conversation) {
-        User                 currentUser = Objects.requireNonNull(LoggedInUserManager.getInstance().getLoggedInUser());
-        ConversationMetadata metadata    = ConversationMapper.mapToMetadata(conversation,
-                                                                            currentUser,
-                                                                            getApplication().getApplicationContext());
+        FirebaseUser         firebaseUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
+        User                 currentUser  = LoggedInUserManager.getInstance().parseFirebaseUser(firebaseUser);
+        ConversationMetadata metadata     = ConversationMapper.mapToMetadata(conversation,
+                                                                             currentUser,
+                                                                             getApplication().getApplicationContext());
 
         conversationMetadata.postValue(metadata);
     }

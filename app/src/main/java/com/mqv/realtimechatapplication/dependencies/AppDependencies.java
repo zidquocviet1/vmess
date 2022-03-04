@@ -7,6 +7,7 @@ import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
 import com.mqv.realtimechatapplication.message.MessageSenderProcessor;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
+import com.mqv.realtimechatapplication.notification.NotificationEntry;
 
 /*
 * Create a new Dependency class based on Service Locator Pattern
@@ -20,6 +21,7 @@ public class AppDependencies {
     private static volatile IncomingMessageProcessor incomingMessageProcessor;
     private static volatile DatabaseObserver databaseObserver;
     private static volatile MessageSenderProcessor messageSenderProcessor;
+    private static volatile NotificationEntry notificationEntry;
 
     private static Provider provider;
 
@@ -98,11 +100,23 @@ public class AppDependencies {
         return messageSenderProcessor;
     }
 
+    public static NotificationEntry getNotificationEntry() {
+        if (notificationEntry == null) {
+            synchronized (LOCK) {
+                if (notificationEntry == null) {
+                    notificationEntry = provider.provideNotificationEntry();
+                }
+            }
+        }
+        return notificationEntry;
+    }
+
     public interface Provider {
         WebSocketClient provideWebSocket();
         IncomingMessageObserver provideIncomingMessageObserver();
         IncomingMessageProcessor provideIncomingMessageProcessor();
         DatabaseObserver provideDatabaseObserver();
         MessageSenderProcessor provideMessageSenderProcessor();
+        NotificationEntry provideNotificationEntry();
     }
 }

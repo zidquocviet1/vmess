@@ -112,7 +112,7 @@ public class MainApplication extends Application implements Configuration.Provid
     }
 
     private void setupObserveIncomingMessage() {
-        AppDependencies.getIncomingMessageObserver();
+//        AppDependencies.getIncomingMessageObserver();
     }
 
     private void initializeAlarmSleepTimer() {

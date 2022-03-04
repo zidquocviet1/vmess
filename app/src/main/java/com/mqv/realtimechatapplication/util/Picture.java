@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
@@ -16,6 +17,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.mqv.realtimechatapplication.R;
 import com.mqv.realtimechatapplication.di.GlideApp;
 import com.mqv.realtimechatapplication.di.GlideRequest;
+
+import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
@@ -61,6 +64,23 @@ public class Picture {
                        .circleCrop()
                        .placeholder(getDefaultCirclePlaceHolder(context))
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    @WorkerThread
+    public static Bitmap loadUserAvatarIntoBitmap(Context context, @Nullable  String url) {
+        try {
+            return GlideApp.with(context)
+                           .asBitmap()
+                           .load(reformatUrl(url))
+                           .error(getErrorAvatarLoaded(context))
+                           .fallback(getDefaultUserAvatar(context))
+                           .circleCrop()
+                           .diskCacheStrategy(DiskCacheStrategy.ALL)
+                           .submit()
+                           .get();
+        } catch (ExecutionException | InterruptedException e) {
+            return null;
+        }
     }
 
     private static CircularProgressDrawable getDefaultCirclePlaceHolder(Context context) {

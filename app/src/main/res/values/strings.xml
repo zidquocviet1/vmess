@@ -48,6 +48,7 @@
     <string name="label_name">Name</string>
     <string name="label_members">Members</string>
     <string name="label_text_more_number" translatable="false">+%1$d</string>
+    <string name="label_you">You</string>
 
     <string name="title_brand_name_short" translatable="false">TAC</string>
     <string name="title_brand_name" translatable="false">Take a Conversation</string>
@@ -166,6 +167,7 @@
     <string name="action_view_profile">View Profile</string>
     <string name="action_clear_all">Clear all</string>
     <string name="action_add">Add</string>
+    <string name="action_reply">Reply</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -220,6 +222,7 @@
     <string name="msg_edit_profile_social_link_explain">Link your own social media into your profile to make everyone know more about you.</string>
     <string name="msg_at_date_time">at</string>
     <string name="msg_yesterday_date_time">Yesterday</string>
+    <string name="msg_added_to_group">%1$s added you into a group.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

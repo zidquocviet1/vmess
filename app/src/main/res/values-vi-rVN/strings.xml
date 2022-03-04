@@ -222,4 +222,7 @@
     <string name="label_members">Thành viên</string>
     <string name="action_add">Thêm</string>
     <string name="dummy_first_chat_group">%1$s đã tạo nhóm. Thêm thành viên vào nhóm để có thể chia sẻ thêm nhiều câu chuyện mới.</string>
+    <string name="msg_added_to_group">%1$s đã  thêm bạn vào trong một nhóm.</string>
+    <string name="label_you">Bạn</string>
+    <string name="action_reply">Trả lời</string>
 </resources>

@@ -1,7 +1,9 @@
 package com.mqv.realtimechatapplication.manager;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.realtimechatapplication.network.model.User;
 
 import java.util.List;
@@ -57,5 +59,13 @@ public class LoggedInUserManager {
 
     public void signOut() {
         this.user = null;
+    }
+
+    public User parseFirebaseUser(@NonNull FirebaseUser user) {
+        return new User.Builder()
+                       .setUid(user.getUid())
+                       .setPhotoUrl(user.getPhotoUrl() == null ? null : user.getPhotoUrl().toString())
+                       .setDisplayName(user.getDisplayName())
+                       .create();
     }
 }

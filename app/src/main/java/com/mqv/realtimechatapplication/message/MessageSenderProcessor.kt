@@ -86,6 +86,7 @@ class MessageSenderProcessor(
                     )
                     .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
                     .build()
+                // TODO: should sent seen message using HTTP even websocket in when the user in background
                 WorkDependency.enqueue(PushMessageAcknowledgeWorkWrapper(context, data))
             }
         }
