@@ -476,27 +476,15 @@ public class ConversationActivity
     }
 
     private void checkForShowHeader() {
-//        int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
-//        if (firstItemPosition != -1) {
-//            Chat firstVisible = mChatList.get(firstItemPosition);
-//            boolean shouldShowHeader = !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
-//            boolean isGroup = mConversation.getGroup() != null;
-//
-//            if (isGroup) {
-//                mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-//            } else {
-//                mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-//            }
-//            mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
-//            mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-//        }
         boolean shouldShowHeader = shouldShowHeader();
         boolean isGroup = mConversation.getGroup() != null;
 
         if (isGroup) {
             mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+            avatarGroupStubBinding.imageActive.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.INVISIBLE);
         } else {
             mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+            avatarNormalStubBinding.imageActive.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.INVISIBLE);
         }
         mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
         mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
