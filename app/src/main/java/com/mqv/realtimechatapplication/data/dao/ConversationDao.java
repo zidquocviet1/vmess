@@ -15,13 +15,11 @@ import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.network.model.type.ConversationType;
-import com.mqv.realtimechatapplication.util.Retriever;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,6 +53,13 @@ public abstract class ConversationDao {
            "limit 40")
     public abstract Map<Conversation, List<Chat>> conversationAndChat(String id);
 
+    @Query("select * from conversation\n" +
+           "inner join chat " +
+           "on chat_conversation_id = conversation_id and conversation_id = :conversationId\n" +
+           "group by conversation_id\n" +
+           "order by max(chat_timestamp) desc")
+    public abstract Map<Conversation, Chat> conversationAndLastChat(String conversationId);
+
     @Insert(onConflict = IGNORE)
     abstract long saveIfNotExists(Conversation data);
 
@@ -73,20 +78,12 @@ public abstract class ConversationDao {
             if (result != -1) {
                 saveListChat(c.getChats());
             } else {
-                Map<Conversation, List<Chat>> conversationMapper = conversationAndChat(c.getId());
-
-                List<Chat> freshChat = c.getChats();
-                List<Chat> cacheChat = Retriever.getOrDefault(conversationMapper.get(c), new ArrayList<>());
-
-                Collections.reverse(cacheChat);
-
-                // Find the last cache chat appear in fresh chat
-                Chat lastCacheChat = cacheChat.get(cacheChat.size() - 1);
-
-                Optional<Chat> presenceChatOptional =
-                        freshChat.stream()
-                                .filter(ch -> ch.getId().equals(lastCacheChat.getId()))
-                                .findFirst();
+                Map<Conversation, Chat> conversationMapper = conversationAndLastChat(c.getId());
+                List<Chat>              freshChat          = c.getChats();
+                Chat                    lastCacheChat      = Objects.requireNonNull(conversationMapper.get(c));
+                Optional<Chat>          presenceChatOptional = freshChat.stream()
+                                                                        .filter(ch -> ch.getId().equals(lastCacheChat.getId()))
+                                                                        .findFirst();
 
                 if (presenceChatOptional.isPresent()) {
                     /*
@@ -96,10 +93,8 @@ public abstract class ConversationDao {
                      * So the E is the presence last chat in cache.
                      * We need to add the next sublist to cache [F, G, H]
                      * */
-                    Chat presenceChat = presenceChatOptional.get();
-
-                    int index = freshChat.indexOf(presenceChat);
-
+                    Chat       presenceChat     = presenceChatOptional.get();
+                    int        index            = freshChat.indexOf(presenceChat);
                     List<Chat> shouldInsertList = freshChat.subList(index, freshChat.size());
 
                     saveListChat(shouldInsertList);
