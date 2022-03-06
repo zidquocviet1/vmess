@@ -35,6 +35,7 @@ import com.mqv.realtimechatapplication.activity.viewmodel.ConversationViewModel;
 import com.mqv.realtimechatapplication.databinding.ActivityConversationBinding;
 import com.mqv.realtimechatapplication.databinding.ItemImageGroupBinding;
 import com.mqv.realtimechatapplication.databinding.ItemUserAvatarBinding;
+import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
 import com.mqv.realtimechatapplication.network.model.User;
@@ -107,6 +108,8 @@ public class ConversationActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppDependencies.getIncomingMessageObserver();
+
         super.onCreate(savedInstanceState);
 
         mCurrentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
