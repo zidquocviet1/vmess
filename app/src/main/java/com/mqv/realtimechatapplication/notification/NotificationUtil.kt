@@ -95,10 +95,12 @@ object NotificationUtil {
     @JvmStatic
     fun sendIncomingMessageNotification(
         context: Context,
-        sender: User,
-        message: Chat,
-        conversation: Conversation
+        metadata: MessageNotificationMetadata
     ) {
+        val conversation = metadata.conversation
+        val message = metadata.message
+        val sender = metadata.sender
+
         getConversationMetadata(context, conversation)?.let {
             val intent = Intent(context, ConversationActivity::class.java).apply {
                 putExtra(ConversationActivity.EXTRA_CONVERSATION, conversation)
@@ -107,7 +109,7 @@ object NotificationUtil {
                 context,
                 REQUEST_CODE,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_ONE_SHOT
             )
             val conversationThumbnailBitmap =
                 Picture.loadUserAvatarIntoBitmap(context, it.conversationThumbnail[0])
@@ -130,11 +132,17 @@ object NotificationUtil {
             }
             val replyIntent = Intent(context, DirectReplyReceiver::class.java)
             val replyPendingIntent: PendingIntent =
-                PendingIntent.getBroadcast(context.applicationContext,
+                PendingIntent.getBroadcast(
+                    context.applicationContext,
                     conversation.hashCode(),
                     replyIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT)
-            val action = NotificationCompat.Action.Builder(null, context.getString(R.string.action_reply), replyPendingIntent)
+                    PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            val action = NotificationCompat.Action.Builder(
+                null,
+                context.getString(R.string.action_reply),
+                replyPendingIntent
+            )
                 .addRemoteInput(remoteInput)
                 .build()
             sendNotification(

@@ -12,6 +12,7 @@ import com.mqv.realtimechatapplication.data.repository.impl.ConversationReposito
 import com.mqv.realtimechatapplication.message.IncomingMessageObserver;
 import com.mqv.realtimechatapplication.message.IncomingMessageProcessor;
 import com.mqv.realtimechatapplication.message.MessageSenderProcessor;
+import com.mqv.realtimechatapplication.network.service.ChatService;
 import com.mqv.realtimechatapplication.network.service.ConversationService;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketAlarmTimer;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketClient;
@@ -67,7 +68,8 @@ public class AppDependencyProvider implements AppDependencies.Provider {
         ConversationRepository conversationRepository = new ConversationRepositoryImpl(retrofit.create(ConversationService.class),
                                                                                        database.getConversationDao(),
                                                                                        database.getChatDao());
-        return new IncomingMessageProcessor(database.getChatDao(),
+        return new IncomingMessageProcessor(context,
+                                            database.getChatDao(),
                                             database.getConversationDao(),
                                             conversationRepository);
     }
@@ -87,7 +89,7 @@ public class AppDependencyProvider implements AppDependencies.Provider {
 
     @Override
     public NotificationEntry provideNotificationEntry() {
-        return new NotificationHandler(context, database, retrofit.create(ConversationService.class));
+        return new NotificationHandler(context, database, retrofit.create(ConversationService.class), retrofit.create(ChatService.class));
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

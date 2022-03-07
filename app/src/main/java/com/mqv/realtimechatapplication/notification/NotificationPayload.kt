@@ -7,7 +7,6 @@ private const val KEY_SENDER_ID = "sender_id"
 private const val KEY_MESSAGE_ID = "message_id"
 private const val KEY_TIMESTAMP = "timestamp"
 private const val KEY_NOTIFICATION_TYPE = "type"
-private const val KEY_SHOULD_SHOW = "should_show"
 
 sealed class NotificationPayload(
     open val timestamp: Long
@@ -16,6 +15,7 @@ sealed class NotificationPayload(
         FRIEND_REQUEST,
         ACCEPTED_FRIEND_REQUEST,
         INCOMING_MESSAGE,
+        STATUS_MESSAGE,
         ADDED_TO_GROUP
     }
 
@@ -59,7 +59,6 @@ sealed class NotificationPayload(
         val senderId: String,
         val messageId: String,
         val conversationId: String,
-        val shouldShow: Boolean,
         override val timestamp: Long
     ) : NotificationPayload(timestamp) {
         companion object {
@@ -67,14 +66,12 @@ sealed class NotificationPayload(
                 val senderId = map[KEY_SENDER_ID]!!
                 val messageId = map[KEY_MESSAGE_ID]!!
                 val conversationId = map[KEY_CONVERSATION_ID]!!
-                val shouldShow = map[KEY_SHOULD_SHOW]!!.toBoolean()
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
                 return IncomingMessagePayload(
                     senderId,
                     messageId,
                     conversationId,
-                    shouldShow,
                     timestamp
                 )
             }
@@ -84,8 +81,29 @@ sealed class NotificationPayload(
             return "Sender: $senderId," +
                     " Message: $messageId," +
                     " ConversationId: $conversationId," +
-                    " Should show: $shouldShow," +
                     " Timestamp: $timestamp"
+        }
+    }
+
+    class StatusMessagePayload(
+        val messageId: String,
+        override val timestamp: Long
+    ) : NotificationPayload(timestamp) {
+
+        companion object {
+            fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
+                val messageId = map[KEY_MESSAGE_ID]!!
+                val timestamp = map[KEY_TIMESTAMP]!!.toLong()
+
+                return StatusMessagePayload(
+                    messageId,
+                    timestamp
+                )
+            }
+        }
+
+        override fun toString(): String {
+            return "[Status Message Payload, Message ID = $messageId, Timestamp = $timestamp]"
         }
     }
 
@@ -116,6 +134,7 @@ sealed class NotificationPayload(
                 NotificationType.ACCEPTED_FRIEND_REQUEST -> AcceptedFriendPayload.parsePayload(map)
                 NotificationType.FRIEND_REQUEST -> FriendRequestPayload.parsePayload(map)
                 NotificationType.INCOMING_MESSAGE -> IncomingMessagePayload.parsePayload(map)
+                NotificationType.STATUS_MESSAGE -> StatusMessagePayload.parsePayload(map)
                 NotificationType.ADDED_TO_GROUP -> ConversationGroupPayload.parsePayload(map)
             }
         }

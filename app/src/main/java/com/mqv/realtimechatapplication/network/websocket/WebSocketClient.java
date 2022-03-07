@@ -160,6 +160,10 @@ public class WebSocketClient {
         return webSocket;
     }
 
+    public boolean isDead() {
+        return webSocket == null || presenceWebSocket == null || webSocket.isDead() || presenceWebSocket.isDead();
+    }
+
     public Single<WebSocketResponse> sendRequest(WebSocketRequestMessage requestMessage) {
         try {
             return getWebSocket().sendRequest(requestMessage);

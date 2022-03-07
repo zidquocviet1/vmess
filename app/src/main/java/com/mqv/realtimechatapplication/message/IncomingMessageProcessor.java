@@ -1,5 +1,11 @@
 package com.mqv.realtimechatapplication.message;
 
+import android.app.Activity;
+import android.content.Context;
+
+import com.mqv.realtimechatapplication.MainApplication;
+import com.mqv.realtimechatapplication.activity.ConversationActivity;
+import com.mqv.realtimechatapplication.activity.MainActivity;
 import com.mqv.realtimechatapplication.data.DatabaseObserver;
 import com.mqv.realtimechatapplication.data.dao.ChatDao;
 import com.mqv.realtimechatapplication.data.dao.ConversationDao;
@@ -8,9 +14,12 @@ import com.mqv.realtimechatapplication.dependencies.AppDependencies;
 import com.mqv.realtimechatapplication.network.exception.ResourceNotFoundException;
 import com.mqv.realtimechatapplication.network.model.Chat;
 import com.mqv.realtimechatapplication.network.model.Conversation;
+import com.mqv.realtimechatapplication.network.model.User;
 import com.mqv.realtimechatapplication.network.model.type.ConversationStatusType;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketRequestMessage;
 import com.mqv.realtimechatapplication.network.websocket.WebSocketResponse;
+import com.mqv.realtimechatapplication.notification.MessageNotificationMetadata;
+import com.mqv.realtimechatapplication.notification.NotificationUtil;
 import com.mqv.realtimechatapplication.util.Logging;
 
 import java.net.HttpURLConnection;
@@ -31,13 +40,16 @@ public final class IncomingMessageProcessor {
     private static final int RESPONSE_SEEN_MESSAGE = 201;
     private static final int RESPONSE_ACCEPTED_MESSAGE = 202;
 
+    private final Context context;
     private final ChatDao chatDao;
     private final ConversationDao conversationDao;
     private final ConversationRepository conversationRepository;
 
-    public IncomingMessageProcessor(ChatDao chatDao,
+    public IncomingMessageProcessor(Context context,
+                                    ChatDao chatDao,
                                     ConversationDao conversationDao,
                                     ConversationRepository conversationRepository) {
+        this.context = context;
         this.chatDao = chatDao;
         this.conversationDao = conversationDao;
         this.conversationRepository = conversationRepository;
@@ -79,7 +91,10 @@ public final class IncomingMessageProcessor {
                                                                 Completable newAction = action;
 
                                                                 if (!isUpdate) {
-                                                                    newAction = action.andThen(conversationDao.markConversationAsInbox(optional.get()));
+                                                                    Conversation conversation = optional.get();
+
+                                                                    newAction = action.andThen(conversationDao.markConversationAsInbox(conversation))
+                                                                                      .andThen(notifyIncomingMessageNotification(conversation, body));
                                                                 }
 
                                                                 return newAction.onErrorComplete()
@@ -114,9 +129,18 @@ public final class IncomingMessageProcessor {
                                      .flatMapCompletable(response -> {
                                          if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                                              Conversation conversation = response.getSuccess();
+                                             Chat         message      = conversation.getChats()
+                                                                                     .stream()
+                                                                                     .filter(c -> c.getId().equals(messageId))
+                                                                                     .findFirst()
+                                                                                     .orElseThrow(ResourceNotFoundException::new);
+
                                              conversation.setStatus(ConversationStatusType.INBOX);
+
                                              return conversationRepository.save(conversation)
-                                                     .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver().notifyConversationInserted(conversationId)));
+                                                                          .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver()
+                                                                                                                               .notifyConversationInserted(conversationId)))
+                                                                          .andThen(notifyIncomingMessageNotification(conversation, message));
                                          }
                                          return Completable.error(ResourceNotFoundException::new);
                                      })
@@ -149,5 +173,32 @@ public final class IncomingMessageProcessor {
 
     private Completable onSeenMessageSuccess(String messageId) {
         return AppDependencies.getMessageSenderProcessor().deleteSeenMessage(messageId);
+    }
+
+    private Completable notifyIncomingMessageNotification(Conversation conversation, Chat message) {
+        return Completable.fromAction(() -> {
+            MainApplication app             = (MainApplication) context.getApplicationContext();
+            Activity        currentActivity = app.getActiveActivity();
+
+            boolean isInCurrentConversationOrMainActivity;
+
+            if (currentActivity instanceof ConversationActivity) {
+                isInCurrentConversationOrMainActivity = ((ConversationActivity) currentActivity).getExtraConversationId().equals(conversation.getId());
+            } else {
+                isInCurrentConversationOrMainActivity = currentActivity instanceof MainActivity;
+            }
+
+            if (!isInCurrentConversationOrMainActivity) {
+                User sender = conversation.getParticipants()
+                                          .stream()
+                                          .filter(u -> u.getUid().equals(message.getSenderId()))
+                                          .findFirst()
+                                          .orElseThrow(ResourceNotFoundException::new);
+
+                MessageNotificationMetadata metadata = new MessageNotificationMetadata(sender, conversation, message);
+
+                NotificationUtil.sendIncomingMessageNotification(context, metadata);
+            }
+        });
     }
 }

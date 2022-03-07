@@ -40,7 +40,7 @@ public interface ChatService {
                                                      @Query("page") int page,
                                                      @Query("size") int size);
 
-    @PUT(value = "chat/receive")
-    Observable<ApiResponse<String>> notifyReceiveChat(@Header(AUTHORIZATION) String token,
-                                                      @Body Chat chat);
+    @PUT(value = "chat/mark-received")
+    Observable<ApiResponse<Chat>> notifyReceiveMessage(@Header(AUTHORIZATION) String token,
+                                                       @Query(value = "id") String messageId);
 }
