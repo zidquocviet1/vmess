@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/qr_code"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.QrCodeScannerFragment"
+        android:name="com.mqv.vmess.ui.fragment.QrCodeScannerFragment"
         android:label="fragment_qr_code_scanner"
         tools:layout="@layout/fragment_qr_code_scanner">
         <action
@@ -21,7 +21,7 @@
 
     <fragment
         android:id="@+id/username"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.UsernameConnectionFragment"
+        android:name="com.mqv.vmess.ui.fragment.UsernameConnectionFragment"
         android:label="fragment_username_connection"
         tools:layout="@layout/fragment_username_connection" />
 </navigation>

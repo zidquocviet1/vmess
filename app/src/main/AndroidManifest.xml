@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.mqv.realtimechatapplication">
+    package="com.mqv.vmess">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -26,7 +26,7 @@
     </queries>
 
     <application
-        android:name=".MainApplication"
+        android:name="com.mqv.vmess.MainApplication"
         android:allowBackup="false"
         android:description="@string/title_brand_name"
         android:icon="@mipmap/ic_launcher"
@@ -36,10 +36,10 @@
         android:theme="@style/Theme.RealTimeChatApplication"
         tools:ignore="DataExtractionRules">
         <activity
-            android:name=".activity.AddGroupConversationActivity"
+            android:name="com.mqv.vmess.activity.AddGroupConversationActivity"
             android:exported="false" />
         <activity
-            android:name=".activity.preferences.PreferenceMessageRequestActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceMessageRequestActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.tac.open.message_request" />
@@ -48,7 +48,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.preferences.PreferenceArchivedConversationActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceArchivedConversationActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.tac.open.archived_chats" />
@@ -57,19 +57,19 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.AddConversationActivity"
+            android:name="com.mqv.vmess.activity.AddConversationActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.SearchConversationActivity"
+            android:name="com.mqv.vmess.activity.SearchConversationActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.ConversationActivity"
+            android:name="com.mqv.vmess.activity.ConversationActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="true"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".activity.preferences.PreferenceNotificationActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceNotificationActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.notification" />
@@ -78,15 +78,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.AllPeopleActivity"
+            android:name="com.mqv.vmess.activity.AllPeopleActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.RequestPeopleActivity"
+            android:name="com.mqv.vmess.activity.RequestPeopleActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.preferences.PreferenceFriendRequestActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceFriendRequestActivity"
             android:exported="true"
-            android:parentActivityName=".activity.UserActivity"
+            android:parentActivityName="com.mqv.vmess.activity.UserActivity"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
@@ -97,7 +97,7 @@
 
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.UserActivity" />
+                android:value="com.mqv.vmess.activity.UserActivity" />
         </activity>
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
@@ -105,12 +105,12 @@
             tools:ignore="LockedOrientationActivity"
             tools:replace="screenOrientation" />
         <activity
-            android:name=".activity.ConnectPeopleActivity"
+            android:name="com.mqv.vmess.activity.ConnectPeopleActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activity.preferences.PreferenceQrCodeActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceQrCodeActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
@@ -121,7 +121,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.preferences.PreferenceUsernameActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceUsernameActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
@@ -132,17 +132,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.EditProfileLinkActivity"
+            android:name="com.mqv.vmess.activity.EditProfileLinkActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activity.EditProfileBioActivity"
+            android:name="com.mqv.vmess.activity.EditProfileBioActivity"
             android:exported="true"
             android:screenOrientation="sensorPortrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activity.preferences.PreferenceAccountSettingsActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceAccountSettingsActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.account.settings" />
@@ -151,21 +151,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.PreviewEditPhotoActivity"
+            android:name="com.mqv.vmess.activity.PreviewEditPhotoActivity"
             android:configChanges="orientation|keyboardHidden"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activity.EditDetailsActivity"
+            android:name="com.mqv.vmess.activity.EditDetailsActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
         <activity
-            android:name=".activity.SelectPhotoActivity"
+            android:name="com.mqv.vmess.activity.SelectPhotoActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.EditProfileActivity"
+            android:name="com.mqv.vmess.activity.EditProfileActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.edit.profile" />
@@ -174,7 +174,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.preferences.PreferenceDarkModeActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceDarkModeActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.tac.open.dark.mode" />
@@ -183,7 +183,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.preferences.PreferenceManageAccountsActivity"
+            android:name="com.mqv.vmess.activity.preferences.PreferenceManageAccountsActivity"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">
@@ -194,32 +194,32 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.UserActivity"
+            android:name="com.mqv.vmess.activity.UserActivity"
             android:exported="true"
-            android:parentActivityName=".activity.MainActivity">
+            android:parentActivityName="com.mqv.vmess.activity.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".activity.MainActivity" />
+                android:value="com.mqv.vmess.activity.MainActivity" />
         </activity>
         <activity
-            android:name=".activity.VerifyOtpActivity"
+            android:name="com.mqv.vmess.activity.VerifyOtpActivity"
             android:configChanges="orientation"
             android:exported="true"
             android:windowSoftInputMode="stateVisible" />
         <activity
-            android:name=".activity.GenerateOtpActivity"
+            android:name="com.mqv.vmess.activity.GenerateOtpActivity"
             android:exported="true" />
         <activity
-            android:name=".activity.RegisterActivity"
+            android:name="com.mqv.vmess.activity.RegisterActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.LoginActivity"
+            android:name="com.mqv.vmess.activity.LoginActivity"
             android:exported="true"
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.SplashScreenActivity"
+            android:name="com.mqv.vmess.activity.SplashScreenActivity"
             android:exported="true"
             android:theme="@style/SplashScreen">
             <intent-filter>
@@ -229,12 +229,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.mqv.vmess.activity.MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustNothing" />
 
         <receiver
-            android:name=".activity.br.FileObserverBroadcastReceiver"
+            android:name="com.mqv.vmess.activity.br.FileObserverBroadcastReceiver"
             android:exported="false"
             android:permission="android.permission.READ_EXTERNAL_STORAGE">
             <intent-filter>
@@ -245,11 +245,11 @@
         </receiver>
 
         <service
-            android:name=".activity.service.FileObserverService"
+            android:name="com.mqv.vmess.activity.service.FileObserverService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".network.firebase.MessagingService"
+            android:name="com.mqv.vmess.network.firebase.MessagingService"
             android:directBootAware="true"
             android:exported="false">
             <intent-filter>
@@ -258,7 +258,7 @@
         </service>
 
         <receiver
-            android:name=".activity.br.BootCompletedReceiver"
+            android:name="com.mqv.vmess.activity.br.BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -268,7 +268,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".activity.br.AlarmReceiver"
+            android:name="com.mqv.vmess.activity.br.AlarmReceiver"
             android:enabled="true"
             android:exported="true" />
         <!--

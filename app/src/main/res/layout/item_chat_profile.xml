@@ -48,6 +48,8 @@
         android:layout_marginEnd="@dimen/all_margin"
         android:text="@string/app_name"
         android:textAlignment="center"
+        android:maxLines="3"
+        android:ellipsize="end"
         android:textStyle="normal" />
 
     <com.google.android.material.button.MaterialButton

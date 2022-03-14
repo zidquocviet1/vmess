@@ -9,7 +9,7 @@
     <include app:graph="@navigation/people"/>
     <fragment
         android:id="@+id/notification"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.NotificationFragment"
+        android:name="com.mqv.vmess.ui.fragment.NotificationFragment"
         android:label="fragment_notification"
         tools:layout="@layout/fragment_notification" />
 </navigation>

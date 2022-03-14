@@ -12,15 +12,15 @@ android {
     compileSdk COMPILE_SDK
 
     defaultConfig {
-        applicationId "com.mqv.realtimechatapplication"
+        applicationId "com.mqv.vmess"
         minSdk MIN_SDK
         targetSdk TARGET_SDK
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "API_URL", "\"https://192.168.100.25/api/v1\""
-        buildConfigField "String", "SERVER_URL", "\"https://192.168.100.25\""
+        buildConfigField "String", "API_URL", "\"https://192.168.9.100/api/v1\""
+        buildConfigField "String", "SERVER_URL", "\"https://192.168.9.100\""
     }
 
     buildTypes {

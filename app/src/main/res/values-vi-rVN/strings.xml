@@ -225,4 +225,16 @@
     <string name="msg_added_to_group">%1$s đã  thêm bạn vào trong một nhóm.</string>
     <string name="label_you">Bạn</string>
     <string name="action_reply">Trả lời</string>
+    <string name="label_unfriend_question">Xoá bạn?</string>
+    <string name="msg_unfriend_warning">Bạn có chắc muốn xoá bạn bè với $1%s?</string>
+    <string name="msg_unfriend_successfully">Xoá bạn bè thành công</string>
+    <string name="dummy_user_name">Người dùng ứng dụng</string>
+    <string name="error_conversation_not_found">Không tìm thấy cuộc trò chuyện phù hơp với người dùng này. Vui lòng thử lại sau.</string>
+    <string name="error_conversation_has_been_deleted">Cuộc trò chuyện này không còn tồn tại nữa bởi vì người dùng đã xoá bạn bè với bạn.</string>
+    <string name="title_change_group_name">Thay đổi tên nhóm</string>
+    <string name="prompt_enter_your_group_name">Nhập tên nhóm mới vào ô bên dưới.</string>
+    <string name="msg_who_changed_the_group_name">%1$s đã thay đổi tên nhóm thành %2$s.</string>
+    <string name="msg_who_added_another_to_the_group">%1$s đã thêm %2$s vào nhóm.</string>
+    <string name="msg_change_group_name_success">" Thay đổi tên nhóm thành công."</string>
+    <string name="msg_permission_denied">Bạn không có quyền truy cập để thực hiện tác vụ này. Thử lại sau</string>
 </resources>

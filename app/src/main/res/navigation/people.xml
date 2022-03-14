@@ -6,7 +6,7 @@
     app:startDestination="@id/peopleListFragment">
     <fragment
         android:id="@+id/peopleListFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.PeopleListFragment"
+        android:name="com.mqv.vmess.ui.fragment.PeopleListFragment"
         android:label="@string/title_people"
         tools:layout="@layout/fragment_people_list" >
         <action
@@ -15,7 +15,7 @@
     </fragment>
     <fragment
         android:id="@+id/activePeopleFragment2"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.ActivePeopleFragment"
+        android:name="com.mqv.vmess.ui.fragment.ActivePeopleFragment"
         android:label="fragment_active_people"
         tools:layout="@layout/fragment_active_people" />
 </navigation>

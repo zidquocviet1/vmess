@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/userEditDetailsFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.UserEditDetailsFragment"
+        android:name="com.mqv.vmess.ui.fragment.UserEditDetailsFragment"
         android:label="@string/label_edit_details"
         tools:layout="@layout/fragment_user_edit_details">
         <action
@@ -47,7 +47,7 @@
 
     <fragment
         android:id="@+id/editDisplayNameFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.EditDisplayNameFragment"
+        android:name="com.mqv.vmess.ui.fragment.EditDisplayNameFragment"
         android:label="@string/title_display_name"
         tools:layout="@layout/fragment_edit_display_name">
         <argument
@@ -58,7 +58,7 @@
 
     <fragment
         android:id="@+id/editGenderFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.EditGenderFragment"
+        android:name="com.mqv.vmess.ui.fragment.EditGenderFragment"
         android:label="@string/title_gender"
         tools:layout="@layout/fragment_edit_gender">
         <argument
@@ -68,7 +68,7 @@
     </fragment>
     <fragment
         android:id="@+id/editBirthdayFragment"
-        android:name="com.mqv.realtimechatapplication.ui.fragment.EditBirthdayFragment"
+        android:name="com.mqv.vmess.ui.fragment.EditBirthdayFragment"
         android:label="@string/title_change_birthday"
         tools:layout="@layout/fragment_edit_birthday" />
 </navigation>

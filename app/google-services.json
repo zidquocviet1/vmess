@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:875101732598:android:e56cb3f5d39e3e5111f6d7",
         "android_client_info": {
-          "package_name": "com.mqv.realtimechatapplication"
+          "package_name": "com.mqv.vmess"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "875101732598-169vdfgi39h7f09ak7uolo2vt85720a0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.mqv.realtimechatapplication",
+            "package_name": "com.mqv.vmess",
             "certificate_hash": "1c319094e3cead6c351575c8bf6130e33ac8ef83"
           }
         },

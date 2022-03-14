@@ -8,7 +8,7 @@ dependencyResolutionManagement {
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
-rootProject.name = "Real Time Chat Application"
+rootProject.name = "VMess Application"
 include ':app'
 include ':core'
 

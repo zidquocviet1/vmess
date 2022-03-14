@@ -6,7 +6,7 @@
     // msg_
     // title_
     // action_
-    <string name="app_name" translatable="false">TAC</string>
+    <string name="app_name" translatable="false">VMess</string>
     <string name="author_app_first_name" translatable="false">Viet</string>
     <string name="author_app_last_name" translatable="false">Mai</string>
     <string name="author_app_full_name" translatable="false">Mai Quoc Viet</string>
@@ -14,6 +14,7 @@
     <string name="dummy_chat_receiver" translatable="false">When were you create this app?</string>
     <string name="dummy_first_chat">You have connected to this person. Text something to share your story.</string>
     <string name="dummy_first_chat_group">%1$s has created this group. Add new member to this group to share the story.</string>
+    <string name="dummy_user_name">Application User</string>
 
     // activity label
     <string name="label_switch_accounts">Switch Accounts</string>
@@ -49,9 +50,10 @@
     <string name="label_members">Members</string>
     <string name="label_text_more_number" translatable="false">+%1$d</string>
     <string name="label_you">You</string>
+    <string name="label_unfriend_question">Unfriend?</string>
 
-    <string name="title_brand_name_short" translatable="false">TAC</string>
-    <string name="title_brand_name" translatable="false">Take a Conversation</string>
+    <string name="title_brand_name_short" translatable="false">VMess</string>
+    <string name="title_brand_name" translatable="false">V Messenger</string>
     <string name="title_copyright_name">Made by MQV Inc.</string>
     <string name="title_chat">Chats</string>
     <string name="title_people">People</string>
@@ -126,6 +128,7 @@
     <string name="title_add_account">Add account</string>
     <string name="title_notification_earlier">Earlier</string>
     <string name="title_add_group_conversation">Add Participants</string>
+    <string name="title_change_group_name">Change Group Name</string>
 
     <string name="action_search_message">Search</string>
     <string name="action_add_new_message">Add a new message</string>
@@ -223,6 +226,12 @@
     <string name="msg_at_date_time">at</string>
     <string name="msg_yesterday_date_time">Yesterday</string>
     <string name="msg_added_to_group">%1$s added you into a group.</string>
+    <string name="msg_unfriend_warning">Are you sure you want to unfriend with %1$s?</string>
+    <string name="msg_unfriend_successfully">Unfriend successfully</string>
+    <string name="msg_who_changed_the_group_name">%1$s changed the group name to %2$s.</string>
+    <string name="msg_who_added_another_to_the_group">%1$s added %2$s to the group.</string>
+    <string name="msg_change_group_name_success">Change the group name successfully</string>
+    <string name="msg_permission_denied">Your permission have not been granted to execute. Try again</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
@@ -234,6 +243,8 @@
     <string name="error_create_user_not_complete">Create a new account not completed</string>
     <string name="error_auth_email_in_use">The email address already in use by another account</string>
     <string name="error_user_id_not_found">The current user is not exists</string>
+    <string name="error_conversation_not_found">Can\'t find the specific conversation with this user. Please try again.</string>
+    <string name="error_conversation_has_been_deleted">This conversation has been deleted because that user unfriended with you.</string>
     <string name="error_network_connection">A network error (such as timeout, interrupted connection or unreachable host) has occurred.</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_too_many_request">Too many requests at the same time. Try again later</string>
@@ -255,6 +266,7 @@
     <string name="prompt_new_username">New username</string>
     <string name="prompt_find_username">Find username</string>
     <string name="prompt_write_message"><font size="16">Write a message...</font></string>
+    <string name="prompt_enter_your_group_name">Enter your new group name here.</string>
 
     <string name="invalid_username_not_exists">The username is not exists.</string>
     <string name="invalid_username">Not a valid username</string>
