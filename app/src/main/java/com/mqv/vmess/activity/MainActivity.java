@@ -13,6 +13,7 @@ import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import com.mqv.vmess.MainApplication;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
 import com.mqv.vmess.activity.preferences.PreferenceNotificationActivity;
@@ -69,6 +70,13 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         AppDependencies.getMessageSenderProcessor();
 
         reloadFirebaseUser();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        MainApplication.clearAllNotification(this);
     }
 
     @Override

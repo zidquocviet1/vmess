@@ -2,11 +2,13 @@ package com.mqv.vmess;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.hilt.work.HiltWorkerFactory;
 import androidx.work.Configuration;
 
@@ -44,6 +46,7 @@ public class MainApplication extends Application implements Configuration.Provid
         setupActivityListener();
         setupObserveIncomingMessage();
         initializeAlarmSleepTimer();
+        clearAllNotification(this);
     }
 
     private void setAppTheme(DarkMode mode){
@@ -117,5 +120,10 @@ public class MainApplication extends Application implements Configuration.Provid
 
     private void initializeAlarmSleepTimer() {
         new AlarmSleepTimer(this).setRepeatingAlarm();
+    }
+
+
+    public static void clearAllNotification(Context context) {
+        NotificationManagerCompat.from(context).cancelAll();
     }
 }
