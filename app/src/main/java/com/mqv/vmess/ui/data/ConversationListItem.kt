@@ -12,8 +12,8 @@ import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ImageAvatarView
-import com.mqv.vmess.util.Const
 import com.mqv.vmess.util.DateTimeHelper.getMessageDateTimeFormatted
+import com.mqv.vmess.util.MessageUtil
 
 class ConversationListItem(
     private val mBinding: ItemConversationBinding,
@@ -111,9 +111,9 @@ class ConversationListItem(
         val metadata = getConversationMetadata(item)
         val textContent = StringBuilder()
 
-        if (recentMessage.id.startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) return
+        if (MessageUtil.isDummyProfileMessage(recentMessage)) return
 
-        if (recentMessage.id.startsWith(Const.WELCOME_CHAT_PREFIX)) {
+        if (MessageUtil.isWelcomeMessage(recentMessage)) {
             bindWelcomeMessage(recentMessage, null)
 
             when (metadata.type) {
@@ -125,7 +125,7 @@ class ConversationListItem(
                 )
                 else -> textContent.append(mContext.getString(R.string.dummy_first_chat))
             }
-        } else if (recentMessage.id.startsWith(Const.CHANGE_GROUP_NAME_CHAT_ID)) {
+        } else if (MessageUtil.isChangeGroupNameMessage(recentMessage)) {
             bindWelcomeMessage(recentMessage, null)
 
             val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
@@ -138,7 +138,49 @@ class ConversationListItem(
                     recentMessage.content
                 )
             )
-        } else if (recentMessage.id.startsWith(Const.ADDED_MEMBER_CHAT_ID)) {
+        } else if (MessageUtil.isAddedMemberMessage(recentMessage)) {
+            bindWelcomeMessage(recentMessage, null)
+
+            val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
+                ?: mContext.getString(R.string.dummy_user_name)
+            val memberName = getSenderById(recentMessage.content, item.participants)?.displayName
+                ?: mContext.getString(R.string.dummy_user_name)
+            textContent.append(
+                mContext.getString(
+                    R.string.msg_who_added_another_to_the_group,
+                    senderName,
+                    memberName
+                )
+            )
+        } else if (MessageUtil.isRemoveMemberMessage(recentMessage)) {
+            bindWelcomeMessage(recentMessage, null)
+
+            val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
+                ?: mContext.getString(R.string.dummy_user_name)
+            val memberName = recentMessage.content
+
+            textContent.append(
+                mContext.getString(
+                    R.string.msg_who_remove_another_member,
+                    senderName,
+                    memberName
+                )
+            )
+        } else if (MessageUtil.isMemberLeaveGroupMessage(recentMessage)) {
+            bindWelcomeMessage(recentMessage, null)
+
+            val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
+                ?: mContext.getString(R.string.dummy_user_name)
+            val memberName = getSenderById(recentMessage.content, item.participants)?.displayName
+                ?: mContext.getString(R.string.dummy_user_name)
+            textContent.append(
+                mContext.getString(
+                    R.string.msg_who_added_another_to_the_group,
+                    senderName,
+                    memberName
+                )
+            )
+        } else if (MessageUtil.isChangeThumbnailMessage(recentMessage)) {
             bindWelcomeMessage(recentMessage, null)
 
             val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName

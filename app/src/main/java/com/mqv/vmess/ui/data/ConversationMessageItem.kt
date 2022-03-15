@@ -13,8 +13,8 @@ import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ImageAvatarView
-import com.mqv.vmess.util.Const
 import com.mqv.vmess.util.DateTimeHelper.getMessageDateTimeFormatted
+import com.mqv.vmess.util.MessageUtil
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.stream.Collectors
@@ -34,12 +34,12 @@ class ConversationMessageItem(
         mContext.resources.getDimensionPixelSize(R.dimen.chat_corner_radius_normal)
 
     init {
-        when (mMetadata.type) {
-            ConversationType.GROUP -> {
-                mBinding.layoutImageStatusMore.visibility = View.VISIBLE
-            }
-            else -> mBinding.layoutImageStatusMore.visibility = View.GONE
-        }
+//        when (mMetadata.type) {
+//            ConversationType.GROUP -> {
+//                mBinding.layoutImageStatusMore.visibility = View.VISIBLE
+//            }
+//            else -> mBinding.layoutImageStatusMore.visibility = View.GONE
+//        }
     }
 
     override fun getBindFor() = BindSource.CONVERSATION
@@ -94,11 +94,11 @@ class ConversationMessageItem(
     ) {
         super.bindMessageStatus(message, participants, type)
 
-        val numberOfPeopleHaveSeen = message.seenBy.size
-
-        if (numberOfPeopleHaveSeen > 1) {
-            mBinding.textMoreNumber.text = "+" + "${numberOfPeopleHaveSeen - 1}"
-        }
+//        val numberOfPeopleHaveSeen = message.seenBy.size
+//
+//        if (numberOfPeopleHaveSeen > 1) {
+//            mBinding.textMoreNumber.text = "+" + "${numberOfPeopleHaveSeen - 1}"
+//        }
     }
 
     private fun bindSenderMessage(item: Chat) {
@@ -180,10 +180,7 @@ class ConversationMessageItem(
          * Check if the preItem is the dummy chat or not.
          * If the preItem is the dummy chat so the current item will show normally.
          * */
-        if (preItem == null ||
-            preItem.id.startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) ||
-            preItem.id.startsWith(Const.WELCOME_CHAT_PREFIX)
-        ) {
+        if (MessageUtil.isDummyMessage(preItem)) {
             val senderId = item.senderId ?: return
             if (nextItem != null && !shouldShowTimestamp(
                     item,
@@ -229,7 +226,7 @@ class ConversationMessageItem(
         } else {
             showIconReceiver()
         }
-        renderBunchOfChats(preItem, item, nextItem)
+        renderBunchOfChats(preItem!!, item, nextItem)
         findLastSeenStatus(item)
     }
 
@@ -243,10 +240,10 @@ class ConversationMessageItem(
      * The method to check the duration time of two chat in a row larger than 10 minutes or not.
      * */
     fun showTimestamp(preItem: Chat?, item: Chat) {
-        if (preItem == null || preItem.id.startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+        if (preItem == null || MessageUtil.isDummyMessage(preItem)) {
             return
         }
-        if (preItem.id.startsWith(Const.WELCOME_CHAT_PREFIX)) {
+        if (MessageUtil.isWelcomeMessage(preItem)) {
             mBinding.textTimestamp.visibility = View.VISIBLE
             mBinding.textTimestamp.text = getMessageDateTimeFormatted(mContext, item.timestamp)
             return
@@ -260,12 +257,13 @@ class ConversationMessageItem(
     }
 
     private fun findLastSeenStatus(item: Chat) {
-        if (isSelf(item)) {
+        if (isSelf(item) && !MessageUtil.isDummyMessage(item)) {
             val mSenderChatList: List<Chat> = mMessages.stream()
                 .filter { c ->
                     c != null &&
                             c.senderId != null &&
                             isSelf(c) &&
+                            !MessageUtil.isDummyMessage(c) &&
                             c.seenBy.isNotEmpty()
                 }
                 .collect(Collectors.toList())
@@ -285,10 +283,10 @@ class ConversationMessageItem(
         mBinding.imageMessageStatus.visibility =
             if (shouldShow) View.VISIBLE else View.INVISIBLE
 
-        if (isGroup()) {
+//        if (isGroup()) {
 //            mBinding.layoutImageStatusMore.visibility =
 //                if (shouldShow) View.VISIBLE else View.GONE
-        }
+//        }
 
 //        if (mMetadata.type != ConversationType.GROUP) {
 ////            mBinding.imageMessageStatus.visibility =
@@ -461,7 +459,7 @@ class ConversationMessageItem(
             bottomLeft = bottomLeft xor bottomRight
             bottomRight = bottomLeft xor bottomRight
             bottomLeft = bottomLeft xor bottomRight
-        } else if (isStartOfClusterOrSingleMessage(topLeft, topRight, bottomRight, bottomLeft)){
+        } else if (isStartOfClusterOrSingleMessage(topLeft, topRight, bottomRight, bottomLeft)) {
             showSenderName(item)
         } else {
             mBinding.textReceiverName.visibility = View.GONE
@@ -481,6 +479,10 @@ class ConversationMessageItem(
      * The method to check the duration time of two chat in a row larger than 10 minutes or not.
      * */
     private fun shouldShowTimestamp(item: Chat, nextItem: Chat?): Boolean {
+        if (MessageUtil.isDummyMessage(item) || MessageUtil.isDummyMessage(nextItem)) {
+            return true
+        }
+
         val from = item.timestamp
         val to = nextItem!!.timestamp
         val minuteDuration = ChronoUnit.MINUTES.between(from, to)

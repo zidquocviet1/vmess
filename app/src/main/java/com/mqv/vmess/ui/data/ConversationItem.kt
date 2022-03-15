@@ -86,7 +86,17 @@ abstract class ConversationItem<T>(
                                         target[currentImageIndex].avatarView
                                     )
                                     target[currentImageIndex].parentLayout.visibility = View.VISIBLE
-                                    target[currentImageIndex].parentLayout.background = ContextCompat.getDrawable(mContext, R.drawable.avatar_stroke_ripple)
+                                    target[currentImageIndex].parentLayout.background =
+                                        ContextCompat.getDrawable(
+                                            mContext,
+                                            R.drawable.avatar_stroke_ripple
+                                        )
+                                    target[currentImageIndex].parentLayout.setPadding(
+                                        mContext.resources.getDimensionPixelSize(R.dimen.chat_status_row_user_padding),
+                                        mContext.resources.getDimensionPixelSize(R.dimen.chat_status_row_user_padding),
+                                        mContext.resources.getDimensionPixelSize(R.dimen.chat_status_row_user_padding),
+                                        mContext.resources.getDimensionPixelSize(R.dimen.chat_status_row_user_padding),
+                                    )
 
                                     currentImageIndex += 1
                                     availableImageSlot -= 1
@@ -107,9 +117,9 @@ abstract class ConversationItem<T>(
                             getSenderById(seenBy[0], participants)?.photoUrl,
                             target[0].avatarView
                         )
-                        target[1].avatarView.setImageDrawable(Picture.getErrorAvatarLoaded(mContext))
-                        target[1].parentLayout.visibility =
-                            if (seenBy.size == 1) View.GONE else View.VISIBLE
+//                        target[1].avatarView.setImageDrawable(Picture.getErrorAvatarLoaded(mContext))
+//                        target[1].parentLayout.visibility =
+//                            if (seenBy.size == 1) View.GONE else View.VISIBLE
                     }
                 }
             }
