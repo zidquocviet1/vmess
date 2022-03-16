@@ -26,7 +26,7 @@ import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.model.FriendRequest;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.FriendRequestStatus;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 import com.mqv.vmess.work.BaseWorker;
@@ -101,17 +101,17 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
 
             switch (status) {
                 case LOADING:
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
 
                     break;
                 case SUCCESS:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     mBinding.buttonAddFriend.setVisibility(View.GONE);
                     mBinding.buttonCancel.setVisibility(View.VISIBLE);
                     break;
                 case ERROR:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
 
@@ -126,11 +126,11 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
 
             switch (status) {
                 case LOADING:
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
 
                     break;
                 case SUCCESS:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     if (responseStatus == CONFIRM)
                         fetchNotificationWithWork();
@@ -149,7 +149,7 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                     finish();
                     break;
                 case ERROR:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
                     break;

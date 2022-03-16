@@ -10,7 +10,7 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.activity.ToolbarActivity;
 import com.mqv.vmess.activity.viewmodel.UsernameViewModel;
 import com.mqv.vmess.databinding.ActivityPreferenceUsernameBinding;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 
 import java.util.concurrent.TimeUnit;
@@ -120,9 +120,9 @@ public class PreferenceUsernameActivity extends ToolbarActivity<UsernameViewMode
     private void showLoadingUi(boolean isLoading) {
         mBinding.includedAppbar.buttonSave.setEnabled(!isLoading);
         if (isLoading) {
-            LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+            AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
         } else {
-            LoadingDialog.finishLoadingDialog();
+            AlertDialogUtil.finishLoadingDialog();
         }
     }
 

@@ -20,7 +20,7 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.ConnectPeopleViewModel;
 import com.mqv.vmess.databinding.ActivityConnectPeopleBinding;
 import com.mqv.vmess.util.Const;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.work.MarkNotificationReadWorker;
 
 import java.util.Objects;
@@ -61,10 +61,10 @@ public class ConnectPeopleActivity extends BaseActivity<ConnectPeopleViewModel, 
 
             switch (status) {
                 case LOADING:
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
                     break;
                 case SUCCESS:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     var user = result.getSuccess();
                     var firebaseUser = mViewModel.getFirebaseUser().getValue();
@@ -82,7 +82,7 @@ public class ConnectPeopleActivity extends BaseActivity<ConnectPeopleViewModel, 
                     this.finish();
                     break;
                 case ERROR:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
 

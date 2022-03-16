@@ -30,7 +30,7 @@ import com.mqv.vmess.network.model.type.FriendRequestStatus;
 import com.mqv.vmess.ui.adapter.FriendRequestAdapter;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Const;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.work.BaseWorker;
 import com.mqv.vmess.work.FetchNotificationWorker;
@@ -119,11 +119,11 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
 
             switch (status) {
                 case LOADING:
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
 
                     break;
                 case SUCCESS:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     mAdapter.removeItem(currentItemPosition);
 
@@ -142,7 +142,7 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     }
                     break;
                 case ERROR:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
                     break;
@@ -156,11 +156,11 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
 
             switch (status) {
                 case LOADING:
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.msg_loading);
 
                     break;
                 case SUCCESS:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     var intent = new Intent(this, RequestPeopleActivity.class);
                     intent.putExtra("user", result.getSuccess());
@@ -176,7 +176,7 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     });
                     break;
                 case ERROR:
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(getApplicationContext(), result.getError(), Toast.LENGTH_SHORT).show();
                     break;

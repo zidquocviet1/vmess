@@ -9,7 +9,7 @@ import com.mqv.vmess.activity.LoginActivity;
 import com.mqv.vmess.activity.ToolbarActivity;
 import com.mqv.vmess.activity.viewmodel.AccountSettingViewModel;
 import com.mqv.vmess.databinding.ActivityPreferenceAccountSettingsBinding;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -46,7 +46,7 @@ public class PreferenceAccountSettingsActivity extends ToolbarActivity<AccountSe
     protected void onStop() {
         super.onStop();
         if (isLoading){
-            LoadingDialog.finishLoadingDialog();
+            AlertDialogUtil.finishLoadingDialog();
         }
     }
 
@@ -54,7 +54,7 @@ public class PreferenceAccountSettingsActivity extends ToolbarActivity<AccountSe
     protected void onRestart() {
         super.onRestart();
         if (isLoading){
-            LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+            AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
         }
     }
 
@@ -70,12 +70,12 @@ public class PreferenceAccountSettingsActivity extends ToolbarActivity<AccountSe
                 case LOADING:
                     isLoading = true;
 
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
                     break;
                 case ERROR:
                     isLoading = false;
 
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     Toast.makeText(this, "Fail to sign out the current user, error: " + result.getError(),
                             Toast.LENGTH_SHORT).show();
@@ -83,7 +83,7 @@ public class PreferenceAccountSettingsActivity extends ToolbarActivity<AccountSe
                 case SUCCESS:
                     isLoading = false;
 
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
 
                     var loginIntent = new Intent(PreferenceAccountSettingsActivity.this, LoginActivity.class);
                     loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);

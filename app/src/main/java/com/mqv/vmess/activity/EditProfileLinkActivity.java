@@ -17,7 +17,7 @@ import com.mqv.vmess.network.model.type.SocialType;
 import com.mqv.vmess.network.model.UserSocialLink;
 import com.mqv.vmess.ui.adapter.UserLinkAdapter;
 import com.mqv.vmess.ui.fragment.SocialLinkListDialogFragment;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.NetworkStatus;
 
@@ -123,9 +123,9 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
             makeButtonEnable(result.getStatus() != NetworkStatus.LOADING);
 
             if (result.getStatus() == NetworkStatus.LOADING) {
-                LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+                AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
             } else if (result.getStatus() == NetworkStatus.SUCCESS) {
-                LoadingDialog.finishLoadingDialog();
+                AlertDialogUtil.finishLoadingDialog();
 
                 updateLoggedInUser(result.getSuccess());
 
@@ -133,7 +133,7 @@ public class EditProfileLinkActivity extends ToolbarActivity<EditProfileLinkView
 
                 finish();
             } else {
-                LoadingDialog.finishLoadingDialog();
+                AlertDialogUtil.finishLoadingDialog();
 
                 Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
             }
