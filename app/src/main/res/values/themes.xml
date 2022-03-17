@@ -177,4 +177,19 @@
         <item name="android:paddingEnd">@dimen/all_padding_common</item>
         <item name="android:textColor">@color/color_preference_category</item>
     </style>
+
+    <style name="Theme.VMess.AlertDialog.Dark.Cornered" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_corners</item>
+    </style>
+
+    <style name="Theme.VMess.AlertDialog.Light.Cornered" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_corners</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/AlertDialogButtonColor</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/AlertDialogButtonColor</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/AlertDialogButtonColor</item>
+    </style>
+
+    <style name="AlertDialogButtonColor" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/purple_500</item>
+    </style>
 </resources>
