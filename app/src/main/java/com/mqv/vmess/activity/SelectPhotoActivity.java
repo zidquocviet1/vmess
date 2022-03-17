@@ -405,7 +405,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
 
             cursor.close();
         }
-        return images;
+        return images == null ? new ArrayList<>() : images;
     }
 
     private List<ImageThumbnail> getImagesShownInApiLower29(@Nullable Uri specificUri) {
@@ -466,7 +466,7 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
 
             cursor.close();
         }
-        return images;
+        return images == null ? new ArrayList<>() : images;
     }
 
     private List<ImageThumbnail> getAllPhotoFromExternal(@Nullable Uri specificUri) {
