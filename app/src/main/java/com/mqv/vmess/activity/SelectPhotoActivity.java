@@ -17,7 +17,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Size;
 import android.view.View;
@@ -38,6 +37,7 @@ import com.mqv.vmess.activity.service.FileObserverService;
 import com.mqv.vmess.databinding.ActivitySelectPhotoBinding;
 import com.mqv.vmess.ui.adapter.ImageThumbnailAdapter;
 import com.mqv.vmess.ui.data.ImageThumbnail;
+import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Logging;
 
@@ -181,34 +181,13 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     }
 
     private Consumer<Void> onCameraPreviewClick() {
-        return unused -> {
-            if (ContextCompat.checkSelfPermission(SelectPhotoActivity.this, Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED) {
-                dispatchTakePhotoIntent();
-            } else {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-                    createDialog("Request Permission",
-                            "The app will run perfectly when have a camera permission. Do you want to grant it.",
-                            "Continue",
-                            "Not now",
-                            (dialog, which) -> permissionLauncher.launch(Manifest.permission.CAMERA, isGranted -> {
-                                if (isGranted) dispatchTakePhotoIntent();
-                            }));
-                } else {
-                    createDialog("Request Camera Permission",
-                            "The app will run perfectly when have a camera permission. Go to Settings?",
-                            "Go to Settings",
-                            "Cancel",
-                            (dialog, which) -> {
-                                isPendingStartCamera = true;
-                                var settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                settingsIntent.setData(Uri.parse("package:" + getPackageName()));
-                                startActivity(settingsIntent);
-                            });
-                }
-            }
-        };
+        return unused -> Permission.with(this, mPermissionsLauncher)
+                .request(Manifest.permission.CAMERA)
+                .ifNecessary()
+                .onAllGranted(this::dispatchTakePhotoIntent)
+                .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                .execute();
     }
 
     private void dispatchTakePhotoIntent() {

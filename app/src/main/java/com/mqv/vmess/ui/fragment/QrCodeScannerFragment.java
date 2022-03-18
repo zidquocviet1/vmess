@@ -1,7 +1,6 @@
 package com.mqv.vmess.ui.fragment;
 
 import android.Manifest;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -10,7 +9,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +18,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.MultiFormatReader;
 import com.google.zxing.NotFoundException;
@@ -32,10 +29,10 @@ import com.journeyapps.barcodescanner.BarcodeResult;
 import com.journeyapps.barcodescanner.CaptureManager;
 import com.journeyapps.barcodescanner.DecoratedBarcodeView;
 import com.mqv.vmess.R;
-import com.mqv.vmess.activity.ConnectPeopleActivity;
 import com.mqv.vmess.activity.RequestPeopleActivity;
 import com.mqv.vmess.activity.viewmodel.ConnectPeopleViewModel;
 import com.mqv.vmess.databinding.FragmentQrCodeScannerBinding;
+import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.NetworkStatus;
 
 import java.io.FileNotFoundException;
@@ -46,7 +43,6 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
     private CaptureManager mCaptureManager;
     private boolean isFlashOff = true;
     private boolean isBarcodeViewPaused = false;
-    private boolean isPendingScan = false;
     private boolean isScanFromImage = false;
 
     private final BarcodeCallback callback = new BarcodeCallback() {
@@ -93,6 +89,7 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
         super.onViewCreated(view, savedInstanceState);
 
         mCaptureManager = new CaptureManager(requireActivity(), mBinding.decoratedBarcodeView);
+        mBinding.buttonEnableCamera.setOnClickListener(v -> requestCameraPermission());
 
         requestCameraPermission();
     }
@@ -136,15 +133,6 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
             mViewModel.resetConnectUserResult();
         });
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        if (isPendingScan) {
-            requestCameraPermission();
-            isPendingScan = false;
-        }
     }
 
     @Override
@@ -197,55 +185,34 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
     }
 
     private void requestCameraPermission() {
-        ((ConnectPeopleActivity) this.requireActivity()).permissionLauncher
-                .launch(Manifest.permission.CAMERA, isGranted -> {
-                    if (isGranted) startScan();
-                    else {
-                        mBinding.layoutPermission.setVisibility(View.VISIBLE);
-                        mBinding.layoutScanner.setVisibility(View.GONE);
-                        mBinding.buttonEnableCamera.setOnClickListener(v -> checkCameraPermission());
-                    }
-                });
+        Permission.with(this, mPermissionLauncher)
+                .request(Manifest.permission.CAMERA)
+                .ifNecessary()
+                .onAllGranted(this::startScan)
+                .onAnyDenied(() -> {
+                    mBinding.layoutPermission.setVisibility(View.VISIBLE);
+                    mBinding.layoutScanner.setVisibility(View.GONE);
+                })
+                .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                .execute();
     }
 
     private void requestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            getImageContent();
-        } else {
-            ((ConnectPeopleActivity) this.requireActivity()).permissionLauncher
-                    .launch(Manifest.permission.READ_EXTERNAL_STORAGE, isGranted -> {
-                        if (isGranted) {
-                            getImageContent();
-                        } else {
-                            if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                                createDialog("Request Permission",
-                                        "The app will run perfectly when have a storage permission. Do you want to grant it.",
-                                        "Continue",
-                                        "Not now",
-                                        (dialog, which) -> requestStoragePermission());
-                            } else {
-                                createDialog("Request Camera Permission",
-                                        "The app will run perfectly when have a storage permission. Go to Settings?",
-                                        "Go to Settings",
-                                        "Cancel",
-                                        (dialog, which) -> {
-                                            isPendingScan = true;
-                                            var settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                            settingsIntent.setData(Uri.parse("package:" + requireContext().getPackageName()));
-                                            startActivity(settingsIntent);
-                                        });
-                            }
-                        }
-                    });
-        }
+        Permission.with(this, mPermissionLauncher)
+                .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
+                .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
+                .onAllGranted(this::getImageContent)
+                .execute();
     }
 
     private void getImageContent() {
         var storageIntent = new Intent(Intent.ACTION_GET_CONTENT);
         storageIntent.setType("image/*");
-        ((ConnectPeopleActivity) this.requireActivity()).activityResultLauncher
-                .launch(storageIntent, result -> {
+
+        mActivityLauncher.launch(storageIntent, result -> {
                     var data = result.getData();
                     if (data != null) {
                         decodeQrCodeFromImage(data.getData());
@@ -295,39 +262,6 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
         if (!isFlashOff)
             mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_on));
         else mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_off));
-    }
-
-    private void checkCameraPermission() {
-        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            createDialog("Request Permission",
-                    "The app will run perfectly when have a camera permission. Do you want to grant it.",
-                    "Continue",
-                    "Not now",
-                    (dialog, which) -> requestCameraPermission());
-        } else {
-            createDialog("Request Camera Permission",
-                    "The app will run perfectly when have a camera permission. Go to Settings?",
-                    "Go to Settings",
-                    "Cancel",
-                    (dialog, which) -> {
-                        isPendingScan = true;
-                        var settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        settingsIntent.setData(Uri.parse("package:" + requireContext().getPackageName()));
-                        startActivity(settingsIntent);
-                    });
-        }
-    }
-
-    private void createDialog(String title, String message, String positive, String negative,
-                              DialogInterface.OnClickListener positiveCallback) {
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(positive, positiveCallback)
-                .setNegativeButton(negative, null)
-                .create()
-                .show();
     }
 
     @Override

@@ -4,15 +4,14 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.EditProfileViewModel;
@@ -21,6 +20,7 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.UserSocialLink;
 import com.mqv.vmess.ui.adapter.UserLinkAdapter;
 import com.mqv.vmess.ui.fragment.preference.UserDetailsPreferenceFragment;
+import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.Picture;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -170,47 +170,54 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
     }
 
     private void checkPermission() {
-        /*
-         * Following to the recommendation of Google Android Developer about the permission privacy
-         * We should use this pattern to request any permissions in this app
-         * */
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                PackageManager.PERMISSION_GRANTED) {
-            startActivity(SelectPhotoActivity.class);
-            isOpenSelectPhotoPending = false;
-        } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            /*
-             * First time to ask about a permission. If user deny grant the permission, don't show this again
-             * Go to the section below
-             * */
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("Request Permission")
-                    .setMessage("Grant a permission to allow this app access a gallery")
-                    .setNegativeButton("Not now", null)
-                    .setPositiveButton("Continue", (dialog, which) ->
-                            permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
-                                if (result) {
-                                    startActivity(SelectPhotoActivity.class);
-                                    isOpenSelectPhotoPending = false;
-                                }
-                            }))
-                    .create().show();
-        } else {
-            /*
-             * In this section, show a dialog to explain why this app need a permission
-             * and make the user go to settings to open it
-             * */
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("Request Permission")
-                    .setMessage("The app need a read external storage permission to run smoothly. Go to Settings to grant the permission")
-                    .setNegativeButton("Cancel", null)
-                    .setPositiveButton("Settings", (dialog, which) -> {
-                        var settingIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        settingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        settingIntent.setData(Uri.parse("package:" + this.getPackageName()));
-                        startActivity(settingIntent);
-                    })
-                    .create().show();
-        }
+        Permission.with(this, mPermissionsLauncher)
+                .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
+                .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
+                .onAllGranted(() -> startActivity(SelectPhotoActivity.class))
+                .execute();
+//        /*
+//         * Following to the recommendation of Google Android Developer about the permission privacy
+//         * We should use this pattern to request any permissions in this app
+//         * */
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+//                PackageManager.PERMISSION_GRANTED) {
+//            startActivity(SelectPhotoActivity.class);
+//            isOpenSelectPhotoPending = false;
+//        } else if (shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+//            /*
+//             * First time to ask about a permission. If user deny grant the permission, don't show this again
+//             * Go to the section below
+//             * */
+//            new MaterialAlertDialogBuilder(this)
+//                    .setTitle("Request Permission")
+//                    .setMessage("Grant a permission to allow this app access a gallery")
+//                    .setNegativeButton("Not now", null)
+//                    .setPositiveButton("Continue", (dialog, which) ->
+//                            permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE, result -> {
+//                                if (result) {
+//                                    startActivity(SelectPhotoActivity.class);
+//                                    isOpenSelectPhotoPending = false;
+//                                }
+//                            }))
+//                    .create().show();
+//        } else {
+//            /*
+//             * In this section, show a dialog to explain why this app need a permission
+//             * and make the user go to settings to open it
+//             * */
+//            new MaterialAlertDialogBuilder(this)
+//                    .setTitle("Request Permission")
+//                    .setMessage("The app need a read external storage permission to run smoothly. Go to Settings to grant the permission")
+//                    .setNegativeButton("Cancel", null)
+//                    .setPositiveButton("Settings", (dialog, which) -> {
+//                        var settingIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                        settingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        settingIntent.setData(Uri.parse("package:" + this.getPackageName()));
+//                        startActivity(settingIntent);
+//                    })
+//                    .create().show();
+//        }
     }
 }
