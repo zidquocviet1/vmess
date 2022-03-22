@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResult;
@@ -27,8 +28,11 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.MyActivityForResult;
 
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+
+import javax.inject.Inject;
 
 public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         extends AppCompatActivity {
@@ -36,8 +40,8 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     public B mBinding;
     public V mViewModel;
 
-//    @Inject
-//    AppPreferences mPreferences;
+    @Inject
+    AppPreferences mPreferences;
 
     /*
      * Some callback to notify current user change
@@ -86,6 +90,15 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
 
     public MyActivityForResult<String, Boolean> permissionLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.RequestPermission());
+
+    public MyActivityForResult<Uri, Boolean> takePictureLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.TakePicture());
+
+    public MyActivityForResult<String, Uri> getContentLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.GetContent());
+
+    public MyActivityForResult<String[], Map<String, Boolean>> mPermissionsLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.RequestMultiplePermissions());
 
     public abstract void binding();
 
@@ -149,6 +162,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
     public FirebaseUser getCurrentUser() {
         return FirebaseAuth.getInstance().getCurrentUser();
     }
+    public AppPreferences getAppPreference() { return mPreferences; }
 
     /*
      * OnCurrentUser changed
