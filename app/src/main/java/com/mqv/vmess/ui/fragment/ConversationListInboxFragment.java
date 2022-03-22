@@ -16,14 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.mqv.vmess.R;
 import com.mqv.vmess.activity.MainActivity;
 import com.mqv.vmess.activity.SearchConversationActivity;
 import com.mqv.vmess.databinding.FragmentConversationBinding;
 import com.mqv.vmess.ui.adapter.ConversationListAdapter;
 import com.mqv.vmess.ui.adapter.RankUserConversationAdapter;
 import com.mqv.vmess.ui.fragment.viewmodel.ConversationFragmentViewModel;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.RingtoneUtil;
 
@@ -100,11 +99,14 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
         mViewModel.getPresenceUserListObserver().observe(this, this::bindPresenceConversation);
 
-        mViewModel.getOneTimeLoadingObserver().observe(this, isLoading -> {
+        mViewModel.getOneTimeLoadingResult().observe(this, pair -> {
+            Boolean isLoading = pair.first;
+            Integer content = pair.second;
+
             if (isLoading) {
-                LoadingDialog.startLoadingDialog(requireContext(), requireActivity().getLayoutInflater(), R.string.action_creating_3_dot);
+                AlertDialogUtil.startLoadingDialog(requireContext(), requireActivity().getLayoutInflater(), content);
             } else {
-                LoadingDialog.finishLoadingDialog();
+                AlertDialogUtil.finishLoadingDialog();
             }
         });
 
@@ -146,7 +148,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
     public void initializeRecyclerview() {
         mConversations = new ArrayList<>();
         mRankUserAdapter = new RankUserConversationAdapter(getContext());
-        mAdapter = new ConversationListAdapter(getContext());
+        mAdapter = new ConversationListAdapter(getContext(), getPreference().getUserAuthToken().orElse(""));
         mAdapter.registerOnConversationClick(onConversationClick());
 
         mBinding.recyclerMessages.setAdapter(mAdapter);

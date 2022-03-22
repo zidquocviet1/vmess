@@ -4,11 +4,14 @@ import static com.mqv.vmess.R.id.menu_about;
 import static com.mqv.vmess.R.id.menu_phone_call;
 import static com.mqv.vmess.R.id.menu_video_call;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Rect;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -22,6 +25,7 @@ import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -48,14 +52,19 @@ import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
 import com.mqv.vmess.network.model.type.MessageType;
+import com.mqv.vmess.ui.ConversationOptionHandler;
 import com.mqv.vmess.ui.adapter.ChatListAdapter;
-import com.mqv.vmess.ui.data.UserSelection;
-import com.mqv.vmess.util.Const;
-import com.mqv.vmess.util.LoadingDialog;
+import com.mqv.vmess.ui.data.ConversationMetadata;
+import com.mqv.vmess.ui.data.ImageThumbnail;
+import com.mqv.vmess.ui.permissions.Permission;
+import com.mqv.vmess.util.AlertDialogUtil;
+import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -75,16 +84,17 @@ public class ConversationActivity
                   ChatListAdapter.ConversationGroupOption {
     public static final String EXTRA_CONVERSATION_ID = "conversation_id";
     public static final String EXTRA_PARTICIPANT_ID = "participant_id";
-    public static final String EXTRA_GROUP_MEMBER_ID = "group_member_id";
 
     private static final int NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM = 10;
     private static final int NUM_ITEM_TO_SCROLL_FAST_THRESHOLD = 50;
     private static final int FAST_DURATION = 200;
 
+    private final ConversationOptionHandler conversationOptionHandler = new ConversationOptionHandler(this);
     private List<Chat> mChatList;
     private Conversation mConversation;
     private ChatListAdapter mChatListAdapter;
     private CustomLinearLayoutManager mLayoutManager;
+    private WidgetPresenter mWidgetPresenter;
     private FirebaseUser mCurrentUser;
 
     // Default color for the whole conversation
@@ -145,7 +155,7 @@ public class ConversationActivity
             int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
             if (firstItemPosition != -1) {
                 Chat firstVisible = mChatList.get(firstItemPosition);
-                if (firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+                if (MessageUtil.isDummyProfileMessage(firstVisible)) {
                     mChatListAdapter.notifyItemChanged(0, ChatListAdapter.PROFILE_USER_PAYLOAD);
                 }
             }
@@ -225,9 +235,11 @@ public class ConversationActivity
         });
 
         mViewModel.getConversationMetadata().observe(this, metadata -> {
+            mWidgetPresenter = new WidgetPresenter(metadata);
             mChatListAdapter.setConversationMetadata(metadata);
             mChatListAdapter.setParticipants(metadata.getConversationParticipants());
             mChatListAdapter.notifyItemChanged(0);
+            mConversation.setParticipants(metadata.getConversationParticipants());
 
             setToolbarTitle(metadata.getConversationName());
 
@@ -237,7 +249,15 @@ public class ConversationActivity
                 loadImage(conversationThumbnail.get(0), avatarGroupStubBinding.avatarUser1);
                 loadImage(conversationThumbnail.get(1), avatarGroupStubBinding.avatarUser2);
             } else {
-                loadImage(conversationThumbnail.get(0), avatarNormalStubBinding.imageAvatar);
+                if (metadata.getType() == ConversationType.GROUP) {
+                    avatarGroupStubBinding.avatarUser1.setVisibility(View.GONE);
+                    avatarGroupStubBinding.layoutAvatar2.setVisibility(View.GONE);
+                    mWidgetPresenter.setActiveIcon(avatarGroupStubBinding.groupAvatar.imageActive);
+
+                    loadImage(conversationThumbnail.get(0), avatarGroupStubBinding.groupAvatar.imageAvatar);
+                } else {
+                    loadImage(conversationThumbnail.get(0), avatarNormalStubBinding.imageAvatar);
+                }
             }
 
             if (metadata.getType() == ConversationType.NORMAL) {
@@ -279,9 +299,11 @@ public class ConversationActivity
         mViewModel.getSingleRequestCall().observe(this, result -> {
             if (result != null) {
                 if (result.getStatus() == NetworkStatus.LOADING) {
-                    LoadingDialog.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+                    AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
                 } else if (result.getStatus() == NetworkStatus.SUCCESS) {
-                    LoadingDialog.finishLoadingDialog();
+                    AlertDialogUtil.finishLoadingDialog();
+                } else if (result.getStatus() == NetworkStatus.TERMINATE) {
+                    finish();
                 }
             }
         });
@@ -342,20 +364,20 @@ public class ConversationActivity
             return false;
         });
         mBinding.buttonSendMessage.setOnClickListener(v -> {
+            String id = UUID.randomUUID().toString();
             String senderId = mCurrentUser.getUid();
             String content = mBinding.editTextContent.getText().toString();
             String conversationId = mConversation.getId();
 
             mBinding.editTextContent.getText().clear();
-
-            Chat chat = new Chat(UUID.randomUUID().toString(), senderId, content, conversationId, MessageType.GENERIC);
-            mViewModel.sendMessage(this, chat);
+            mViewModel.sendMessage(this, new Chat(id, senderId, content, conversationId, MessageType.GENERIC));
         });
         mBinding.buttonMore.setOnClickListener(v -> {
         });
         mBinding.buttonCamera.setOnClickListener(v -> {
         });
         mBinding.buttonGallery.setOnClickListener(v -> {
+            
         });
         mBinding.buttonMic.setOnClickListener(v -> {
         });
@@ -461,8 +483,7 @@ public class ConversationActivity
                          * */
                         int firstItem = mLayoutManager.findFirstCompletelyVisibleItemPosition();
                         if (firstItem != -1) {
-                            Chat chat = mChatList.get(firstItem);
-                            mLayoutManager.setStackFromEnd(!chat.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
+                            mLayoutManager.setStackFromEnd(!MessageUtil.isDummyProfileMessage(mChatList.get(firstItem)));
                         }
                         // At this point the layout is complete and the
                         // dimensions of recyclerView and any child views
@@ -480,20 +501,18 @@ public class ConversationActivity
 
         if (isGroup) {
             mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-            avatarGroupStubBinding.imageActive.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.INVISIBLE);
         } else {
             mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-            avatarNormalStubBinding.imageActive.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.INVISIBLE);
         }
-        mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
-        mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
+        mWidgetPresenter.shouldShowAsActive(shouldShowHeader && isActive);
+        mWidgetPresenter.shouldShowTitle(shouldShowHeader);
     }
 
     private boolean shouldShowHeader() {
         int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
         if (firstItemPosition != -1) {
             Chat firstVisible = mChatList.get(firstItemPosition);
-            return !(firstVisible != null && firstVisible.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX));
+            return !(firstVisible != null && MessageUtil.isDummyProfileMessage(firstVisible));
         }
         return false;
     }
@@ -511,7 +530,7 @@ public class ConversationActivity
         int index = mLayoutManager.findFirstVisibleItemPosition();
         Chat headerChatItem = mChatList.get(index);
 
-        if (headerChatItem != null && !headerChatItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) && getNetworkStatus()) {
+        if (headerChatItem != null && !MessageUtil.isDummyProfileMessage(headerChatItem) && getNetworkStatus()) {
             if (!isLoadMore) {
                 mViewModel.registerLoadMore(mConversation);
             }
@@ -530,12 +549,8 @@ public class ConversationActivity
 
     private void seenWelcomeChat() {
         List<Chat> dummyMessages = mChatList.stream()
-                                            .filter(c -> (c.getId().startsWith(Const.WELCOME_CHAT_PREFIX) ||
-                                                          c.getId().startsWith(Const.CHANGE_GROUP_NAME_CHAT_ID) ||
-                                                          c.getId().startsWith(Const.ADDED_MEMBER_CHAT_ID) ||
-                                                          c.getId().startsWith(Const.REMOVE_MEMBER_CHAT_ID) ||
-                                                          c.getId().startsWith(Const.MEMBER_LEAVE_GROUP_CHAT_ID) ||
-                                                          c.getId().startsWith(Const.CHANGE_GROUP_THUMBNAIL_ID)) &&
+                                            .filter(c -> (MessageUtil.isNotificationMessage(c) ||
+                                                          MessageUtil.isWelcomeMessage(c)) &&
                                                           !c.getSeenBy().contains(mCurrentUser.getUid()))
                                             .peek(c -> c.getSeenBy().add(mCurrentUser.getUid()))
                                             .collect(Collectors.toList());
@@ -579,25 +594,9 @@ public class ConversationActivity
 
     @Override
     public void addMember() {
-        ArrayList<String> groupMemberId = mConversation.getParticipants()
-                                                       .stream()
-                                                       .map(User::getUid)
-                                                       .collect(Collectors.toCollection(ArrayList::new));
-
-        Intent intent = new Intent(this, AddGroupConversationActivity.class);
-        intent.putStringArrayListExtra(EXTRA_GROUP_MEMBER_ID, groupMemberId);
-        intent.putExtra(AddGroupConversationActivity.EXTRA_ADD_MEMBER, true);
-
-        activityResultLauncher.launch(intent, result -> {
-            if (result.getResultCode() == RESULT_OK) {
-                Intent data = result.getData();
-
-                if (data != null) {
-                    ArrayList<UserSelection> members = data.getParcelableArrayListExtra(AddGroupConversationActivity.EXTRA_GROUP_PARTICIPANTS);
-
-                    mViewModel.addGroupMember(mConversation.getId(), members.stream().map(UserSelection::getUid).collect(Collectors.toList()));
-                }
-            }
+        conversationOptionHandler.addMember(activityResultLauncher, mConversation, memberIds -> {
+            mViewModel.addGroupMember(memberIds);
+            return null;
         });
     }
 
@@ -640,7 +639,7 @@ public class ConversationActivity
             String newName = binding.editTextOtp.getText().toString().trim();
 
             if (!Objects.equals(oldName, newName)) {
-                mViewModel.changeGroupName(mConversation.getId(), newName);
+                mViewModel.changeGroupName(newName);
             }
 
             dialog.dismiss();
@@ -649,7 +648,132 @@ public class ConversationActivity
 
     @Override
     public void viewGroupMember() {
-        Logging.show("View all group members");
+        Intent intent = new Intent(this, GroupMemberActivity.class);
+        intent.putExtra("conversation", mConversation);
+
+        activityResultLauncher.launch(intent, result -> {
+            if (result.getResultCode() == RESULT_OK) {
+                Intent data = result.getData();
+
+                if (data != null) {
+                    int type = data.getIntExtra(GroupMemberActivity.EXTRA_TYPE, -1);
+
+                    switch (type) {
+                        case GroupMemberActivity.TYPE_REMOVE:
+                            mViewModel.removeGroupMember(data.getStringExtra(GroupMemberActivity.EXTRA_MEMBER_ID));
+                            break;
+                        case GroupMemberActivity.TYPE_LEAVE:
+                            mViewModel.leaveGroup();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public void changeGroupThumbnail() {
+        AlertDialogUtil.showPhotoSelectionDialog(this, (dialog, which) -> {
+            if (which == 0) {
+                Permission.with(this, mPermissionsLauncher)
+                        .request(Manifest.permission.CAMERA)
+                        .ifNecessary()
+                        .onAllGranted(this::handleTakePicture)
+                        .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                        .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                        .execute();
+            } else {
+                Permission.with(this, mPermissionsLauncher)
+                        .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                        .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                        .onAllGranted(() -> getContentLauncher.launch("image/*", uri -> {
+                            String path = FileProviderUtil.getPath(this, uri);
+                            if (path != null) {
+                                File file = new File(path);
+
+                                mViewModel.changeGroupThumbnail(file);
+                            } else {
+                                Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
+                            }
+                        }))
+                        .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
+                        .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
+                        .execute();
+            }
+        });
+    }
+
+    private void handleTakePicture() {
+        Uri uri = FileProviderUtil.createTempFilePicture(getContentResolver());
+
+        takePictureLauncher.launch(uri, isSuccess -> {
+            if (isSuccess) {
+                ImageThumbnail imageThumbnail = FileProviderUtil.getImageThumbnailFromUri(getContentResolver(), uri);
+
+                Intent intent = new Intent(this, PreviewEditPhotoActivity.class);
+                intent.putExtra(PreviewEditPhotoActivity.EXTRA_CHANGE_PHOTO, PreviewEditPhotoActivity.EXTRA_GROUP_THUMBNAIL);
+                intent.putExtra(PreviewEditPhotoActivity.EXTRA_IMAGE_THUMBNAIL, imageThumbnail);
+
+                activityResultLauncher.launch(intent, result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+
+                        if (data != null) {
+                            String filePath = data.getStringExtra(PreviewEditPhotoActivity.EXTRA_FILE_PATH_RESULT);
+                            File file = new File(filePath);
+
+                            mViewModel.changeGroupThumbnail(file);
+                        }
+                    }
+                });
+            } else {
+                getContentResolver().delete(uri, null, null);
+            }
+        });
+    }
+
+    private class WidgetPresenter {
+        private final List<View> headerAvatar;
+        private final TextView toolbarTitle;
+        private final TextView toolbarSubtitle;
+        private ImageView activeIcon;
+
+        public WidgetPresenter(ConversationMetadata metadata) {
+            headerAvatar    = new ArrayList<>();
+            toolbarTitle    = mBinding.toolbarTitle;
+            toolbarSubtitle = mBinding.toolbarSubtitle;
+
+            if (metadata.getType() == ConversationType.GROUP) {
+                headerAvatar.add(avatarGroupStubBinding.avatarUser1);
+                headerAvatar.add(avatarGroupStubBinding.avatarUser2);
+                headerAvatar.add(avatarGroupStubBinding.layoutAvatar2);
+
+                activeIcon = avatarGroupStubBinding.imageActive;
+            } else {
+                headerAvatar.add(avatarNormalStubBinding.imageAvatar);
+
+                activeIcon = avatarNormalStubBinding.imageActive;
+            }
+        }
+
+        public void setActiveIcon(ImageView activeIcon) {
+            this.activeIcon = activeIcon;
+        }
+
+        public void shouldShowTitle(boolean isShow) {
+            toolbarTitle.setVisibility(isShow ? View.VISIBLE : View.GONE);
+        }
+
+        public void shouldShowAvatarView(boolean isShow) {
+            headerAvatar.forEach(v -> v.setVisibility(isShow ? View.VISIBLE : View.GONE));
+        }
+
+        public void shouldShowAsActive(boolean isShow) {
+            activeIcon.setVisibility(isShow ? View.VISIBLE : View.GONE);
+            toolbarSubtitle.setVisibility(isShow ? View.VISIBLE : View.GONE);
+        }
     }
 
     private static class CustomLinearLayoutManager extends LinearLayoutManager {
@@ -715,8 +839,8 @@ public class ConversationActivity
              * If the preItem is the dummy chat so the current item will show normally.
              * */
             if (preItem == null ||
-                preItem.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX) ||
-                preItem.getId().startsWith(Const.WELCOME_CHAT_PREFIX)) {
+                MessageUtil.isDummyProfileMessage(preItem) ||
+                MessageUtil.isWelcomeMessage(preItem)) {
                 return;
             }
 
@@ -724,7 +848,7 @@ public class ConversationActivity
              * Add margin between two different sender chat item.
              * */
             if (!shouldShowTimestamp(preItem, item)) {
-                if (!item.getSenderId().equals(preItem.getSenderId())) {
+                if (!item.getSenderId().equals(preItem.getSenderId()) && !MessageUtil.isDummyMessage(item)) {
                     outRect.top = mChatMargin;
                 }
             }

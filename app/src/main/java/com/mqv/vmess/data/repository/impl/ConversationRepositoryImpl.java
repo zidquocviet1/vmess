@@ -25,6 +25,7 @@ import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.Retriever;
 import com.mqv.vmess.util.UserTokenUtil;
 
+import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +43,9 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 
 public class ConversationRepositoryImpl implements ConversationRepository {
     private final ConversationService service;
@@ -278,10 +282,28 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Observable<ApiResponse<Conversation>> changeConversationGroupThumbnail(String conversationId, File image) {
+        RequestBody        requestBody = RequestBody.create(image, MediaType.parse("image/*"));
+        MultipartBody.Part part        = MultipartBody.Part.createFormData("image", image.getName(), requestBody);
+
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.changeConversationGroupThumbnail(token, conversationId, part));
+    }
+
+    @Override
     public Observable<ApiResponse<Conversation>> addGroupMember(String conversationId, String memberId) {
         return getBearerTokenObservable()
                 .flatMap(token -> service.addConversationGroupMember(token, conversationId, memberId))
                 .subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Observable<ApiResponse<Conversation>> removeGroupMember(String conversationId, String memberId) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.removeGroupMember(token, conversationId, memberId));
+    }
+
+    @Override
+    public Observable<ApiResponse<Conversation>> leaveGroup(String conversationId) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.leaveGroup(token, conversationId));
     }
 
     @Override

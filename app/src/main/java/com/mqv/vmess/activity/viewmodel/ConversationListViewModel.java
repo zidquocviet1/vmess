@@ -1,14 +1,18 @@
 package com.mqv.vmess.activity.viewmodel;
 
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.FirebaseNetworkException;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
+import com.mqv.vmess.network.exception.PermissionDeniedException;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.ConversationGroup;
@@ -16,11 +20,14 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.model.type.ConversationType;
 import com.mqv.vmess.reactive.RxHelper;
+import com.mqv.vmess.ui.ConversationOptionHandler;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Event;
 import com.mqv.vmess.util.LiveDataUtil;
+import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Retriever;
 
+import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,12 +44,12 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ConversationListViewModel extends ViewModel {
-    private   final ConversationRepository              conversationRepository;
-    protected final MutableLiveData<List<Conversation>> conversationListObserver;
-    protected final MutableLiveData<List<String>>       presenceUserListObserver;
-    protected final MutableLiveData<Boolean>            oneTimeLoadingResult;
-    protected final MutableLiveData<Event<Integer>>     errorEmitter;
-    protected final CompositeDisposable                 cd;
+    private   final ConversationRepository                  conversationRepository;
+    protected final MutableLiveData<List<Conversation>>     conversationListObserver;
+    protected final MutableLiveData<List<String>>           presenceUserListObserver;
+    protected final MutableLiveData<Pair<Boolean, Integer>> oneTimeLoadingResult;
+    protected final MutableLiveData<Event<Integer>>         errorEmitter;
+    protected final CompositeDisposable                     cd;
 
     private static final int INITIALIZE_PAGE = 0;
 
@@ -69,6 +76,10 @@ public class ConversationListViewModel extends ViewModel {
 
     public LiveData<Event<Integer>> getOneTimeErrorObserver() {
         return errorEmitter;
+    }
+
+    public LiveData<Pair<Boolean, Integer>> getOneTimeLoadingResult() {
+        return oneTimeLoadingResult;
     }
 
     protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
@@ -183,10 +194,10 @@ public class ConversationListViewModel extends ViewModel {
         Disposable disposable = conversationRepository.createGroup(conversation)
                                                       .compose(RxHelper.applyObservableSchedulers())
                                                       .startWith(Completable.fromAction(() ->
-                                                              oneTimeLoadingResult.postValue(true)))
+                                                              oneTimeLoadingResult.postValue(Pair.create(true, R.string.action_creating_3_dot))))
                                                       .compose(RxHelper.parseResponseData())
                                                       .subscribe(data -> {
-                                                          oneTimeLoadingResult.postValue(false);
+                                                          oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
 
                                                           data.setStatus(ConversationStatusType.INBOX);
 
@@ -197,7 +208,7 @@ public class ConversationListViewModel extends ViewModel {
 
                                                           AppDependencies.getDatabaseObserver().notifyConversationInserted(data.getId());
                                                       }, t -> {
-                                                          oneTimeLoadingResult.postValue(false);
+                                                          oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
                                                           emitterOneTimeErrorToast(R.string.error_create_group_conversation_fail);
                                                       });
 
@@ -213,11 +224,45 @@ public class ConversationListViewModel extends ViewModel {
     }
 
     public void leaveGroup(Conversation conversation) {
+        Disposable disposable = ConversationOptionHandler.leaveGroup(conversationRepository, conversation.getId())
+                                                         .compose(RxHelper.applyObservableSchedulers())
+                                                         .subscribe(result -> {
+                                                             oneTimeLoadingResult.postValue(Pair.create(result.getStatus() == NetworkStatus.LOADING, R.string.action_loading));
+                                                         }, t -> {
+                                                             oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_loading));
 
+                                                             if (t instanceof ConnectException) {
+                                                                 errorEmitter.postValue(new Event<>(R.string.error_connect_server_fail));
+                                                             } else if (t instanceof FirebaseNetworkException) {
+                                                                 errorEmitter.postValue(new Event<>(R.string.error_network_connection));
+                                                             } else {
+                                                                 errorEmitter.postValue(new Event<>(R.string.msg_permission_denied));
+                                                             }
+                                                         });
+        cd.add(disposable);
     }
 
-    public void addMember(Conversation conversation) {
+    public void addMember(String conversationId, List<String> memberIds) {
+        Disposable disposable = Observable.fromIterable(memberIds)
+                                          .flatMap(memberId -> ConversationOptionHandler.addMemberObservable(conversationRepository, conversationId, memberId))
+                                          .compose(RxHelper.applyObservableSchedulers())
+                                          .subscribe(result -> {
+                                              oneTimeLoadingResult.postValue(Pair.create(result.getStatus() == NetworkStatus.LOADING, R.string.action_loading));
+                                          }, t -> {
+                                              oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_loading));
 
+                                              if (t instanceof ConnectException) {
+                                                  errorEmitter.postValue(new Event<>(R.string.error_connect_server_fail));
+                                              } else if (t instanceof FirebaseNetworkException) {
+                                                  errorEmitter.postValue(new Event<>(R.string.error_network_connection));
+                                              } else if (t instanceof PermissionDeniedException) {
+                                                  errorEmitter.postValue(new Event<>(R.string.msg_user_dont_allow_added));
+                                              } else {
+                                                  errorEmitter.postValue(new Event<>(R.string.msg_permission_denied));
+                                              }
+                                          });
+
+        cd.add(disposable);
     }
 
     public void loadMore(int page, ConversationStatusType statusType) {

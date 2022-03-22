@@ -5,6 +5,7 @@ import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -60,5 +61,11 @@ public interface ConversationRepository {
 
     Observable<ApiResponse<Conversation>> changeConversationGroupName(String conversationId, String groupName);
 
+    Observable<ApiResponse<Conversation>> changeConversationGroupThumbnail(String conversationId, File image);
+
     Observable<ApiResponse<Conversation>> addGroupMember(String conversationId, String memberId);
+
+    Observable<ApiResponse<Conversation>> removeGroupMember(String conversationId, String memberId);
+
+    Observable<ApiResponse<Conversation>> leaveGroup(String conversationId);
 }

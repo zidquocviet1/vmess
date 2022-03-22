@@ -10,12 +10,15 @@ import java.util.List;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import okhttp3.MultipartBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -52,8 +55,23 @@ public interface ConversationService {
                                                                       @Query("name") String groupName,
                                                                       @Query("id") String conversationId);
 
+    @Multipart
+    @PUT("conversation/{conversation-id}/group/thumbnail")
+    Observable<ApiResponse<Conversation>> changeConversationGroupThumbnail(@Header(AUTHORIZATION) String token,
+                                                                           @Path("conversation-id") String conversationId,
+                                                                           @Part MultipartBody.Part image);
+
     @PUT("conversation/{conversation-id}/group/add-member/{id}")
     Observable<ApiResponse<Conversation>> addConversationGroupMember(@Header(AUTHORIZATION) String token,
                                                                      @Path("conversation-id") String conversationId,
                                                                      @Path("id") String memberId);
+
+    @PUT("conversation/{conversation-id}/group/remove-member/{id}")
+    Observable<ApiResponse<Conversation>> removeGroupMember(@Header(AUTHORIZATION) String token,
+                                                            @Path("conversation-id") String conversationId,
+                                                            @Path("id") String memberId);
+
+    @PUT("conversation/{conversation-id}/group/leave")
+    Observable<ApiResponse<Conversation>> leaveGroup(@Header(AUTHORIZATION) String token,
+                                                     @Path("conversation-id") String conversationId);
 }

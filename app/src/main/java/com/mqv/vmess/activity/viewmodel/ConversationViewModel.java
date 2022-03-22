@@ -31,6 +31,7 @@ import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.ApiResponse;
+import com.mqv.vmess.network.exception.PermissionDeniedException;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
@@ -38,6 +39,7 @@ import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.model.type.ConversationType;
 import com.mqv.vmess.network.model.type.MessageStatus;
 import com.mqv.vmess.reactive.RxHelper;
+import com.mqv.vmess.ui.ConversationOptionHandler;
 import com.mqv.vmess.ui.data.ConversationMapper;
 import com.mqv.vmess.ui.data.ConversationMetadata;
 import com.mqv.vmess.ui.data.People;
@@ -49,6 +51,7 @@ import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.vmess.work.SendMessageWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
+import java.io.File;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -91,6 +94,7 @@ public class ConversationViewModel extends AndroidViewModel {
     private final DatabaseObserver.MessageListener      messageListener;
     private final CompositeDisposable                   cd;
 
+    private Conversation mConversation;
     private int currentChatPage = DEFAULT_PAGE_CHAT_LIST;
 
     @Inject
@@ -248,6 +252,8 @@ public class ConversationViewModel extends AndroidViewModel {
     }
 
     private void onLoadConversationComplete(Conversation conversation) {
+        mConversation = conversation;
+
         conversationRepository.save(conversation)
                               .subscribeOn(Schedulers.io())
                               .observeOn(Schedulers.io())
@@ -420,7 +426,15 @@ public class ConversationViewModel extends AndroidViewModel {
                                                   AppDependencies.getDatabaseObserver().notifyMessageInserted(message.getConversationId(), message.getId());
                                               }
                                           }, t -> {
-                                              eventToast.postValue(new Event<>(R.string.msg_permission_denied));
+                                              if (t instanceof ConnectException) {
+                                                  eventToast.postValue(new Event<>(R.string.error_connect_server_fail));
+                                              } else if (t instanceof FirebaseNetworkException) {
+                                                  eventToast.postValue(new Event<>(R.string.error_network_connection));
+                                              } else if (t instanceof PermissionDeniedException) {
+                                                  eventToast.postValue(new Event<>(R.string.msg_user_dont_allow_added));
+                                              } else {
+                                                  eventToast.postValue(new Event<>(R.string.error_unknown));
+                                              }
                                               singleRequestCall.postValue(Result.Fail(R.string.msg_permission_denied));
                                           });
 
@@ -532,13 +546,28 @@ public class ConversationViewModel extends AndroidViewModel {
         scrollButtonState.setValue(state);
     }
 
-    public void changeGroupName(String conversationId, String groupName) {
-        onGroupOptionChangedComplete(conversationRepository.changeConversationGroupName(conversationId, groupName));
+    public void changeGroupName(String groupName) {
+        onGroupOptionChangedComplete(conversationRepository.changeConversationGroupName(mConversation.getId(), groupName));
     }
 
-    public void addGroupMember(String conversationId, List<String> memberIds) {
+    public void addGroupMember(List<String> memberIds) {
         onGroupOptionChangedComplete(Observable.fromIterable(memberIds)
-                                               .flatMap(memberId -> conversationRepository.addGroupMember(conversationId, memberId)));
+                                               .flatMap(memberId -> conversationRepository.addGroupMember(mConversation.getId(), memberId)));
+    }
+
+    public void removeGroupMember(String memberId) {
+        onGroupOptionChangedComplete(conversationRepository.removeGroupMember(mConversation.getId(), memberId));
+    }
+
+    public void leaveGroup() {
+        Disposable disposable = ConversationOptionHandler.leaveGroup(conversationRepository, mConversation.getId())
+                                                         .compose(RxHelper.applyObservableSchedulers())
+                                                         .subscribe(singleRequestCall::postValue, t -> singleRequestCall.postValue(Result.Fail(-1)));
+        cd.add(disposable);
+    }
+
+    public void changeGroupThumbnail(File file) {
+        onGroupOptionChangedComplete(conversationRepository.changeConversationGroupThumbnail(mConversation.getId(), file));
     }
 
     @Override

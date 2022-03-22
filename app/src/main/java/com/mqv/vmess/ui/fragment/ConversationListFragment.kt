@@ -19,8 +19,10 @@ import com.mqv.vmess.manager.LoggedInUserManager
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
+import com.mqv.vmess.ui.ConversationOptionHandler
 import com.mqv.vmess.ui.adapter.ConversationListAdapter
 import com.mqv.vmess.ui.data.UserSelection
+import com.mqv.vmess.util.AlertDialogUtil
 import com.mqv.vmess.util.MyActivityForResult
 import java.util.*
 import java.util.function.BiConsumer
@@ -34,6 +36,8 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     ConversationListChanged,
     ConversationDialogFragment.ConversationOptionListener {
 
+    private lateinit var mConversationHandler: ConversationOptionHandler
+
     internal open lateinit var mAdapter: ConversationListAdapter
     internal open lateinit var mConversations: MutableList<Conversation>
 
@@ -42,6 +46,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
         initializeRecyclerview()
         mAdapter.registerOnDataSizeChanged { onDataSizeChanged(it) }
+        mConversationHandler = ConversationOptionHandler(requireContext())
     }
 
     abstract fun initializeRecyclerview()
@@ -104,11 +109,20 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     override fun onLeaveGroup(conversation: Conversation?) {
-        mViewModel.leaveGroup(conversation)
+        AlertDialogUtil.show(requireContext(),
+            R.string.title_leave_group,
+            R.string.msg_leave_group,
+            R.string.action_yes,
+            R.string.action_cancel) { dialog, _ ->
+            dialog.dismiss()
+            mViewModel.leaveGroup(conversation)
+        }
     }
 
     override fun onAddMember(conversation: Conversation?) {
-        mViewModel.addMember(conversation)
+        mConversationHandler.addMember(getLauncherByActivity()!!, conversation!!) { memberIds ->
+            mViewModel.addMember(conversation.id, memberIds)
+        }
     }
 
     override fun onMarkUnread(conversation: Conversation?) {

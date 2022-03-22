@@ -171,13 +171,10 @@ class ConversationListItem(
 
             val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
                 ?: mContext.getString(R.string.dummy_user_name)
-            val memberName = getSenderById(recentMessage.content, item.participants)?.displayName
-                ?: mContext.getString(R.string.dummy_user_name)
             textContent.append(
                 mContext.getString(
-                    R.string.msg_who_added_another_to_the_group,
-                    senderName,
-                    memberName
+                    R.string.msg_who_leave_group,
+                    senderName
                 )
             )
         } else if (MessageUtil.isChangeThumbnailMessage(recentMessage)) {
@@ -185,13 +182,10 @@ class ConversationListItem(
 
             val senderName = getSenderFromChat(recentMessage, item.participants)?.displayName
                 ?: mContext.getString(R.string.dummy_user_name)
-            val memberName = getSenderById(recentMessage.content, item.participants)?.displayName
-                ?: mContext.getString(R.string.dummy_user_name)
             textContent.append(
                 mContext.getString(
-                    R.string.msg_who_added_another_to_the_group,
-                    senderName,
-                    memberName
+                    R.string.msg_who_change_group_thumbnail,
+                    senderName
                 )
             )
         } else {
