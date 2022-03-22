@@ -148,7 +148,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
     public void initializeRecyclerview() {
         mConversations = new ArrayList<>();
         mRankUserAdapter = new RankUserConversationAdapter(getContext());
-        mAdapter = new ConversationListAdapter(getContext(), getPreference().getUserAuthToken().orElse(""));
+        mAdapter = new ConversationListAdapter(getContext());
         mAdapter.registerOnConversationClick(onConversationClick());
 
         mBinding.recyclerMessages.setAdapter(mAdapter);
