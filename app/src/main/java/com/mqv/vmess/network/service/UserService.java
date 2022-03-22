@@ -49,7 +49,6 @@ public interface UserService {
     @PUT(value = "user/upload-photo")
     @Multipart
     Observable<ApiResponse<String>> updateProfilePicture(@Header(Const.AUTHORIZATION) String token,
-                                                         @Header(Const.AUTHORIZER) String authorizer,
                                                          @Part("type") RequestBody type,
                                                          @Part MultipartBody.Part part);
 

@@ -48,7 +48,7 @@ public class PreviewEditPhotoViewModel extends ViewModel {
             if (task.isSuccessful() && task.getResult() != null) {
                 var token = task.getResult().getToken();
 
-                cd.add(repository.updateProfilePicture(Const.PREFIX_TOKEN + token, "firebase", realFilePath)
+                cd.add(repository.updateProfilePicture(Const.PREFIX_TOKEN + token, realFilePath)
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(response -> {
