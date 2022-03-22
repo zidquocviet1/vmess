@@ -1,10 +1,12 @@
 package com.mqv.vmess.ui.fragment.viewmodel;
 
+import static com.mqv.vmess.network.model.type.ConversationStatusType.ARCHIVED;
 import static com.mqv.vmess.network.model.type.ConversationStatusType.INBOX;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Transformations;
 
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.ConversationListViewModel;
@@ -23,6 +25,7 @@ import com.mqv.vmess.util.Logging;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -100,7 +103,14 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     }
 
     public LiveData<List<Conversation>> getConversationListObserver() {
-        return conversationListObserver;
+        return Transformations.map(conversationListObserver, list -> {
+            if (list != null && !list.isEmpty()) {
+                return list.stream()
+                        .filter(c -> c.getStatus() == INBOX)
+                        .collect(Collectors.toList());
+            }
+            return new ArrayList<>();
+        });
     }
 
     public LiveData<Event<String>> getConversationInserted() {

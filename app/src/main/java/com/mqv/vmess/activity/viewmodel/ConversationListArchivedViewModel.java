@@ -3,11 +3,14 @@ package com.mqv.vmess.activity.viewmodel;
 import static com.mqv.vmess.network.model.type.ConversationStatusType.ARCHIVED;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Transformations;
 
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.model.Conversation;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -30,7 +33,14 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
     }
 
     public LiveData<List<Conversation>> getListObserver() {
-        return conversationListObserver;
+        return Transformations.map(conversationListObserver, list -> {
+            if (list != null && !list.isEmpty()) {
+                return list.stream()
+                           .filter(c -> c.getStatus() == ARCHIVED)
+                           .collect(Collectors.toList());
+            }
+            return new ArrayList<>();
+        });
     }
 
     public LiveData<List<String>> getPresenceUserListObserver() {
