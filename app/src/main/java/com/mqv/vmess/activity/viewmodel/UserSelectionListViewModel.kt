@@ -4,10 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.mqv.vmess.activity.ConversationActivity
 import com.mqv.vmess.data.repository.PeopleRepository
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.reactive.RxHelper
+import com.mqv.vmess.ui.ConversationOptionHandler
 import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.ui.fragment.ConversationListFragment
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -94,7 +94,7 @@ class UserSelectionListViewModel @Inject constructor(
                 }
                 whoCreateWith?.let { suggestionList.add(0, whoCreateWith) }
 
-                val groupMemberId = savedStateHandle.get<ArrayList<String>>(ConversationActivity.EXTRA_GROUP_MEMBER_ID)
+                val groupMemberId = savedStateHandle.get<ArrayList<String>>(ConversationOptionHandler.EXTRA_GROUP_MEMBER_ID)
                 groupMemberId?.let { ids ->
                     val groupMemberSelection = ids.stream()
                         .map { id -> UserSelection(id, null, "", isOnline = false, isSelected = false) }
