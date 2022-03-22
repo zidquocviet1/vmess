@@ -31,7 +31,7 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.Ite
                 LayoutInflater.from(parent.context).inflate(getViewRes(), parent, false)
             ),
             eventHandler
-        )
+        ) { binding -> afterCreateViewHolder(binding) }
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
@@ -56,9 +56,14 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.Ite
         eventHandler = event
     }
 
+    open fun afterCreateViewHolder(binding: ViewBinding) {
+        // Default function for the derived class if it wants to register listener some different widgets
+    }
+
     class BaseViewHolder(
         val binding: ViewBinding,
-        val event: ItemEventHandler?
+        val event: ItemEventHandler?,
+        val afterCreateSuccess: (ViewBinding) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -67,6 +72,7 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.Ite
             binding.root.setOnLongClickListener {
                 return@setOnLongClickListener event?.onItemLongClick(layoutPosition) != null
             }
+            afterCreateSuccess(binding)
         }
     }
 }
