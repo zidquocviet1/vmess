@@ -37,4 +37,12 @@ public interface AppPreferences {
     void setNotificationStatus(Boolean isTurnOn);
 
     Boolean getNotificationStatus();
+
+    void setUserAuthToken(String token);
+
+    Optional<String> getUserAuthToken();
+
+    void setUserAuthTokenExpiresTime(Long time);
+
+    Long getUserAuthTokenExpiresTime();
 }

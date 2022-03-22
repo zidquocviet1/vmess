@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +13,9 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.hilt.work.HiltWorkerFactory;
 import androidx.work.Configuration;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.gson.Gson;
 import com.mqv.vmess.activity.br.AlarmSleepTimer;
 import com.mqv.vmess.activity.preferences.AppPreferences;
@@ -20,6 +24,8 @@ import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.dependencies.AppDependencyProvider;
 import com.mqv.vmess.util.Logging;
+
+import java.time.Instant;
 
 import javax.inject.Inject;
 
@@ -37,16 +43,21 @@ public class MainApplication extends Application implements Configuration.Provid
     @Inject Retrofit          retrofit;
 
     private Activity activeActivity;
+    private Handler mHandler;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        mHandler = new Handler();
+
         initializeAppDependencies();
         setAppTheme(mPreferences.getDarkModeTheme());
         setupActivityListener();
         setupObserveIncomingMessage();
         initializeAlarmSleepTimer();
+        initializeAuthUserToken();
         clearAllNotification(this);
+        startTimerForCheckingAuthToken();
     }
 
     private void setAppTheme(DarkMode mode){
@@ -122,8 +133,49 @@ public class MainApplication extends Application implements Configuration.Provid
         new AlarmSleepTimer(this).setRepeatingAlarm();
     }
 
+    private void initializeAuthUserToken() {
+        FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> checkAuthUserToken(false));
+    }
+
+    private void checkAuthUserToken(boolean forceRefresh) {
+        FirebaseUser user                 = FirebaseAuth.getInstance().getCurrentUser();
+        Long         authTokenExpiresTime = mPreferences.getUserAuthTokenExpiresTime();
+
+        if (user == null) {
+            mPreferences.setUserAuthToken("");
+            mPreferences.setUserAuthTokenExpiresTime(0L);
+        } else if (forceRefresh || (authTokenExpiresTime < Instant.now().getEpochSecond())) {
+            user.getIdToken(true).addOnCompleteListener(result -> {
+                if (result.isSuccessful()) {
+                    GetTokenResult tokenResult = result.getResult();
+
+                    if (tokenResult != null) {
+                        String token       = tokenResult.getToken();
+                        long   expiresTime = tokenResult.getExpirationTimestamp();
+
+                        Logging.show("Token: " + token);
+
+                        mPreferences.setUserAuthToken(token);
+                        mPreferences.setUserAuthTokenExpiresTime(expiresTime);
+                    }
+                }
+            });
+        }
+    }
 
     public static void clearAllNotification(Context context) {
         NotificationManagerCompat.from(context).cancelAll();
+    }
+
+    private Runnable getAuthTokenChecker() {
+        return () -> checkAuthUserToken(true);
+    }
+
+    private void startTimerForCheckingAuthToken() {
+        mHandler.postDelayed(getAuthTokenChecker(), 55 * 60 * 1000);
+    }
+
+    private void stopTimerForCheckingAuthToken() {
+        mHandler.removeCallbacks(getAuthTokenChecker());
     }
 }

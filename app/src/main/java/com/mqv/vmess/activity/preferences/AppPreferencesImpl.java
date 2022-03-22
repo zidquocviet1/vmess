@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.annotation.Nullable;
 
-public class AppPreferencesImpl implements AppPreferences{
+public class AppPreferencesImpl implements AppPreferences {
     public static final String PREF_DARK_THEME = "dark_theme_mode";
 
     private final Context mContext;
@@ -106,5 +106,26 @@ public class AppPreferencesImpl implements AppPreferences{
     @Override
     public Boolean getNotificationStatus() {
         return mPreferences.getBoolean(Const.KEY_PREF_NOTIFICATION_STATUS, true);
+    }
+
+    @Override
+    public void setUserAuthToken(String token) {
+        mPreferences.edit().putString(Const.KEY_PREF_AUTH_USER_TOKEN, token).apply();
+    }
+
+    @Override
+    public Optional<String> getUserAuthToken() {
+        String authToken = mPreferences.getString(Const.KEY_PREF_AUTH_USER_TOKEN, null);
+        return Optional.ofNullable(authToken);
+    }
+
+    @Override
+    public void setUserAuthTokenExpiresTime(Long time) {
+        mPreferences.edit().putLong(Const.KEY_PREF_AUTH_USER_TOKEN_EXPIRES_TIME, time).apply();
+    }
+
+    @Override
+    public Long getUserAuthTokenExpiresTime() {
+        return mPreferences.getLong(Const.KEY_PREF_AUTH_USER_TOKEN_EXPIRES_TIME, 0L);
     }
 }
