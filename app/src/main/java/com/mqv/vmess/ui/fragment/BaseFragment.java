@@ -15,6 +15,8 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewbinding.ViewBinding;
 
+import com.mqv.vmess.activity.BaseActivity;
+import com.mqv.vmess.activity.preferences.AppPreferences;
 import com.mqv.vmess.util.MyActivityForResult;
 
 import java.util.Map;
@@ -57,4 +59,8 @@ public abstract class BaseFragment<V extends ViewModel, B extends ViewBinding> e
     }
 
     public abstract void setupObserver();
+
+    public AppPreferences getPreference() {
+        return ((BaseActivity)requireActivity()).getAppPreference();
+    }
 }
