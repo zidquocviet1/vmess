@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.hilt.work.HiltWorkerFactory;
 import androidx.work.Configuration;
+import androidx.work.Data;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -24,12 +25,15 @@ import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.dependencies.AppDependencyProvider;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
+import com.mqv.vmess.work.WorkDependency;
 
 import java.time.Instant;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.HiltAndroidApp;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 
@@ -58,6 +62,7 @@ public class MainApplication extends Application implements Configuration.Provid
         initializeAuthUserToken();
         clearAllNotification(this);
         startTimerForCheckingAuthToken();
+        notifyAllIncomingMessage();
     }
 
     private void setAppTheme(DarkMode mode){
@@ -177,5 +182,29 @@ public class MainApplication extends Application implements Configuration.Provid
 
     private void stopTimerForCheckingAuthToken() {
         mHandler.removeCallbacks(getAuthTokenChecker());
+    }
+
+    private void notifyAllIncomingMessage() {
+        //noinspection ResultOfMethodCallIgnored
+        database.getChatDao()
+                .fetchNotReceivedChatList()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .flattenAsObservable(list -> list)
+                .flatMap(c -> database.getChatDao()
+                                      .update(c)
+                                      .toSingleDefault(c.getId())
+                                      .toObservable())
+                .toList()
+                .onErrorComplete()
+                .subscribe(list -> {
+                    if (!list.isEmpty()) {
+                        Data data = new Data.Builder()
+                                            .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, list.toArray(new String[0]))
+                                            .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, false)
+                                            .build();
+                        WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
+                    }
+                });
     }
 }

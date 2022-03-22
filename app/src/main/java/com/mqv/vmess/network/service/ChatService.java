@@ -30,7 +30,7 @@ public interface ChatService {
     Observable<ApiResponse<Chat>> seenMessage(@Header(AUTHORIZATION) String token,
                                               @Body Chat chat);
 
-    @PUT(value = "chat/seen_welcome_chat")
+    @PUT(value = "chat/seen-welcome-chat")
     Observable<ApiResponse<Chat>> seenWelcomeMessage(@Header(AUTHORIZATION) String token,
                                                      @Body Chat chat);
 

@@ -100,7 +100,7 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
             if (isMarkAsRead) {
                 return messageIds == null ? Single.just(Result.failure()) : markAsReadWork(Arrays.asList(messageIds));
             } else {
-                return responseReceivedWork();
+                return messageIds == null ? Single.just(Result.failure()) : responseReceivedWork(Arrays.asList(messageIds));
             }
         }
 
@@ -122,8 +122,22 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
             }
         }
 
-        private Single<Result> responseReceivedWork() {
-            return Single.just(Result.success());
+        private Single<Result> responseReceivedWork(List<String> messageIds) {
+            if (LifecycleUtil.isAppForeground()) {
+                return Observable.fromIterable(messageIds)
+                                 .subscribeOn(Schedulers.io())
+                                 .observeOn(Schedulers.io())
+                                 .concatMapSingle(chatDao::findById)
+                                 .concatMapSingle(c -> sendWebsocketRequest(WebSocketRequestMessage.Status.ACCEPTED_MESSAGE, c))
+                                 .flatMapCompletable(response -> {
+                                     AppDependencies.getIncomingMessageProcessor().process(response);
+                                     return Completable.complete();
+                                 })
+                                 .toSingleDefault(Result.success())
+                                 .onErrorReturnItem(Result.failure());
+            } else {
+                return sendReceivedMessageBackground(messageIds);
+            }
         }
 
         private Single<WebSocketResponse> sendWebsocketRequest(WebSocketRequestMessage.Status status, Chat body) {
@@ -143,8 +157,21 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
                                 .subscribeOn(Schedulers.io())
                                 .observeOn(Schedulers.io())
                                 .flatMapObservable(token -> Observable.fromIterable(messageIds)
-                                                            .flatMap(id -> chatDao.findById(id).toObservable())
-                                                            .flatMap(chat -> chatService.seenMessage(token, chat)))
+                                                                      .flatMap(id -> chatDao.findById(id).toObservable())
+                                                                      .flatMap(chat -> chatService.seenMessage(token, chat)))
+                                .singleOrError()
+                                .compose(RxHelper.parseSingleResponseData())
+                                .flatMap(updated -> Single.just(Result.success()))
+                                .doOnError(Throwable::printStackTrace)
+                                .onErrorReturnItem(Result.failure());
+        }
+
+        private Single<Result> sendReceivedMessageBackground(List<String> messageIds) {
+            return UserTokenUtil.getTokenSingle(user)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.io())
+                                .flatMapObservable(token -> Observable.fromIterable(messageIds)
+                                                                      .flatMap(chat -> chatService.notifyReceiveMessage(token, chat)))
                                 .singleOrError()
                                 .compose(RxHelper.parseSingleResponseData())
                                 .flatMap(updated -> Single.just(Result.success()))
