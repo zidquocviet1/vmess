@@ -40,4 +40,5 @@
     <dimen name="chat_corner_radius">20dp</dimen>
     <dimen name="chat_corner_radius_normal">4dp</dimen>
     <dimen name="chat_margin">10dp</dimen>
+    <dimen name="chat_status_row_user_padding">3dp</dimen>
 </resources>
