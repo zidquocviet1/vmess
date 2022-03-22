@@ -265,4 +265,5 @@
     <string name="msg_permission_external_storage_rational">Để gửi hình ảnh và videos từ Thư viện máy của bạn.</string>
     <string name="msg_permission_allow_app_use_external_storage_title">Cho phép &appname; sử dụng bộ nhớ của thiết bị?</string>
     <string name="msg_permission_external_storage_message">Cho phép &appname; lưu trữ và truy cập thông tin như hình ảnh trên điện thoại của bạn cũng như trên thẻ nhớ SD.</string>
+    <string name="msg_change_avatar_success">Thay đổi ảnh đại diện thành công</string>
 </resources>
