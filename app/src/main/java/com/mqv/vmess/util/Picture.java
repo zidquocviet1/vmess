@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.RoundedBitmapDrawable;
@@ -14,7 +15,10 @@ import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
 import com.mqv.vmess.R;
+import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.di.GlideApp;
 import com.mqv.vmess.di.GlideRequest;
 
@@ -31,29 +35,37 @@ public class Picture {
     public static final int DEFAULT_IMAGE_WIDTH = 88;
 
     // Remove the host name of the photo URL
+    public static GlideRequest<Drawable> loadUserAvatar(Fragment fragment, @Nullable String url) {
+        Context context = fragment.requireContext();
+
+        if (url == null) {
+            return GlideApp.with(context)
+                           .load((String) null)
+                           .error(getErrorAvatarLoaded(context))
+                           .fallback(getDefaultUserAvatar(context))
+                           .circleCrop()
+                           .diskCacheStrategy(DiskCacheStrategy.ALL);
+        } else {
+            return loadSecureResource(AppDependencies.getAppPreferences().getUserAuthToken().orElse(""), context, url);
+        }
+    }
+
     private static String reformatUrl(@Nullable String photoUrl) {
         return photoUrl == null ? null : photoUrl.replace("localhost", Const.BASE_IP);
     }
 
-    public static GlideRequest<Drawable> loadUserAvatar(Fragment fragment, @Nullable String url) {
-        Context context = fragment.requireContext();
-
-        return GlideApp.with(context)
-                       .load(reformatUrl(url))
-                       .error(getErrorAvatarLoaded(context))
-                       .fallback(getDefaultUserAvatar(context))
-                       .circleCrop()
-                       .diskCacheStrategy(DiskCacheStrategy.ALL);
-    }
-
     public static GlideRequest<Drawable> loadUserAvatar(Context context, @Nullable String url) {
-        return GlideApp.with(context)
-                       .load(reformatUrl(url))
-                       .error(getErrorAvatarLoaded(context))
-                       .fallback(getDefaultUserAvatar(context))
-//                       .transition(DrawableTransitionOptions.withCrossFade())
-                       .circleCrop()
-                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+        if (url == null) {
+            return GlideApp.with(context)
+                           .load((String) null)
+                           .error(getErrorAvatarLoaded(context))
+                           .fallback(getDefaultUserAvatar(context))
+//                              .transition(DrawableTransitionOptions.withCrossFade())
+                           .circleCrop()
+                           .diskCacheStrategy(DiskCacheStrategy.ALL);
+        } else {
+            return loadSecureResource(AppDependencies.getAppPreferences().getUserAuthToken().orElse(""), context, url);
+        }
     }
 
     public static GlideRequest<Drawable> loadUserAvatarWithPlaceHolder(Context context, @Nullable String url) {
@@ -63,6 +75,21 @@ public class Picture {
                        .fallback(getDefaultUserAvatar(context))
                        .circleCrop()
                        .placeholder(getDefaultCirclePlaceHolder(context))
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    public static GlideRequest<Drawable> loadSecureResource(String token, Context context,@NonNull String url) {
+        GlideUrl glideUrl = new GlideUrl(reformatUrl(url),
+                                         new LazyHeaders.Builder()
+                                                        .addHeader(Const.AUTHORIZATION, Const.PREFIX_TOKEN + token)
+                                                        .build());
+
+        return GlideApp.with(context)
+                       .load(glideUrl)
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getDefaultUserAvatar(context))
+                       .circleCrop()
+                       .placeholder(getErrorAvatarLoaded(context))
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
     }
 
