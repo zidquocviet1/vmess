@@ -28,11 +28,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, ActivityEditProfileBinding>
         implements View.OnClickListener {
-    public static final String EXTRA_PROFILE_PICTURE = "profile_picture";
-    public static final String EXTRA_COVER_PHOTO = "cover_photo";
-    public static final String EXTRA_CHANGE_PHOTO = "change_photo";
-    public static final String EXTRA_IMAGE_THUMBNAIL = "image_thumbnail";
-
     private boolean isOpenSelectPhotoPending = false;
     private String extraSelected;
 
@@ -102,11 +97,11 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
 
         if (id == mBinding.imageAvatar.getId() || id == mBinding.buttonEditPicture.getId()) {
             isOpenSelectPhotoPending = true;
-            extraSelected = EXTRA_PROFILE_PICTURE;
+            extraSelected = PreviewEditPhotoActivity.EXTRA_PROFILE_PICTURE;
             checkPermission();
         } else if (id == mBinding.imageCover.getId() || id == mBinding.buttonEditCover.getId()) {
             isOpenSelectPhotoPending = true;
-            extraSelected = EXTRA_COVER_PHOTO;
+            extraSelected = PreviewEditPhotoActivity.EXTRA_COVER_PHOTO;
             checkPermission();
         } else if (id == mBinding.buttonEditBio.getId()) {
             startActivity(EditProfileBioActivity.class);
@@ -163,7 +158,7 @@ public class EditProfileActivity extends BaseUserActivity<EditProfileViewModel, 
         var intent = new Intent(getApplicationContext(), target);
 
         if (target == SelectPhotoActivity.class) {
-            intent.putExtra(EXTRA_CHANGE_PHOTO, extraSelected);
+            intent.putExtra(PreviewEditPhotoActivity.EXTRA_CHANGE_PHOTO, extraSelected);
         }
 
         startActivity(intent);

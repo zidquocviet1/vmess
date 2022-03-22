@@ -1,11 +1,11 @@
 package com.mqv.vmess.activity;
 
-import static com.mqv.vmess.activity.EditProfileActivity.EXTRA_CHANGE_PHOTO;
-import static com.mqv.vmess.activity.EditProfileActivity.EXTRA_COVER_PHOTO;
-import static com.mqv.vmess.activity.EditProfileActivity.EXTRA_IMAGE_THUMBNAIL;
-import static com.mqv.vmess.activity.EditProfileActivity.EXTRA_PROFILE_PICTURE;
-
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,6 +24,7 @@ import com.mqv.vmess.databinding.ActivityPreviewEditPhotoBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.ui.data.ImageThumbnail;
 import com.mqv.vmess.util.ExifUtils;
+import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
@@ -33,8 +34,16 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoViewModel, ActivityPreviewEditPhotoBinding> {
+    public static final String EXTRA_PROFILE_PICTURE = "profile_picture";
+    public static final String EXTRA_COVER_PHOTO = "cover_photo";
+    public static final String EXTRA_CHANGE_PHOTO = "change_photo";
+    public static final String EXTRA_IMAGE_THUMBNAIL = "image_thumbnail";
+    public static final String EXTRA_GROUP_THUMBNAIL = "group_thumbnail";
+    public static final String EXTRA_FILE_PATH_RESULT = "file_path";
+
     private float my;
     private AlertDialog uploadingDialog;
+    private String filePath;
 
     @Override
     public void binding() {
@@ -57,17 +66,16 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
         var image = (ImageThumbnail) getIntent().getParcelableExtra(EXTRA_IMAGE_THUMBNAIL);
         var bitmap = ExifUtils.getRotatedBitmap(getContentResolver(), image.getContentUri());
 
-        if (from.equals(EXTRA_PROFILE_PICTURE)) {
+        filePath = image.getRealPath();
+
+        if (from.equals(EXTRA_PROFILE_PICTURE) || from.equals(EXTRA_GROUP_THUMBNAIL)) {
             updateActionBarTitle(R.string.label_preview_profile_picture);
 
             mBinding.layoutProfilePhoto.setVisibility(View.VISIBLE);
             mBinding.layoutCoverPhoto.setVisibility(View.GONE);
+            mBinding.buttonCrop.setOnClickListener(v -> performCrop(image.getContentUri()));
 
-            mBinding.imageProfilePhoto.setImageBitmap(bitmap);
-            mBinding.imageProfilePhotoReal.setImageBitmap(bitmap);
-
-            // TODO: crop the image here
-            mBinding.buttonCrop.setOnClickListener(null);
+            setImageProfileBitmap(bitmap);
         } else if (from.equals(EXTRA_COVER_PHOTO)) {
             updateActionBarTitle(R.string.label_preview_cover_photo);
 
@@ -77,7 +85,6 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
             mBinding.imageCoverPhoto.setImageBitmap(bitmap);
 
             var user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
-
             var uri = user.getPhotoUrl();
             var url = uri == null ? null : uri.toString();
 
@@ -92,6 +99,12 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
         enableSaveButton(v -> {
             if (from.equals(EXTRA_PROFILE_PICTURE)) {
                 mViewModel.updateProfilePicture(image.getRealPath());
+            } else if (from.equals(EXTRA_GROUP_THUMBNAIL)) {
+                Intent result = new Intent();
+                result.putExtra(EXTRA_FILE_PATH_RESULT, filePath);
+
+                setResult(RESULT_OK, result);
+                finish();
             } else {
                 mViewModel.updateCoverPhoto();
             }
@@ -122,7 +135,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
                 showLoadingUi(false);
 
-                Toast.makeText(this, uploadPhotoResult.getSuccess(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.msg_change_avatar_success, Toast.LENGTH_SHORT).show();
 
                 setResult(RESULT_OK);
                 finish();
@@ -208,5 +221,45 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
     private void finishUploading() {
         if (uploadingDialog != null)
             uploadingDialog.dismiss();
+    }
+
+
+    private void performCrop(Uri contentUri) {
+        try {
+            Intent cropIntent = new Intent("com.android.camera.action.CROP");
+            // indicate image type and Uri
+            cropIntent.setDataAndType(contentUri, "image/*");
+            // set crop properties here
+            cropIntent.putExtra("crop", true);
+            // indicate aspect of desired crop
+            cropIntent.putExtra("aspectX", 1);
+            cropIntent.putExtra("aspectY", 1);
+            // indicate output X and Y
+            cropIntent.putExtra("outputX", 128);
+            cropIntent.putExtra("outputY", 128);
+            // retrieve data on return
+            cropIntent.putExtra("return-data", true);
+
+            activityResultLauncher.launch(cropIntent, result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null) {
+                        Uri uri = data.getData();
+
+                        filePath = FileProviderUtil.getImagePathFromUri(getContentResolver(), uri);
+
+                        setImageProfileBitmap(BitmapFactory.decodeFile(filePath));
+                    }
+                }
+            });
+        }
+        catch (ActivityNotFoundException ignore) {
+            Toast.makeText(this, "Whoops - your device doesn't support the crop action!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setImageProfileBitmap(Bitmap bitmap) {
+        mBinding.imageProfilePhoto.setImageBitmap(bitmap);
+        mBinding.imageProfilePhotoReal.setImageBitmap(bitmap);
     }
 }
