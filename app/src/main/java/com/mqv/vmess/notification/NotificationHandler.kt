@@ -165,51 +165,66 @@ class NotificationHandler(
         val option = payload.option
         val member = payload.memberJson?.run { gson.fromJson(this, User::class.java) }
 
-        shouldHaveConversationInCache(message.conversationId)
-            .flatMap { optional ->
-                if (optional.isPresent) {
-                    val conversation = optional.get()
-                    val group = conversation.group
-
-                    when (option) {
-                        GroupOptionChangedPayload.Option.NAME -> group.name = message.content
-                        GroupOptionChangedPayload.Option.ADDED_MEMBER -> member?.let { conversation.participants.add(member) }
-                        GroupOptionChangedPayload.Option.LEAVE_GROUP -> member?.let { conversation.participants.remove(member) }
-                        GroupOptionChangedPayload.Option.THUMBNAIL -> group.thumbnail = message.content
-                        GroupOptionChangedPayload.Option.REMOVE_MEMBER -> {
-                            member?.let {
-                                if (it.uid == mUser.uid) {
-                                    // This is mean the current user has been removed by the admin of that conversation
-                                    // So delete the conversation in the cache
-                                } else {
-                                    conversation.participants.remove(member)
-                                }
-                            }
-                        }
-                    }
-
-                    conversation.chats = mutableListOf(message)
-
-                    return@flatMap Completable.fromAction {
-                        mDatabase.conversationDao.saveConversationList(
-                            mutableListOf(conversation)
-                        )
-                    }.toSingleDefault(conversation)
-                } else {
-                    return@flatMap fetchConversation(message.conversationId).concatMap { c ->
-                        Completable.fromAction {
-                            mDatabase.conversationDao.saveConversationList(
-                                mutableListOf(c)
-                            )
-                        }.toSingleDefault(c)
+        if ((option == GroupOptionChangedPayload.Option.REMOVE_MEMBER) && (member?.uid == mUser.uid)) {
+            // This is mean the current user has been removed by the admin of that conversation
+            // So delete the conversation in the cache
+            shouldHaveConversationInCache(message.conversationId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .flatMapCompletable { optional ->
+                    if (optional.isPresent) {
+                        return@flatMapCompletable mDatabase.conversationDao.delete(optional.get())
+                    } else {
+                        return@flatMapCompletable Completable.complete()
                     }
                 }
-            }
-            .subscribe { c, _ ->
-                AppDependencies.getDatabaseObserver().notifyMessageInserted(c.id, message.conversationId)
-                AppDependencies.getDatabaseObserver().notifyConversationUpdated(c.id)
-            }
+                .onErrorComplete()
+                .subscribe()
+        } else {
+            shouldHaveConversationInCache(message.conversationId)
+                .flatMap { optional ->
+                    if (optional.isPresent) {
+                        val conversation = optional.get()
+                        val group = conversation.group
 
+                        when (option) {
+                            GroupOptionChangedPayload.Option.NAME -> group.name = message.content
+                            GroupOptionChangedPayload.Option.ADDED_MEMBER -> conversation.participants.add(
+                                member!!
+                            )
+                            GroupOptionChangedPayload.Option.LEAVE_GROUP -> conversation.participants.remove(
+                                member!!
+                            )
+                            GroupOptionChangedPayload.Option.THUMBNAIL -> group.thumbnail =
+                                message.content
+                            GroupOptionChangedPayload.Option.REMOVE_MEMBER -> conversation.participants.remove(
+                                member!!
+                            )
+                        }
+
+                        conversation.chats = mutableListOf(message)
+
+                        return@flatMap Completable.fromAction {
+                            mDatabase.conversationDao.saveConversationList(
+                                mutableListOf(conversation)
+                            )
+                        }.andThen(Single.just(conversation))
+                    } else {
+                        return@flatMap fetchConversation(message.conversationId).concatMap { c ->
+                            Completable.fromAction {
+                                mDatabase.conversationDao.saveConversationList(
+                                    mutableListOf(c)
+                                )
+                            }.toSingleDefault(c)
+                        }
+                    }
+                }
+                .subscribe { c, _ ->
+                    AppDependencies.getDatabaseObserver()
+                        .notifyMessageInserted(c.id, message.id)
+                    AppDependencies.getDatabaseObserver().notifyConversationUpdated(c.id)
+                }
+        }
     }
 
     private fun mapPairToMessageNotificationMetadata(
