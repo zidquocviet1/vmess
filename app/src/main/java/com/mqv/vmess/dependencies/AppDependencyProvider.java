@@ -3,8 +3,11 @@ package com.mqv.vmess.dependencies;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 
 import com.google.gson.Gson;
+import com.mqv.vmess.activity.preferences.AppPreferences;
+import com.mqv.vmess.activity.preferences.AppPreferencesImpl;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.data.repository.ConversationRepository;
@@ -97,6 +100,11 @@ public class AppDependencyProvider implements AppDependencies.Provider {
                                        retrofit.create(ChatService.class),
                                        retrofit.create(UserService.class),
                                        gson);
+    }
+
+    @Override
+    public AppPreferences provideAppPreferences() {
+        return new AppPreferencesImpl(context, PreferenceManager.getDefaultSharedPreferences(context));
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

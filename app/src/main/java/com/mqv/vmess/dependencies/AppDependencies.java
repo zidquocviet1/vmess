@@ -2,6 +2,7 @@ package com.mqv.vmess.dependencies;
 
 import androidx.annotation.MainThread;
 
+import com.mqv.vmess.activity.preferences.AppPreferences;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.manager.MemoryManager;
 import com.mqv.vmess.message.IncomingMessageObserver;
@@ -24,6 +25,7 @@ public class AppDependencies {
     private static volatile MessageSenderProcessor messageSenderProcessor;
     private static volatile NotificationEntry notificationEntry;
     private static volatile MemoryManager memoryManager;
+    private static volatile AppPreferences appPreferences;
 
     private static Provider provider;
 
@@ -124,6 +126,17 @@ public class AppDependencies {
         return memoryManager;
     }
 
+    public static AppPreferences getAppPreferences() {
+        if (appPreferences == null) {
+            synchronized (LOCK) {
+                if (appPreferences == null) {
+                    appPreferences = provider.provideAppPreferences();
+                }
+            }
+        }
+        return appPreferences;
+    }
+
     public interface Provider {
         WebSocketClient provideWebSocket();
         IncomingMessageObserver provideIncomingMessageObserver();
@@ -131,5 +144,6 @@ public class AppDependencies {
         DatabaseObserver provideDatabaseObserver();
         MessageSenderProcessor provideMessageSenderProcessor();
         NotificationEntry provideNotificationEntry();
+        AppPreferences provideAppPreferences();
     }
 }
