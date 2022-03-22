@@ -2,10 +2,7 @@ package com.mqv.vmess.reactive
 
 import com.google.firebase.auth.GetTokenResult
 import com.mqv.vmess.network.ApiResponse
-import com.mqv.vmess.network.exception.BadRequestException
-import com.mqv.vmess.network.exception.FirebaseUnauthorizedException
-import com.mqv.vmess.network.exception.ResourceConflictException
-import com.mqv.vmess.network.exception.ResourceNotFoundException
+import com.mqv.vmess.network.exception.*
 import com.mqv.vmess.util.Const
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.*
@@ -115,6 +112,7 @@ object RxHelper {
         return when (statusCode) {
             403 -> BadRequestException()
             404 -> ResourceNotFoundException()
+            406 -> PermissionDeniedException()
             409 -> ResourceConflictException()
             else -> IllegalStateException()
         }
