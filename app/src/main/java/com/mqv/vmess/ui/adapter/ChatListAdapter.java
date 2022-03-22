@@ -24,7 +24,7 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
 import com.mqv.vmess.ui.data.ConversationMessageItem;
 import com.mqv.vmess.ui.data.ConversationMetadata;
-import com.mqv.vmess.util.Const;
+import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.Picture;
 
 import java.util.List;
@@ -61,6 +61,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         void changeGroupName();
 
         void viewGroupMember();
+
+        void changeGroupThumbnail();
     }
 
     public ChatListAdapter(Context context,
@@ -135,14 +137,14 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         if (item == null)
             return VIEW_LOAD_MORE;
 
-        if (item.getId().startsWith(Const.DUMMY_FIRST_CHAT_PREFIX)) {
+        if (MessageUtil.isDummyProfileMessage(item)) {
             if (mConversationType == ConversationType.GROUP) {
                 return VIEW_PROFILE_GROUP;
             } else if (mConversationType == ConversationType.SELF) {
                 return VIEW_PROFILE_SELF;
             }
             return VIEW_PROFILE;
-        } else if (item.getId().startsWith(Const.ADDED_MEMBER_CHAT_ID) || item.getId().startsWith(Const.CHANGE_GROUP_NAME_CHAT_ID)) {
+        } else if (MessageUtil.isNotificationMessage(item)) {
             return VIEW_CHAT_NOTIFICATION;
         } else {
             return VIEW_CHAT;
@@ -180,7 +182,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             ChatListViewHolder chatHolder = (ChatListViewHolder) holder;
             ConversationMessageItem bindableItem = chatHolder.getItemBindable();
 
-            if (!payloads.isEmpty()) {
+            if (!payloads.isEmpty() && getItem(position) != null) {
                 for (Object s : payloads) {
                     if (s.equals(MESSAGE_STATUS_PAYLOAD)) {
                         bindableItem.bindStatus(getItem(position));
@@ -243,7 +245,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                   @NonNull List<User> participants,
                                   @NonNull ColorStateList colorStateList,
                                   @NonNull List<Chat> listItem,
-                                  @NonNull ConversationMetadata metadata) {
+                                  ConversationMetadata metadata) {
             super(binding.getRoot());
 
             mBinding = binding;
@@ -312,6 +314,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 mBinding.buttonAddMember.setOnClickListener(v -> conversationCallback.addMember());
                 mBinding.buttonEditName.setOnClickListener(v -> conversationCallback.changeGroupName());
                 mBinding.buttonViewGroupMember.setOnClickListener(v -> conversationCallback.viewGroupMember());
+                mBinding.layoutGroupThumbnail.setOnClickListener(v -> conversationCallback.changeGroupThumbnail());
             }
         }
 
@@ -322,18 +325,37 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             List<String> thumbnails = metadata.getConversationThumbnail();
             List<User> participants = metadata.getConversationParticipants();
 
-            Picture.loadUserAvatar(mContext, thumbnails.get(0)).into(mBinding.imageAvatar3);
-            Picture.loadUserAvatar(mContext, thumbnails.get(1)).into(mBinding.imageAvatar2);
+            if (thumbnails.isEmpty()) {
+                Picture.loadUserAvatar(mContext, null).into(mBinding.imageAvatar3);
 
-            if (participants.size() == 3) {
+                mBinding.layoutAvatar2.setVisibility(View.GONE);
                 mBinding.layoutAvatar1.setVisibility(View.GONE);
-            } else if (participants.size() == 4) {
-                Picture.loadUserAvatar(mContext, thumbnails.get(2)).into(mBinding.imageAvatar1);
+                mBinding.textMoreNumber.setVisibility(View.GONE);
+            } else if (thumbnails.size() == 1) {
+                Picture.loadUserAvatar(mContext, thumbnails.get(0)).into(mBinding.imageAvatar3);
+
+                mBinding.layoutAvatar2.setVisibility(View.GONE);
+                mBinding.layoutAvatar1.setVisibility(View.GONE);
                 mBinding.textMoreNumber.setVisibility(View.GONE);
             } else {
-                mBinding.imageAvatar1.setImageDrawable(Picture.getErrorAvatarLoaded(mContext));
-                mBinding.textMoreNumber.setVisibility(View.VISIBLE);
-                mBinding.textMoreNumber.setText(mContext.getString(R.string.label_text_more_number, participants.size() - 3));
+                Picture.loadUserAvatar(mContext, thumbnails.get(0)).into(mBinding.imageAvatar3);
+                Picture.loadUserAvatar(mContext, thumbnails.get(1)).into(mBinding.imageAvatar2);
+
+                mBinding.layoutAvatar2.setVisibility(View.VISIBLE);
+
+                if (participants.size() == 3) {
+                    mBinding.layoutAvatar1.setVisibility(View.GONE);
+                } else if (participants.size() == 4) {
+                    Picture.loadUserAvatar(mContext, thumbnails.get(2)).into(mBinding.imageAvatar1);
+                    mBinding.layoutAvatar1.setVisibility(View.VISIBLE);
+                    mBinding.textMoreNumber.setVisibility(View.GONE);
+                } else {
+                    mBinding.layoutAvatar1.setVisibility(View.VISIBLE);
+                    mBinding.imageAvatar1.setVisibility(View.VISIBLE);
+                    mBinding.imageAvatar1.setImageDrawable(Picture.getErrorAvatarLoaded(mContext));
+                    mBinding.textMoreNumber.setVisibility(View.VISIBLE);
+                    mBinding.textMoreNumber.setText(mContext.getString(R.string.label_text_more_number, participants.size() - 3));
+                }
             }
         }
     }
@@ -352,12 +374,16 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
 
         public void bind(Chat item) {
-            String id = item.getId();
-
-            if (id.startsWith(Const.CHANGE_GROUP_NAME_CHAT_ID)) {
+            if (MessageUtil.isChangeGroupNameMessage(item)) {
                 bindChangeGroupName(item);
-            } else if (id.startsWith(Const.ADDED_MEMBER_CHAT_ID)) {
+            } else if (MessageUtil.isAddedMemberMessage(item)) {
                 bindAddedMember(item);
+            } else if (MessageUtil.isChangeThumbnailMessage(item)) {
+                bindChangeThumbnail(item);
+            } else if (MessageUtil.isMemberLeaveGroupMessage(item)) {
+                bindLeaveGroup(item);
+            } else if (MessageUtil.isRemoveMemberMessage(item)) {
+                bindRemoveMember(item);
             }
         }
 
@@ -377,6 +403,29 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             User   sender   = findUserIfNotExists(senderId);
 
             mBinding.textMessage.setText(mContext.getString(R.string.msg_who_added_another_to_the_group, sender.getDisplayName(), member.getDisplayName()));
+        }
+
+        private void bindRemoveMember(Chat item) {
+            String content  = item.getContent(); // That member who was removed in the group
+            String senderId = item.getSenderId();
+
+            User   sender   = findUserIfNotExists(senderId);
+
+            mBinding.textMessage.setText(mContext.getString(R.string.msg_who_remove_another_member, sender.getDisplayName(), content));
+        }
+
+        private void bindLeaveGroup(Chat item) {
+            String senderId = item.getSenderId();
+            User   sender   = findUserIfNotExists(senderId);
+
+            mBinding.textMessage.setText(mContext.getString(R.string.msg_who_leave_group, sender.getDisplayName()));
+        }
+
+        private void bindChangeThumbnail(Chat item) {
+            String senderId = item.getSenderId();
+            User   sender   = findUserIfNotExists(senderId);
+
+            mBinding.textMessage.setText(mContext.getString(R.string.msg_who_change_group_thumbnail, sender.getDisplayName()));
         }
 
         private User findUserIfNotExists(String senderId) {
