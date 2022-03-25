@@ -49,4 +49,11 @@ public class AlertDialogUtil {
                 .setNegativeButton(negativeButton, null)
                 .show();
     }
+
+    public static void showPhotoSelectionDialog(Context context,
+                                                DialogInterface.OnClickListener onItemClick) {
+        new MaterialAlertDialogBuilder(context)
+                .setItems(R.array.action_change_avatar, onItemClick)
+                .show();
+    }
 }

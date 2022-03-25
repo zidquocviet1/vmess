@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.mqv.vmess.R
 import com.mqv.vmess.activity.ConversationActivity
 import com.mqv.vmess.activity.br.DirectReplyReceiver
+import com.mqv.vmess.activity.br.MarkNotificationReadReceiver
 import com.mqv.vmess.activity.preferences.PreferenceFriendRequestActivity
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
@@ -65,8 +66,13 @@ object NotificationUtil {
     }
 
     @JvmStatic
-    fun sendFriendRequestNotification(context: Context, sender: User) {
-        val intent = Intent(context, PreferenceFriendRequestActivity::class.java)
+    fun sendFriendRequestNotification(context: Context, sender: User, notificationId: Long) {
+        val markAsReadIntent = Intent(context, MarkNotificationReadReceiver::class.java).apply {
+            putExtra(MarkNotificationReadReceiver.EXTRA_NOTIFICATION_ID, notificationId)
+        }
+        val intent = Intent(context, PreferenceFriendRequestActivity::class.java).apply {
+            putExtra(MarkNotificationReadReceiver.EXTRA_INTENT, markAsReadIntent)
+        }
         val pendingIntent =
             PendingIntent.getActivity(context, REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT)
         val body = Html.fromHtml(
@@ -78,7 +84,7 @@ object NotificationUtil {
 
         sendNotification(
             context = context,
-            id = -1,
+            id = notificationId.toInt(),
             channelId = CHANNEL_ID_FRIEND_REQUEST,
             channelName = CHANNEL_NAME_FRIEND_REQUEST,
             title = context.getString(R.string.app_name),
@@ -90,9 +96,13 @@ object NotificationUtil {
     }
 
     @JvmStatic
-    fun sendAcceptedFriendRequestNotification(context: Context, whoAccepted: User) {
+    fun sendAcceptedFriendRequestNotification(context: Context, whoAccepted: User, id: Long) {
+        val markAsReadIntent = Intent(context, MarkNotificationReadReceiver::class.java).apply {
+            putExtra(MarkNotificationReadReceiver.EXTRA_NOTIFICATION_ID, id)
+        }
         val intent = Intent(context, ConversationActivity::class.java).apply {
             putExtra(ConversationActivity.EXTRA_PARTICIPANT_ID, whoAccepted.uid)
+            putExtra(MarkNotificationReadReceiver.EXTRA_INTENT, markAsReadIntent)
         }
         val pendingIntent =
             PendingIntent.getActivity(context, REQUEST_CODE, intent, PendingIntent.FLAG_ONE_SHOT)
@@ -105,7 +115,7 @@ object NotificationUtil {
 
         sendNotification(
             context = context,
-            id = -1,
+            id = id.toInt(),
             channelId = CHANNEL_ID_ACCEPTED,
             channelName = CHANNEL_NAME_ACCEPTED_REQUEST,
             title = context.getString(R.string.app_name),

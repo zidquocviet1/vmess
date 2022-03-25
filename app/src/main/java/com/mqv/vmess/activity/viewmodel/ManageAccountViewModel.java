@@ -25,15 +25,18 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
 import com.mqv.vmess.data.model.SignInProvider;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.FriendRequestRepository;
 import com.mqv.vmess.data.repository.HistoryLoggedInUserRepository;
 import com.mqv.vmess.data.repository.LoginRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
+import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
-import com.mqv.vmess.network.model.Notification;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.reactive.RxHelper;
+import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Logging;
 
@@ -48,8 +51,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.observers.DisposableCompletableObserver;
-import io.reactivex.rxjava3.observers.DisposableObserver;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -59,6 +60,8 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     private final PeopleRepository peopleRepository;
     private final NotificationRepository notificationRepository;
     private final ConversationRepository conversationRepository;
+    private final UserRepository userRepository;
+    private final FriendRequestRepository friendRequestRepository;
     private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
     private final MutableLiveData<HistoryLoggedInUser> verifyResult = new MutableLiveData<>();
     private final MutableLiveData<List<HistoryLoggedInUser>> historyUserList = new MutableLiveData<>();
@@ -76,12 +79,16 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                                   LoginRepository loginRepository,
                                   PeopleRepository peopleRepository,
                                   NotificationRepository notificationRepository,
-                                  ConversationRepository conversationRepository) {
+                                  ConversationRepository conversationRepository,
+                                  UserRepository userRepository,
+                                  FriendRequestRepository friendRequestRepository) {
         this.historyUserRepository = historyUserRepository;
         this.loginRepository = loginRepository;
         this.peopleRepository = peopleRepository;
         this.notificationRepository = notificationRepository;
         this.conversationRepository = conversationRepository;
+        this.userRepository = userRepository;
+        this.friendRequestRepository = friendRequestRepository;
 
         getAllHistoryUser();
         loadLoggedInUser();
@@ -343,43 +350,28 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
         loginRepository.sendFcmToken(currentUser);
 
-        fetchNotification(Objects.requireNonNull(currentUser).getUid());
+        fetchNotification();
     }
 
-    private void fetchNotification(String uid) {
-        notificationRepository.fetchNotification(uid, 1)
+    private void fetchNotification() {
+        Disposable disposable = notificationRepository.fetchNotification(1)
+                .compose(RxHelper.parseResponseData())
+                .flatMapIterable(list -> list)
+                .flatMap(fn -> userRepository.fetchUserFromRemote(fn.getSenderId())
+                        .compose(RxHelper.parseResponseData())
+                        .flatMapCompletable(user -> friendRequestRepository.isFriend(user.getUid())
+                                .flatMapCompletable(isFriend -> peopleRepository.save(People.mapFromUser(user, isFriend))))
+                        .subscribeOn(Schedulers.io())
+                        .doOnError(t -> Logging.show(t.getMessage()))
+                        .toSingleDefault(fn)
+                        .toObservable())
+                .toList()
+                .concatMapCompletable(notificationRepository::saveCachedNotification)
                 .subscribeOn(Schedulers.io())
-                .subscribe(new DisposableObserver<>() {
-                    @Override
-                    public void onNext(@NonNull ApiResponse<List<Notification>> response) {
-                        if (response.getStatusCode() == HttpURLConnection.HTTP_OK){
-                            notificationRepository.saveCachedNotification(response.getSuccess())
-                                    .subscribeOn(Schedulers.io())
-                                    .subscribe(new DisposableCompletableObserver() {
-                                        @Override
-                                        public void onComplete() {
-                                            Logging.show("Fetch notification when login SUCCESSFULLY");
-                                        }
+                .observeOn(Schedulers.io())
+                .onErrorComplete()
+                .subscribe();
 
-                                        @Override
-                                        public void onError(@NonNull Throwable e) {
-
-                                        }
-                                    });
-                        }else{
-                            Logging.show("Fetch notification when login FAIL");
-                        }
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
+        cd.add(disposable);
     }
 }

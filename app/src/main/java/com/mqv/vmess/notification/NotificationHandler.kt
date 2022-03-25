@@ -4,6 +4,8 @@ import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
 import com.mqv.vmess.data.MyDatabase
+import com.mqv.vmess.data.model.FriendNotification
+import com.mqv.vmess.data.model.FriendNotificationType
 import com.mqv.vmess.dependencies.AppDependencies
 import com.mqv.vmess.network.exception.ResourceNotFoundException
 import com.mqv.vmess.network.model.Chat
@@ -12,6 +14,7 @@ import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
 import com.mqv.vmess.network.service.ChatService
 import com.mqv.vmess.network.service.ConversationService
+import com.mqv.vmess.network.service.FriendRequestService
 import com.mqv.vmess.network.service.UserService
 import com.mqv.vmess.notification.NotificationPayload.*
 import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
@@ -19,8 +22,12 @@ import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.ui.data.People
 import com.mqv.vmess.util.Logging
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 
 class NotificationHandler(
@@ -29,6 +36,7 @@ class NotificationHandler(
     private val mConversationService: ConversationService,
     private val mChatService: ChatService,
     private val mUserService: UserService,
+    private val mFriendRequestService: FriendRequestService,
     private val gson: Gson
 ) : NotificationEntry {
     private val mUser = FirebaseAuth.getInstance().currentUser!!
@@ -104,11 +112,21 @@ class NotificationHandler(
     * */
     private fun handleFriendRequest(payload: FriendRequestPayload) {
         val whoSent = payload.whoSent
+        val notificationId = payload.notificationId
 
-        fetchUserDetail(whoSent)
+        saveFriendNotification(
+            notificationId,
+            senderId = whoSent,
+            createdAt = payload.timestamp.toLocalDateTime(),
+            FriendNotificationType.REQUEST_FRIEND
+        ).concatMap { id ->
+            fetchUserDetail(whoSent).zipWith(Single.just(id)) { user, notificationId ->
+                return@zipWith Pair(user, notificationId)
+            }
+        }
             .onErrorComplete()
-            .subscribe { u ->
-                NotificationUtil.sendFriendRequestNotification(mContext, u)
+            .subscribe { pair ->
+                NotificationUtil.sendFriendRequestNotification(mContext, pair.first, pair.second)
             }
     }
 
@@ -118,23 +136,86 @@ class NotificationHandler(
     private fun handleAcceptedFriend(payload: AcceptedFriendPayload) {
         val whoConfirm = payload.whoAccepted
         val conversationId = payload.conversationId
+        val notificationId = payload.notificationId
 
-        fetchConversation(conversationId)
-            .subscribe { c, _ ->
-                val user = c.participants.stream()
+        saveFriendNotification(
+            notificationId,
+            senderId = whoConfirm,
+            createdAt = payload.timestamp.toLocalDateTime(),
+            FriendNotificationType.ACCEPTED_FRIEND
+        ).concatMap { id ->
+            fetchConversation(conversationId).zipWith(Single.just(id)) { c, notificationId ->
+                return@zipWith Pair(c, notificationId)
+            }
+        }
+            .subscribe { pair, _ ->
+                val user = pair.first.participants.stream()
                     .filter { u -> u.uid == whoConfirm }
                     .findFirst()
                     .orElseThrow { ResourceNotFoundException() }
+                with(user) {
+                    val people =
+                        People(uid, biographic, displayName, photoUrl, username, true, accessedDate)
 
-                NotificationUtil.sendAcceptedFriendRequestNotification(mContext, user)
+                    mDatabase.peopleDao.save(people)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                        .onErrorComplete()
+                        .subscribe()
+                }
 
-                AppDependencies.getDatabaseObserver().notifyConversationInserted(c.id)
+                NotificationUtil.sendAcceptedFriendRequestNotification(mContext, user, pair.second)
+                AppDependencies.getDatabaseObserver().notifyConversationInserted(pair.first.id)
             }
+    }
+
+    private fun saveFriendNotification(
+        id: Long,
+        senderId: String,
+        createdAt: LocalDateTime,
+        type: FriendNotificationType
+    ): Single<Long> {
+        val item = FriendNotification(
+            id = id,
+            senderId = senderId,
+            type = type,
+            hasRead = false,
+            createdAt = createdAt
+        )
+
+        return mDatabase.friendNotificationDao
+            .insertAndReturn(item)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
     }
 
     private fun handleUnfriend(payload: UnfriendPayload) {
         val whoUnfriend = payload.whoUnfriend
         val dao = mDatabase.peopleDao
+        val notificationDao = mDatabase.friendNotificationDao
+        val tempNotification = FriendNotification.TEMP
+
+        val completable = Single.zip(
+            notificationDao.fetchAcceptedNotificationByUserId(whoUnfriend)
+                .onErrorReturnItem(tempNotification),
+            notificationDao.fetchRequestNotificationByUserId(whoUnfriend)
+                .onErrorReturnItem(tempNotification)
+        ) { accepted, request ->
+            val result = mutableListOf<FriendNotification>()
+
+            if (accepted != tempNotification) {
+                result.add(accepted)
+            }
+
+            if (request != tempNotification) {
+                result.add(request)
+            }
+
+            return@zip result
+        }
+            .flatMapObservable { Observable.fromIterable(it) }
+            .flatMapCompletable { notificationDao.delete(it) }
+            .subscribeOn(Schedulers.io())
 
         dao.getByUid(whoUnfriend)
             .subscribeOn(Schedulers.io())
@@ -148,6 +229,7 @@ class NotificationHandler(
                         )
                     })
             }
+            .andThen(completable)
             .onErrorComplete()
             .subscribe()
     }
@@ -345,14 +427,33 @@ class NotificationHandler(
             .compose(RxHelper.parseResponseData())
             .singleOrError()
             .flatMap { user ->
-                val people = with(user) {
-                    People(uid, user.biographic, displayName, photoUrl, username, accessedDate)
-                }
-
-                return@flatMap mDatabase.peopleDao.save(people).toSingleDefault(user)
+                return@flatMap mUser.authorizeToken()
+                    .flatMapObservable { token -> mFriendRequestService.isFriend(token, userId) }
+                    .map { isFriend ->
+                        return@map with(user) {
+                            People(
+                                uid,
+                                user.biographic,
+                                displayName,
+                                photoUrl,
+                                username,
+                                isFriend,
+                                accessedDate
+                            )
+                        }
+                    }
+                    .flatMapCompletable { people ->
+                        return@flatMapCompletable mDatabase.peopleDao.save(
+                            people
+                        )
+                    }
+                    .toSingleDefault(user)
             }
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
+
+    private fun Long.toLocalDateTime() =
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault());
 
     companion object {
         val TAG: String = NotificationHandler::class.java.simpleName

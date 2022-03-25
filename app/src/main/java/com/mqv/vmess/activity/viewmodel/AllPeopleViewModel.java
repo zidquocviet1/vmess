@@ -5,8 +5,10 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.result.Result;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Logging;
 
@@ -17,6 +19,8 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -24,12 +28,15 @@ public class AllPeopleViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<Boolean>> unfriendResult = new MutableLiveData<>();
     private final PeopleRepository peopleRepository;
     private final ConversationRepository conversationRepository;
+    private final NotificationRepository notificationRepository;
 
     @Inject
     public AllPeopleViewModel(PeopleRepository peopleRepository,
-                              ConversationRepository conversationRepository) {
+                              ConversationRepository conversationRepository,
+                              NotificationRepository notificationRepository) {
         this.peopleRepository = peopleRepository;
         this.conversationRepository = conversationRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     public LiveData<Result<Boolean>> getUnfriendResult() {
@@ -49,9 +56,22 @@ public class AllPeopleViewModel extends CurrentUserViewModel {
 
                                 deleteCachePeople(people);
                                 deleteCacheConversation(userId, people.getUid());
+                                deleteNotificationRelatedToUser(people.getUid());
                             }
                         }, t -> unfriendResult.setValue(Result.Fail(R.string.error_connect_server_fail)))
                 ), e -> unfriendResult.setValue(Result.Fail(R.string.error_authentication_fail)));
+    }
+
+    private void deleteNotificationRelatedToUser(String userId) {
+        Disposable disposable = notificationRepository.fetchAllNotificationRelatedToUser(userId)
+                                                      .flatMapObservable(Observable::fromIterable)
+                                                      .flatMap(notificationRepository::removeNotification)
+                                                      .observeOn(Schedulers.io())
+                                                      .subscribeOn(Schedulers.io())
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .onErrorComplete()
+                                                      .subscribe();
+        cd.add(disposable);
     }
 
     private void deleteCachePeople(People people) {

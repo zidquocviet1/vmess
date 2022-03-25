@@ -310,6 +310,7 @@ public class ConversationViewModel extends AndroidViewModel {
                                                                                  user.getDisplayName(),
                                                                                  user.getPhotoUrl(),
                                                                                  user.getUsername(),
+                                                                                 false,
                                                                                  user.getAccessedDate());
                                                       return peopleRepository.save(people)
                                                                              .subscribeOn(Schedulers.io())

@@ -2,6 +2,7 @@ package com.mqv.vmess.data.repository.impl;
 
 import androidx.annotation.NonNull;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
 import com.mqv.vmess.network.ApiResponse;
@@ -9,6 +10,7 @@ import com.mqv.vmess.network.model.FriendRequest;
 import com.mqv.vmess.network.model.type.FriendRequestStatus;
 import com.mqv.vmess.network.service.FriendRequestService;
 import com.mqv.vmess.util.Const;
+import com.mqv.vmess.util.UserTokenUtil;
 
 import java.util.List;
 import java.util.Objects;
@@ -70,6 +72,12 @@ public class FriendRequestRepositoryImpl implements FriendRequestRepository {
     @Override
     public Observable<ApiResponse<List<String>>> getFriendListId(String token) {
         return service.getFriendListId(Const.PREFIX_TOKEN + token);
+    }
+
+    @Override
+    public Observable<Boolean> isFriend(String userId) {
+        return UserTokenUtil.getTokenSingle(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()))
+                            .flatMapObservable(token -> service.isFriend(token, userId));
     }
 
     private void validateIdToken(FirebaseUser user,

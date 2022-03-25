@@ -5,12 +5,13 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
+import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.network.model.FriendRequest;
 import com.mqv.vmess.network.model.User;
-import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
@@ -20,6 +21,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
@@ -30,14 +32,17 @@ public class FriendRequestViewModel extends CurrentUserViewModel {
     private final FriendRequestRepository repository;
     private final UserRepository userRepository;
     private final PeopleRepository peopleRepository;
+    private final NotificationRepository notificationRepository;
 
     @Inject
     public FriendRequestViewModel(FriendRequestRepository repository,
                                   UserRepository userRepository,
-                                  PeopleRepository peopleRepository) {
+                                  PeopleRepository peopleRepository,
+                                  NotificationRepository notificationRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.peopleRepository = peopleRepository;
+        this.notificationRepository = notificationRepository;
 
         loadFirebaseUser();
         loadPendingFriendRequest();
@@ -124,13 +129,28 @@ public class FriendRequestViewModel extends CurrentUserViewModel {
                             } else
                                 connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail));
                         })),
-                e -> responseRequestResult.setValue(Result.Fail(R.string.error_authentication_fail))
+                e -> connectUserResult.setValue(Result.Fail(R.string.error_authentication_fail))
         );
     }
 
-    public void confirmFriendRequest(People people) {
-        cd.add(peopleRepository.save(people)
+    public void confirmFriendRequest(String uid) {
+        cd.add(peopleRepository.getConnectPeopleByUid(uid)
+                .compose(RxHelper.parseResponseData())
+                .flatMapCompletable(peopleRepository::save)
                 .subscribeOn(Schedulers.io())
+                .onErrorComplete()
                 .subscribe(() -> Logging.show("Insert new people into database successfully")));
+    }
+
+    // Remove request notification whenever the user accept or cancel request.
+    public void removeRequestNotification(String senderId) {
+        Disposable disposable = notificationRepository.fetchRequestNotificationBySenderId(senderId)
+                                                      .flatMapObservable(notificationRepository::removeNotification)
+                                                      .compose(RxHelper.applyObservableSchedulers())
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .onErrorComplete()
+                                                      .subscribe();
+
+        cd.add(disposable);
     }
 }

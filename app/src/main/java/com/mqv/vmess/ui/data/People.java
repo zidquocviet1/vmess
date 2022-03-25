@@ -4,11 +4,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.google.gson.annotations.SerializedName;
+import com.mqv.vmess.network.model.User;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -25,21 +27,30 @@ public class People implements Parcelable {
     private String photoUrl;
     @SerializedName(value = "user_connect_name")
     private String username;
+    @ColumnInfo(name = "is_friend")
+    private Boolean isFriend;
     @SerializedName(value = "accessed_date")
     private LocalDateTime accessedDate;
+
+    public static final People NOT_FOUND = new People("-1", "", "Application User", null, "", false, null);
 
     @Ignore
     public People(@NonNull String uid) {
         this.uid = uid;
     }
 
-    public People(@NonNull String uid, String biographic, String displayName, String photoUrl, String username, LocalDateTime accessedDate) {
+    public People(@NonNull String uid, String biographic, String displayName, String photoUrl, String username, Boolean isFriend, LocalDateTime accessedDate) {
         this.uid = uid;
         this.displayName = displayName;
         this.biographic = biographic;
         this.photoUrl = photoUrl;
         this.username = username;
+        this.isFriend = isFriend;
         this.accessedDate = accessedDate;
+    }
+
+    public static People mapFromUser(User user, Boolean isFriend) {
+        return new People(user.getUid(), user.getBiographic(), user.getDisplayName(), user.getPhotoUrl(), user.getUsername(), isFriend, user.getAccessedDate());
     }
 
     protected People(Parcel in) {
@@ -108,6 +119,14 @@ public class People implements Parcelable {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Boolean getFriend() {
+        return isFriend;
+    }
+
+    public void setFriend(Boolean friend) {
+        isFriend = friend;
     }
 
     public LocalDateTime getAccessedDate() {

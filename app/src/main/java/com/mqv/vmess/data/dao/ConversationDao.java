@@ -29,6 +29,13 @@ import io.reactivex.rxjava3.core.Single;
 
 @Dao
 public abstract class ConversationDao {
+    @Query(" select * from conversation\n" +
+           " inner join chat on chat_conversation_id = conversation_id and conversation_status = :statusType\n" +
+           " group by conversation_id\n" +
+           " order by max(chat_timestamp) desc\n" +
+           " limit :limit")
+    public abstract Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit);
+
     @Query("select * from conversation\n" +
             "inner join chat on chat_conversation_id = conversation_id and conversation_status = :statusType\n" +
             "group by conversation_id\n" +

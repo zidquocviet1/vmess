@@ -24,14 +24,16 @@ public interface FriendRequestRepository {
                                              Consumer<Exception> onAuthFail);
 
     void responseFriendRequest(FirebaseUser user,
-                               @Body FriendRequest request,
+                               FriendRequest request,
                                Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
                                Consumer<Exception> onAuthFail);
 
     void requestConnect(FirebaseUser user,
-                        @Body FriendRequest request,
+                        FriendRequest request,
                         Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
                         Consumer<Exception> onAuthFail);
 
     Observable<ApiResponse<List<String>>> getFriendListId(String token);
+
+    Observable<Boolean> isFriend(String userId);
 }

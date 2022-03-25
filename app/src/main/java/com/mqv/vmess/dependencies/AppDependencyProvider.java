@@ -17,6 +17,7 @@ import com.mqv.vmess.message.IncomingMessageProcessor;
 import com.mqv.vmess.message.MessageSenderProcessor;
 import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
+import com.mqv.vmess.network.service.FriendRequestService;
 import com.mqv.vmess.network.service.UserService;
 import com.mqv.vmess.network.websocket.WebSocketAlarmTimer;
 import com.mqv.vmess.network.websocket.WebSocketClient;
@@ -99,6 +100,7 @@ public class AppDependencyProvider implements AppDependencies.Provider {
                                        retrofit.create(ConversationService.class),
                                        retrofit.create(ChatService.class),
                                        retrofit.create(UserService.class),
+                                       retrofit.create(FriendRequestService.class),
                                        gson);
     }
 

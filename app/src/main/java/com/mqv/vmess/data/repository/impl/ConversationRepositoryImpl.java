@@ -66,6 +66,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit) {
+        return dao.observeUnreadConversation(statusType, limit);
+    }
+
+    @Override
     public Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType) {
         return dao.conversationAndLastChat(statusType);
     }

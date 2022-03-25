@@ -2,6 +2,7 @@ package com.mqv.vmess.ui.adapter;
 
 import android.content.Context;
 import android.text.Html;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,41 +14,37 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.mqv.vmess.R;
+import com.mqv.vmess.data.model.FriendNotificationType;
 import com.mqv.vmess.databinding.ItemNotificationFragmentBinding;
-import com.mqv.vmess.di.GlideApp;
-import com.mqv.vmess.di.GlideRequests;
-import com.mqv.vmess.network.model.Notification;
+import com.mqv.vmess.ui.data.FriendNotificationState;
 import com.mqv.vmess.util.Picture;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.function.Consumer;
 
-public class NotificationAdapter extends ListAdapter<Notification, NotificationAdapter.NotificationViewHolder> {
+public class NotificationAdapter extends ListAdapter<FriendNotificationState, NotificationAdapter.NotificationViewHolder> {
     private final Context mContext;
-    private List<Notification> mData;
     private Consumer<Integer> onItemClick;
     private Consumer<Integer> onChangeItem;
     private Consumer<Boolean> onDatasetChange;
     private static final String WEEK_PATTERN = "EEE hh:mm a";
     private static final String MONTH_PATTERN = "MMM dd hh:mm a";
 
-    public NotificationAdapter(Context context, List<Notification> data) {
+    public NotificationAdapter(Context context) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
-            public boolean areItemsTheSame(@NonNull Notification oldItem, @NonNull Notification newItem) {
-                return oldItem.getId().equals(newItem.getId());
+            public boolean areItemsTheSame(@NonNull FriendNotificationState oldItem, @NonNull FriendNotificationState newItem) {
+                return oldItem.getId() == newItem.getId();
             }
 
             @Override
-            public boolean areContentsTheSame(@NonNull Notification oldItem, @NonNull Notification newItem) {
+            public boolean areContentsTheSame(@NonNull FriendNotificationState oldItem, @NonNull FriendNotificationState newItem) {
                 return oldItem.equals(newItem);
             }
         });
         mContext = context;
-        mData = data;
     }
 
     public void setOnItemClick(Consumer<Integer> onItemClick) {
@@ -62,27 +59,11 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
         this.onDatasetChange = onDatasetChange;
     }
 
-    public void removeItem(Notification notification) {
-        var index = mData.indexOf(notification);
-
-        mData.remove(index);
-
-        notifyItemRemoved(index);
-        notifyItemRangeChanged(index, mData.size());
-
-        if (onDatasetChange != null)
-            onDatasetChange.accept(mData.isEmpty());
-    }
-
     @NonNull
     @Override
     public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        var view = LayoutInflater.from(mContext).inflate(R.layout.item_notification_fragment, parent, false);
-        return new NotificationViewHolder(ItemNotificationFragmentBinding.bind(view),
-                mContext,
-                GlideApp.with(mContext),
-                onItemClick,
-                onChangeItem);
+        View view = LayoutInflater.from(mContext).inflate(R.layout.item_notification_fragment, parent, false);
+        return new NotificationViewHolder(ItemNotificationFragmentBinding.bind(view), mContext, onItemClick, onChangeItem);
     }
 
     @Override
@@ -93,17 +74,14 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
     public static class NotificationViewHolder extends RecyclerView.ViewHolder {
         ItemNotificationFragmentBinding mBinding;
         Context mContext;
-        GlideRequests mRequest;
 
         public NotificationViewHolder(@NonNull ItemNotificationFragmentBinding binding,
                                       Context context,
-                                      GlideRequests request,
                                       Consumer<Integer> onItemClick,
                                       Consumer<Integer> onChangeItem) {
             super(binding.getRoot());
             mBinding = binding;
             mContext = context;
-            mRequest = request;
 
             binding.getRoot().setOnClickListener(v -> {
                 if (onItemClick != null)
@@ -123,12 +101,12 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
             });
         }
 
-        public void bindTo(Notification item) {
-            mBinding.textBody.setText(Html.fromHtml(item.getBody(), Html.FROM_HTML_MODE_COMPACT));
-            mBinding.textTimestamp.setText(convertReadableTimestamp(item.getCreatedDate()));
+        public void bindTo(FriendNotificationState item) {
+            mBinding.textBody.setText(getBodyText(item));
+            mBinding.textTimestamp.setText(convertReadableTimestamp(item.getCreatedAt()));
             mBinding.layoutUnread.setVisibility(item.getHasRead() ? View.GONE : View.VISIBLE);
 
-            Picture.loadUserAvatar(mContext, item.getAgentImageUrl())
+            Picture.loadUserAvatar(mContext, item.getSender().getPhotoUrl())
                    .transition(DrawableTransitionOptions.withCrossFade())
                    .into(mBinding.imageAvatar);
         }
@@ -165,6 +143,19 @@ public class NotificationAdapter extends ListAdapter<Notification, NotificationA
 
                 return mContext.getString(R.string.msg_notification_month, arr[0], arr[1], arr[2] + " " + arr[3]);
             }
+        }
+
+        private Spanned getBodyText(FriendNotificationState item) {
+            String result;
+
+            if (item.getType() == FriendNotificationType.ACCEPTED_FRIEND) {
+                result = mContext.getString(R.string.msg_accepted_friend_request_notification_fragment, item.getSender().getDisplayName());
+            } else if (item.getType() == FriendNotificationType.REQUEST_FRIEND) {
+                result = mContext.getString(R.string.msg_new_friend_request_notification_fragment, item.getSender().getDisplayName());
+            } else {
+                result = "Unknown";
+            }
+            return Html.fromHtml(result, Html.FROM_HTML_MODE_COMPACT);
         }
     }
 }

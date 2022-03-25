@@ -1,7 +1,5 @@
 package com.mqv.vmess.activity.preferences;
 
-import static com.mqv.vmess.network.firebase.MessagingService.EXTRA_ACTION_NEW_FRIEND;
-import static com.mqv.vmess.network.firebase.MessagingService.EXTRA_KEY;
 import static com.mqv.vmess.network.model.type.FriendRequestStatus.CANCEL;
 import static com.mqv.vmess.network.model.type.FriendRequestStatus.CONFIRM;
 import static com.mqv.vmess.network.model.type.FriendRequestStatus.PENDING;
@@ -13,32 +11,22 @@ import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.work.Constraints;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
 
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.RequestPeopleActivity;
 import com.mqv.vmess.activity.ToolbarActivity;
+import com.mqv.vmess.activity.br.MarkNotificationReadReceiver;
 import com.mqv.vmess.activity.viewmodel.FriendRequestViewModel;
 import com.mqv.vmess.databinding.ActivityPreferenceFriendRequestBinding;
 import com.mqv.vmess.network.model.FriendRequest;
 import com.mqv.vmess.network.model.type.FriendRequestStatus;
 import com.mqv.vmess.ui.adapter.FriendRequestAdapter;
-import com.mqv.vmess.ui.data.People;
-import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
-import com.mqv.vmess.work.BaseWorker;
-import com.mqv.vmess.work.FetchNotificationWorker;
-import com.mqv.vmess.work.MarkNotificationReadWorker;
 import com.mqv.vmess.work.NewConversationWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -132,14 +120,13 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     FriendRequest request = result.getSuccess();
 
                     if (request.getStatus() == CONFIRM) {
+                        confirmFriendRequest(request.getReceiverId());
                         Data data = new Data.Builder()
                                             .putString("otherId", request.getReceiverId())
                                             .build();
-
-                        BaseWorker worker = new NewConversationWorkWrapper(this, data);
-
-                        WorkDependency.enqueue(worker);
+                        WorkDependency.enqueue(new NewConversationWorkWrapper(this, data));
                     }
+                    removeRequestNotification(request.getReceiverId());
                     break;
                 case ERROR:
                     AlertDialogUtil.finishLoadingDialog();
@@ -168,10 +155,10 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                     activityResultLauncher.launch(intent, data -> {
                         if (data != null && data.getResultCode() == RESULT_OK) {
                             var item = mAdapter.getCurrentList().get(currentItemPosition);
-
-                            confirmFriendRequest(item.getSenderId(), item.getPhotoUrl(), item.getDisplayName());
-
                             mAdapter.removeItem(currentItemPosition);
+
+                            confirmFriendRequest(item.getSenderId());
+                            removeRequestNotification(item.getSenderId());
                         }
                     });
                     break;
@@ -224,65 +211,26 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                 break;
             case CANCEL:
                 mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CANCEL));
-
-                fetchNotificationWithWork();
                 break;
             case CONFIRM:
-                confirmFriendRequest(request.getSenderId(), request.getPhotoUrl(), request.getDisplayName());
-
                 mViewModel.responseFriendRequest(new FriendRequest(request.getReceiverId(), request.getSenderId(), CONFIRM));
-
-                fetchNotificationWithWork();
                 break;
         }
     }
 
-    private void confirmFriendRequest(String uid, String photoUrl, String displayName) {
-        var people = new People(uid, "", displayName, photoUrl, null, LocalDateTime.now().minusMinutes(11));
+    private void confirmFriendRequest(String uid) {
+        mViewModel.confirmFriendRequest(uid);
+    }
 
-        mViewModel.confirmFriendRequest(people);
+    private void removeRequestNotification(String senderId) {
+        mViewModel.removeRequestNotification(senderId);
     }
 
     private void triggerOpenFromNotification(Intent intent) {
-        var extra = intent.getStringExtra(EXTRA_KEY);
-        if (extra != null && extra.equals(EXTRA_ACTION_NEW_FRIEND)) {
-            var uid = intent.getStringExtra(Const.KEY_UID);
-            var agentId = intent.getStringExtra(Const.KEY_AGENT_ID);
-            var imageUrl = intent.getStringExtra(Const.KEY_IMAGE_URL);
+        Intent broadcastMarkRead = intent.getParcelableExtra(MarkNotificationReadReceiver.EXTRA_INTENT);
 
-            var constraint = new Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build();
-
-            var workData = new Data.Builder()
-                    .putString(Const.KEY_UID, uid)
-                    .putString(Const.KEY_AGENT_ID, agentId)
-                    .putString(Const.KEY_IMAGE_URL, imageUrl)
-                    .putString("type", Const.DEFAULT_NEW_FRIEND_REQUEST)
-                    .build();
-
-            var workRequest = new OneTimeWorkRequest.Builder(MarkNotificationReadWorker.class)
-                    .setConstraints(constraint)
-                    .setInputData(workData)
-                    .build();
-
-            WorkManager.getInstance(this)
-                    .enqueueUniqueWork("mark_notification_read", ExistingWorkPolicy.REPLACE, workRequest);
+        if (broadcastMarkRead != null) {
+            sendBroadcast(broadcastMarkRead);
         }
-    }
-
-    private void fetchNotificationWithWork() {
-        var constraint =
-                new Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .build();
-
-        var workRequest =
-                new OneTimeWorkRequest.Builder(FetchNotificationWorker.class)
-                        .setConstraints(constraint)
-                        .build();
-
-        WorkManager.getInstance(this)
-                .enqueueUniqueWork("notification_worker", ExistingWorkPolicy.REPLACE, workRequest);
     }
 }

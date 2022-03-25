@@ -14,6 +14,7 @@ import com.mqv.vmess.network.service.UserService;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.util.UserTokenUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -139,6 +140,11 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     @Override
     public Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token) {
         return userService.getConnectPeopleByUid(Const.PREFIX_TOKEN + token, Const.DEFAULT_AUTHORIZER, uid);
+    }
+
+    @Override
+    public Observable<ApiResponse<People>> getConnectPeopleByUid(String uid) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> userService.getConnectPeopleByUid(token, Const.DEFAULT_AUTHORIZER, uid));
     }
 
     @Override

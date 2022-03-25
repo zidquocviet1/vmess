@@ -274,6 +274,14 @@
             android:name=".activity.br.AlarmReceiver"
             android:enabled="true"
             android:exported="true" />
+
+        <receiver android:name=".activity.br.MarkNotificationReadReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mqv.vmess.MARK_NOTIFICATION_READ"/>
+            </intent-filter>
+        </receiver>
         <!--
  Set custom default icon. This is used when no icon is set for incoming notification messages.
      See README(https://goo.gl/l4GJaQ) for more.

@@ -1,5 +1,6 @@
 package com.mqv.vmess.activity;
 
+import static com.mqv.vmess.network.model.type.FriendRequestStatus.CANCEL;
 import static com.mqv.vmess.network.model.type.FriendRequestStatus.CONFIRM;
 
 import android.app.Dialog;
@@ -12,12 +13,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.widget.PopupMenu;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
-import androidx.work.Constraints;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
 
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.RequestPeopleViewModel;
@@ -29,8 +25,6 @@ import com.mqv.vmess.network.model.type.FriendRequestStatus;
 import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
-import com.mqv.vmess.work.BaseWorker;
-import com.mqv.vmess.work.FetchNotificationWorker;
 import com.mqv.vmess.work.NewConversationWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
@@ -45,7 +39,6 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
     private User user;
     private User currentUser;
     private FriendRequestStatus friendRequestStatus;
-    private FriendRequestStatus responseStatus;
 
     @Override
     public void binding() {
@@ -132,17 +125,11 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 case SUCCESS:
                     AlertDialogUtil.finishLoadingDialog();
 
-                    if (responseStatus == CONFIRM)
-                        fetchNotificationWithWork();
-
                     if (result.getSuccess().getStatus() == CONFIRM) {
                         Data data = new Data.Builder()
                                             .putString("otherId", result.getSuccess().getReceiverId())
                                             .build();
-
-                        BaseWorker worker = new NewConversationWorkWrapper(this, data);
-
-                        WorkDependency.enqueue(worker);
+                        WorkDependency.enqueue(new NewConversationWorkWrapper(this, data));
                     }
                     setResult(RESULT_OK);
 
@@ -164,11 +151,9 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
         if (id == mBinding.buttonAddFriend.getId()) {
             mViewModel.requestConnect(new FriendRequest(currentUser.getUid(), user.getUid()));
         } else if (id == mBinding.buttonConfirm.getId()) {
-            responseStatus = CONFIRM;
-            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), responseStatus));
+            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), CONFIRM));
         } else if (id == mBinding.buttonCancel.getId()) {
-            responseStatus = FriendRequestStatus.CANCEL;
-            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), responseStatus));
+            mViewModel.responseFriendRequest(new FriendRequest(currentUser.getUid(), user.getUid(), CANCEL));
         } else if (id == mBinding.buttonMessage.getId()) {
             Intent intent = new Intent(this, ConversationActivity.class);
             intent.putExtra(ConversationActivity.EXTRA_PARTICIPANT_ID, user.getUid());
@@ -300,20 +285,5 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
         Picture.loadUserAvatar(this, user.getPhotoUrl()).into(img);
 
         dialog.show();
-    }
-
-    private void fetchNotificationWithWork() {
-        var constraint =
-                new Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .build();
-
-        var workRequest =
-                new OneTimeWorkRequest.Builder(FetchNotificationWorker.class)
-                        .setConstraints(constraint)
-                        .build();
-
-        WorkManager.getInstance(this)
-                .enqueueUniqueWork("notification_worker", ExistingWorkPolicy.REPLACE, workRequest);
     }
 }

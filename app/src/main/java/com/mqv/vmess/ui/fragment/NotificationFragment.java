@@ -1,7 +1,5 @@
 package com.mqv.vmess.ui.fragment;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,23 +11,16 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.mqv.vmess.activity.MainActivity;
-import com.mqv.vmess.activity.preferences.PreferenceFriendRequestActivity;
 import com.mqv.vmess.databinding.FragmentNotificationBinding;
-import com.mqv.vmess.network.model.Notification;
 import com.mqv.vmess.ui.adapter.NotificationAdapter;
+import com.mqv.vmess.ui.data.FriendNotificationState;
 import com.mqv.vmess.ui.fragment.viewmodel.NotificationFragmentViewModel;
 import com.mqv.vmess.util.NetworkStatus;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class NotificationFragment extends BaseSwipeFragment<NotificationFragmentViewModel, FragmentNotificationBinding> {
-    private final List<Notification> notifications = new ArrayList<>();
     private NotificationAdapter mAdapter;
-    private int mCurrentPosition;
-    private boolean isPendingMarkRead;
 
     public static final String REQUEST_KEY = "notification_option";
     public static final String EXTRA_KEY_ACTION = "action";
@@ -60,53 +51,40 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        mViewModel.loadNotificationUsingNBR();
-
         setupRecyclerView();
         registerEvent();
         registerFragmentResult();
+
+        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
     public void setupObserver() {
-        mViewModel.getNotificationListResult().observe(getViewLifecycleOwner(), result -> {
-            if (result == null)
-                return;
-
-            var status = result.getStatus();
-
-            switch (status) {
-                case ERROR:
-                    break;
-                case SUCCESS:
-                    var data = result.getSuccess();
-                    var deleteItemList = mViewModel.getDeleteItemList();
-
-                    data.removeAll(deleteItemList);
-
-                    retrieveNotificationList(result.getSuccess());
-                    break;
-            }
-        });
-
         mViewModel.getRefreshResultSafe().observe(getViewLifecycleOwner(), result -> {
             if (result == null)
                 return;
 
-            var status = result.getStatus();
-
-            if (status != NetworkStatus.LOADING)
+            if (result.getStatus() != NetworkStatus.LOADING)
                 stopRefresh();
+        });
 
-            switch (status) {
-                case ERROR:
-                    Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
-                    break;
-                case SUCCESS:
-                    retrieveNotificationList(result.getSuccess());
-                    break;
+        mViewModel.getListFriendNotificationState().observe(getViewLifecycleOwner(), list -> {
+            if (list != null) {
+                emptyListUi(list.isEmpty());
+
+                mAdapter.submitList(list.stream()
+                        .sorted((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()))
+                        .collect(Collectors.toList()));
+            }
+        });
+
+        mViewModel.getOneTimeEvent().observe(getViewLifecycleOwner(), event -> {
+            if (event != null) {
+                Integer result = event.getContentIfNotHandled();
+
+                if (result != null) {
+                    Toast.makeText(requireContext(), result, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -122,27 +100,6 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
         mViewModel.onRefresh();
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mViewModel.forceClearDispose();
-        mViewModel.forceDispose();
-    }
-
-    private void retrieveNotificationList(List<Notification> data) {
-        emptyListUi(data == null || data.isEmpty());
-
-        if (data != null) {
-            var sorted = data.stream()
-                    .sorted((o1, o2) -> o2.getCreatedDate().compareTo(o1.getCreatedDate()))
-                    .collect(Collectors.toList());
-
-            notifications.clear();
-            notifications.addAll(sorted);
-            mAdapter.notifyItemRangeChanged(0, sorted.size());
-        }
-    }
-
     private void emptyListUi(boolean isEmpty) {
         mBinding.textNoData.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
         mBinding.imageNoData.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
@@ -150,9 +107,7 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
     }
 
     private void setupRecyclerView() {
-        mAdapter = new NotificationAdapter(requireContext(), notifications);
-        mAdapter.submitList(notifications); // Use submit list only one time when Adapter is created
-
+        mAdapter = new NotificationAdapter(requireContext());
         mBinding.recyclerNotification.setAdapter(mAdapter);
         mBinding.recyclerNotification.setLayoutManager(new LinearLayoutManager(requireContext()));
         mBinding.recyclerNotification.setNestedScrollingEnabled(false);
@@ -160,45 +115,14 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
 
     private void registerEvent() {
         mAdapter.setOnItemClick(position -> {
-            var notification = mAdapter.getCurrentList().get(position);
-
-            if (!notification.getHasRead()) {
-                mCurrentPosition = position;
-                isPendingMarkRead = true;
-            }
-
-            switch (notification.getType()) {
-                case NEW_FRIEND_REQUEST:
-                    var intent = new Intent(requireContext(), PreferenceFriendRequestActivity.class);
-
-                    ((MainActivity) requireActivity()).activityResultLauncher
-                            .launch(intent, result -> {
-                                if (result != null && result.getResultCode() == Activity.RESULT_OK) {
-
-                                } else {
-                                    if (isPendingMarkRead) {
-                                        var oldItem = mAdapter.getCurrentList().get(mCurrentPosition);
-                                        oldItem.setHasRead(true);
-
-                                        mAdapter.notifyItemChanged(mCurrentPosition);
-
-                                        mViewModel.markAsRead(notification);
-
-                                        isPendingMarkRead = false;
-                                    }
-                                }
-                            });
-                    break;
-                case ACCEPTED_FRIEND_REQUEST:
-                    break;
-            }
+            FriendNotificationState notification = mAdapter.getCurrentList().get(position);
+            startActivity(notification.getIntentByType(requireContext()));
         });
 
         mAdapter.setOnChangeItem(position -> {
-            var notification = mAdapter.getCurrentList().get(position);
-
+            FriendNotificationState notification = mAdapter.getCurrentList().get(position);
             NotificationOptionDialogFragment.newInstance(notification)
-                    .show(requireActivity().getSupportFragmentManager(), "NOTIFICATION");
+                                            .show(requireActivity().getSupportFragmentManager(), "NOTIFICATION");
         });
 
         mAdapter.setOnDatasetChange(this::emptyListUi);
@@ -210,8 +134,8 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
                 getViewLifecycleOwner(),
                 (requestKey, result) -> {
                     if (requestKey.equals(REQUEST_KEY)) {
-                        var action = result.getString(EXTRA_KEY_ACTION);
-                        var item = (Notification) result.getParcelable(EXTRA_NOTIFICATION);
+                        String action = result.getString(EXTRA_KEY_ACTION);
+                        FriendNotificationState item = (FriendNotificationState) result.getParcelable(EXTRA_NOTIFICATION);
 
                         switch (action) {
                             case ACTION_REMOVE:
@@ -228,22 +152,15 @@ public class NotificationFragment extends BaseSwipeFragment<NotificationFragment
                 });
     }
 
-    private void onRemove(Notification notification) {
-        mAdapter.removeItem(notification);
+    private void onRemove(FriendNotificationState notification) {
         mViewModel.removeNotification(notification);
-
-        mViewModel.addRemoveItemList(notification);
-
-        Toast.makeText(requireContext(), "Notification removed", Toast.LENGTH_SHORT).show();
     }
 
-    private void onReportProblem(Notification notification) {
+    private void onReportProblem(FriendNotificationState notification) {
         Toast.makeText(requireContext(), "Your report has been sent to our Notification Team", Toast.LENGTH_SHORT).show();
     }
 
-    private void onMarkRead(Notification notification) {
-        notification.setHasRead(true);
-        mAdapter.notifyItemChanged(mAdapter.getCurrentList().indexOf(notification));
+    private void onMarkRead(FriendNotificationState notification) {
         mViewModel.markAsRead(notification);
     }
 }

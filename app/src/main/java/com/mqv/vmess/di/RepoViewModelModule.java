@@ -2,7 +2,7 @@ package com.mqv.vmess.di;
 
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
-import com.mqv.vmess.data.dao.NotificationDao;
+import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
@@ -37,8 +37,8 @@ public class RepoViewModelModule {
     @ViewModelScoped
     @Provides
     public NotificationRepository provideNotificationRepository(NotificationService service,
-                                                                NotificationDao dao) {
-        return new NotificationRepositoryImpl(service, dao);
+                                                                FriendNotificationDao friendNotificationDao) {
+        return new NotificationRepositoryImpl(service, friendNotificationDao);
     }
 
     @ViewModelScoped

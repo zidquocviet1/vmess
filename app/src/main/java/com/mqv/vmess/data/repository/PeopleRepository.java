@@ -33,6 +33,8 @@ public interface PeopleRepository {
 
     Observable<ApiResponse<People>> getConnectPeopleByUid(String uid, String token);
 
+    Observable<ApiResponse<People>> getConnectPeopleByUid(String uid);
+
     void unfriend(String uid,
                   Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
                   Consumer<Exception> onAuthFail);

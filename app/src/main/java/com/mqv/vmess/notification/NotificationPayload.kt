@@ -17,6 +17,7 @@ private const val KEY_MESSAGE_CONTENT = "message_content"
 private const val KEY_MESSAGE_TIMESTAMP = "message_timestamp"
 private const val KEY_CHANGE_OPTION = "change_option"
 private const val KEY_MEMBER = "member"
+private const val KEY_NOTIFICATION_ID = "notification_id"
 
 sealed class NotificationPayload(
     open val timestamp: Long
@@ -34,15 +35,17 @@ sealed class NotificationPayload(
     class AcceptedFriendPayload(
         val whoAccepted: String,
         val conversationId: String,
+        val notificationId: Long,
         override val timestamp: Long
     ) : NotificationPayload(timestamp) {
         companion object {
             fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
                 val whoAccepted = map[KEY_WHO_ACCEPTED]!!
                 val conversationId = map[KEY_CONVERSATION_ID]!!
+                val notificationId = map[KEY_NOTIFICATION_ID]!!
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
-                return AcceptedFriendPayload(whoAccepted, conversationId, timestamp)
+                return AcceptedFriendPayload(whoAccepted, conversationId, notificationId.toLong(), timestamp)
             }
         }
 
@@ -53,14 +56,16 @@ sealed class NotificationPayload(
 
     class FriendRequestPayload(
         val whoSent: String,
+        val notificationId: Long,
         override val timestamp: Long
     ) : NotificationPayload(timestamp) {
         companion object {
             fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
                 val whoSent = map[KEY_WHO_SENT]!!
+                val notificationId = map[KEY_NOTIFICATION_ID]!!.toLong()
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
-                return FriendRequestPayload(whoSent, timestamp)
+                return FriendRequestPayload(whoSent, notificationId, timestamp)
             }
         }
 

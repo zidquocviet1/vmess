@@ -40,4 +40,8 @@ public interface FriendRequestService {
     @PUT(value = "connection/unfriend")
     Observable<ApiResponse<Boolean>> unfriend(@Header(Const.AUTHORIZATION) String token,
                                               @Query("uid") String uid);
+
+    @GET(value = "connection/is-friend/{id}")
+    Observable<Boolean> isFriend(@Header(Const.AUTHORIZATION) String token,
+                                 @Path("id") String userId);
 }

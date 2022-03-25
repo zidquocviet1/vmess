@@ -10,12 +10,14 @@ import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
@@ -34,7 +36,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
     private final NotificationRepository notificationRepository;
 
     private final MutableLiveData<Result<User>> remoteUserResult = new MutableLiveData<>();
-    private final MutableLiveData<List<People>> listPeople = new MutableLiveData<>();
+    private final MutableLiveData<List<People>> listPeople       = new MutableLiveData<>();
     private final MutableLiveData<List<People>> activePeopleList = new MutableLiveData<>();
 
     protected static final int NOTIFICATION_DURATION_LIMIT = 1;
@@ -89,8 +91,31 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                 .fetchPeopleUsingNBS(this::createCall, this::handleAuthError)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this.listPeople::setValue,
+                .subscribe(people -> listPeople.postValue(people.stream()
+                                               .filter(People::getFriend)
+                                               .collect(Collectors.toList())),
                         t -> this.listPeople.setValue(null)));
+    }
+
+    protected void loadAllRemoteNotification() {
+        Disposable disposable = notificationRepository.fetchNotification(NOTIFICATION_DURATION_LIMIT)
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .flatMapIterable(list -> list)
+                                                      .flatMap(fn -> userRepository.fetchUserFromRemote(fn.getSenderId())
+                                                                                   .compose(RxHelper.parseResponseData())
+                                                                                   .flatMapCompletable(user -> friendRequestRepository.isFriend(user.getUid())
+                                                                                           .flatMapCompletable(isFriend -> peopleRepository.save(People.mapFromUser(user, isFriend))))
+                                                                                   .subscribeOn(Schedulers.io())
+                                                                                   .toSingleDefault(fn)
+                                                                                   .toObservable())
+                                                      .toList()
+                                                      .concatMapCompletable(notificationRepository::saveCachedNotification)
+                                                      .subscribeOn(Schedulers.io())
+                                                      .observeOn(Schedulers.io())
+                                                      .onErrorComplete()
+                                                      .subscribe();
+
+        cd.add(disposable);
     }
 
     private void handleAuthError(Exception e) {
@@ -113,6 +138,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                     public void onNext(@NonNull ApiResponse<People> response) {
                         if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                             var p = response.getSuccess();
+                            p.setFriend(true);
                             freshPeopleList.add(p);
                         }
                     }

@@ -1,5 +1,7 @@
 package com.mqv.vmess.util;
 
+import android.util.Pair;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.Observer;
@@ -22,6 +24,24 @@ public final class LiveDataUtil {
                 }
             }
         });
+        return mediator;
+    }
+
+    public static <A, B> LiveData<Pair<A, B>> zip(LiveData<A> source1, LiveData<B> source2) {
+        final MediatorLiveData<Pair<A, B>> mediator = new MediatorLiveData<>();
+
+        mediator.addSource(source1, a -> {
+            if (a != null && source2.getValue() != null) {
+                mediator.setValue(Pair.create(a, source2.getValue()));
+            }
+        });
+
+        mediator.addSource(source2, b -> {
+            if (b != null && source1.getValue() != null) {
+                mediator.setValue(Pair.create(source1.getValue(), b));
+            }
+        });
+
         return mediator;
     }
 

@@ -15,6 +15,8 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 
 public interface ConversationRepository {
+    Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit);
+
     Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType);
 
     Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);

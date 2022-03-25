@@ -99,6 +99,13 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
             badge.setNumber(number);
             badge.setMaxCharacterCount(MAX_BADGE_NUMBER);
         });
+
+        mViewModel.getConversationBadgeResult().observe(this, number -> {
+            var badge = mBinding.bottomNav.getOrCreateBadge(R.id.chat);
+            badge.setVisible(number > 0);
+            badge.setNumber(number);
+            badge.setMaxCharacterCount(MAX_BADGE_NUMBER);
+        });
     }
 
     @Override

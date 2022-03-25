@@ -8,8 +8,8 @@ import androidx.room.Room;
 import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
-import com.mqv.vmess.data.dao.NotificationDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.UserDao;
 import com.mqv.vmess.util.Const;
@@ -53,8 +53,8 @@ public class DatabaseModule {
 
     @Provides
     @Singleton
-    public NotificationDao provideNotificationDao(MyDatabase db){
-        return db.getNotificationDao();
+    public FriendNotificationDao provideFriendNotificationDao(MyDatabase db){
+        return db.getFriendNotificationDao();
     }
 
     @Provides

@@ -21,7 +21,6 @@ import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewStub;
-import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -40,6 +39,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
+import com.mqv.vmess.activity.br.MarkNotificationReadReceiver;
 import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
 import com.mqv.vmess.activity.viewmodel.ConversationViewModel;
 import com.mqv.vmess.databinding.ActivityConversationBinding;
@@ -145,6 +145,7 @@ public class ConversationActivity
         registerEventClick();
         registerNetworkEventCallback(this);
         setupColorUi();
+        triggerIntent();
     }
 
     @Override
@@ -274,8 +275,8 @@ public class ConversationActivity
 
                 mChatList.addAll(mConversation.getChats());
                 mChatListAdapter.notifyItemRangeInserted(0, mConversation.getChats().size());
+                mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);
 
-                onFirstLoadComplete();
                 seenUnseenMessage();
             } else if (result.getStatus() == NetworkStatus.ERROR) {
                 Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
@@ -320,6 +321,14 @@ public class ConversationActivity
     public void onLost() {
         if (mBinding != null) {
             runOnUiThread(() -> mBinding.textNetworkError.setVisibility(View.VISIBLE));
+        }
+    }
+
+    private void triggerIntent() {
+        Intent intent = getIntent().getParcelableExtra(MarkNotificationReadReceiver.EXTRA_INTENT);
+
+        if (intent != null) {
+            sendBroadcast(intent);
         }
     }
 
@@ -374,13 +383,13 @@ public class ConversationActivity
         });
         mBinding.buttonMore.setOnClickListener(v -> {
         });
-        mBinding.buttonCamera.setOnClickListener(v -> {
-        });
-        mBinding.buttonGallery.setOnClickListener(v -> {
-            
-        });
-        mBinding.buttonMic.setOnClickListener(v -> {
-        });
+//        mBinding.buttonCamera.setOnClickListener(v -> {
+//        });
+//        mBinding.buttonGallery.setOnClickListener(v -> {
+//
+//        });
+//        mBinding.buttonMic.setOnClickListener(v -> {
+//        });
         mBinding.editTextContent.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -423,9 +432,9 @@ public class ConversationActivity
             menuItem.setIconTintList(mDefaultColorStateList);
         }
         mBinding.buttonBack.setIconTint(mDefaultColorStateList);
-        mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
-        mBinding.buttonGallery.setIconTint(mDefaultColorStateList);
-        mBinding.buttonMic.setIconTint(mDefaultColorStateList);
+//        mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
+//        mBinding.buttonGallery.setIconTint(mDefaultColorStateList);
+//        mBinding.buttonMic.setIconTint(mDefaultColorStateList);
         mBinding.buttonSendMessage.setIconTint(mDefaultColorStateList);
         mBinding.buttonMore.setIconTint(mDefaultColorStateList);
         mBinding.buttonScrollToBottom.setIconTint(mDefaultColorStateList);
@@ -466,33 +475,6 @@ public class ConversationActivity
 
         mChatListAdapter.submitList(mChatList);
         mChatListAdapter.registerConversationOption(this);
-    }
-
-    private void onFirstLoadComplete() {
-        mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);
-
-        mBinding.recyclerChatList
-                .getViewTreeObserver()
-                .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        /*
-                         * Check the first dummy Profile chat view type
-                         * If the layout can show the view completely then make the layout manager stackFromEnd = false
-                         * Otherwise true
-                         * */
-                        int firstItem = mLayoutManager.findFirstCompletelyVisibleItemPosition();
-                        if (firstItem != -1) {
-                            mLayoutManager.setStackFromEnd(!MessageUtil.isDummyProfileMessage(mChatList.get(firstItem)));
-                        }
-                        // At this point the layout is complete and the
-                        // dimensions of recyclerView and any child views
-                        // are known.
-                        mBinding.recyclerChatList
-                                .getViewTreeObserver()
-                                .removeOnGlobalLayoutListener(this);
-                    }
-                });
     }
 
     private void checkForShowHeader() {
@@ -750,7 +732,11 @@ public class ConversationActivity
                 headerAvatar.add(avatarGroupStubBinding.avatarUser2);
                 headerAvatar.add(avatarGroupStubBinding.layoutAvatar2);
 
-                activeIcon = avatarGroupStubBinding.imageActive;
+                if (metadata.getConversationThumbnail().size() > 1) {
+                    activeIcon = avatarGroupStubBinding.imageActive;
+                } else {
+                    activeIcon = avatarGroupStubBinding.groupAvatar.imageActive;
+                }
             } else {
                 headerAvatar.add(avatarNormalStubBinding.imageAvatar);
 

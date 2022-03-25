@@ -24,7 +24,7 @@ class ConversationMessageItem(
     private val mMessages: List<Chat>,
     private val mParticipants: List<User>,
     private val mCurrentUser: User,
-    private val mMetadata: ConversationMetadata,
+    private val mMetadata: ConversationMetadata?,
     private val mItemColor: ColorStateList
 ) : ConversationItem<Chat>(mBinding.root.context, mParticipants, mCurrentUser, mItemColor) {
 
@@ -75,12 +75,14 @@ class ConversationMessageItem(
     }
 
     override fun bindWelcomeMessage(welcomeMessage: Chat, nextItem: Chat?) {
-        val message = if (mMetadata.type == ConversationType.GROUP) mContext.getString(
-            R.string.dummy_first_chat_group,
-            mMetadata.conversationCreatedBy
-        ) else mContext.getString(R.string.dummy_first_chat)
+        mMetadata?.let {
+            val message = if (mMetadata.type == ConversationType.GROUP) mContext.getString(
+                R.string.dummy_first_chat_group,
+                mMetadata.conversationCreatedBy
+            ) else mContext.getString(R.string.dummy_first_chat)
+            mBinding.textWelcome.text = message
+        }
 
-        mBinding.textWelcome.text = message
         mBinding.layoutWelcome.visibility = if (nextItem != null) View.GONE else View.VISIBLE
         mBinding.layoutReceiver.visibility = View.GONE
         mBinding.layoutSender.visibility = View.GONE
@@ -166,7 +168,7 @@ class ConversationMessageItem(
 
     fun bindStatus(item: Chat) {
         findLastSeenStatus(item)
-        bindMessageStatus(item, mParticipants, mMetadata.type)
+        mMetadata?.let { bindMessageStatus(item, mParticipants, mMetadata.type) }
     }
 
     fun bindMessageShape(item: Chat?) {
@@ -510,7 +512,7 @@ class ConversationMessageItem(
         }
     }
 
-    private fun isGroup() = mMetadata.type == ConversationType.GROUP
+    private fun isGroup() = if (mMetadata != null) mMetadata.type == ConversationType.GROUP else false
 
     /*
     * Detect the incoming message by shape itself

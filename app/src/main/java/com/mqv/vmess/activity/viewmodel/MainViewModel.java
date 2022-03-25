@@ -6,12 +6,16 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
+import com.google.firebase.auth.FirebaseUser;
+import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.network.model.type.ConversationStatusType;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
 
 import java.util.List;
@@ -19,27 +23,28 @@ import java.util.List;
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class MainViewModel extends AbstractMainViewModel {
     private final NotificationRepository notificationRepository;
+    private final ConversationRepository conversationRepository;
 
     private final MutableLiveData<Integer> notificationBadgeResult = new MutableLiveData<>();
+    private final MutableLiveData<Integer> conversationBadgeResult = new MutableLiveData<>();
 
     @Inject
     public MainViewModel(UserRepository userRepository,
                          FriendRequestRepository friendRequestRepository,
                          PeopleRepository peopleRepository,
-                         NotificationRepository notificationRepository) {
+                         NotificationRepository notificationRepository,
+                         ConversationRepository conversationRepository) {
         super(userRepository, friendRequestRepository, peopleRepository, notificationRepository);
 
         this.notificationRepository = notificationRepository;
+        this.conversationRepository = conversationRepository;
 
-        loadRemoteUserUsingNBR();
-        loadAllPeople();
-        loadNotificationBadge();
+        onFirstLoad();
+        observeConversationUnreadBadge();
     }
 
     @Override
@@ -67,19 +72,40 @@ public class MainViewModel extends AbstractMainViewModel {
         return notificationBadgeResult;
     }
 
+    public LiveData<Integer> getConversationBadgeResult() {
+        return conversationBadgeResult;
+    }
+
     private void loadNotificationBadge() {
-        cd.add(notificationRepository.getUnreadNotificationCached()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(notifications -> {
-                    if (notifications == null || notifications.isEmpty()) {
-                        notificationBadgeResult.setValue(0);
-                    } else {
-                        var count = (int) notifications.stream()
-                                .filter(n -> !n.getHasRead())
-                                .count();
-                        notificationBadgeResult.setValue(count);
+        cd.add(notificationRepository.observeUnreadFriendNotification()
+                .compose(RxHelper.applyFlowableSchedulers())
+                .subscribe(notificationBadgeResult::postValue, t -> notificationBadgeResult.setValue(0)));
+    }
+
+    private void observeConversationUnreadBadge() {
+        // Need to sync the currently limit conversation item list
+        // DistinctUntilChanged to avoid load many times
+        cd.add(conversationRepository.observeUnreadConversation(ConversationStatusType.INBOX, 20)
+                .compose(RxHelper.applyFlowableSchedulers())
+                .subscribe(map -> {
+                    FirebaseUser user = getFirebaseUser().getValue();
+
+                    if (user != null) {
+                        long unread = map.values()
+                                         .stream()
+                                         .filter(c -> !c.getSeenBy().contains(user.getUid()) &&
+                                                      c.getSenderId() != null &&
+                                                      !c.getSenderId().equals(user.getUid()))
+                                         .count();
+                        conversationBadgeResult.postValue(Long.valueOf(unread).intValue());
                     }
                 }, t -> notificationBadgeResult.setValue(0)));
+    }
+
+    public void onFirstLoad() {
+        loadRemoteUserUsingNBR();
+        loadAllPeople();
+        loadNotificationBadge();
+        loadAllRemoteNotification();
     }
 }

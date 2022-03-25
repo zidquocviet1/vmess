@@ -18,30 +18,30 @@ import com.mqv.vmess.data.converter.SocialLinksListConverter;
 import com.mqv.vmess.data.converter.SocialTypeConverter;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
-import com.mqv.vmess.data.dao.NotificationDao;
 import com.mqv.vmess.data.dao.PendingMessageDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.SeenMessageDao;
 import com.mqv.vmess.data.dao.UserDao;
+import com.mqv.vmess.data.model.FriendNotification;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
 import com.mqv.vmess.data.model.PendingMessage;
 import com.mqv.vmess.data.model.SeenMessage;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
-import com.mqv.vmess.network.model.Notification;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.ui.data.People;
 
 @Database(entities = {User.class,
                       HistoryLoggedInUser.class,
                       People.class,
-                      Notification.class,
                       Conversation.class,
                       Chat.class,
                       PendingMessage.class,
-                      SeenMessage.class},
-        version = 18,
+                      SeenMessage.class,
+                      FriendNotification.class},
+        version = 22,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -62,7 +62,7 @@ public abstract class MyDatabase extends RoomDatabase {
 
     public abstract PeopleDao getPeopleDao();
 
-    public abstract NotificationDao getNotificationDao();
+    public abstract FriendNotificationDao getFriendNotificationDao();
 
     public abstract ConversationDao getConversationDao();
 
