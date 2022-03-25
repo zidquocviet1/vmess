@@ -1,177 +1,86 @@
 package com.mqv.vmess.data.repository.impl;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.mqv.vmess.R;
-import com.mqv.vmess.data.dao.NotificationDao;
+import com.mqv.vmess.data.dao.FriendNotificationDao;
+import com.mqv.vmess.data.model.FriendNotification;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.network.ApiResponse;
-import com.mqv.vmess.network.NetworkBoundResource;
-import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
-import com.mqv.vmess.network.model.Notification;
 import com.mqv.vmess.network.service.NotificationService;
-import com.mqv.vmess.util.Const;
-import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.UserTokenUtil;
 
-import java.net.HttpURLConnection;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Observer;
-import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class NotificationRepositoryImpl implements NotificationRepository {
-    private final NotificationService service;
-    private final NotificationDao dao;
+    private final NotificationService   service;
+    private final FriendNotificationDao dao;
     private FirebaseUser user;
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     @Inject
     public NotificationRepositoryImpl(NotificationService service,
-                                      NotificationDao dao) {
+                                      FriendNotificationDao friendNotificationDao) {
         this.service = service;
-        this.dao = dao;
-        this.user = FirebaseAuth.getInstance().getCurrentUser();
+        this.dao     = friendNotificationDao;
+        this.user    = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth ->
                 user = firebaseAuth.getCurrentUser());
     }
 
     @Override
-    public Observable<ApiResponse<List<Notification>>> fetchNotification(String uid, int duration) {
-        return Observable.fromFuture(futureToken())
-                .flatMap(optionalToken -> {
-                    if (optionalToken.isPresent()) {
-                        var bearerToken = Const.PREFIX_TOKEN + optionalToken.get();
-                        var defaultAuthorizer = Const.DEFAULT_AUTHORIZER;
-
-                        return service.fetchNotification(bearerToken, defaultAuthorizer, uid, duration);
-                    } else {
-                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                    }
-                }).subscribeOn(Schedulers.io());
+    public Flowable<List<FriendNotification>> observeFriendNotification() {
+        return dao.fetchAll();
     }
 
     @Override
-    public Observable<List<Notification>> fetchNotificationNBR(int duration) {
-        return new NetworkBoundResource<List<Notification>, ApiResponse<List<Notification>>>(false) {
-            boolean isCachedEmpty = false;
-
-            @Override
-            protected void saveCallResult(@NonNull ApiResponse<List<Notification>> response) {
-                if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                    var data = response.getSuccess();
-
-                    if (isCachedEmpty && data.isEmpty())
-                        return;
-
-                    saveListNotification(data);
-                }
-            }
-
-            @Override
-            protected Boolean shouldFetch(@Nullable List<Notification> data) {
-                if (user == null)
-                    return false;
-
-                if (data == null || data.isEmpty()) {
-                    isCachedEmpty = true;
-                    return true;
-                }
-
-                var time = data.stream()
-                        .map(p -> p.getAccessedDate().plusMinutes(10).compareTo(LocalDateTime.now()))
-                        .filter(i -> i <= 0)
-                        .collect(Collectors.toList());
-
-                return !time.isEmpty();
-            }
-
-            @Override
-            protected Flowable<List<Notification>> loadFromDb() {
-                return dao.fetchAll();
-            }
-
-            @Override
-            protected Observable<ApiResponse<List<Notification>>> createCall() {
-                return fetchNotification(user.getUid(), duration);
-            }
-
-            @Override
-            protected void callAndSaveResult() {
-
-            }
-        }.asObservable();
+    public Flowable<Integer> observeUnreadFriendNotification() {
+        return dao.fetchUnreadNotification();
     }
 
     @Override
-    public Observable<List<Notification>> refreshNotificationList(int duration) {
-        return Observable.create(emitter -> fetchNotification(user.getUid(), duration)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<>() {
-                    @Override
-                    public void onSubscribe(@NonNull Disposable d) {
-                        if (!d.isDisposed())
-                            emitter.setDisposable(d);
-                    }
-
-                    @Override
-                    public void onNext(@NonNull ApiResponse<List<Notification>> response) {
-                        if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                            var data = response.getSuccess();
-
-                            saveListNotification(data);
-
-                            emitter.onNext(data);
-                        } else if (response.getStatusCode() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-                            emitter.onError(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                        }
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable e) {
-                        emitter.onError(e);
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                }));
+    public Single<FriendNotification> fetchById(Long id) {
+        return dao.fetchById(id);
     }
 
     @Override
-    public Observable<ApiResponse<Notification>> markAsRead(Notification notification) {
-        return Observable.fromFuture(futureToken())
-                .subscribeOn(Schedulers.io())
-                .flatMap(optionalToken -> {
-                    if (optionalToken.isPresent()) {
-                        var bearerToken = Const.PREFIX_TOKEN + optionalToken.get();
-                        var defaultAuthorizer = Const.DEFAULT_AUTHORIZER;
+    public Single<FriendNotification> fetchRequestNotificationBySenderId(String senderId) {
+        return dao.fetchRequestNotificationByUserId(senderId);
+    }
 
-                        return service.markAsRead(bearerToken, defaultAuthorizer, notification);
-                    } else {
-                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                    }
-                });
+    @Override
+    public Single<FriendNotification> fetchAcceptedNotificationByUserId(String userId) {
+        return dao.fetchAcceptedNotificationByUserId(userId);
+    }
+
+    @Override
+    public Single<List<FriendNotification>> fetchAllNotificationRelatedToUser(String userId) {
+        return dao.fetchAllNotificationRelatedToUser(userId);
+    }
+
+    @Override
+    public Observable<ApiResponse<List<FriendNotification>>> fetchNotification(int duration) {
+        return UserTokenUtil.getTokenSingle(user)
+                            .flatMapObservable(token -> service.fetchNotification(token, duration));
+    }
+
+    @Override
+    public Observable<ApiResponse<FriendNotification>> markAsRead(FriendNotification notification) {
+        notification.setHasRead(true);
+
+        return dao.update(notification)
+                  .andThen(UserTokenUtil.getTokenSingle(user).toObservable())
+                  .flatMap(token -> service.markAsRead(token, notification));
     }
 
     @Override
@@ -180,91 +89,27 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     @Override
-    public Completable deleteLocal(Notification notification) {
-        return dao.delete(notification);
+    public Observable<ApiResponse<FriendNotification>> removeNotification(@NonNull FriendNotification notification) {
+        return dao.delete(notification)
+                  .andThen(UserTokenUtil.getTokenSingle(user).toObservable())
+                  .flatMap(token -> service.removeNotification(token, notification));
     }
 
     @Override
-    public Completable updateLocal(Notification notification) {
-        return dao.update(notification);
+    public Completable saveCachedNotification(List<FriendNotification> notifications) {
+        return saveListNotification(notifications);
     }
 
     @Override
-    public Observable<ApiResponse<Integer>> getUnreadNotification(int duration) {
-        return Observable.fromFuture(futureToken())
-                .subscribeOn(Schedulers.io())
-                .flatMap(optionalToken -> {
-                    if (optionalToken.isPresent()) {
-                        var token = optionalToken.get();
-                        var bearerToken = Const.PREFIX_TOKEN + token;
-                        var authorizer = Const.DEFAULT_AUTHORIZER;
-
-                        return service.getUnreadNotification(bearerToken, authorizer, user.getUid(), duration);
-                    } else {
-                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                    }
-                });
+    public Completable delete(List<FriendNotification> notifications) {
+        return dao.delete(notifications);
     }
 
-    @Override
-    public Observable<ApiResponse<Notification>> removeNotification(@NonNull Notification notification) {
-        return Observable.fromFuture(futureToken())
-                .subscribeOn(Schedulers.io())
-                .flatMap(optionalToken -> {
-                    if (optionalToken.isPresent()) {
-                        var token = optionalToken.get();
-                        var bearerToken = Const.PREFIX_TOKEN + token;
-                        var authorizer = Const.DEFAULT_AUTHORIZER;
-
-                        return service.removeNotification(bearerToken, authorizer, notification);
-                    } else {
-                        return Observable.error(new FirebaseUnauthorizedException(R.string.error_authentication_fail));
-                    }
-                });
-    }
-
-    @Override
-    public Flowable<List<Notification>> getUnreadNotificationCached() {
-        return dao.fetchAll();
-    }
-
-    @Override
-    public Completable saveCachedNotification(List<Notification> notifications) {
-        return dao.save(notifications);
-    }
-
-    private CompletableFuture<Optional<String>> futureToken() {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return UserTokenUtil.getToken(user);
-            } catch (Throwable throwable) {
-                return Optional.empty();
-            }
-        }, executorService);
-    }
-
-    private void saveListNotification(List<Notification> notifications) {
-        dao.save(notifications)
-                .andThen(dao.deleteById(notifications
-                        .stream()
-                        .map(Notification::getId)
-                        .collect(Collectors.toList())))
-                .subscribeOn(Schedulers.io())
-                .subscribe(new CompletableObserver() {
-                    @Override
-                    public void onSubscribe(@io.reactivex.rxjava3.annotations.NonNull Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        Logging.show("Save notification list into database successfully");
-                    }
-
-                    @Override
-                    public void onError(@io.reactivex.rxjava3.annotations.NonNull Throwable e) {
-
-                    }
-                });
+    private Completable saveListNotification(List<FriendNotification> notifications) {
+        return dao.insert(notifications)
+                  .andThen(dao.deleteById(notifications.stream()
+                                                       .map(FriendNotification::getId)
+                                                       .collect(Collectors.toList())))
+                  .subscribeOn(Schedulers.io());
     }
 }
