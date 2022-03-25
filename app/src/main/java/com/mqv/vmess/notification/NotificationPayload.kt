@@ -196,6 +196,7 @@ sealed class NotificationPayload(
                     null,
                     null,
                     null,
+                    null,
                     mutableListOf<String>(),
                     null,
                     null,

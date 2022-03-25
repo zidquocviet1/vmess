@@ -56,6 +56,9 @@ public class Chat implements Parcelable {
     @Ignore
     private List<File> files;
 
+    @Ignore
+    private List<Video> videos;
+
     private List<String> seenBy;
 
     @ColumnInfo(name = "chat_status")
@@ -83,6 +86,7 @@ public class Chat implements Parcelable {
                 Share share,
                 List<Photo> photos,
                 List<File> files,
+                List<Video> videos,
                 List<String> seenBy,
                 MessageStatus status,
                 MessageType messageType,
@@ -95,6 +99,7 @@ public class Chat implements Parcelable {
         this.share = share;
         this.photos = photos;
         this.files = files;
+        this.videos = videos;
         this.seenBy = seenBy;
         this.status = status;
         this.type = messageType;
@@ -238,6 +243,14 @@ public class Chat implements Parcelable {
         this.files = files;
     }
 
+    public List<Video> getVideos() {
+        return videos;
+    }
+
+    public void setVideos(List<Video> videos) {
+        this.videos = videos;
+    }
+
     public List<String> getSeenBy() {
         return seenBy == null ? new ArrayList<>() : seenBy;
     }
@@ -358,6 +371,42 @@ public class Chat implements Parcelable {
 
         public void setLink(String link) {
             this.link = link;
+        }
+    }
+
+    public static class Video {
+        private String uri;
+        private String thumbnail;
+        private LocalDateTime creationTimestamp;
+
+        public Video(String uri, String thumbnail, LocalDateTime creationTimestamp) {
+            this.uri = uri;
+            this.thumbnail = thumbnail;
+            this.creationTimestamp = creationTimestamp;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
+
+        public String getThumbnail() {
+            return thumbnail;
+        }
+
+        public void setThumbnail(String thumbnail) {
+            this.thumbnail = thumbnail;
+        }
+
+        public LocalDateTime getCreationTimestamp() {
+            return creationTimestamp;
+        }
+
+        public void setCreationTimestamp(LocalDateTime creationTimestamp) {
+            this.creationTimestamp = creationTimestamp;
         }
     }
 }
