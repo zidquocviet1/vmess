@@ -1,5 +1,6 @@
 package com.mqv.vmess.ui.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,17 +8,22 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.mqv.vmess.R;
+import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.databinding.FragmentPeopleListBinding;
+import com.mqv.vmess.ui.adapter.ActivePeopleAdapter;
+import com.mqv.vmess.ui.adapter.BaseAdapter;
 import com.mqv.vmess.ui.fragment.viewmodel.PeopleListFragmentViewModel;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentViewModel, FragmentPeopleListBinding> {
+public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentViewModel, FragmentPeopleListBinding>
+        implements BaseAdapter.ItemEventHandler {
+    private ActivePeopleAdapter mAdapter;
+
     public PeopleListFragment() {
         // Required empty public constructor
     }
@@ -41,17 +47,19 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+        mAdapter = new ActivePeopleAdapter(requireContext());
+        mAdapter.registerEventHandler(this);
+        mBinding.recyclerActivePeople.setAdapter(mAdapter);
+        mBinding.recyclerActivePeople.setHasFixedSize(true);
+        mBinding.recyclerActivePeople.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        mBinding.buttonActive.setOnClickListener(v -> {
-            Navigation.findNavController(view).navigate(R.id.action_peopleListFragment_to_activePeopleFragment2);
-        });
+        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
     public void setupObserver() {
         mViewModel.getActivePeopleListSafe().observe(getViewLifecycleOwner(), peopleList -> {
-
+            mAdapter.submitList(peopleList);
         });
     }
 
@@ -67,8 +75,21 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        mViewModel.forceClearDispose();
+    public void onItemClick(int position) {
+        Intent intent = new Intent(requireContext(), ConversationActivity.class);
+        intent.putExtra(ConversationActivity.EXTRA_PARTICIPANT_ID, mAdapter.getCurrentList().get(position).getUid());
+
+        startActivity(intent);
+    }
+
+    @Override
+    public void onItemLongClick(int position) {
+    }
+
+    @Override
+    public void onListItemSizeChanged(int size) {
+        mBinding.recyclerActivePeople.setVisibility(size == 0 ? View.GONE : View.VISIBLE);
+        mBinding.textEmpty.setVisibility(size == 0 ? View.VISIBLE : View.GONE);
+        mBinding.imageNotActive.setVisibility(size == 0 ? View.VISIBLE : View.GONE);
     }
 }
