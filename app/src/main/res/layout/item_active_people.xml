@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:baselineAligned="false"
+    android:clickable="true"
+    android:clipToPadding="false"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <include
+        android:id="@+id/included_image_avatar"
+        layout="@layout/item_user_avatar"
+        android:layout_width="@dimen/image_user_avatar_small"
+        android:layout_height="@dimen/image_user_avatar_small"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/all_padding_common"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_display_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:alpha="0.8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/author_app_full_name"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/included_image_avatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toEndOf="@id/included_image_avatar"
+        app:layout_constraintTop_toTopOf="@id/included_image_avatar" />
+</androidx.constraintlayout.widget.ConstraintLayout>

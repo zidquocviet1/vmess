@@ -76,6 +76,10 @@ public class MainViewModel extends AbstractMainViewModel {
         return conversationBadgeResult;
     }
 
+    public LiveData<Integer> getPeopleActiveBadgeResult() {
+        return Transformations.map(getPresenceUserList(), List::size);
+    }
+
     private void loadNotificationBadge() {
         cd.add(notificationRepository.observeUnreadFriendNotification()
                 .compose(RxHelper.applyFlowableSchedulers())

@@ -63,4 +63,7 @@ public abstract class BaseFragment<V extends ViewModel, B extends ViewBinding> e
     public AppPreferences getPreference() {
         return ((BaseActivity)requireActivity()).getAppPreference();
     }
+
+    public void onConnectionStateChanged() {
+    }
 }

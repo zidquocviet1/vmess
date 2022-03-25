@@ -8,11 +8,14 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.MainApplication;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
@@ -21,7 +24,9 @@ import com.mqv.vmess.activity.viewmodel.MainViewModel;
 import com.mqv.vmess.databinding.ActivityMainBinding;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
+import com.mqv.vmess.network.websocket.WebSocketConnectionState;
 import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.ui.fragment.BaseFragment;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
@@ -34,6 +39,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBinding>
         implements View.OnClickListener, NavController.OnDestinationChangedListener, OnNetworkChangedListener {
     private static final int MAX_BADGE_NUMBER = 99;
+
+    private NavHostFragment navHostFragment;
 
     @Override
     public void binding() {
@@ -53,7 +60,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
         super.onCreate(savedInstanceState);
 
-        var navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
         var navController = Objects.requireNonNull(navHostFragment).getNavController();
         var bottomNavigationView = mBinding.bottomNav;
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
@@ -102,6 +109,13 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
         mViewModel.getConversationBadgeResult().observe(this, number -> {
             var badge = mBinding.bottomNav.getOrCreateBadge(R.id.chat);
+            badge.setVisible(number > 0);
+            badge.setNumber(number);
+            badge.setMaxCharacterCount(MAX_BADGE_NUMBER);
+        });
+
+        mViewModel.getPeopleActiveBadgeResult().observe(this, number -> {
+            var badge = mBinding.bottomNav.getOrCreateBadge(R.id.people);
             badge.setVisible(number > 0);
             badge.setNumber(number);
             badge.setMaxCharacterCount(MAX_BADGE_NUMBER);
@@ -166,11 +180,32 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
     @Override
     public void onAvailable() {
-//        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.GONE));
     }
 
     @Override
     public void onLost() {
-//        runOnUiThread(() -> mBinding.textSubtitle.setVisibility(View.VISIBLE));
+    }
+
+    @Override
+    public void onConnectionStateChanged(WebSocketConnectionState state) {
+        if (state == WebSocketConnectionState.CONNECTED) {
+            mBinding.textSubtitle.setVisibility(View.GONE);
+            mViewModel.onFirstLoad();
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user != null) {
+                showUserImage(user.getPhotoUrl());
+            }
+
+
+            Fragment fragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+
+            if (fragment instanceof BaseFragment) {
+                ((BaseFragment) fragment).onConnectionStateChanged();
+            }
+        } else if (state.isFailure() || state == WebSocketConnectionState.DISCONNECTED) {
+            mBinding.textSubtitle.setVisibility(View.VISIBLE);
+        }
     }
 }

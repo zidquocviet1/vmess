@@ -1,5 +1,6 @@
 package com.mqv.vmess.activity.viewmodel;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.mqv.vmess.R;
@@ -8,14 +9,17 @@ import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
+import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.util.LiveDataUtil;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,7 +41,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
 
     private final MutableLiveData<Result<User>> remoteUserResult = new MutableLiveData<>();
     private final MutableLiveData<List<People>> listPeople       = new MutableLiveData<>();
-    private final MutableLiveData<List<People>> activePeopleList = new MutableLiveData<>();
+    private final MutableLiveData<List<String>> presenceUserListObserver = new MutableLiveData<>(Collections.emptyList());
 
     protected static final int NOTIFICATION_DURATION_LIMIT = 1;
 
@@ -52,6 +56,13 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
 
         loadFirebaseUser();
         loadLoggedInUser();
+
+
+        //noinspection ResultOfMethodCallIgnored
+        AppDependencies.getWebSocket()
+                       .getPresenceUserList()
+                       .onErrorComplete()
+                       .subscribe(presenceUserListObserver::postValue);
     }
 
     public abstract void onRefresh();
@@ -64,8 +75,14 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
         return listPeople;
     }
 
-    protected MutableLiveData<List<People>> getActivePeopleList() {
-        return activePeopleList;
+    public LiveData<List<String>> getPresenceUserList() {
+        return LiveDataUtil.distinctUntilChanged(presenceUserListObserver, (oldList, newList) -> {
+            if (newList == null) return false;
+            if (oldList.isEmpty() && !newList.isEmpty()) return false;
+            if (!oldList.isEmpty() && newList.isEmpty()) return false;
+
+            return newList.containsAll(oldList) && oldList.containsAll(newList);
+        });
     }
 
     protected void loadRemoteUserUsingNBR() {

@@ -49,7 +49,7 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.Ite
     }
 
     override fun onCurrentListChanged(previousList: MutableList<T>, currentList: MutableList<T>) {
-//        eventHandler?.onListItemSizeChanged(currentList.size)
+        eventHandler?.onListItemSizeChanged(currentList.size)
     }
 
     fun registerEventHandler(event: ItemEventHandler) {

@@ -218,6 +218,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     protected open fun onConversationOpenResult(result: ActivityResult?) {
     }
 
+    override fun onConnectionStateChanged() {
+        onRefresh()
+    }
+
     companion object {
         const val EXTRA_USER = "user"
     }

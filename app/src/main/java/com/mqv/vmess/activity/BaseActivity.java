@@ -22,17 +22,24 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
 import com.mqv.vmess.activity.preferences.AppPreferences;
 import com.mqv.vmess.activity.preferences.DarkMode;
+import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.firebase.FirebaseUserManager;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.network.websocket.WebSocketConnectionState;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.MyActivityForResult;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
+
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         extends AppCompatActivity {
@@ -85,6 +92,8 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
             loggedInUserConsumer.accept(user);
     };
 
+    private Disposable mConnectionStateDisposable;
+
     public MyActivityForResult<Intent, ActivityResult> activityResultLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.StartActivityForResult());
 
@@ -122,6 +131,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         sConnectivityManager = getSystemService(ConnectivityManager.class);
 
         registerNetworkEventManager();
+        registerConnectionStateChanged();
     }
 
     @Override
@@ -155,6 +165,7 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
 //        mPreferences.removeListener(onPreferenceChanged);
         firebaseUserManager.removeListener(onFirebaseUserChanged);
         loggedInUserManager.removeListener(onLoggedInUserChanged);
+        mConnectionStateDisposable.dispose();
     }
 
     public abstract void setupObserver();
@@ -229,6 +240,20 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
         });
     }
 
+    private void registerConnectionStateChanged() {
+        BehaviorSubject<WebSocketConnectionState> subject = BehaviorSubject.create();
+
+        AppDependencies.getWebSocket()
+                       .getWebSocketState()
+                       .distinctUntilChanged()
+                       .compose(RxHelper.applyObservableSchedulers())
+                       .subscribe(subject);
+
+        mConnectionStateDisposable = subject.debounce(2, TimeUnit.SECONDS)
+                                            .compose(RxHelper.applyObservableSchedulers())
+                                            .subscribe(this::onConnectionStateChanged, t -> {});
+    }
+
     private void onThemeSettingsModeChange() {
         if (paused) {
             themeChangePending = true;
@@ -242,5 +267,8 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
      * */
     public boolean getNetworkStatus() {
         return hasNetwork;
+    }
+
+    public void onConnectionStateChanged(WebSocketConnectionState state) {
     }
 }
