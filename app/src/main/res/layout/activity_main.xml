@@ -86,7 +86,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="No Internet Connection"
+                android:text="@string/label_no_internet_connection"
                 android:textColor="@android:color/holo_red_light"
                 android:visibility="gone" />
         </com.google.android.material.appbar.AppBarLayout>

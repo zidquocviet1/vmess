@@ -24,6 +24,7 @@ import com.mqv.vmess.activity.viewmodel.MainViewModel;
 import com.mqv.vmess.databinding.ActivityMainBinding;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
+import com.mqv.vmess.network.NetworkConstraint;
 import com.mqv.vmess.network.websocket.WebSocketConnectionState;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.ui.fragment.BaseFragment;
@@ -205,7 +206,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
                 ((BaseFragment) fragment).onConnectionStateChanged();
             }
         } else if (state.isFailure() || state == WebSocketConnectionState.DISCONNECTED) {
-            mBinding.textSubtitle.setVisibility(View.VISIBLE);
+            mBinding.textSubtitle.setVisibility(NetworkConstraint.isMet(this) ? View.GONE : View.VISIBLE);
         }
     }
 }
