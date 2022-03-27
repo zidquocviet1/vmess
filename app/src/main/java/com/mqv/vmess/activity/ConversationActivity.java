@@ -6,6 +6,8 @@ import static com.mqv.vmess.R.id.menu_video_call;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -19,6 +21,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.animation.Animation;
@@ -51,8 +54,10 @@ import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.network.model.type.MessageStatus;
 import com.mqv.vmess.network.model.type.MessageType;
 import com.mqv.vmess.ui.ConversationOptionHandler;
+import com.mqv.vmess.ui.adapter.BaseAdapter;
 import com.mqv.vmess.ui.adapter.ChatListAdapter;
 import com.mqv.vmess.ui.data.ConversationMetadata;
 import com.mqv.vmess.ui.data.ImageThumbnail;
@@ -81,7 +86,8 @@ public class ConversationActivity
        implements OnNetworkChangedListener,
                   View.OnLayoutChangeListener,
                   ViewStub.OnInflateListener,
-                  ChatListAdapter.ConversationGroupOption {
+                  ChatListAdapter.ConversationGroupOption,
+                  BaseAdapter.ItemEventHandler {
     public static final String EXTRA_CONVERSATION_ID = "conversation_id";
     public static final String EXTRA_PARTICIPANT_ID = "participant_id";
 
@@ -292,8 +298,6 @@ public class ConversationActivity
 
             if (value != null) {
                 Toast.makeText(getApplicationContext(), value, Toast.LENGTH_LONG).show();
-
-                finish();
             }
         });
 
@@ -301,7 +305,7 @@ public class ConversationActivity
             if (result != null) {
                 if (result.getStatus() == NetworkStatus.LOADING) {
                     AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
-                } else if (result.getStatus() == NetworkStatus.SUCCESS) {
+                } else if (result.getStatus() == NetworkStatus.SUCCESS || result.getStatus() == NetworkStatus.ERROR) {
                     AlertDialogUtil.finishLoadingDialog();
                 } else if (result.getStatus() == NetworkStatus.TERMINATE) {
                     finish();
@@ -383,13 +387,13 @@ public class ConversationActivity
         });
         mBinding.buttonMore.setOnClickListener(v -> {
         });
-//        mBinding.buttonCamera.setOnClickListener(v -> {
-//        });
-//        mBinding.buttonGallery.setOnClickListener(v -> {
-//
-//        });
-//        mBinding.buttonMic.setOnClickListener(v -> {
-//        });
+        mBinding.buttonCamera.setOnClickListener(v -> {
+        });
+        mBinding.buttonGallery.setOnClickListener(v -> {
+
+        });
+        mBinding.buttonMic.setOnClickListener(v -> {
+        });
         mBinding.editTextContent.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -421,6 +425,11 @@ public class ConversationActivity
                 mLayoutManager.smoothScrollToPosition(mBinding.recyclerChatList, false, mChatList.size() - 1);
             }
         });
+        mBinding.includedFooterOption.layoutUnsent.setOnClickListener(this::handleUnsentMessage);
+        mBinding.includedFooterOption.layoutReply.setOnClickListener(this::handleReplyMessage);
+        mBinding.includedFooterOption.layoutForward.setOnClickListener(this::handleForwardMessage);
+        mBinding.includedFooterOption.layoutCopy.setOnClickListener(this::handleCopyMessageContent);
+        mBinding.includedFooterOption.layoutSave.setOnClickListener(this::handleSaveMessageMedia);
     }
 
     private void setupColorUi() {
@@ -432,9 +441,9 @@ public class ConversationActivity
             menuItem.setIconTintList(mDefaultColorStateList);
         }
         mBinding.buttonBack.setIconTint(mDefaultColorStateList);
-//        mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
-//        mBinding.buttonGallery.setIconTint(mDefaultColorStateList);
-//        mBinding.buttonMic.setIconTint(mDefaultColorStateList);
+        mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
+        mBinding.buttonGallery.setIconTint(mDefaultColorStateList);
+        mBinding.buttonMic.setIconTint(mDefaultColorStateList);
         mBinding.buttonSendMessage.setIconTint(mDefaultColorStateList);
         mBinding.buttonMore.setIconTint(mDefaultColorStateList);
         mBinding.buttonScrollToBottom.setIconTint(mDefaultColorStateList);
@@ -475,6 +484,7 @@ public class ConversationActivity
 
         mChatListAdapter.submitList(mChatList);
         mChatListAdapter.registerConversationOption(this);
+        mChatListAdapter.registerItemEventListener(this);
     }
 
     private void checkForShowHeader() {
@@ -714,6 +724,109 @@ public class ConversationActivity
                 getContentResolver().delete(uri, null, null);
             }
         });
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        // Show the timestamp and list of users have seen messages.
+    }
+
+    @Override
+    public void onItemLongClick(int position) {
+        Chat   message  = mChatListAdapter.getCurrentList().get(position);
+        String senderId = message.getSenderId();
+        String userId   = mCurrentUser.getUid();
+
+        mBinding.includedFooterOption.layoutUnsent.setVisibility(!senderId.equals(userId) ? View.GONE : View.VISIBLE);
+        mBinding.includedFooterOption.layoutSave.setVisibility(MessageUtil.isMultiMediaMessage(message) ? View.VISIBLE : View.GONE);
+        mBinding.includedFooterOption.layoutCopy.setVisibility(MessageUtil.isMultiMediaMessage(message) ? View.GONE : View.VISIBLE);
+        mBinding.includedFooterOption.layoutUnsent.setTag(message);
+        mBinding.includedFooterOption.layoutCopy.setTag(message);
+        mBinding.includedFooterOption.layoutReply.setTag(message);
+        mBinding.includedFooterOption.layoutForward.setTag(message);
+
+        if (!message.isUnsent() && message.getStatus() != MessageStatus.SENDING) {
+            shouldShowFooterOption(true);
+        }
+    }
+
+    @Override
+    public void onListItemSizeChanged(int size) {
+        // Default implementation
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        int x = (int) event.getRawX();
+        int y = (int) event.getRawY();
+
+        Rect footerRect = new Rect();
+        mBinding.includedFooterOption.getRoot().getHitRect(footerRect);
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN &&
+                !footerRect.contains(x, y) &&
+                mBinding.includedFooterOption.getRoot().getVisibility() == View.VISIBLE) {
+            shouldShowFooterOption(false);
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    private void shouldShowFooterOption(boolean isShow) {
+        mBinding.includedFooterOption.getRoot().startAnimation(isShow ? slideUpAnimation : AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_down));
+        mBinding.includedFooterOption.getRoot().setVisibility(isShow ? View.VISIBLE : View.GONE);
+    }
+
+    private void handleCopyMessageContent(View view) {
+        Chat             message = (Chat) view.getTag();
+        ClipboardManager cm      = getSystemService(ClipboardManager.class);
+        ClipData         cd      = ClipData.newPlainText("Copied Message Content", message.getContent());
+
+        cm.setPrimaryClip(cd);
+
+        shouldShowFooterOption(false);
+
+        Toast.makeText(this, R.string.msg_copy_message_successfully, Toast.LENGTH_SHORT).show();
+    }
+
+    private void handleReplyMessage(View view) {
+        Chat message = (Chat) view.getTag();
+        shouldShowFooterOption(false);
+    }
+
+    private void handleForwardMessage(View view) {
+        Chat message = (Chat) view.getTag();
+        shouldShowFooterOption(false);
+    }
+
+    private void handleUnsentMessage(View view) {
+        Chat message = (Chat) view.getTag();
+
+        shouldShowFooterOption(false);
+
+        mViewModel.unsentMessage(message);
+    }
+
+    private void handleSaveMessageMedia(View view) {
+        Chat message = (Chat) view.getTag();
+
+        Permission.with(this, mPermissionsLauncher)
+                  .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                  .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                  .onAllGranted(() -> getContentLauncher.launch("image/*", uri -> {
+                      String path = FileProviderUtil.getPath(this, uri);
+                      if (path != null) {
+                          File file = new File(path);
+
+                          mViewModel.changeGroupThumbnail(file);
+                      } else {
+                          Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
+                      }
+                  }))
+                  .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
+                  .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
+                  .execute();
+
+        shouldShowFooterOption(false);
     }
 
     private class WidgetPresenter {

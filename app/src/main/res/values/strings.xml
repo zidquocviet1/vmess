@@ -188,6 +188,9 @@
     <string name="action_reply">Reply</string>
     <string name="action_continue">Continue</string>
     <string name="action_not_now">Not now</string>
+    <string name="action_forward">Forward</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_unsent">Unsent</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -264,6 +267,7 @@
     <string name="msg_permission_external_storage_message">This lets &appname; store and access information like photos on your phone and its SD card.</string>
     <string name="msg_change_avatar_success">Change user avatar successfully</string>
     <string name="msg_dont_have_any_user_active">Don\'t have any user active.</string>
+    <string name="msg_copy_message_successfully">Copy message content successfully</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

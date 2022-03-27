@@ -126,6 +126,7 @@ class ConversationMessageItem(
 
     private fun bindUnsentMessage(item: Chat, background: View, contentView: TextView) {
         renderUnsentMessage(background, contentView, getUnsentMessage(item))
+        bindMessageShape(item)
     }
 
     private fun renderUnsentMessage(background: View, contentView: TextView, content: String) {
@@ -137,9 +138,11 @@ class ConversationMessageItem(
         )
         val backgroundDrawable =
             ContextCompat.getDrawable(mContext, R.drawable.background_rounded_chat_unsent)
+        background.alpha = 0.2f
         background.backgroundTintList = backgroundTintColor
         background.background = backgroundDrawable
         contentView.text = content
+        contentView.textSize = 14f
         contentView.setTypeface(mBinding.textSenderContent.typeface, Typeface.ITALIC)
         contentView.setTextColor(
             ContextCompat.getColor(

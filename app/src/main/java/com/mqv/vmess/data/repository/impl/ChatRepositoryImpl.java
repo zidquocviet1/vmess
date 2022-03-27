@@ -83,6 +83,11 @@ public class ChatRepositoryImpl implements ChatRepository {
     }
 
     @Override
+    public Observable<ApiResponse<Chat>> unsentMessage(@NonNull Chat chat) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.unsentMessage(token, chat.getId()));
+    }
+
+    @Override
     public Single<List<Chat>> pagingCachedByConversation(String id, int page, int size) {
         return dao.fetchChatByConversation(id, page, size)
                   .flatMap(list -> {

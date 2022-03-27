@@ -43,4 +43,8 @@ public interface ChatService {
     @PUT(value = "chat/mark-received")
     Observable<ApiResponse<Chat>> notifyReceiveMessage(@Header(AUTHORIZATION) String token,
                                                        @Query(value = "id") String messageId);
+
+    @PUT(value = "chat/unsent")
+    Observable<ApiResponse<Chat>> unsentMessage(@Header(AUTHORIZATION) String token,
+                                                @Query(value = "id") String messageId);
 }

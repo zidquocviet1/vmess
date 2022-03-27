@@ -191,8 +191,13 @@ class ConversationListItem(
         } else {
             bindConversationStatus(item)
 
-            if (recentMessage.senderId == mCurrentUser.uid) {
+            if (recentMessage.isUnsent) {
+                textContent.append(
+                    getUnsentMessage(recentMessage, item.participants)
+                )
+            } else if (recentMessage.senderId == mCurrentUser.uid) {
                 textContent.append(mContext.getString(R.string.msg_owner_chat))
+                textContent.append(recentMessage.content)
             } else {
                 if (metadata.type == ConversationType.GROUP) {
                     textContent.append(
@@ -204,8 +209,8 @@ class ConversationListItem(
                         }: "
                     )
                 }
+                textContent.append(recentMessage.content)
             }
-            textContent.append(recentMessage.content)
         }
         val recentMessageReadableTimestamp = mContext.getString(
             R.string.title_conversation_timestamp,
@@ -273,6 +278,6 @@ class ConversationListItem(
     }
 
     fun bindUnsentMessage(item: Conversation) {
-        mBinding.textContentConversation.text = getUnsentMessage(item.lastChat)
+        mBinding.textContentConversation.text = getUnsentMessage(item.lastChat, item.participants)
     }
 }

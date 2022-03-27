@@ -24,6 +24,8 @@ public interface ChatRepository {
 
     Observable<ApiResponse<Chat>> seenWelcomeMessage(@NonNull Chat chat);
 
+    Observable<ApiResponse<Chat>> unsentMessage(@NonNull Chat chat);
+
     Single<List<Chat>> pagingCachedByConversation(String id, int page, int size);
 
     Single<Chat> fetchCached(String id);

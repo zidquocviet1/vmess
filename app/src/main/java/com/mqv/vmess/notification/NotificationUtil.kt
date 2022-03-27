@@ -129,7 +129,8 @@ object NotificationUtil {
     @JvmStatic
     fun sendIncomingMessageNotification(
         context: Context,
-        metadata: MessageNotificationMetadata
+        metadata: MessageNotificationMetadata,
+        notificationId: Int
     ) {
         val conversation = metadata.conversation
         val message = metadata.message
@@ -183,7 +184,7 @@ object NotificationUtil {
                 .build()
             sendNotification(
                 context = context,
-                id = conversation.hashCode(),
+                id = notificationId,
                 title = it.conversationName,
                 body = message.content,
                 channelId = CHANNEL_ID_INCOMING_MESSAGE,
@@ -241,6 +242,12 @@ object NotificationUtil {
                 context
             )
         }
+    }
+
+    @JvmStatic
+    fun removeNotification(context: Context, id: Int) {
+        val notificationManager = context.getSystemService(NotificationManager::class.java)
+        notificationManager.cancel(id)
     }
 }
 

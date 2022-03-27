@@ -41,6 +41,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private User mOtherUserDetail;
     private ConversationMetadata mConversationMetadata;
     private ConversationGroupOption mConversationCallback;
+    private BaseAdapter.ItemEventHandler mItemEventHandler;
 
     private static final int VIEW_PROFILE = -1;
     private static final int VIEW_PROFILE_SELF = 0;
@@ -48,6 +49,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private static final int VIEW_LOAD_MORE = 2;
     private static final int VIEW_PROFILE_GROUP = 3;
     private static final int VIEW_CHAT_NOTIFICATION = 4;
+    private static final int VIEW_CHAT_MULTI_MEDIA = 5;
+    private static final int VIEW_CHAT_UNSENT = 6;
 
     public static final String PROFILE_USER_PAYLOAD = "profile_user";
     public static final String TIMESTAMP_MESSAGE_PAYLOAD = "timestamp";
@@ -130,6 +133,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mConversationCallback = callback;
     }
 
+    public void registerItemEventListener(BaseAdapter.ItemEventHandler callback) {
+        mItemEventHandler = callback;
+    }
+
     @Override
     public int getItemViewType(int position) {
         var item = getItem(position);
@@ -146,8 +153,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             return VIEW_PROFILE;
         } else if (MessageUtil.isNotificationMessage(item)) {
             return VIEW_CHAT_NOTIFICATION;
+        } else if (MessageUtil.isMultiMediaMessage(item)) {
+            return VIEW_CHAT_MULTI_MEDIA;
         } else {
-            return VIEW_CHAT;
+            return item.isUnsent() ? VIEW_CHAT_UNSENT : VIEW_CHAT;
         }
     }
 
@@ -170,7 +179,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mParticipants,
                         mChatColorStateList,
                         mChatList,
-                        mConversationMetadata);
+                        mConversationMetadata,
+                        mItemEventHandler);
         }
     }
 
@@ -234,6 +244,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         pool.setMaxRecycledViews(VIEW_LOAD_MORE, 1);
         pool.setMaxRecycledViews(VIEW_PROFILE_SELF, 1);
         pool.setMaxRecycledViews(VIEW_PROFILE, 1);
+        pool.setMaxRecycledViews(VIEW_CHAT_UNSENT, 1);
     }
 
     static class ChatListViewHolder extends RecyclerView.ViewHolder {
@@ -245,11 +256,39 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                   @NonNull List<User> participants,
                                   @NonNull ColorStateList colorStateList,
                                   @NonNull List<Chat> listItem,
-                                  ConversationMetadata metadata) {
+                                  ConversationMetadata metadata,
+                                  BaseAdapter.ItemEventHandler handler) {
             super(binding.getRoot());
 
             mBinding = binding;
             mMessageItem = new ConversationMessageItem(binding, listItem, participants, user, metadata, colorStateList);
+
+            mBinding.senderChatBackground.setOnClickListener(v -> {
+                if (handler != null) {
+                    handler.onItemClick(getLayoutPosition());
+                }
+            });
+            mBinding.receiverChatBackground.setOnClickListener(v -> {
+                if (handler != null) {
+                    handler.onItemClick(getLayoutPosition());
+                }
+            });
+            mBinding.senderChatBackground.setOnLongClickListener(v -> {
+                if (handler != null) {
+                    handler.onItemLongClick(getLayoutPosition());
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            mBinding.receiverChatBackground.setOnLongClickListener(v -> {
+                if (handler != null) {
+                    handler.onItemLongClick(getLayoutPosition());
+                    return true;
+                } else {
+                    return false;
+                }
+            });
         }
 
         public ConversationMessageItem getItemBindable() {

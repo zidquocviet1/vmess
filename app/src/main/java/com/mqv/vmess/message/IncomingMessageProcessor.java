@@ -197,7 +197,7 @@ public final class IncomingMessageProcessor {
 
                 MessageNotificationMetadata metadata = new MessageNotificationMetadata(sender, conversation, message);
 
-                NotificationUtil.sendIncomingMessageNotification(context, metadata);
+                NotificationUtil.sendIncomingMessageNotification(context, metadata, message.getId().hashCode());
             }
         });
     }

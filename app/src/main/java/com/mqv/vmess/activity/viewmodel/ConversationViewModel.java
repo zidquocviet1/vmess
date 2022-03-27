@@ -31,6 +31,7 @@ import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.ApiResponse;
+import com.mqv.vmess.network.exception.NetworkException;
 import com.mqv.vmess.network.exception.PermissionDeniedException;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
@@ -165,7 +166,8 @@ public class ConversationViewModel extends AndroidViewModel {
                     prev.getContent().equals(cur.getContent()) &&
                     prev.getType().equals(cur.getType()) &&
                     prev.getStatus().equals(cur.getStatus()) &&
-                    prev.getSeenBy().equals(cur.getSeenBy());
+                    prev.getSeenBy().equals(cur.getSeenBy()) &&
+                    prev.isUnsent() == cur.isUnsent();
         });
     }
 
@@ -569,6 +571,31 @@ public class ConversationViewModel extends AndroidViewModel {
 
     public void changeGroupThumbnail(File file) {
         onGroupOptionChangedComplete(conversationRepository.changeConversationGroupThumbnail(mConversation.getId(), file));
+    }
+
+    public void unsentMessage(Chat message) {
+        Disposable disposable = conversationRepository.isExists(message.getConversationId())
+                                                      .startWith(Completable.fromAction(() -> singleRequestCall.postValue(Result.Loading())))
+                                                      .flatMapCompletable(isExists -> isExists ?
+                                                              Completable.fromAction(() -> chatRepository.updateCached(message)) :
+                                                              Completable.error(new EmptyResultSetException("empty")))
+                                                      .andThen(chatRepository.unsentMessage(message))
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .flatMapSingle(c -> chatRepository.saveCached(c).toSingleDefault(c))
+                                                      .compose(RxHelper.applyObservableSchedulers())
+                                                      .subscribe(data -> {
+                                                          messageObserver.setValue(data);
+                                                          AppDependencies.getDatabaseObserver().notifyConversationUpdated(data.getConversationId());
+                                                          singleRequestCall.postValue(Result.Success(null));
+                                                      }, t -> {
+                                                          if (t instanceof EmptyResultSetException) {
+                                                              eventToast.postValue(new Event<>(R.string.error_conversation_has_been_deleted));
+                                                          } else if (t instanceof NetworkException) {
+                                                              eventToast.postValue(new Event<>(((NetworkException)t).getStringRes()));
+                                                          }
+                                                          singleRequestCall.postValue(Result.Fail(-1));
+                                                      });
+        cd.add(disposable);
     }
 
     @Override

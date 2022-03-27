@@ -268,4 +268,8 @@
     <string name="msg_change_avatar_success">Thay đổi ảnh đại diện thành công</string>
     <string name="msg_dont_have_any_user_active">Không có người dùng nào đang hoạt động.</string>
     <string name="label_no_internet_connection">Không có kết nối mạng</string>
+    <string name="action_forward">Chuyển tiếp</string>
+    <string name="action_copy">Sao chép</string>
+    <string name="action_unsent">Thu hồi</string>
+    <string name="msg_copy_message_successfully">Sao chép nội dung tin nhắn thành công</string>
 </resources>

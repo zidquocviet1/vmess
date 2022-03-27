@@ -72,7 +72,8 @@ class NotificationHandler(
                 .subscribe { metadata, _ ->
                     NotificationUtil.sendIncomingMessageNotification(
                         mContext,
-                        metadata
+                        metadata,
+                        payload.messageId.hashCode()
                     )
                 }
         }
@@ -91,7 +92,7 @@ class NotificationHandler(
                     }
             }
             .onErrorComplete()
-            .subscribe { }
+            .subscribe { NotificationUtil.removeNotification(mContext, payload.messageId.hashCode())}
     }
 
     /*

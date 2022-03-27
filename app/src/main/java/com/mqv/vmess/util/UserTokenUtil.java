@@ -8,7 +8,7 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
-import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
+import com.mqv.vmess.network.exception.NetworkException;
 
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -45,7 +45,13 @@ public final class UserTokenUtil {
                     emitter.onError(state.getException());
                 }
             } else {
-                emitter.onError(state.getException());
+                Exception e = state.getException();
+
+                if (e instanceof FirebaseNetworkException) {
+                    emitter.onError(new NetworkException());
+                } else {
+                    emitter.onError(e);
+                }
             }
         }));
     }

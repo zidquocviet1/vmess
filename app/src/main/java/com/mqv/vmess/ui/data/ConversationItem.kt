@@ -151,14 +151,11 @@ abstract class ConversationItem<T>(
         }
     }
 
-    protected fun getUnsentMessage(message: Chat): String {
+    protected fun getUnsentMessage(message: Chat, participants: List<User>? = mParticipants): String {
         return if (isSelf(message)) {
             mContext.getString(R.string.title_sender_chat_unsent)
         } else {
-            val otherNameArr: Array<String> =
-                getSenderFromChat(message)!!.displayName.split(" ").toTypedArray()
-            val otherName = otherNameArr[otherNameArr.size - 1]
-            mContext.getString(R.string.title_receiver_chat_unsent, otherName)
+            mContext.getString(R.string.title_receiver_chat_unsent, getSenderFromChat(message, participants)?.displayName ?: mContext.getString(R.string.dummy_user_name))
         }
     }
 
