@@ -61,6 +61,8 @@ dependencyResolutionManagement {
             alias('commons-codec').to('commons-codec:commons-codec:1.10')
             alias('zxing-android-embedded').to('com.journeyapps:zxing-android-embedded:4.2.0')
             alias('google-guava').to('com.google.guava:guava:29.0-android')
+            alias('zelory-compressor').to('id.zelory:compressor:3.0.1')
+            alias('coroutine-jdk').to('org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0')
         }
 
         testLibs {

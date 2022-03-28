@@ -14,10 +14,21 @@ import android.provider.MediaStore
 import android.util.Size
 import androidx.annotation.RequiresApi
 import com.mqv.vmess.ui.data.ImageThumbnail
+import id.zelory.compressor.Compressor
+import id.zelory.compressor.constraint.format
+import id.zelory.compressor.constraint.quality
+import id.zelory.compressor.constraint.resolution
+import id.zelory.compressor.constraint.size
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.future.future
+import java.io.File
 import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.concurrent.CompletableFuture
 
 object FileProviderUtil {
     /*
@@ -121,7 +132,10 @@ object FileProviderUtil {
     }
 
     @JvmStatic
-    fun getImagesShownInApiLower29(resolver: ContentResolver, specificUri: Uri?): List<ImageThumbnail?> {
+    fun getImagesShownInApiLower29(
+        resolver: ContentResolver,
+        specificUri: Uri?
+    ): List<ImageThumbnail?> {
         var images: MutableList<ImageThumbnail?>? = null
         val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         val projection = arrayOf(
@@ -178,7 +192,10 @@ object FileProviderUtil {
     }
 
     @JvmStatic
-    fun getAllPhotoFromExternal(resolver: ContentResolver, specificUri: Uri?): List<ImageThumbnail?> {
+    fun getAllPhotoFromExternal(
+        resolver: ContentResolver,
+        specificUri: Uri?
+    ): List<ImageThumbnail?> {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             getImagesShownInApi29(resolver, specificUri)
         } else {
@@ -249,6 +266,27 @@ object FileProviderUtil {
             }
         }
     }
+
+    @JvmStatic
+    fun isLocalFile(path: String?): Boolean {
+        return if (path == null) {
+            false
+        } else {
+            File(path).exists()
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @JvmStatic
+    fun compressFileFuture(context: Context, file: File): CompletableFuture<File> =
+        GlobalScope.future(Dispatchers.Main) {
+            Compressor.compress(context, file) {
+                resolution(1280, 720)
+                quality(80)
+                format(Bitmap.CompressFormat.JPEG)
+                size(524_288) // 500KB
+            }
+        }
 
     @JvmStatic
     fun getPath(context: Context, uri: Uri): String? {

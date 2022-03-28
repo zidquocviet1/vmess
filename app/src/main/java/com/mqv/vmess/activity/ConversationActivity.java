@@ -681,13 +681,15 @@ public class ConversationActivity
                         .request(Manifest.permission.READ_EXTERNAL_STORAGE)
                         .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
                         .onAllGranted(() -> getContentLauncher.launch("image/*", uri -> {
-                            String path = FileProviderUtil.getPath(this, uri);
-                            if (path != null) {
-                                File file = new File(path);
+                            if (uri != null) {
+                                String path = FileProviderUtil.getPath(this, uri);
+                                if (path != null) {
+                                    File file = new File(path);
 
-                                mViewModel.changeGroupThumbnail(file);
-                            } else {
-                                Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
+                                    mViewModel.changeGroupThumbnail(this, file);
+                                } else {
+                                    Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
+                                }
                             }
                         }))
                         .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
@@ -716,7 +718,7 @@ public class ConversationActivity
                             String filePath = data.getStringExtra(PreviewEditPhotoActivity.EXTRA_FILE_PATH_RESULT);
                             File file = new File(filePath);
 
-                            mViewModel.changeGroupThumbnail(file);
+                            mViewModel.changeGroupThumbnail(this, file);
                         }
                     }
                 });
@@ -817,7 +819,7 @@ public class ConversationActivity
                       if (path != null) {
                           File file = new File(path);
 
-                          mViewModel.changeGroupThumbnail(file);
+                          mViewModel.changeGroupThumbnail(this, file);
                       } else {
                           Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
                       }

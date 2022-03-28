@@ -1,5 +1,7 @@
 package com.mqv.vmess.activity.viewmodel;
 
+import android.content.Context;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -10,8 +12,10 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.data.repository.EditUserPhotoRepository;
 import com.mqv.vmess.data.result.UploadPhotoResult;
 import com.mqv.vmess.util.Const;
+import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.Logging;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -21,6 +25,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -39,7 +44,8 @@ public class PreviewEditPhotoViewModel extends ViewModel {
         return uploadPhotoResult;
     }
 
-    public void updateProfilePicture(String realFilePath) {
+    public void updateProfilePicture(Context context, String realFilePath) {
+        File file = new File(realFilePath);
         uploadPhotoResult.setValue(UploadPhotoResult.Loading());
 
         var user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
@@ -48,7 +54,8 @@ public class PreviewEditPhotoViewModel extends ViewModel {
             if (task.isSuccessful() && task.getResult() != null) {
                 var token = task.getResult().getToken();
 
-                cd.add(repository.updateProfilePicture(Const.PREFIX_TOKEN + token, realFilePath)
+                cd.add(Observable.fromFuture(FileProviderUtil.compressFileFuture(context, file))
+                        .flatMap(compress -> repository.updateProfilePicture(Const.PREFIX_TOKEN + token, compress))
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(response -> {

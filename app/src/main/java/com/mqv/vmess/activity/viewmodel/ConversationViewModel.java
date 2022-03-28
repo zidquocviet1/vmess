@@ -46,6 +46,7 @@ import com.mqv.vmess.ui.data.ConversationMetadata;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Event;
+import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.LiveDataUtil;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
@@ -569,8 +570,9 @@ public class ConversationViewModel extends AndroidViewModel {
         cd.add(disposable);
     }
 
-    public void changeGroupThumbnail(File file) {
-        onGroupOptionChangedComplete(conversationRepository.changeConversationGroupThumbnail(mConversation.getId(), file));
+    public void changeGroupThumbnail(Context context, File file) {
+        onGroupOptionChangedComplete(Observable.fromFuture(FileProviderUtil.compressFileFuture(context, file))
+                                               .flatMap(compress -> conversationRepository.changeConversationGroupThumbnail(mConversation.getId(), compress)));
     }
 
     public void unsentMessage(Chat message) {

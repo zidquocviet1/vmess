@@ -98,7 +98,7 @@ public class PreviewEditPhotoActivity extends ToolbarActivity<PreviewEditPhotoVi
 
         enableSaveButton(v -> {
             if (from.equals(EXTRA_PROFILE_PICTURE)) {
-                mViewModel.updateProfilePicture(image.getRealPath());
+                mViewModel.updateProfilePicture(this, image.getRealPath());
             } else if (from.equals(EXTRA_GROUP_THUMBNAIL)) {
                 Intent result = new Intent();
                 result.putExtra(EXTRA_FILE_PATH_RESULT, filePath);

@@ -32,9 +32,8 @@ public class EditUserPhotoRepositoryImpl implements EditUserPhotoRepository {
     }
 
     @Override
-    public Observable<ApiResponse<String>> updateProfilePicture(String token, String filePath) {
+    public Observable<ApiResponse<String>> updateProfilePicture(String token, File file) {
         var typeBody = RequestBody.create("profile_picture", MediaType.parse(Const.MULTIPART_TYPE));
-        var file = new File(filePath);
         var fileBody = RequestBody.create(file, MediaType.parse(Const.MULTIPART_TYPE));
         var part = MultipartBody.Part.createFormData("photo", file.getName(), fileBody);
         return service.updateProfilePicture(token, typeBody, part);
