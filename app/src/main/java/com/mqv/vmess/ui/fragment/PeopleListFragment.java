@@ -2,6 +2,8 @@ package com.mqv.vmess.ui.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,7 +73,7 @@ public class PeopleListFragment extends BaseSwipeFragment<PeopleListFragmentView
 
     @Override
     public void onRefresh() {
-        mViewModel.onRefresh();
+        new Handler(Looper.getMainLooper()).postDelayed(this::stopRefresh, 2000);
     }
 
     @Override
