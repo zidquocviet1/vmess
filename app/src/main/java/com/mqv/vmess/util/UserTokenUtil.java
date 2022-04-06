@@ -47,10 +47,12 @@ public final class UserTokenUtil {
             } else {
                 Exception e = state.getException();
 
-                if (e instanceof FirebaseNetworkException) {
-                    emitter.onError(new NetworkException());
-                } else {
-                    emitter.onError(e);
+                if (e != null) {
+                    if (e instanceof FirebaseNetworkException) {
+                        emitter.onError(new NetworkException());
+                    } else {
+                        emitter.onError(e);
+                    }
                 }
             }
         }));
