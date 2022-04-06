@@ -18,6 +18,7 @@ import com.mqv.vmess.util.LiveDataUtil;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -155,6 +156,7 @@ public abstract class AbstractMainViewModel extends CurrentUserViewModel {
                     public void onNext(@NonNull ApiResponse<People> response) {
                         if (response.getStatusCode() == HttpURLConnection.HTTP_OK) {
                             var p = response.getSuccess();
+                            p.setAccessedDate(LocalDateTime.now());
                             p.setFriend(true);
                             freshPeopleList.add(p);
                         }

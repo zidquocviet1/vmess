@@ -294,7 +294,9 @@ public class UserRepositoryImpl implements UserRepository {
                 .subscribe(response -> {
                     var code = response.getStatusCode();
                     if (code == HttpURLConnection.HTTP_OK) {
-                        saveRemoteUserToDb(response.getSuccess());
+                        var user = response.getSuccess();
+                        user.setAccessedDate(LocalDateTime.now());
+                        saveRemoteUserToDb(user);
                     }
                 }, Throwable::printStackTrace));
     }
