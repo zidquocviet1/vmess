@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_single_avatar"
+            android:layout_width="@dimen/image_user_avatar_small"
+            android:layout_height="@dimen/image_user_avatar_small"
+            android:src="@drawable/ic_default_user_avatar"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_multiple_thumbnail"
+            android:layout_width="@dimen/image_conversation_group"
+            android:layout_height="@dimen/image_conversation_group"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_multiple_avatar_1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_margin"
+                android:padding="3dp"
+                android:src="@drawable/ic_default_user_avatar"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+            <LinearLayout
+                android:id="@+id/layout_avatar_2"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/all_margin"
+                android:layout_marginBottom="@dimen/all_margin"
+                android:background="@drawable/avatar_stroke_ripple"
+                android:padding="3dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/image_multiple_avatar_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="false"
+                    android:src="@drawable/ic_default_user_avatar"
+                    app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_active"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="-2dp"
+            android:background="@drawable/avatar_active_icon_ripple"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@id/image_single_avatar"
+            app:layout_constraintEnd_toEndOf="@id/image_single_avatar"
+            app:layout_constraintHeight_percent="0.3"
+            app:layout_constraintWidth_percent="0.3"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

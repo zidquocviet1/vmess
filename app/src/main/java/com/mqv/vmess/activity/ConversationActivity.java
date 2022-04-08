@@ -232,17 +232,11 @@ public class ConversationActivity
 
         mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
             isActive = isOnline;
+            mBinding.conversationThumbnail.setActiveStatus(isActive);
             mBinding.toolbarSubtitle.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
-            if (avatarNormalStubBinding != null) {
-                avatarNormalStubBinding.imageActive.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
-            }
-            if (avatarGroupStubBinding != null) {
-                avatarGroupStubBinding.imageActive.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
-            }
         });
 
         mViewModel.getConversationMetadata().observe(this, metadata -> {
-            mWidgetPresenter = new WidgetPresenter(metadata);
             mChatListAdapter.setConversationMetadata(metadata);
             mChatListAdapter.setParticipants(metadata.getConversationParticipants());
             mChatListAdapter.notifyItemChanged(0);
@@ -252,20 +246,7 @@ public class ConversationActivity
 
             List<String> conversationThumbnail = metadata.getConversationThumbnail();
 
-            if (conversationThumbnail.size() > 1) {
-                loadImage(conversationThumbnail.get(0), avatarGroupStubBinding.avatarUser1);
-                loadImage(conversationThumbnail.get(1), avatarGroupStubBinding.avatarUser2);
-            } else {
-                if (metadata.getType() == ConversationType.GROUP) {
-                    avatarGroupStubBinding.avatarUser1.setVisibility(View.GONE);
-                    avatarGroupStubBinding.layoutAvatar2.setVisibility(View.GONE);
-                    mWidgetPresenter.setActiveIcon(avatarGroupStubBinding.groupAvatar.imageActive);
-
-                    loadImage(conversationThumbnail.get(0), avatarGroupStubBinding.groupAvatar.imageAvatar);
-                } else {
-                    loadImage(conversationThumbnail.get(0), avatarNormalStubBinding.imageAvatar);
-                }
-            }
+            mBinding.conversationThumbnail.setThumbnail(conversationThumbnail);
 
             if (metadata.getType() == ConversationType.NORMAL) {
                 mViewModel.loadUserDetail(metadata.getOtherUid());
@@ -276,7 +257,6 @@ public class ConversationActivity
             if (result.getStatus() == NetworkStatus.SUCCESS) {
                 mConversation = result.getSuccess();
 
-                setupConversation(mConversation);
                 setupRecyclerView(mConversation.getParticipants(), mConversation.getType());
 
                 mChatList.addAll(mConversation.getChats());
@@ -338,21 +318,6 @@ public class ConversationActivity
 
     public String getExtraConversationId() {
         return mConversation.getId();
-    }
-
-    private void setupConversation(Conversation conversation) {
-        mBinding.viewStubImageGroup.setOnInflateListener(this);
-        mBinding.viewStubImageAvatar.setOnInflateListener(this);
-
-        if (conversation.getId().startsWith("-1")) {
-            // The new conversation when user request a new message but have not friend relationship
-        } else {
-            if (conversation.getType() == ConversationType.SELF || conversation.getType() == ConversationType.NORMAL) {
-                mBinding.viewStubImageAvatar.inflate();
-            } else {
-                mBinding.viewStubImageGroup.inflate();
-            }
-        }
     }
 
     private void registerEventClick() {
@@ -489,15 +454,10 @@ public class ConversationActivity
 
     private void checkForShowHeader() {
         boolean shouldShowHeader = shouldShowHeader();
-        boolean isGroup = mConversation.getGroup() != null;
 
-        if (isGroup) {
-            mBinding.viewStubImageGroup.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-        } else {
-            mBinding.viewStubImageAvatar.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
-        }
-        mWidgetPresenter.shouldShowAsActive(shouldShowHeader && isActive);
-        mWidgetPresenter.shouldShowTitle(shouldShowHeader);
+        mBinding.conversationThumbnail.showHeader(shouldShowHeader, isActive);
+        mBinding.toolbarSubtitle.setVisibility(shouldShowHeader && isActive ? View.VISIBLE : View.GONE);
+        mBinding.toolbarTitle.setVisibility(shouldShowHeader ? View.VISIBLE : View.INVISIBLE);
     }
 
     private boolean shouldShowHeader() {
@@ -553,10 +513,6 @@ public class ConversationActivity
         mViewModel.postSeenMessageConversation(this, mConversation.getId(), mCurrentUser.getUid());
     }
 
-    private void loadImage(@Nullable String url, ImageView container) {
-        Picture.loadUserAvatar(this, url).into(container);
-    }
-
     private void setToolbarTitle(String title) {
         mBinding.toolbarTitle.setText(title);
     }
@@ -570,17 +526,6 @@ public class ConversationActivity
 
         if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
             mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
-        }
-    }
-
-    @Override
-    public void onInflate(ViewStub viewStub, View view) {
-        int id = viewStub.getInflatedId();
-
-        if (id == R.id.inflated_image_normal) {
-            avatarNormalStubBinding = ItemUserAvatarBinding.bind(view);
-        } else if (id == R.id.inflated_image_group) {
-            avatarGroupStubBinding = ItemImageGroupBinding.bind(view);
         }
     }
 

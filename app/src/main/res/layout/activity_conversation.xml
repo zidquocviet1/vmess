@@ -35,30 +35,12 @@
                     android:backgroundTint="?android:colorBackground"
                     app:icon="@drawable/ic_back" />
 
-                <androidx.constraintlayout.widget.ConstraintLayout
+                <com.mqv.vmess.ui.components.conversation.ConversationHeaderThumbnail
+                    android:id="@+id/conversation_thumbnail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="10dp">
-
-                    <ViewStub
-                        android:id="@+id/view_stub_image_avatar"
-                        android:layout_width="@dimen/image_user_avatar_small"
-                        android:layout_height="@dimen/image_user_avatar_small"
-                        android:inflatedId="@+id/inflated_image_normal"
-                        android:layout="@layout/item_user_avatar"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <ViewStub
-                        android:id="@+id/view_stub_image_group"
-                        android:layout_width="@dimen/image_conversation_group"
-                        android:layout_height="@dimen/image_conversation_group"
-                        android:inflatedId="@+id/inflated_image_group"
-                        android:layout="@layout/item_image_group"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
+                    android:layout_marginStart="10dp"/>
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/toolbar"
