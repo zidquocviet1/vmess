@@ -195,21 +195,8 @@ class ConversationListItem(
                 textContent.append(
                     getUnsentMessage(recentMessage, item.participants)
                 )
-            } else if (recentMessage.senderId == mCurrentUser.uid) {
-                textContent.append(mContext.getString(R.string.msg_owner_chat))
-                textContent.append(recentMessage.content)
             } else {
-                if (metadata.type == ConversationType.GROUP) {
-                    textContent.append(
-                        "${
-                            getSenderFromChat(
-                                recentMessage,
-                                item.participants
-                            )!!.displayName
-                        }: "
-                    )
-                }
-                textContent.append(recentMessage.content)
+                textContent.append(getContentFromMessage(recentMessage, metadata))
             }
         }
         val recentMessageReadableTimestamp = mContext.getString(
@@ -279,5 +266,40 @@ class ConversationListItem(
 
     fun bindUnsentMessage(item: Conversation) {
         mBinding.textContentConversation.text = getUnsentMessage(item.lastChat, item.participants)
+    }
+
+    private fun getContentFromMessage(item: Chat, metadata: ConversationMetadata): String {
+        val whoSentDisplayName = if (isSelf(item)) mContext.getString(R.string.msg_you) else
+            (getSenderFromChat(
+                item,
+                metadata.conversationParticipants
+            )?.displayName ?: mContext.getString(R.string.dummy_user_name))
+
+        return if (MessageUtil.isCallMessage(item)) {
+            mContext.getString(R.string.msg_conversation_list_you_call, whoSentDisplayName)
+        } else if (MessageUtil.isShareMessage(item)) {
+            mContext.getString(R.string.msg_conversation_list_you_sent_link, whoSentDisplayName)
+        } else if (MessageUtil.isVideoMessage(item)) {
+            mContext.getString(R.string.msg_conversation_list_you_sent_video, whoSentDisplayName)
+        } else if (MessageUtil.isPhotoMessage(item)) {
+            mContext.getString(R.string.msg_conversation_list_you_sent_photo, whoSentDisplayName)
+        } else if (MessageUtil.isFileMessage(item)) {
+            mContext.getString(R.string.msg_conversation_list_you_sent_file, whoSentDisplayName)
+        } else {
+            if (item.senderId == mCurrentUser.uid) {
+                "$whoSentDisplayName: ${item.content}"
+            } else {
+                if (metadata.type == ConversationType.GROUP) {
+                    "${
+                        getSenderFromChat(
+                            item,
+                            metadata.conversationParticipants
+                        )?.displayName ?: mContext.getString(R.string.dummy_user_name)
+                    }: ${item.content}"
+                } else {
+                    item.content
+                }
+            }
+        }
     }
 }

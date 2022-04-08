@@ -6,16 +6,6 @@
     android:layout_gravity="center"
     android:clickable="false">
 
-    <include
-        android:id="@+id/group_avatar"
-        layout="@layout/item_user_avatar"
-        android:layout_width="@dimen/image_user_avatar_small"
-        android:layout_height="@dimen/image_user_avatar_small"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/avatar_user_1"
         android:layout_width="match_parent"
