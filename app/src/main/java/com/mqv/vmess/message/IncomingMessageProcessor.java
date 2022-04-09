@@ -3,6 +3,8 @@ package com.mqv.vmess.message;
 import android.app.Activity;
 import android.content.Context;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.MainApplication;
 import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.activity.MainActivity;
@@ -24,6 +26,7 @@ import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -179,6 +182,7 @@ public final class IncomingMessageProcessor {
         return Completable.fromAction(() -> {
             MainApplication app             = (MainApplication) context.getApplicationContext();
             Activity        currentActivity = app.getActiveActivity();
+            FirebaseUser    currentUser     = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
 
             boolean isInCurrentConversationOrMainActivity;
 
@@ -188,7 +192,7 @@ public final class IncomingMessageProcessor {
                 isInCurrentConversationOrMainActivity = currentActivity instanceof MainActivity;
             }
 
-            if (!isInCurrentConversationOrMainActivity) {
+            if (!isInCurrentConversationOrMainActivity && !message.getSenderId().equals(currentUser.getUid())) {
                 User sender = conversation.getParticipants()
                                           .stream()
                                           .filter(u -> u.getUid().equals(message.getSenderId()))
