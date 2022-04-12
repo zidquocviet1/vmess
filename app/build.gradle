@@ -19,8 +19,8 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "API_URL", "\"https://192.168.9.100/api/v1\""
-        buildConfigField "String", "SERVER_URL", "\"https://192.168.9.100\""
+        buildConfigField "String", "API_URL", "\"https://139.99.46.81/api/v1\""
+        buildConfigField "String", "SERVER_URL", "\"https://139.99.46.81\""
     }
 
     buildTypes {
@@ -56,6 +56,8 @@ dependencies {
     implementation libs.androidx.preference
     implementation libs.androidx.work.runtime
     implementation libs.androidx.work.rxjava3
+    implementation libs.androidx.work.coroutine
+    implementation libs.androidx.media2.widget
 
     implementation libs.hilt.lifecycle.viewmodel
     implementation libs.hilt
@@ -83,6 +85,8 @@ dependencies {
     implementation libs.google.guava
     implementation libs.zelory.compressor
     implementation libs.coroutine.jdk
+    implementation libs.jsoup
+    implementation libs.richlinkpreview
 
     kapt libs.glide.compiler
     kapt libs.room.compiler
