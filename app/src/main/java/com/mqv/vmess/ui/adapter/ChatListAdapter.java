@@ -1,13 +1,18 @@
 package com.mqv.vmess.ui.adapter;
 
+import static com.mqv.vmess.util.DateTimeHelper.getMessageDateTimeFormatted;
+
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,19 +21,35 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.databinding.ItemChatBinding;
 import com.mqv.vmess.databinding.ItemChatNotificationMessageBinding;
+import com.mqv.vmess.databinding.ItemChatOutgoingMultiMediaBinding;
 import com.mqv.vmess.databinding.ItemChatProfileBinding;
 import com.mqv.vmess.databinding.ItemChatProfileGroupBinding;
+import com.mqv.vmess.databinding.ItemChatReceivedMultiMediaBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.network.model.type.MessageStatus;
+import com.mqv.vmess.ui.components.ImageClickListener;
+import com.mqv.vmess.ui.components.ImageLongClickListener;
+import com.mqv.vmess.ui.components.LinkPreviewView;
+import com.mqv.vmess.ui.components.conversation.ConversationPhotoView;
+import com.mqv.vmess.ui.components.conversation.ConversationVideoView;
+import com.mqv.vmess.ui.components.linkpreview.LinkPreviewListener;
+import com.mqv.vmess.ui.components.linkpreview.LinkPreviewMetadata;
 import com.mqv.vmess.ui.data.ConversationMessageItem;
 import com.mqv.vmess.ui.data.ConversationMetadata;
 import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.Picture;
+import com.mqv.vmess.util.views.Stub;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> {
     private final Context mContext;
@@ -42,6 +63,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private ConversationMetadata mConversationMetadata;
     private ConversationGroupOption mConversationCallback;
     private BaseAdapter.ItemEventHandler mItemEventHandler;
+    private LinkPreviewListener mLinkPreviewListener;
+    private BiConsumer<Chat, Chat.Video> mVideoListener;
 
     private static final int VIEW_PROFILE = -1;
     private static final int VIEW_PROFILE_SELF = 0;
@@ -49,7 +72,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private static final int VIEW_LOAD_MORE = 2;
     private static final int VIEW_PROFILE_GROUP = 3;
     private static final int VIEW_CHAT_NOTIFICATION = 4;
-    private static final int VIEW_CHAT_MULTI_MEDIA = 5;
+    private static final int VIEW_CHAT_RECEIVED_MULTI_MEDIA = 5;
+    private static final int VIEW_CHAT_OUTGOING_MULTI_MEDIA = 7;
     private static final int VIEW_CHAT_UNSENT = 6;
 
     public static final String PROFILE_USER_PAYLOAD = "profile_user";
@@ -137,6 +161,14 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mItemEventHandler = callback;
     }
 
+    public void registerLinkPreviewListener(LinkPreviewListener callback) {
+        mLinkPreviewListener = callback;
+    }
+
+    public void registerVideoListener(BiConsumer<Chat, Chat.Video> callback) {
+        mVideoListener = callback;
+    }
+
     @Override
     public int getItemViewType(int position) {
         var item = getItem(position);
@@ -153,10 +185,12 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             return VIEW_PROFILE;
         } else if (MessageUtil.isNotificationMessage(item)) {
             return VIEW_CHAT_NOTIFICATION;
+        } else if (item.isUnsent()) {
+            return VIEW_CHAT_UNSENT;
         } else if (MessageUtil.isMultiMediaMessage(item)) {
-            return VIEW_CHAT_MULTI_MEDIA;
+            return item.getSenderId().equals(mCurrentUser.getUid()) ? VIEW_CHAT_OUTGOING_MULTI_MEDIA : VIEW_CHAT_RECEIVED_MULTI_MEDIA;
         } else {
-            return item.isUnsent() ? VIEW_CHAT_UNSENT : VIEW_CHAT;
+            return VIEW_CHAT;
         }
     }
 
@@ -173,6 +207,22 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 return new ProfileGroupViewHolder(ItemChatProfileGroupBinding.bind(inflater.inflate(R.layout.item_chat_profile_group, parent, false)), mConversationCallback);
             case VIEW_CHAT_NOTIFICATION:
                 return new ChatNotificationMessageViewHolder(ItemChatNotificationMessageBinding.bind(inflater.inflate(R.layout.item_chat_notification_message, parent, false)), mParticipants);
+            case VIEW_CHAT_RECEIVED_MULTI_MEDIA:
+                return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_received_multi_media, parent, false), true, mCurrentUser,
+                        mParticipants,
+                        mChatColorStateList,
+                        mChatList,
+                        mLinkPreviewListener,
+                        mVideoListener,
+                        mConversationMetadata);
+            case VIEW_CHAT_OUTGOING_MULTI_MEDIA:
+                return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_outgoing_multi_media, parent, false), false, mCurrentUser,
+                        mParticipants,
+                        mChatColorStateList,
+                        mChatList,
+                        mLinkPreviewListener,
+                        mVideoListener,
+                        mConversationMetadata);
             default:
                 return new ChatListViewHolder(ItemChatBinding.bind(inflater.inflate(R.layout.item_chat, parent, false)),
                         mCurrentUser,
@@ -211,6 +261,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
                 profileHolder.bindTo(mOtherUserDetail);
             }
+        } else if (holder instanceof ChatMultiMediaViewHolder) {
+            ((ChatMultiMediaViewHolder) holder).bind(getItem(position));
         }
     }
 
@@ -236,6 +288,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             ((ProfileGroupViewHolder) holder).bindGroup(mConversationMetadata);
         } else if (holder instanceof ChatNotificationMessageViewHolder) {
             ((ChatNotificationMessageViewHolder) holder).bind(getItem(position));
+        } else if (holder instanceof ChatMultiMediaViewHolder) {
+            ((ChatMultiMediaViewHolder) holder).bind(getItem(position));
         }
     }
 
@@ -475,6 +529,223 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                 .orElse(new User.Builder()
                                                 .setDisplayName(mContext.getString(R.string.dummy_user_name))
                                                 .create());
+        }
+    }
+
+    static class ChatMultiMediaViewHolder extends RecyclerView.ViewHolder {
+        ItemChatReceivedMultiMediaBinding mReceivedBinding;
+        ItemChatOutgoingMultiMediaBinding mOutgoingBinding;
+        Stub<ConversationPhotoView> mMediaThumbnailStub;
+        Stub<LinkPreviewView> mLinkPreviewStub;
+        Stub<ConversationVideoView> mVideoStub;
+        User mUser;
+        List<User> mParticipants;
+        List<Chat> mListItem;
+        Context mContext;
+        LinkPreviewListener mLinkPreviewListener;
+        BiConsumer<Chat, Chat.Video> mVideoListener;
+
+        Drawable mReceivedIconDrawable;
+        Drawable mNotReceivedIconDrawable;
+        Drawable mSendingIconDrawable;
+
+        boolean mIsReceived;
+
+        public ChatMultiMediaViewHolder(@NonNull View itemView, boolean isReceived,
+                                        @NonNull User user,
+                                        @NonNull List<User> participants,
+                                        @NonNull ColorStateList colorStateList,
+                                        @NonNull List<Chat> listItem,
+                                        @NonNull LinkPreviewListener linkPreviewListener,
+                                        @NonNull BiConsumer<Chat, Chat.Video> videoListener,
+                                        ConversationMetadata metadata) {
+            super(itemView);
+
+            if (isReceived) {
+                mReceivedBinding = ItemChatReceivedMultiMediaBinding.bind(itemView);
+                mMediaThumbnailStub = new Stub<>(mReceivedBinding.mediaThumbnailStub);
+                mLinkPreviewStub = new Stub<>(mReceivedBinding.mediaLinkPreviewStub);
+                mVideoStub = new Stub<>(mReceivedBinding.mediaVideoStub);
+            } else {
+                mOutgoingBinding = ItemChatOutgoingMultiMediaBinding.bind(itemView);
+                mMediaThumbnailStub = new Stub<>(mOutgoingBinding.mediaThumbnailStub);
+                mLinkPreviewStub = new Stub<>(mOutgoingBinding.mediaLinkPreviewStub);
+                mVideoStub = new Stub<>(mOutgoingBinding.mediaVideoStub);
+            }
+            mContext = itemView.getContext();
+            mIsReceived = isReceived;
+            mParticipants = participants;
+            mListItem = listItem;
+            mLinkPreviewListener = linkPreviewListener;
+            mVideoListener = videoListener;
+            mUser = user;
+            mSendingIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_outline_circle);
+            mReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle);
+            mNotReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle_outline);
+
+            mReceivedIconDrawable.setTintList(colorStateList);
+            mNotReceivedIconDrawable.setTintList(colorStateList);
+            mSendingIconDrawable.setTintList(colorStateList);
+        }
+
+        public void bind(Chat message) {
+            bindByType(message);
+            bindReceiverThumbnailAndMessageStatus(message);
+            showTimestamp(message);
+        }
+
+        private void bindByType(Chat message) {
+            if (MessageUtil.isPhotoMessage(message)) {
+                bindPhotoMessage(message);
+            } else if (MessageUtil.isVideoMessage(message)) {
+                bindVideoMessage(message);
+            } else if (MessageUtil.isShareMessage(message)) {
+                bindShareMessage(message);
+            } else if (MessageUtil.isFileMessage(message)) {
+                bindFileMessage();
+            } else if (MessageUtil.isCallMessage(message)) {
+                bindCallMessage();
+            }
+        }
+
+        private void bindReceiverThumbnailAndMessageStatus(Chat message) {
+            if (mIsReceived) {
+                Picture.loadUserAvatar(mContext, getSenderFromChat(message.getSenderId()).getPhotoUrl())
+                        .into(mReceivedBinding.imageReceiver);
+            } else {
+                if (!message.getSeenBy().isEmpty()) {
+                    Picture.loadUserAvatar(mContext, getSenderFromChat(message.getSeenBy().get(0)).getPhotoUrl())
+                            .into(mOutgoingBinding.imageMessageStatus);
+                } else {
+                    MessageStatus status = message.getStatus();
+
+                    if (status == MessageStatus.SENDING) {
+                        mOutgoingBinding.imageMessageStatus.setImageDrawable(mSendingIconDrawable);
+                    } else if (status == MessageStatus.NOT_RECEIVED) {
+                        mOutgoingBinding.imageMessageStatus.setImageDrawable(mNotReceivedIconDrawable);
+                    } else if (status == MessageStatus.RECEIVED) {
+                        mOutgoingBinding.imageMessageStatus.setImageDrawable(mReceivedIconDrawable);
+                    }
+                }
+                findLastSeenStatus(message);
+            }
+        }
+
+        private void bindPhotoMessage(Chat message) {
+            mLinkPreviewStub.get().setVisibility(View.GONE);
+            mVideoStub.get().setVisibility(View.GONE);
+            mMediaThumbnailStub.get().setVisibility(View.VISIBLE);
+
+            mMediaThumbnailStub.get().setOnThumbnailClickListener((ImageClickListener) mContext);
+            mMediaThumbnailStub.get().setOnThumbnailLongClickListener((ImageLongClickListener) mContext);
+            mMediaThumbnailStub.get().setImageResource(mIsReceived, message);
+        }
+
+        private void bindVideoMessage(Chat message) {
+            mVideoStub.get().setVisibility(View.VISIBLE);
+            mMediaThumbnailStub.get().setVisibility(View.GONE);
+            mLinkPreviewStub.get().setVisibility(View.GONE);
+
+            mVideoStub.get().setOnThumbnailLongClickListener((ImageLongClickListener) mContext);
+            mVideoStub.get().setVideoResource(mIsReceived, message);
+            mVideoStub.get().setOnPlayListener(video -> mVideoListener.accept(message, video));
+        }
+
+        private void bindShareMessage(Chat message) {
+            mMediaThumbnailStub.get().setVisibility(View.GONE);
+            mVideoStub.get().setVisibility(View.GONE);
+            mLinkPreviewStub.get().setVisibility(View.VISIBLE);
+            mLinkPreviewStub.get().setOnClickListener(v -> mLinkPreviewListener.onOpenLink(message.getShare().getLink()));
+            mLinkPreviewStub.get().setOnLongClickListener(v -> mLinkPreviewListener.onLinkPreviewLongClick(message));
+
+            LinkPreviewMetadata metadata = mLinkPreviewListener.onBindLinkPreview(message.getId());
+
+            if (metadata != null) {
+                mLinkPreviewStub.get().setLinkPreview(mIsReceived, message, metadata);
+            } else {
+                mLinkPreviewListener.onLoadLinkPreview(message.getId(), message.getShare().getLink());
+            }
+        }
+
+        private void bindFileMessage() {
+
+        }
+
+        private void bindCallMessage() {
+
+        }
+
+        private User getSenderFromChat(String uid) {
+            return mParticipants.stream()
+                    .filter(u -> u.getUid().equals(uid))
+                    .findFirst()
+                    .orElse(new User.Builder()
+                                    .setUid("123")
+                                    .setDisplayName("Application User")
+                                    .create());
+        }
+
+        private void findLastSeenStatus(Chat item) {
+            if (isSelf(item) && !MessageUtil.isDummyMessage(item)) {
+                List<Chat> mSenderChatList = mListItem.stream()
+                                                        .filter(c -> c != null &&
+                                                                    c.getSenderId() != null &&
+                                                                    isSelf(c) &&
+                                                                    !MessageUtil.isDummyMessage(c) &&
+                                                                    !c.getSeenBy().isEmpty())
+                                                        .collect(Collectors.toList());
+
+                if (mSenderChatList.contains(item)) {
+                    changeSeenStatusVisibility(mSenderChatList.indexOf(item) == mSenderChatList.size() - 1);
+                } else {
+                    Optional<Chat> nextSeenChat = mSenderChatList.stream()
+                            .filter ( c -> c.getTimestamp().compareTo(item.getTimestamp()) > 0 )
+                            .findFirst();
+                    changeSeenStatusVisibility(!nextSeenChat.isPresent());
+                }
+            }
+        }
+
+        private boolean isSelf(Chat item) {
+            return mUser.getUid().equals(item.getSenderId());
+        }
+
+        private void changeSeenStatusVisibility(boolean isShow) {
+            if (!mIsReceived) {
+                mOutgoingBinding.imageMessageStatus.setVisibility(isShow ? View.VISIBLE : View.INVISIBLE);
+            }
+        }
+
+        private void showTimestamp(Chat item) {
+            int      currentIndex = mListItem.indexOf(item);
+            Chat     preItem      = (currentIndex - 1) < 0 ? null : mListItem.get(currentIndex - 1);
+            TextView timestamp    = mIsReceived ? mReceivedBinding.textTimestamp : mOutgoingBinding.textTimestamp;
+
+            if (preItem == null || MessageUtil.isDummyMessage(preItem)) {
+                return;
+            }
+            if (MessageUtil.isWelcomeMessage(preItem)) {
+                timestamp.setVisibility(View.VISIBLE);
+                timestamp.setText(getMessageDateTimeFormatted(mContext, item.getTimestamp()));
+                return;
+            }
+            if (shouldShowTimestamp(preItem, item)) {
+                timestamp.setVisibility(View.VISIBLE);
+                timestamp.setText(getMessageDateTimeFormatted(mContext, item.getTimestamp()));
+            } else {
+                timestamp.setVisibility(View.GONE);
+            }
+        }
+
+        private boolean shouldShowTimestamp(Chat item, Chat nextItem) {
+            if (MessageUtil.isDummyMessage(item) || MessageUtil.isDummyMessage(nextItem)) {
+                return true;
+            }
+
+            LocalDateTime from = item.getTimestamp();
+            LocalDateTime to = nextItem.getTimestamp();
+            long minuteDuration = ChronoUnit.MINUTES.between(from, to);
+            return minuteDuration > 10;
         }
     }
 }

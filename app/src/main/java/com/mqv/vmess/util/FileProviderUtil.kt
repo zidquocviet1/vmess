@@ -12,8 +12,11 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Size
+import android.webkit.MimeTypeMap
 import androidx.annotation.RequiresApi
+import androidx.core.database.getIntOrNull
 import com.mqv.vmess.ui.data.ImageThumbnail
+import com.mqv.vmess.ui.data.Media
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.format
 import id.zelory.compressor.constraint.quality
@@ -25,9 +28,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.future.future
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.nio.file.Files
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 object FileProviderUtil {
@@ -204,6 +210,63 @@ object FileProviderUtil {
     }
 
     @JvmStatic
+    fun getMimeTypeFromUri(context: Context, uri: Uri): String? = uri.getMimeType(context)
+
+    fun Uri.getMimeType(context: Context): String? {
+        return when (scheme) {
+            ContentResolver.SCHEME_CONTENT -> context.contentResolver.getType(this)
+            ContentResolver.SCHEME_FILE -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                MimeTypeMap.getFileExtensionFromUrl(toString()).lowercase(Locale.getDefault())
+            )
+            else -> null
+        }
+    }
+
+    // This content uri must has already id in the URI like "content://external/media/image:63"
+    @JvmStatic
+    fun getMediaFromUriSpecificId(context: Context, contentUri: Uri): Media? {
+        var media: Media? = null
+        val projection: Array<String> = arrayOf(
+            MediaStore.Images.Media.DATA,
+            MediaStore.Images.Media.MIME_TYPE,
+            MediaStore.Images.Media.DATE_MODIFIED,
+            MediaStore.Images.Media.ORIENTATION,
+            MediaStore.Images.Media.SIZE,
+            MediaStore.Video.Media.DURATION
+        )
+
+        context.contentResolver.query(contentUri, projection, null, null, null)
+            .use { cursor ->
+                if (cursor != null && cursor.moveToFirst()) {
+                    val path =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
+                    val mimetype =
+                        cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.MIME_TYPE))
+                    val date =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED))
+                    val size =
+                        cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE))
+                    val duration =
+                        cursor.getIntOrNull(cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION))
+                            ?.toLong() ?: 0
+                    media = Media(
+                        -1,
+                        contentUri,
+                        path ?: "",
+                        mimetype,
+                        null,
+                        duration,
+                        size,
+                        date,
+                        isVideo = duration > 0,
+                        isSelected = false
+                    )
+                }
+            }
+        return media
+    }
+
+    @JvmStatic
     fun getImageThumbnailFromUri(resolver: ContentResolver, uri: Uri?): ImageThumbnail? {
         return uri?.run {
             val cursor = resolver.query(uri, null, null, null, null)
@@ -278,6 +341,18 @@ object FileProviderUtil {
 
     @OptIn(DelicateCoroutinesApi::class)
     @JvmStatic
+    fun compressFileFutureForMessage(context: Context, file: File): CompletableFuture<File> =
+        GlobalScope.future(Dispatchers.Main) {
+            Compressor.compress(context, file) {
+                resolution(1280, 720)
+                quality(80)
+                format(Bitmap.CompressFormat.JPEG)
+                size(104_857) // 100KB
+            }
+        }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    @JvmStatic
     fun compressFileFuture(context: Context, file: File): CompletableFuture<File> =
         GlobalScope.future(Dispatchers.Main) {
             Compressor.compress(context, file) {
@@ -288,8 +363,18 @@ object FileProviderUtil {
             }
         }
 
+//    @JvmStatic
+//    fun createTempFile(context: Context, uri: Uri): File {
+//        val inputStream = context.contentResolver.openInputStream(uri)!!
+//        val bytes = byteArrayOf()
+//
+//        inputStream.read(bytes)
+//
+//        val tempFile = Files.createTempFile(context.filesDir.toPath(), "temp_file_${System.currentTimeMillis()}", "")
+//    }
+
     @JvmStatic
-    fun getPath(context: Context, uri: Uri): String? {
+    fun getPath(context: Context, uri: Uri): String {
         // DocumentProvider
         if (DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
@@ -302,11 +387,15 @@ object FileProviderUtil {
                 }
             } else if (isDownloadsDocument(uri)) {
                 val id: String = DocumentsContract.getDocumentId(uri)
+
+                if (id.startsWith("raw:")) {
+                    return id.removePrefix("raw:")
+                }
                 val contentUri = ContentUris.withAppendedId(
                     Uri.parse("content://downloads/public_downloads"),
-                    java.lang.Long.valueOf(id)
+                    id.toLong()
                 )
-                return getDataColumn(context, contentUri, null, null)
+                return getDataColumn(context, contentUri, null, null) ?: ""
             } else if (isMediaDocument(uri)) {
                 val docId: String = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":").toTypedArray()
@@ -322,13 +411,27 @@ object FileProviderUtil {
                     "audio" -> {
                         contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                     }
+                    "document" -> contentUri = MediaStore.Files.getContentUri("external")
                 }
                 val selection = "_id=?"
                 val selectionArgs = arrayOf(split[1])
-                return getDataColumn(context, contentUri, selection, selectionArgs)
+                return getDataColumn(context, contentUri, selection, selectionArgs) ?: ""
+            }
+            // MediaStore (and general)
+            else if ("content".equals(uri.scheme, true)) {
+
+                // Return the remote address
+                if (isGooglePhotosUri(uri))
+                    return uri.lastPathSegment ?: ""
+
+                return getDataColumn(context, uri, null, null) ?: ""
+            }
+            // File
+            else if ("file".equals(uri.scheme, true)) {
+                return uri.getPath() ?: ""
             }
         }
-        return null
+        return ""
     }
 
     private fun getDataColumn(

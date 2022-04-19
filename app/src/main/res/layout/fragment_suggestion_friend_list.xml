@@ -6,6 +6,39 @@
     android:layout_height="match_parent"
     tools:context=".ui.fragment.SuggestionFriendListFragment">
 
+    <include
+        android:id="@+id/included_search_bar"
+        layout="@layout/item_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_recent_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:layout_marginBottom="@dimen/all_margin_top_soft"
+        android:labelFor="@id/recycler_friend_suggestion"
+        android:text="@string/label_recent_search"
+        android:textAppearance="@style/PrefTitleCategory"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/included_search_bar" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_friend_recent_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        app:layout_constraintTop_toBottomOf="@id/text_recent_search"
+        tools:listitem="@layout/item_user_selection" />
+
     <TextView
         android:id="@+id/text_suggested"
         android:layout_width="wrap_content"
@@ -18,7 +51,7 @@
         android:text="@string/label_suggested"
         android:textAppearance="@style/PrefTitleCategory"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/recycler_friend_recent_search" />
 
     <TextView
         android:id="@+id/text_clear"
@@ -28,14 +61,14 @@
         android:layout_marginTop="@dimen/all_margin_top_soft"
         android:layout_marginEnd="@dimen/all_padding_common"
         android:layout_marginBottom="@dimen/all_margin_top_soft"
+        android:background="?selectableItemBackgroundBorderless"
+        android:clickable="true"
         android:labelFor="@id/recycler_friend_suggestion"
         android:text="@string/action_clear_all"
-        android:clickable="true"
-        android:background="?selectableItemBackgroundBorderless"
-        android:textColor="@color/purple_500"
         android:textAppearance="@style/PrefTitleCategory"
+        android:textColor="@color/purple_500"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/text_suggested" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_friend_suggestion"

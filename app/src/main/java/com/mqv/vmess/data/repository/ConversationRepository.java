@@ -45,6 +45,8 @@ public interface ConversationRepository {
 
     Single<Boolean> isExists(String conversationId);
 
+    Single<List<Conversation>> suggestConversation(int size);
+
     void deleteConversationChatRemote(Conversation conversation);
 
     void deleteNormalByParticipantId(String userId, String otherUserId);

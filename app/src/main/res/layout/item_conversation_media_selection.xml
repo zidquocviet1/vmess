@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="2dp"
+    android:layout_marginEnd="2dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_thumbnail"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:clickable="true"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize5Percent" />
+
+    <TextView
+        android:id="@+id/text_video_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="6dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/transparent_black_pill"
+        android:fontFamily="sans-serif-medium"
+        android:paddingStart="8dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="4dp"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="@id/image_thumbnail"
+        app:layout_constraintEnd_toEndOf="@id/image_thumbnail" />
+
+    <com.google.android.material.radiobutton.MaterialRadioButton
+        android:id="@+id/radio_select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="0dp"
+        app:layout_constraintEnd_toEndOf="@id/image_thumbnail"
+        app:layout_constraintTop_toTopOf="@id/image_thumbnail" />
+</androidx.constraintlayout.widget.ConstraintLayout>

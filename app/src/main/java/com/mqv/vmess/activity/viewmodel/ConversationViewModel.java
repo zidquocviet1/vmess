@@ -25,6 +25,7 @@ import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.MediaRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
@@ -38,12 +39,17 @@ import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.network.model.type.MessageMediaUploadType;
 import com.mqv.vmess.network.model.type.MessageStatus;
+import com.mqv.vmess.network.model.type.MessageType;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.ConversationOptionHandler;
+import com.mqv.vmess.ui.components.linkpreview.LinkPreviewMetadata;
 import com.mqv.vmess.ui.data.ConversationMapper;
 import com.mqv.vmess.ui.data.ConversationMetadata;
+import com.mqv.vmess.ui.data.Media;
 import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.ui.validator.InputValidator;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Event;
 import com.mqv.vmess.util.FileProviderUtil;
@@ -53,15 +59,21 @@ import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.vmess.work.SendMessageWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
 import java.io.File;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -79,22 +91,25 @@ import retrofit2.HttpException;
 
 @HiltViewModel
 public class ConversationViewModel extends AndroidViewModel {
-    private final ConversationRepository                conversationRepository;
-    private final ChatRepository                        chatRepository;
-    private final UserRepository                        userRepository;
-    private final PeopleRepository                      peopleRepository;
-    private final FirebaseUser                          currentUser;
-    private final MutableLiveData<User>                 userDetail;
-    private final MutableLiveData<Result<List<Chat>>>   moreChatResult;
-    private final MutableLiveData<Chat>                 messageObserver;
-    private final MutableLiveData<Boolean>              scrollButtonState;
-    private final MutableLiveData<Boolean>              conversationActiveStatus;
-    private final MutableLiveData<ConversationMetadata> conversationMetadata;
-    private final MutableLiveData<Result<Conversation>> conversationObserver;
-    private final MutableLiveData<Result<Conversation>> singleRequestCall;
-    private final MutableLiveData<Event<Integer>>       eventToast;
-    private final DatabaseObserver.MessageListener      messageListener;
-    private final CompositeDisposable                   cd;
+    private final ConversationRepository                            conversationRepository;
+    private final ChatRepository                                    chatRepository;
+    private final UserRepository                                    userRepository;
+    private final PeopleRepository                                  peopleRepository;
+    private final MediaRepository                                   mediaRepository;
+    private final FirebaseUser                                      currentUser;
+    private final MutableLiveData<User>                             userDetail;
+    private final MutableLiveData<Result<List<Chat>>>               moreChatResult;
+    private final MutableLiveData<Chat>                             messageObserver;
+    private final MutableLiveData<Boolean>                          scrollButtonState;
+    private final MutableLiveData<Boolean>                          conversationActiveStatus;
+    private final MutableLiveData<ConversationMetadata>             conversationMetadata;
+    private final MutableLiveData<Result<Conversation>>             conversationObserver;
+    private final MutableLiveData<Result<Conversation>>             singleRequestCall;
+    private final MutableLiveData<Event<Integer>>                   eventToast;
+    private final MutableLiveData<Map<String, LinkPreviewMetadata>> linkPreviewMapper;
+    private final MutableLiveData<List<Media>>                      mediaAttachment;
+    private final DatabaseObserver.MessageListener                  messageListener;
+    private final CompositeDisposable                               cd;
 
     private Conversation mConversation;
     private int currentChatPage = DEFAULT_PAGE_CHAT_LIST;
@@ -104,6 +119,7 @@ public class ConversationViewModel extends AndroidViewModel {
                                  UserRepository userRepository,
                                  PeopleRepository peopleRepository,
                                  ChatRepository chatRepository,
+                                 MediaRepository mediaRepository,
                                  SavedStateHandle savedStateHandle,
                                  Application application) {
         super(application);
@@ -112,6 +128,7 @@ public class ConversationViewModel extends AndroidViewModel {
         this.chatRepository           = chatRepository;
         this.userRepository           = userRepository;
         this.peopleRepository         = peopleRepository;
+        this.mediaRepository          = mediaRepository;
         this.currentUser              = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
         this.userDetail               = new MutableLiveData<>();
         this.moreChatResult           = new MutableLiveData<>();
@@ -122,6 +139,8 @@ public class ConversationViewModel extends AndroidViewModel {
         this.conversationObserver     = new MutableLiveData<>();
         this.singleRequestCall        = new MutableLiveData<>();
         this.eventToast               = new MutableLiveData<>();
+        this.linkPreviewMapper        = new MutableLiveData<>(new ConcurrentHashMap<>());
+        this.mediaAttachment          = new MutableLiveData<>();
         this.cd                       = new CompositeDisposable();
         this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
@@ -164,7 +183,7 @@ public class ConversationViewModel extends AndroidViewModel {
             return  prev.getId().equals(cur.getId()) &&
                     prev.getSenderId().equals(cur.getSenderId()) &&
                     prev.getTimestamp().equals(cur.getTimestamp()) &&
-                    prev.getContent().equals(cur.getContent()) &&
+                    Objects.equals(prev.getContent(), cur.getContent()) &&
                     prev.getType().equals(cur.getType()) &&
                     prev.getStatus().equals(cur.getStatus()) &&
                     prev.getSeenBy().equals(cur.getSeenBy()) &&
@@ -190,6 +209,14 @@ public class ConversationViewModel extends AndroidViewModel {
 
     public LiveData<Event<Integer>> getEventToast() {
         return eventToast;
+    }
+
+    public LiveData<Map<String, LinkPreviewMetadata>> getLinkPreviewMapper() {
+        return linkPreviewMapper;
+    }
+
+    public LiveData<List<Media>> getMediaAttachment() {
+        return mediaAttachment;
     }
 
     //// Private method
@@ -389,7 +416,7 @@ public class ConversationViewModel extends AndroidViewModel {
         conversationMetadata.postValue(metadata);
     }
 
-    private String updateAndReturn(Chat chat, String userId) {
+    private String markSeenAndReturnId(Chat chat, String userId) {
         chat.setStatus(MessageStatus.SEEN);
         chat.getSeenBy().add(userId);
 
@@ -446,9 +473,75 @@ public class ConversationViewModel extends AndroidViewModel {
     }
 
     //// Public method
-    public void sendMessage(Context context, Chat chat) {
-        Disposable disposable = conversationRepository.isExists(chat.getConversationId())
-                                                      .flatMapCompletable(isExists -> isExists ? chatRepository.saveCached(chat) : Completable.error(new EmptyResultSetException("empty")))
+    public void sendMessage(Context context, String plainText) {
+        Chat chat = Chat.builder()
+                        .setConversationId(mConversation.getId())
+                        .setSenderId(currentUser.getUid())
+                        .setType(MessageType.GENERIC)
+                        .setContent(plainText)
+                        .create();
+
+        if (InputValidator.isLinkMessage(plainText)) {
+            String     link  = InputValidator.getLinkFromText(plainText);
+            Chat.Share share = new Chat.Share(link);
+
+            chat.setShare(share);
+            chat.setType(MessageType.SHARE);
+        }
+
+        saveMessageIntoCache(chat);
+        sendMessageWorker(context, chat.getId());
+    }
+
+    public void sendMultiMessageDifferentMediaType(Context context, Map<MessageMediaUploadType, List<String>> selectedMedia) {
+        selectedMedia.forEach((type, paths) -> sendMultipleMediaMessage(context, paths, type));
+    }
+
+    public void sendMediaMessage(Context context, String path, MessageMediaUploadType type) {
+        sendMultipleMediaMessage(context, Collections.singletonList(path), type);
+    }
+
+    public void sendMultipleMediaMessage(Context context, List<String> paths, MessageMediaUploadType type) {
+        if (paths.isEmpty()) {
+            return;
+        }
+
+        Chat.Builder builder = Chat.builder()
+                                   .setConversationId(mConversation.getId())
+                                   .setSenderId(currentUser.getUid())
+                                   .setType(MessageType.GENERIC);
+
+        if (type == MessageMediaUploadType.PHOTO) {
+            List<Chat.Photo> cachePhotos = paths.stream()
+                                                .map(Chat.Photo::new)
+                                                .collect(Collectors.toList());
+
+            builder.withPhoto(cachePhotos);
+        } else if (type == MessageMediaUploadType.VIDEO) {
+            List<Chat.Video> cacheVideos = paths.stream()
+                                                .map(path -> new Chat.Video(path, null))
+                                                .collect(Collectors.toList());
+
+            builder.withVideos(cacheVideos);
+        } else if (type == MessageMediaUploadType.FILE) {
+            // Currently not complete
+            List<Chat.File> cacheFiles = paths.stream()
+                                              .map(Chat.File::new)
+                                              .collect(Collectors.toList());
+            builder.withFile(cacheFiles);
+        } else {
+            // send audio message
+        }
+
+        Chat chat = builder.create();
+
+        saveMessageIntoCache(chat);
+        sendMessageWorker(context, chat.getId());
+    }
+
+    private void saveMessageIntoCache(Chat chat) {
+        Disposable disposable = conversationRepository.isExists(mConversation.getId())
+                                                      .flatMapCompletable(isExists -> checkConversationAndReturn(isExists, chat))
                                                       .compose(RxHelper.applyCompleteSchedulers())
                                                       .subscribe(() -> {
                                                           messageObserver.postValue(chat);
@@ -460,13 +553,16 @@ public class ConversationViewModel extends AndroidViewModel {
                                                       });
 
         cd.add(disposable);
+    }
 
+    private Completable checkConversationAndReturn(boolean isExists, Chat chat) {
+        return isExists ? chatRepository.saveCached(chat) :
+                Completable.error(new EmptyResultSetException("empty"));
+    }
+
+    private void sendMessageWorker(Context context, String messageId) {
         Data input = new Data.Builder()
-                             .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, chat.getId())
-                             .putString(SendMessageWorkWrapper.EXTRA_SENDER_ID, chat.getSenderId())
-                             .putString(SendMessageWorkWrapper.EXTRA_CONTENT, chat.getContent())
-                             .putString(SendMessageWorkWrapper.EXTRA_CONVERSATION_ID, chat.getConversationId())
-                             .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_TYPE, chat.getType().name())
+                             .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, messageId)
                              .build();
 
         WorkDependency.enqueue(new SendMessageWorkWrapper(context, input));
@@ -518,11 +614,18 @@ public class ConversationViewModel extends AndroidViewModel {
 
     public void postSeenMessageConversation(Context context, String conversationId, String userId) {
         //noinspection ResultOfMethodCallIgnored
-        chatRepository.fetchUnreadChatByConversation(conversationId)
+        chatRepository.fetchIncomingByConversation(conversationId)
                       .subscribeOn(Schedulers.io())
                       .observeOn(Schedulers.io())
                       .flattenAsObservable(list -> list)
-                      .map(c -> updateAndReturn(c, userId))
+                      .map(incomingMessage -> {
+                          if (!incomingMessage.getSeenBy().contains(currentUser.getUid())) {
+                              return markSeenAndReturnId(incomingMessage, userId);
+                          } else {
+                              return "";
+                          }
+                      })
+                      .filter(id -> !id.equals(""))
                       .toList()
                       .subscribe((list, t) -> sendSeenMessage(context, list, conversationId));
     }
@@ -598,6 +701,47 @@ public class ConversationViewModel extends AndroidViewModel {
                                                           singleRequestCall.postValue(Result.Fail(-1));
                                                       });
         cd.add(disposable);
+    }
+
+    public void loadLinkPreview(String messageId, String url) {
+        Disposable disposable = getDocumentFromUrl(LinkPreviewMetadata.resolveHttpUrl(url))
+                                                       .startWith(Completable.fromAction(() -> putLinkPreview(messageId, LinkPreviewMetadata.LOADING)))
+                                                       .subscribeOn(Schedulers.io())
+                                                       .map(doc -> LinkPreviewMetadata.parseFromDocument(url, doc))
+                                                       .subscribe(metadata -> putLinkPreview(messageId, metadata), t -> {
+                                                           putLinkPreview(messageId, LinkPreviewMetadata.ERROR);
+                                                           Logging.show("Failed to get link preview: " + t.getMessage());
+                                                       });
+        cd.add(disposable);
+    }
+
+    private void putLinkPreview(String messageId, LinkPreviewMetadata metadata) {
+        Map<String, LinkPreviewMetadata> previews = linkPreviewMapper.getValue();
+
+        if (previews == null) {
+            previews = new HashMap<>();
+        }
+
+        previews.put(messageId, metadata);
+        linkPreviewMapper.postValue(previews);
+    }
+
+    private Observable<Document> getDocumentFromUrl(String url) {
+        return Observable.create(emitter -> {
+            try {
+                Document doc = Jsoup.connect(url)
+                        .timeout(30 * 1000)
+                        .get();
+
+                emitter.onNext(doc);
+            } catch (Exception e) {
+                emitter.onError(e);
+            }
+        });
+    }
+
+    public void onMediaKeyboardOpen() {
+        mediaRepository.getMediaInBucket(getApplication().getApplicationContext(), Media.ALL_BUCKET_ID, mediaAttachment::postValue);
     }
 
     @Override

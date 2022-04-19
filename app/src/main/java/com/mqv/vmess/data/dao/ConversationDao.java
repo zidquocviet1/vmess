@@ -50,6 +50,13 @@ public abstract class ConversationDao {
             "order by max(chat_timestamp) desc")
     public abstract Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);
 
+    @Query("select conversation_id, conversation_type, conversation_status, conversation_participants_id, `group` from conversation\n" +
+            "inner join chat on chat_conversation_id = conversation_id\n" +
+            "group by conversation_id\n" +
+            "order by max(chat_timestamp) desc\n" +
+            "limit :size")
+    public abstract Single<List<Conversation>> suggestConversation(int size);
+
     @Insert
     public abstract Completable save(Conversation data);
 

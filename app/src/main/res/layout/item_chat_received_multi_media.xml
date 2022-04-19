@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/text_timestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/all_padding_common"
+        android:paddingBottom="@dimen/all_padding_common"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        app:layout_constraintStart_toEndOf="@id/image_receiver"
+        app:layout_constraintTop_toBottomOf="@id/text_timestamp">
+
+        <ViewStub
+            android:id="@+id/media_thumbnail_stub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout="@layout/item_chat_photo_view" />
+
+        <ViewStub
+            android:id="@+id/media_video_stub"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout="@layout/item_chat_video_view" />
+
+        <ViewStub
+            android:id="@+id/media_link_preview_stub"
+            android:layout_width="210dp"
+            android:layout_height="wrap_content"
+            android:layout="@layout/item_chat_share" />
+    </LinearLayout>
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_receiver"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_round_account"
+        app:layout_constraintBottom_toBottomOf="@id/content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

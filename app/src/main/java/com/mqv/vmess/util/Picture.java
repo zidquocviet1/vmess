@@ -22,6 +22,7 @@ import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.di.GlideApp;
 import com.mqv.vmess.di.GlideRequest;
 
+import java.io.File;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
@@ -50,7 +51,7 @@ public class Picture {
         }
     }
 
-    private static String reformatUrl(@Nullable String photoUrl) {
+    public static String reformatUrl(@Nullable String photoUrl) {
         return photoUrl == null ? null : photoUrl.replace("localhost", Const.BASE_IP);
     }
 
@@ -78,7 +79,7 @@ public class Picture {
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
     }
 
-    public static GlideRequest<Drawable> loadSecureResource(String token, Context context,@NonNull String url) {
+    public static GlideRequest<Drawable> loadSecureResource(String token, Context context, @NonNull String url) {
         GlideUrl glideUrl = new GlideUrl(reformatUrl(url),
                                          new LazyHeaders.Builder()
                                                         .addHeader(Const.AUTHORIZATION, Const.PREFIX_TOKEN + token)
@@ -89,6 +90,15 @@ public class Picture {
                        .error(getErrorAvatarLoaded(context))
                        .fallback(getDefaultUserAvatar(context))
                        .circleCrop()
+                       .placeholder(getErrorAvatarLoaded(context))
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
+    public static GlideRequest<Drawable> loadLocalFile(Context context, @NonNull File file) {
+        return GlideApp.with(context)
+                       .load(file)
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getDefaultUserAvatar(context))
                        .placeholder(getErrorAvatarLoaded(context))
                        .diskCacheStrategy(DiskCacheStrategy.ALL);
     }

@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../../../layout/custom_preview.xml" value="0.36256410256410254" />
         <entry key="..\:/ComputerSience_TDT/Android/Sdk/platforms/android-30/data/res/layout/auto_complete_list.xml" value="0.1921875" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/a.xml" value="0.15625" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/drawable/background_alert_dialog_corner_radius.xml" value="0.1335" />
@@ -184,16 +185,94 @@
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/test.xml" value="0.18697916666666667" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/user_edit_profile_details.xml" value="0.22" />
         <entry key="..\:/ComputerSience_TDT/RealTimeChatApplication/app/src/main/res/xml/user_information_settings.xml" value="0.22" />
+        <entry key="app/src/main/res/drawable/avatar_stroke.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/avatar_stroke_ripple.xml" value="0.196" />
+        <entry key="app/src/main/res/drawable/background_attachment_keyboard_button.xml" value="0.116" />
+        <entry key="app/src/main/res/drawable/background_rounded_bottom_link_preview_message.xml" value="0.1175" />
+        <entry key="app/src/main/res/drawable/background_rounded_chat.xml" value="0.1175" />
+        <entry key="app/src/main/res/drawable/background_rounded_chat_unsent.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/background_rounded_link_preview_message.xml" value="0.1175" />
+        <entry key="app/src/main/res/drawable/conversation_thumbnail_stroke.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/dialog_corners.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/ic_phone.xml" value="0.191" />
+        <entry key="app/src/main/res/drawable/ic_round_play_circle_outline.xml" value="0.2195" />
+        <entry key="app/src/main/res/drawable/image_no_data.xml" value="0.1905" />
+        <entry key="app/src/main/res/drawable/image_server_break_down.xml" value="0.1905" />
+        <entry key="app/src/main/res/drawable/image_verify_otp_authentication.xml" value="0.1905" />
+        <entry key="app/src/main/res/drawable/transparent_black_pill.xml" value="0.116" />
         <entry key="app/src/main/res/layout/activity_add_group_conversation.xml" value="0.3411458333333333" />
-        <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.3027755737304687" />
+        <entry key="app/src/main/res/layout/activity_connect_people.xml" value="0.31296296296296294" />
+        <entry key="app/src/main/res/layout/activity_conversation.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/activity_edit_details.xml" value="0.171875" />
+        <entry key="app/src/main/res/layout/activity_edit_profile.xml" value="0.41431670281995664" />
+        <entry key="app/src/main/res/layout/activity_edit_profile_bio.xml" value="0.36801541425818884" />
+        <entry key="app/src/main/res/layout/activity_forward_message.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/activity_group_member.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/activity_preference_friend_request.xml" value="0.3734375" />
+        <entry key="app/src/main/res/layout/activity_preference_manage_accounts.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/activity_preview_edit_photo.xml" value="0.29201101928374656" />
+        <entry key="app/src/main/res/layout/activity_request_people.xml" value="0.3734375" />
+        <entry key="app/src/main/res/layout/activity_search_conversation.xml" value="0.3884297520661157" />
         <entry key="app/src/main/res/layout/activity_splash_screen.xml" value="0.16590678824721378" />
+        <entry key="app/src/main/res/layout/activity_video_player.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_album_thumbnail_2.xml" value="0.45" />
+        <entry key="app/src/main/res/layout/custom_album_thumbnail_3.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/custom_album_thumbnail_4.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/custom_album_thumbnail_many.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/custom_album_video_2.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_album_video_3.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_album_video_4.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_album_video_many.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_album_view.xml" value="0.21810699588477367" />
+        <entry key="app/src/main/res/layout/custom_barcode_scanner.xml" value="0.33611111111111114" />
+        <entry key="app/src/main/res/layout/custom_conversation_multi_media_footer.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/custom_conversation_photo_view.xml" value="0.29201101928374656" />
+        <entry key="app/src/main/res/layout/custom_conversation_video_view.xml" value="0.36801541425818884" />
+        <entry key="app/src/main/res/layout/custom_document_view.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/custom_link_preview.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/custom_photo_album_view.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_photo_view.xml" value="0.125" />
+        <entry key="app/src/main/res/layout/custom_video_album.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/custom_video_view.xml" value="0.36801541425818884" />
         <entry key="app/src/main/res/layout/dialog_enter_otp_code.xml" value="0.33106884057971014" />
+        <entry key="app/src/main/res/layout/dialog_image_preview.xml" value="0.29201101928374656" />
         <entry key="app/src/main/res/layout/dialog_people_detail.xml" value="0.33106884057971014" />
+        <entry key="app/src/main/res/layout/dialog_rationale_permissions.xml" value="0.30008096133961404" />
+        <entry key="app/src/main/res/layout/dialog_rationale_settings.xml" value="0.25" />
         <entry key="app/src/main/res/layout/dialog_switch_account.xml" value="0.33106884057971014" />
-        <entry key="app/src/main/res/layout/item_chat.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/fragment_conversation.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/fragment_conversation_list_archived.xml" value="0.3416666666666667" />
+        <entry key="app/src/main/res/layout/fragment_notification.xml" value="0.3416666666666667" />
+        <entry key="app/src/main/res/layout/fragment_people_list.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/fragment_suggestion_friend_list.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_active_people.xml" value="0.3734375" />
+        <entry key="app/src/main/res/layout/item_chat.xml" value="0.28804347826086957" />
         <entry key="app/src/main/res/layout/item_chat_notification_message.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_chat_outgoing_multi_media.xml" value="0.335" />
+        <entry key="app/src/main/res/layout/item_chat_photo_view.xml" value="0.33611111111111114" />
         <entry key="app/src/main/res/layout/item_chat_profile.xml" value="0.33106884057971014" />
+        <entry key="app/src/main/res/layout/item_chat_profile_group.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_chat_received_multi_media.xml" value="0.33611111111111114" />
+        <entry key="app/src/main/res/layout/item_chat_share.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/item_chat_video_view.xml" value="0.48072916666666665" />
+        <entry key="app/src/main/res/layout/item_conversation.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_conversation_chat_option.xml" value="0.3734375" />
+        <entry key="app/src/main/res/layout/item_conversation_header_thumbnail.xml" value="0.44895833333333335" />
+        <entry key="app/src/main/res/layout/item_conversation_media_footer.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/item_conversation_media_selection.xml" value="0.5" />
+        <entry key="app/src/main/res/layout/item_conversation_multi_media_footer.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/item_image_group.xml" value="0.375" />
+        <entry key="app/src/main/res/layout/item_member.xml" value="0.2752780398807011" />
+        <entry key="app/src/main/res/layout/item_notification_fragment.xml" value="0.3416666666666667" />
         <entry key="app/src/main/res/layout/item_people_list.xml" value="0.33106884057971014" />
+        <entry key="app/src/main/res/layout/item_row_group_avatar.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_user_avatar.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/layout/item_user_selection.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/menu/bottom_nav.xml" value="0.171875" />
+        <entry key="app/src/main/res/menu/menu_conversation_toolbar.xml" value="0.3416666666666667" />
+        <entry key="app/src/main/res/menu/menu_group_member.xml" value="0.3411458333333333" />
+        <entry key="app/src/main/res/xml/provider_paths.xml" value="0.3411458333333333" />
       </map>
     </option>
   </component>

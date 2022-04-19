@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linkpreview_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="4dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_text_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <View
+                android:id="@+id/message_background"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@drawable/background_rounded_link_preview_message"
+                android:backgroundTint="@color/purple_500"
+                app:layout_constraintBottom_toBottomOf="@id/text_content"
+                app:layout_constraintTop_toTopOf="@id/text_content" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?colorControlHighlight"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/message_background" />
+
+            <TextView
+                android:id="@+id/text_content"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:padding="@dimen/all_padding_default"
+                android:text="@string/dummy_chat_receiver"
+                android:textAlignment="viewStart"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="@id/message_background"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="@id/message_background"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/background_rounded_bottom_link_preview_message"
+            android:backgroundTint="@color/base_background_color"
+            android:paddingBottom="6dp"
+            app:layout_constraintTop_toBottomOf="@id/layout_text_content">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/linkpreview_thumbnail"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_round_no_photography"
+                android:visibility="visible"
+                app:layout_constraintHeight_min="140dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/linkpreview_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="2"
+                android:text="J. Jonah Jameson on Twitter"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@id/linkpreview_thumbnail"
+                app:layout_constraintTop_toBottomOf="@id/linkpreview_thumbnail" />
+
+            <TextView
+                android:id="@+id/linkpreview_description"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:ellipsize="end"
+                android:maxLines="15"
+                android:text="Wall crawler strikes again!"
+                android:textSize="13sp"
+                android:visibility="invisible"
+                app:layout_constraintEnd_toEndOf="@id/linkpreview_title"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="@id/linkpreview_title"
+                app:layout_constraintTop_toBottomOf="@id/linkpreview_title" />
+
+            <TextView
+                android:id="@+id/linkpreview_site"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:maxLines="2"
+                android:text="dailybugle.com"
+                android:textSize="12sp"
+                android:visibility="invisible"
+                app:layout_constraintStart_toStartOf="@id/linkpreview_description"
+                app:layout_constraintTop_toBottomOf="@id/linkpreview_description" />
+
+            <androidx.core.widget.ContentLoadingProgressBar
+                android:id="@+id/progress_bar_loading"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@id/linkpreview_thumbnail"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/linkpreview_thumbnail" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

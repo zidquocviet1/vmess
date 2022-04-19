@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_photo_video"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toTopOf="@id/button_gallery"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/item_conversation_media_selection" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/button_gallery"
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/background_attachment_keyboard_button"
+            android:clickable="true"
+            android:minWidth="80dp"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/recycler_view_photo_video">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/attachment_button_image_gallery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_round_photo_library"
+                android:tint="#525252"
+                app:layout_constraintBottom_toTopOf="@id/attachment_button_title_gallery"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/attachment_button_title_gallery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:lineSpacingExtra="3sp"
+                android:text="@string/label_gallery"
+                android:textColor="#525252"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/attachment_button_image_gallery" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/button_file"
+            android:layout_width="wrap_content"
+            android:layout_height="80dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/background_attachment_keyboard_button"
+            android:clickable="true"
+            android:minWidth="80dp"
+            android:padding="8dp"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/button_gallery"
+            app:layout_constraintTop_toBottomOf="@id/recycler_view_photo_video">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/attachment_button_image_file"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_round_file_copy"
+                android:tint="#525252"
+                app:layout_constraintBottom_toTopOf="@id/attachment_button_title_file"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/attachment_button_title_file"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:lineSpacingExtra="3sp"
+                android:text="@string/label_file"
+                android:textColor="#525252"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/attachment_button_image_file" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:layout_marginEnd="10dp"
+            android:backgroundTint="@color/base_background_color"
+            android:elevation="0dp"
+            android:minHeight="80dp"
+            android:text="Location"
+            android:textColor="@color/black"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/button_file"
+            app:layout_constraintTop_toBottomOf="@id/recycler_view_photo_video"
+            app:rippleColor="@android:color/darker_gray" />
+
+        <TextView
+            android:id="@+id/text_permission"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="10dp"
+            android:fontFamily="sans-serif"
+            android:gravity="center"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="2sp"
+            android:text="@string/msg_permission_external_storage_rational"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/button_permission_give_access"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/button_permission_give_access"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
+            android:text="@string/action_give_access"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/button_gallery"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_permission" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

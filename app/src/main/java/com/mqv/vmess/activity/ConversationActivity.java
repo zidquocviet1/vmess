@@ -6,8 +6,8 @@ import static com.mqv.vmess.R.id.menu_video_call;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
@@ -23,21 +23,22 @@ import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewStub;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -47,35 +48,45 @@ import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
 import com.mqv.vmess.activity.viewmodel.ConversationViewModel;
 import com.mqv.vmess.databinding.ActivityConversationBinding;
 import com.mqv.vmess.databinding.DialogEnterOtpCodeBinding;
-import com.mqv.vmess.databinding.ItemImageGroupBinding;
-import com.mqv.vmess.databinding.ItemUserAvatarBinding;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.network.model.type.MessageMediaUploadType;
 import com.mqv.vmess.network.model.type.MessageStatus;
-import com.mqv.vmess.network.model.type.MessageType;
 import com.mqv.vmess.ui.ConversationOptionHandler;
 import com.mqv.vmess.ui.adapter.BaseAdapter;
 import com.mqv.vmess.ui.adapter.ChatListAdapter;
-import com.mqv.vmess.ui.data.ConversationMetadata;
+import com.mqv.vmess.ui.components.ImageClickListener;
+import com.mqv.vmess.ui.components.ImageLongClickListener;
+import com.mqv.vmess.ui.components.conversation.ConversationMultiMediaFooter;
+import com.mqv.vmess.ui.components.linkpreview.LinkPreviewListener;
+import com.mqv.vmess.ui.components.linkpreview.LinkPreviewMetadata;
 import com.mqv.vmess.ui.data.ImageThumbnail;
+import com.mqv.vmess.ui.data.Media;
+import com.mqv.vmess.ui.fragment.SuggestionFriendListFragment;
 import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.util.MediaUtil;
 import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
+import com.mqv.vmess.util.ServiceUtil;
+import com.mqv.vmess.util.views.Stub;
+import com.mqv.vmess.work.DownloadMediaWorkWrapper;
+import com.mqv.vmess.work.WorkDependency;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -84,10 +95,12 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class ConversationActivity
        extends BaseActivity<ConversationViewModel, ActivityConversationBinding>
        implements OnNetworkChangedListener,
-                  View.OnLayoutChangeListener,
-                  ViewStub.OnInflateListener,
                   ChatListAdapter.ConversationGroupOption,
-                  BaseAdapter.ItemEventHandler {
+                  BaseAdapter.ItemEventHandler,
+                  ImageClickListener,
+                  ImageLongClickListener,
+                  LinkPreviewListener,
+                  ConversationMultiMediaFooter.Callback {
     public static final String EXTRA_CONVERSATION_ID = "conversation_id";
     public static final String EXTRA_PARTICIPANT_ID = "participant_id";
 
@@ -100,7 +113,7 @@ public class ConversationActivity
     private Conversation mConversation;
     private ChatListAdapter mChatListAdapter;
     private CustomLinearLayoutManager mLayoutManager;
-    private WidgetPresenter mWidgetPresenter;
+    private Stub<ConversationMultiMediaFooter> mMediaFooterStub;
     private FirebaseUser mCurrentUser;
 
     // Default color for the whole conversation
@@ -121,9 +134,6 @@ public class ConversationActivity
         }
     };
 
-    private ItemUserAvatarBinding avatarNormalStubBinding;
-    private ItemImageGroupBinding avatarGroupStubBinding;
-
     @Override
     public void binding() {
         mBinding = ActivityConversationBinding.inflate(getLayoutInflater());
@@ -142,6 +152,7 @@ public class ConversationActivity
 
         mCurrentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
         mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
+        mMediaFooterStub = new Stub<>(mBinding.stubMediaFooter);
 
         slideUpAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
         fadeAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
@@ -152,6 +163,27 @@ public class ConversationActivity
         registerNetworkEventCallback(this);
         setupColorUi();
         triggerIntent();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Register window insets listener to handle keyboard show/hidden
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), Build.VERSION.SDK_INT < Build.VERSION_CODES.R);
+        ViewCompat.setOnApplyWindowInsetsListener(mBinding.footer.getRootView(), (v, insets) -> {
+            checkForScrollToBottomWhenOpenKeyboard(insets.isVisible(WindowInsetsCompat.Type.ime()));
+            return insets;
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mMediaFooterStub.get().isShowing()) {
+            mMediaFooterStub.get().hide();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
@@ -292,6 +324,19 @@ public class ConversationActivity
                 }
             }
         });
+
+        mViewModel.getLinkPreviewMapper().observe(this, mapper ->
+                mapper.entrySet()
+                      .stream()
+                      .filter(entry -> !entry.getValue().isLoadComplete() || !entry.getValue().isNoPreview())
+                      .mapToInt(e -> mChatListAdapter.getCurrentList()
+                                                     .stream()
+                                                     .filter(c ->c != null && c.getId().equals(e.getKey()))
+                                                     .findFirst()
+                                                     .map(c -> mChatListAdapter.getCurrentList().indexOf(c))
+                                                     .orElse(-1))
+                      .filter(i -> i >= 0)
+                      .forEach(index -> mChatListAdapter.notifyItemChanged(index)));
     }
 
     @Override
@@ -342,21 +387,58 @@ public class ConversationActivity
             return false;
         });
         mBinding.buttonSendMessage.setOnClickListener(v -> {
-            String id = UUID.randomUUID().toString();
-            String senderId = mCurrentUser.getUid();
-            String content = mBinding.editTextContent.getText().toString();
-            String conversationId = mConversation.getId();
+            Map<MessageMediaUploadType, List<String>> selectedMedia = mMediaFooterStub.get().getSelectedListMediaAsPath();
 
-            mBinding.editTextContent.getText().clear();
-            mViewModel.sendMessage(this, new Chat(id, senderId, content, conversationId, MessageType.GENERIC));
+            if (selectedMedia.isEmpty()) {
+                String plainText = mBinding.editTextContent.getText().toString();
+                mBinding.editTextContent.getText().clear();
+
+                mViewModel.sendMessage(this, plainText);
+            } else {
+                mMediaFooterStub.get().resetAllSelectMedia();
+                mViewModel.sendMultiMessageDifferentMediaType(this, selectedMedia);
+            }
         });
         mBinding.buttonMore.setOnClickListener(v -> {
-        });
-        mBinding.buttonCamera.setOnClickListener(v -> {
-        });
-        mBinding.buttonGallery.setOnClickListener(v -> {
+            mViewModel.getMediaAttachment().removeObservers(this);
 
+            if (mMediaFooterStub.get().isShowing()) {
+                mMediaFooterStub.get().hide();
+
+                mBinding.editTextContent.requestFocus();
+                ServiceUtil.getInputMethodManager(this).showSoftInput(mBinding.editTextContent, 0);
+            } else {
+                mViewModel.getMediaAttachment().observe(this, media -> mMediaFooterStub.get().setMediaList(media));
+
+                mMediaFooterStub.get().show();
+                mMediaFooterStub.get().setCallback(this);
+
+                ServiceUtil.getInputMethodManager(this).hideSoftInputFromWindow(mBinding.editTextContent.getWindowToken(), 0);
+
+                mViewModel.onMediaKeyboardOpen();
+            }
         });
+        mBinding.buttonCamera.setOnClickListener(v -> Permission.with(this, mPermissionsLauncher)
+                .request(Manifest.permission.CAMERA)
+                .ifNecessary()
+                .onAllGranted(() -> {
+                    Uri uri = FileProviderUtil.createTempFilePicture(getContentResolver());
+
+                    takePictureLauncher.launch(uri, isSuccess -> {
+                        if (isSuccess) {
+                            String path = FileProviderUtil.getImagePathFromUri(getContentResolver(), uri);
+
+                            if (path != null) {
+                                mViewModel.sendMediaMessage(this, path, MessageMediaUploadType.PHOTO);
+                            }
+                        } else {
+                            getContentResolver().delete(uri, null, null);
+                        }
+                    });
+                })
+                .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                .execute());
         mBinding.buttonMic.setOnClickListener(v -> {
         });
         mBinding.editTextContent.addTextChangedListener(new TextWatcher() {
@@ -373,12 +455,15 @@ public class ConversationActivity
             @Override
             public void afterTextChanged(Editable s) {
                 if (s.length() == 0 || TextUtils.isEmpty(s.toString().replace(" ", ""))) {
-                    mBinding.buttonMore.setVisibility(View.VISIBLE);
-                    mBinding.buttonSendMessage.setVisibility(View.GONE);
+                    hideSendMessageButton();
                 } else {
-                    mBinding.buttonMore.setVisibility(View.GONE);
-                    mBinding.buttonSendMessage.setVisibility(View.VISIBLE);
+                    showSendMessageButton();
                 }
+            }
+        });
+        mBinding.editTextContent.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && mMediaFooterStub.get().isShowing()) {
+                mMediaFooterStub.get().hide();
             }
         });
         mBinding.buttonScrollToBottom.setOnClickListener(v -> {
@@ -397,6 +482,16 @@ public class ConversationActivity
         mBinding.includedFooterOption.layoutSave.setOnClickListener(this::handleSaveMessageMedia);
     }
 
+    private void showSendMessageButton() {
+        mBinding.buttonMore.setVisibility(View.GONE);
+        mBinding.buttonSendMessage.setVisibility(View.VISIBLE);
+    }
+
+    private void hideSendMessageButton() {
+        mBinding.buttonMore.setVisibility(View.VISIBLE);
+        mBinding.buttonSendMessage.setVisibility(View.GONE);
+    }
+
     private void setupColorUi() {
         var toolbarMenu = mBinding.toolbar.getMenu();
         var menuItemSize = toolbarMenu.size();
@@ -407,7 +502,6 @@ public class ConversationActivity
         }
         mBinding.buttonBack.setIconTint(mDefaultColorStateList);
         mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
-        mBinding.buttonGallery.setIconTint(mDefaultColorStateList);
         mBinding.buttonMic.setIconTint(mDefaultColorStateList);
         mBinding.buttonSendMessage.setIconTint(mDefaultColorStateList);
         mBinding.buttonMore.setIconTint(mDefaultColorStateList);
@@ -432,7 +526,6 @@ public class ConversationActivity
         mBinding.recyclerChatList.setAdapter(mChatListAdapter);
         mBinding.recyclerChatList.setHasFixedSize(true);
         mBinding.recyclerChatList.setLayoutManager(mLayoutManager);
-        mBinding.recyclerChatList.addOnLayoutChangeListener(this);
         ChatListAdapter.initializePool(mBinding.recyclerChatList.getRecycledViewPool());
 
         mScrollListener = new RecyclerView.OnScrollListener() {
@@ -450,6 +543,8 @@ public class ConversationActivity
         mChatListAdapter.submitList(mChatList);
         mChatListAdapter.registerConversationOption(this);
         mChatListAdapter.registerItemEventListener(this);
+        mChatListAdapter.registerLinkPreviewListener(this);
+        mChatListAdapter.registerVideoListener(this::handlePlayVideo);
     }
 
     private void checkForShowHeader() {
@@ -494,6 +589,17 @@ public class ConversationActivity
         mViewModel.setScrollButtonState(position < mChatList.size() - NUM_ITEM_TO_SHOW_SCROLL_TO_BOTTOM);
     }
 
+    private void checkForScrollToBottomWhenOpenKeyboard(boolean isSoftKeyShow) {
+        if (mLayoutManager != null) {
+            int lastItem = mLayoutManager.findLastCompletelyVisibleItemPosition();
+            boolean wasAtBottom = lastItem >= mChatList.size() - 1;
+
+            if (!mChatList.isEmpty() && !isLoadMore && isSoftKeyShow && !wasAtBottom) {
+                mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
+            }
+        }
+    }
+
     private void seenUnseenMessage() {
         seenWelcomeChat();
         postRequestSeenMessages();
@@ -501,9 +607,10 @@ public class ConversationActivity
 
     private void seenWelcomeChat() {
         List<Chat> dummyMessages = mChatList.stream()
-                                            .filter(c -> (MessageUtil.isNotificationMessage(c) ||
-                                                          MessageUtil.isWelcomeMessage(c)) &&
-                                                          !c.getSeenBy().contains(mCurrentUser.getUid()))
+                                            .filter(c -> c != null &&
+                                                         (MessageUtil.isNotificationMessage(c) ||
+                                                         MessageUtil.isWelcomeMessage(c)) &&
+                                                         !c.getSeenBy().contains(mCurrentUser.getUid()))
                                             .peek(c -> c.getSeenBy().add(mCurrentUser.getUid()))
                                             .collect(Collectors.toList());
         mViewModel.seenDummyMessage(dummyMessages);
@@ -515,18 +622,6 @@ public class ConversationActivity
 
     private void setToolbarTitle(String title) {
         mBinding.toolbarTitle.setText(title);
-    }
-
-    @Override
-    public void onLayoutChange(View view, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7) {
-        int     lastItem        = mLayoutManager.findLastCompletelyVisibleItemPosition();
-        boolean wasAtBottom     = lastItem >= mChatList.size() - 1;
-        boolean isSoftInputShow = WindowInsetsCompat.toWindowInsetsCompat(mBinding.editTextContent.getRootWindowInsets())
-                                                    .isVisible(WindowInsetsCompat.Type.ime());
-
-        if (!mChatList.isEmpty() && !isLoadMore && isSoftInputShow && !wasAtBottom) {
-            mBinding.recyclerChatList.post(() -> mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1));
-        }
     }
 
     @Override
@@ -615,31 +710,25 @@ public class ConversationActivity
         AlertDialogUtil.showPhotoSelectionDialog(this, (dialog, which) -> {
             if (which == 0) {
                 Permission.with(this, mPermissionsLauncher)
-                        .request(Manifest.permission.CAMERA)
-                        .ifNecessary()
-                        .onAllGranted(this::handleTakePicture)
-                        .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
-                        .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
-                        .execute();
+                          .request(Manifest.permission.CAMERA)
+                          .ifNecessary()
+                          .onAllGranted(this::handleTakePicture)
+                          .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                          .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                          .execute();
             } else {
-                Permission.with(this, mPermissionsLauncher)
-                        .request(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
-                        .onAllGranted(() -> getContentLauncher.launch("image/*", uri -> {
-                            if (uri != null) {
-                                String path = FileProviderUtil.getPath(this, uri);
-                                if (path != null) {
-                                    File file = new File(path);
+                requestStoragePermission(() -> getContentLauncher.launch("image/*", uri -> {
+                    if (uri != null) {
+                        String path = FileProviderUtil.getPath(this, uri);
+                        if (!path.equals("")) {
+                            File file = new File(path);
 
-                                    mViewModel.changeGroupThumbnail(this, file);
-                                } else {
-                                    Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }))
-                        .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
-                        .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
-                        .execute();
+                            mViewModel.changeGroupThumbnail(this, file);
+                        } else {
+                            Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }));
             }
         });
     }
@@ -680,13 +769,17 @@ public class ConversationActivity
 
     @Override
     public void onItemLongClick(int position) {
-        Chat   message  = mChatListAdapter.getCurrentList().get(position);
+        setupForShowFooterOption(mChatListAdapter.getCurrentList().get(position));
+    }
+
+    private void setupForShowFooterOption(Chat message) {
         String senderId = message.getSenderId();
         String userId   = mCurrentUser.getUid();
 
         mBinding.includedFooterOption.layoutUnsent.setVisibility(!senderId.equals(userId) ? View.GONE : View.VISIBLE);
-        mBinding.includedFooterOption.layoutSave.setVisibility(MessageUtil.isMultiMediaMessage(message) ? View.VISIBLE : View.GONE);
-        mBinding.includedFooterOption.layoutCopy.setVisibility(MessageUtil.isMultiMediaMessage(message) ? View.GONE : View.VISIBLE);
+        mBinding.includedFooterOption.layoutSave.setVisibility(MessageUtil.isMultiMediaMessage(message) && !MessageUtil.isShareMessage(message) ? View.VISIBLE : View.INVISIBLE);
+        mBinding.includedFooterOption.layoutCopy.setVisibility(MessageUtil.isMultiMediaMessage(message) && !MessageUtil.isShareMessage(message) ? View.INVISIBLE : View.VISIBLE);
+        mBinding.includedFooterOption.layoutSave.setTag(message);
         mBinding.includedFooterOption.layoutUnsent.setTag(message);
         mBinding.includedFooterOption.layoutCopy.setTag(message);
         mBinding.includedFooterOption.layoutReply.setTag(message);
@@ -725,10 +818,9 @@ public class ConversationActivity
 
     private void handleCopyMessageContent(View view) {
         Chat             message = (Chat) view.getTag();
-        ClipboardManager cm      = getSystemService(ClipboardManager.class);
-        ClipData         cd      = ClipData.newPlainText("Copied Message Content", message.getContent());
+        ClipData         cd      = ClipData.newPlainText("Copied Message Content", MessageUtil.isShareMessage(message) ? message.getShare().getLink() : message.getContent());
 
-        cm.setPrimaryClip(cd);
+        ServiceUtil.getClipboardManager(this).setPrimaryClip(cd);
 
         shouldShowFooterOption(false);
 
@@ -736,13 +828,25 @@ public class ConversationActivity
     }
 
     private void handleReplyMessage(View view) {
-        Chat message = (Chat) view.getTag();
         shouldShowFooterOption(false);
+
+        Chat message = (Chat) view.getTag();
     }
 
     private void handleForwardMessage(View view) {
-        Chat message = (Chat) view.getTag();
         shouldShowFooterOption(false);
+
+        Chat message = (Chat) view.getTag();
+
+        Intent intent = new Intent(this, ForwardMessageActivity.class);
+
+        // Put boolean extra to open single send list conversation in ForwardMessageActivity
+        // These key extra must correct with constant val in SuggestionFriendListFragment
+        intent.putExtra(SuggestionFriendListFragment.ARG_INCLUDE_GROUP, true);
+        intent.putExtra(SuggestionFriendListFragment.ARG_SINGLE_SEND, true);
+        intent.putExtra("message", message);
+
+        startActivity(intent);
     }
 
     private void handleUnsentMessage(View view) {
@@ -754,21 +858,12 @@ public class ConversationActivity
     }
 
     private void handleSaveMessageMedia(View view) {
-        Chat message = (Chat) view.getTag();
+        Chat.Media media = (Chat.Media) view.getTag();
 
         Permission.with(this, mPermissionsLauncher)
-                  .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                  .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                   .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
-                  .onAllGranted(() -> getContentLauncher.launch("image/*", uri -> {
-                      String path = FileProviderUtil.getPath(this, uri);
-                      if (path != null) {
-                          File file = new File(path);
-
-                          mViewModel.changeGroupThumbnail(this, file);
-                      } else {
-                          Toast.makeText(this, "Can't open the file, check later", Toast.LENGTH_SHORT).show();
-                      }
-                  }))
+                  .onAllGranted(() -> WorkDependency.enqueue(new DownloadMediaWorkWrapper(this, media.getUri(), media instanceof Chat.Video)))
                   .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
                   .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
                   .execute();
@@ -776,50 +871,132 @@ public class ConversationActivity
         shouldShowFooterOption(false);
     }
 
-    private class WidgetPresenter {
-        private final List<View> headerAvatar;
-        private final TextView toolbarTitle;
-        private final TextView toolbarSubtitle;
-        private ImageView activeIcon;
+    private void handlePlayVideo(Chat chat, Chat.Video video) {
+        Intent intent = new Intent(this, VideoPlayerActivity.class);
+        intent.putExtra(VideoPlayerActivity.EXTRA_START_INDEX, chat.getVideos().indexOf(video));
+        intent.putStringArrayListExtra(VideoPlayerActivity.EXTRA_URI, chat.getVideos()
+                                                                          .stream()
+                                                                          .map(Chat.Media::getUri)
+                                                                          .collect(Collectors.toCollection(ArrayList::new)));
+        startActivity(intent);
+    }
 
-        public WidgetPresenter(ConversationMetadata metadata) {
-            headerAvatar    = new ArrayList<>();
-            toolbarTitle    = mBinding.toolbarTitle;
-            toolbarSubtitle = mBinding.toolbarSubtitle;
+    @Override
+    public void onClick(@NonNull View v, @NonNull Chat.Photo photo) {
+        Dialog dialog = new Dialog(this, android.R.style.Theme_Material_NoActionBar_TranslucentDecor);
+        dialog.setContentView(R.layout.dialog_image_preview);
 
-            if (metadata.getType() == ConversationType.GROUP) {
-                headerAvatar.add(avatarGroupStubBinding.avatarUser1);
-                headerAvatar.add(avatarGroupStubBinding.avatarUser2);
-                headerAvatar.add(avatarGroupStubBinding.layoutAvatar2);
+        ImageView img         = dialog.findViewById(R.id.imgAvatar);
+        View      imgBack     = dialog.findViewById(R.id.imgBack);
+        View      imgMoreVert = dialog.findViewById(R.id.imgMoreVert);
 
-                if (metadata.getConversationThumbnail().size() > 1) {
-                    activeIcon = avatarGroupStubBinding.imageActive;
-                } else {
-                    activeIcon = avatarGroupStubBinding.groupAvatar.imageActive;
-                }
-            } else {
-                headerAvatar.add(avatarNormalStubBinding.imageAvatar);
+        imgBack.setOnClickListener(view -> dialog.dismiss());
 
-                activeIcon = avatarNormalStubBinding.imageActive;
+        Picture.loadSecureResource(getAppPreference().getUserAuthToken().orElse(""), this, photo.getUri())
+               .apply(RequestOptions.centerCropTransform())
+               .into(img);
+
+        dialog.show();
+    }
+
+    @Override
+    public boolean onLongClick(@NonNull View v, int indexOfMedia) {
+        if (indexOfMedia != -1) {
+            Chat chat = (Chat) v.getTag();
+
+            setupForShowFooterOption(chat);
+
+            Chat.Media media = null;
+
+            if (MessageUtil.isVideoMessage(chat)) {
+                media = chat.getVideos().get(indexOfMedia);
+            } else if (MessageUtil.isPhotoMessage(chat)) {
+                media = chat.getPhotos().get(indexOfMedia);
             }
-        }
 
-        public void setActiveIcon(ImageView activeIcon) {
-            this.activeIcon = activeIcon;
+            mBinding.includedFooterOption.layoutSave.setTag(media);
         }
+        return true;
+    }
 
-        public void shouldShowTitle(boolean isShow) {
-            toolbarTitle.setVisibility(isShow ? View.VISIBLE : View.GONE);
-        }
+    @Nullable
+    @Override
+    public LinkPreviewMetadata onBindLinkPreview(@NonNull String messageId) {
+        return Objects.requireNonNull(mViewModel.getLinkPreviewMapper().getValue()).get(messageId);
+    }
 
-        public void shouldShowAvatarView(boolean isShow) {
-            headerAvatar.forEach(v -> v.setVisibility(isShow ? View.VISIBLE : View.GONE));
-        }
+    @Override
+    public void onLoadLinkPreview(@NonNull String messageId, @NonNull String url) {
+        mViewModel.loadLinkPreview(messageId, url);
+    }
 
-        public void shouldShowAsActive(boolean isShow) {
-            activeIcon.setVisibility(isShow ? View.VISIBLE : View.GONE);
-            toolbarSubtitle.setVisibility(isShow ? View.VISIBLE : View.GONE);
+    @Override
+    public void onOpenLink(@NonNull String url) {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(LinkPreviewMetadata.resolveHttpUrl(url))));
+    }
+
+    @Override
+    public boolean onLinkPreviewLongClick(@NonNull Chat message) {
+        setupForShowFooterOption(message);
+        return true;
+    }
+
+    @Override
+    public void onGalleryClick() {
+        requestStoragePermission(() -> mGetMultipleContentLauncher.launch("image/*|video/*", uriList ->
+                mViewModel.sendMultiMessageDifferentMediaType(this, getMessageMediaUploadType(uriList))));
+    }
+
+    @Override
+    public void onFileClick() {
+        requestStoragePermission(() -> mGetMultipleDocument.launch(new String[]{"*/*"}, uriList ->
+                mViewModel.sendMultiMessageDifferentMediaType(this, getMessageMediaUploadType(uriList))));
+    }
+
+    @Override
+    public void onMediaClick(int totalSelectedItem) {
+        if (totalSelectedItem != 0) {
+            showSendMessageButton();
+        } else {
+            hideSendMessageButton();
         }
+    }
+
+    @Override
+    public void onRequestPermissionStorage() {
+        requestStoragePermission(() -> mViewModel.onMediaKeyboardOpen());
+    }
+
+    private void requestStoragePermission(Runnable onAllGranted) {
+        Permission.with(this, mPermissionsLauncher)
+                  .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                  .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                  .onAllGranted(onAllGranted)
+                  .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
+                  .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
+                  .execute();
+    }
+
+    private Map<MessageMediaUploadType, List<String>> getMessageMediaUploadType(List<Uri> uriList) {
+        Map<String, List<Media>> dataForMediaMessage = uriList.stream()
+                                                              .map(uri -> FileProviderUtil.getMediaFromUriSpecificId(this, uri))
+                                                              .filter(Objects::nonNull)
+                                                              .collect(Collectors.groupingBy(Media::getMimeType));
+
+        Map<MessageMediaUploadType, List<String>> data = new HashMap<>();
+
+        dataForMediaMessage.forEach((mimeType, mediaList) -> {
+            List<String> paths = mediaList.stream()
+                                          .map(media -> {
+                                              if (media.getPath().equals("")) {
+                                                  return FileProviderUtil.getPath(this, media.getUri());
+                                              } else return media.getPath();
+                                          })
+                                          .collect(Collectors.toList());
+            data.put(MediaUtil.mapTypeToMessageUploadType(mimeType), paths);
+        });
+
+        return data;
     }
 
     private static class CustomLinearLayoutManager extends LinearLayoutManager {

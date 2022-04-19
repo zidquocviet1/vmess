@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.mqv.vmess.ui.components.conversation.ConversationPhotoView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="210dp"
+    android:layout_height="210dp"
+    android:layout_gravity="center"
+    android:layout_marginBottom="5dp"
+    android:adjustViewBounds="true"
+    android:contentDescription="@null"
+    android:elevation="3dp"
+    android:scaleType="centerCrop"
+    android:visibility="visible" />

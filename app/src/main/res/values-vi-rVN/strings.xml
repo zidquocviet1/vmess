@@ -272,4 +272,17 @@
     <string name="action_copy">Sao chép</string>
     <string name="action_unsent">Thu hồi</string>
     <string name="msg_copy_message_successfully">Sao chép nội dung tin nhắn thành công</string>
+    <string name="msg_conversation_list_you_sent_photo">%1$s đã gửi một ảnh</string>
+    <string name="msg_conversation_list_you_sent_video">%1$s đã gửi một video</string>
+    <string name="msg_conversation_list_you_sent_file">%1$s đã gửi một tệp</string>
+    <string name="msg_conversation_list_you_sent_link">%1$s đã gửi một liên kết</string>
+    <string name="msg_conversation_list_you_call">%1$s đã bắt đầu cuộc gọi</string>
+    <string name="msg_conversation_list_the_call_has_ended">Cuộc gọi đã kết thúc</string>
+    <string name="msg_you">Bạn</string>
+    <string name="title_send_to">Gửi tới</string>
+    <string name="label_recent_search">Tìm kiếm gần đây</string>
+    <string name="action_give_access">Cho phép truy cập</string>
+    <string name="label_gallery">Thư viện</string>
+    <string name="label_file">Tài liệu</string>
+    <string name="title_notification_download_file">Tệp đang được tải xuống...</string>
 </resources>

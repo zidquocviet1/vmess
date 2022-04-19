@@ -158,7 +158,7 @@ object NotificationUtil {
                     if (it.type == ConversationType.GROUP) it.conversationName else ""
                 style.isGroupConversation = conversation.group != null
                 style.addMessage(
-                    message.content,
+                    metadata.getTitle(context),
                     message.timestamp.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                     Person.Builder().setName(sender.displayName).build()
                 )

@@ -10,23 +10,13 @@
         android:id="@+id/included_appbar"
         layout="@layout/custom_appbar" />
 
-    <include
-        android:id="@+id/included_search_bar"
-        layout="@layout/item_search_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/all_padding_common"
-        android:layout_marginTop="@dimen/all_margin_top_soft"
-        android:layout_marginEnd="@dimen/all_padding_common"
-        app:layout_constraintTop_toBottomOf="@id/included_appbar" />
-
     <HorizontalScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin_top_soft"
         android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/included_search_bar">
+        app:layout_constraintTop_toBottomOf="@id/included_appbar">
 
         <LinearLayout
             android:layout_width="wrap_content"

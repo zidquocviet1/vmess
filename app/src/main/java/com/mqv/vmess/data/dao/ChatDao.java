@@ -40,6 +40,12 @@ public interface ChatDao {
            " order by chat_timestamp desc")
     Single<List<Chat>> fetchUnreadChatByConversation(String conversationId, String senderId);
 
+    @Query(" select * from chat" +
+            " where chat_conversation_id = :conversationId " +
+            " and chat_sender_id != :senderId " +
+            " order by chat_timestamp desc")
+    Single<List<Chat>> fetchIncomingMessageByConversation(String conversationId, String senderId);
+
     @Query("select * from chat where chat_status = 'NOT_RECEIVED'")
     Single<List<Chat>> fetchNotReceivedChatList();
 

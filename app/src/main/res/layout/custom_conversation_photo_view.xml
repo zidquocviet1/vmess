@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <com.mqv.vmess.ui.components.PhotoView
+        android:id="@+id/thumbnail"
+        android:layout_width="210dp"
+        android:layout_height="210dp" />
+
+    <com.mqv.vmess.ui.components.AlbumView
+        android:id="@+id/album"
+        android:layout_width="210dp"
+        android:layout_height="210dp" />
+</merge>

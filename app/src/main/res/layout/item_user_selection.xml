@@ -11,16 +11,15 @@
     android:focusable="true"
     android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeightSmall"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp">
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
 
-    <include
+    <com.mqv.vmess.ui.components.conversation.ConversationHeaderThumbnail
         android:id="@+id/included_image_avatar"
-        layout="@layout/item_user_avatar"
-        android:layout_width="@dimen/image_user_avatar_small"
-        android:layout_height="@dimen/image_user_avatar_small"
+        android:layout_width="@dimen/image_conversation_group"
+        android:layout_height="@dimen/image_conversation_group"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginStart="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -29,7 +28,7 @@
         android:id="@+id/text_display_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/all_padding_common"
+        android:layout_marginStart="10dp"
         android:layout_marginEnd="@dimen/all_padding_common"
         android:alpha="0.8"
         android:ellipsize="end"
@@ -39,7 +38,7 @@
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@id/included_image_avatar"
-        app:layout_constraintEnd_toStartOf="@id/radio_select"
+        app:layout_constraintEnd_toStartOf="@id/button_send_message"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@id/included_image_avatar"
         app:layout_constraintTop_toTopOf="@id/included_image_avatar" />
@@ -57,4 +56,27 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_send_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="@color/base_background_color"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:minWidth="0dp"
+        android:minHeight="30dp"
+        android:outlineProvider="none"
+        android:text="@string/action_send"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="@id/radio_select"
+        app:layout_constraintEnd_toEndOf="@id/radio_select"
+        app:layout_constraintStart_toStartOf="@id/radio_select"
+        app:layout_constraintTop_toTopOf="@id/radio_select"
+        app:rippleColor="@android:color/darker_gray" />
 </androidx.constraintlayout.widget.ConstraintLayout>

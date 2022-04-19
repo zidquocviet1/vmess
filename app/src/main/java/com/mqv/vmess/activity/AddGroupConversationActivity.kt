@@ -3,6 +3,7 @@ package com.mqv.vmess.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import com.google.android.material.chip.Chip
 import com.mqv.vmess.R
 import com.mqv.vmess.activity.viewmodel.UserSelectionListViewModel
@@ -31,7 +32,7 @@ class AddGroupConversationActivity :
         enableSaveButton { submitCreateGroup() }
 
         toolbarButton.text = getString(R.string.zxing_button_ok)
-        toolbarButton.setTextColor(R.color.purple_500)
+        toolbarButton.setTextColor(ContextCompat.getColor(this, R.color.purple_500))
 
         fragment = SuggestionFriendListFragment.newInstance(true)
 

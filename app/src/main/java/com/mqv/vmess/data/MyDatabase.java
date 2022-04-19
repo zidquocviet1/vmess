@@ -4,6 +4,10 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
+import com.mqv.vmess.data.converter.ChatFileConverter;
+import com.mqv.vmess.data.converter.ChatPhotoConverter;
+import com.mqv.vmess.data.converter.ChatShareConverter;
+import com.mqv.vmess.data.converter.ChatVideoConverter;
 import com.mqv.vmess.data.converter.ConversationChatConverter;
 import com.mqv.vmess.data.converter.ConversationGroupConverter;
 import com.mqv.vmess.data.converter.ConversationParticipantsConverter;
@@ -41,7 +45,7 @@ import com.mqv.vmess.ui.data.People;
                       PendingMessage.class,
                       SeenMessage.class,
                       FriendNotification.class},
-        version = 22,
+        version = 25,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -54,7 +58,11 @@ import com.mqv.vmess.ui.data.People;
                          MessageTypeConverter.class,
                          MessageStatusConverter.class,
                          MessageSeenByConverter.class,
-                         ConversationGroupConverter.class})
+                         ConversationGroupConverter.class,
+                         ChatPhotoConverter.class,
+                         ChatShareConverter.class,
+                         ChatVideoConverter.class,
+                         ChatFileConverter.class})
 public abstract class MyDatabase extends RoomDatabase {
     public abstract UserDao getUserDao();
 

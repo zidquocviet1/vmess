@@ -9,7 +9,10 @@ data class UserSelection(
     val photoUrl: String?,
     val displayName: String,
     val isOnline: Boolean,
-    var isSelected: Boolean
+    var isSelected: Boolean,
+    val isConversation: Boolean = false,
+    val isGroup: Boolean = false,
+    val conversationMetadata: ConversationMetadata? = null
 ) : Parcelable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

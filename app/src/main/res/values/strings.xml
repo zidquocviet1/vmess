@@ -47,6 +47,7 @@
     <string name="label_system">System</string>
     <string name="label_dark_mode_explain">If system is selected, TAC will automatically adjust your appearance based on your device\'s system settings</string>
     <string name="label_suggested">Suggested</string>
+    <string name="label_recent_search">Recent Search</string>
     <string name="label_who_create_this_group">%1$s created this group.</string>
     <string name="label_name">Name</string>
     <string name="label_members">Members</string>
@@ -58,6 +59,8 @@
     <string name="label_camera">Camera</string>
     <string name="label_storage">Storage</string>
     <string name="label_no_internet_connection">No Internet Connection</string>
+    <string name="label_gallery">Gallery</string>
+    <string name="label_file">File</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>
@@ -139,6 +142,8 @@
     <string name="title_remove_member">Remove member?</string>
     <string name="title_admin">Admin</string>
     <string name="title_leave_group">Leave group?</string>
+    <string name="title_send_to">Send to</string>
+    <string name="title_notification_download_file">Downloading file…</string>
 
     <string name="action_remove_from_group">Remove From Group</string>
     <string name="action_leave_group">Leave Group</string>
@@ -191,6 +196,7 @@
     <string name="action_forward">Forward</string>
     <string name="action_copy">Copy</string>
     <string name="action_unsent">Unsent</string>
+    <string name="action_give_access">Give Access</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -236,6 +242,7 @@
     <string name="msg_notification_yesterday">Yesterday at %1$s</string>
     <string name="msg_notification_month">%1$s %2$s at %3$s</string>
     <string name="msg_owner_chat">You:\u0020</string>
+    <string name="msg_you">You</string>
     <string name="msg_delete_conversation_title">Delete this entire conversation?</string>
     <string name="msg_delete_conversation_message">Once you delete this conversation, the entire chats will be deleted and it can\'t be undone.</string>
     <string name="msg_edit_display_name_explain_1">Help people discover your account by using the name you\'re known by either your full name, nickname, or business name.</string>
@@ -258,7 +265,8 @@
     <string name="msg_remove_group_member">Are you sure want to remove this member from this group?</string>
     <string name="msg_leave_group">Are you sure want to leave this group?</string>
     <string name="msg_user_dont_allow_added">This user doesn\'t allow you add into group as member.</string>
-    <string name="msg_permission_camera_rational">To capture photos and video, allow &appname; access your camera.</string>
+    <string name="msg_permission_camera_rational">To capture photos and video, allow &appname;
+        access your camera.</string>
     <string name="msg_permission_allow_app_use_camera_title">Allow &appname; to use your camera?</string>
     <string name="msg_permission_camera_message">This lets &appname; take photos and video.</string>
     <string name="msg_permission_settings_construction">To enable this, click Settings below and activate %1$s under the Permissions menu.</string>
@@ -268,6 +276,12 @@
     <string name="msg_change_avatar_success">Change user avatar successfully</string>
     <string name="msg_dont_have_any_user_active">Don\'t have any user active.</string>
     <string name="msg_copy_message_successfully">Copy message content successfully</string>
+    <string name="msg_conversation_list_you_sent_photo">%1$s sent a photo</string>
+    <string name="msg_conversation_list_you_sent_video">%1$s sent a video</string>
+    <string name="msg_conversation_list_you_sent_file">%1$s sent a file</string>
+    <string name="msg_conversation_list_you_sent_link">%1$s sent a link</string>
+    <string name="msg_conversation_list_you_call">%1$s made a call</string>
+    <string name="msg_conversation_list_the_call_has_ended">The call has ended</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

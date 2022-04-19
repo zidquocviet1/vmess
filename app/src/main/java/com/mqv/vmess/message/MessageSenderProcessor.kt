@@ -15,7 +15,6 @@ import com.mqv.vmess.network.service.ChatService
 import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
 import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.util.Logging
-import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper
 import com.mqv.vmess.work.SendMessageWorkWrapper
 import com.mqv.vmess.work.WorkDependency
 import io.reactivex.rxjava3.core.Completable
@@ -88,6 +87,8 @@ class MessageSenderProcessor(
 
                 mUser?.let {
                     mUser.authorizeToken()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
                         .flatMap { token ->
                             Observable.fromIterable(messageIds)
                                 .flatMap { id -> messageDao.findById(id).toObservable() }
@@ -105,10 +106,6 @@ class MessageSenderProcessor(
     private fun sendMessage(message: Chat) {
         val input = Data.Builder()
             .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, message.id)
-            .putString(SendMessageWorkWrapper.EXTRA_SENDER_ID, message.senderId)
-            .putString(SendMessageWorkWrapper.EXTRA_CONTENT, message.content)
-            .putString(SendMessageWorkWrapper.EXTRA_CONVERSATION_ID, message.conversationId)
-            .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_TYPE, message.type.name)
             .build()
 
         val worker = SendMessageWorkWrapper(context, input)

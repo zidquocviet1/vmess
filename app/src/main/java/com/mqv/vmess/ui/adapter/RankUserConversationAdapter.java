@@ -13,8 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.mqv.vmess.R;
 import com.mqv.vmess.databinding.ItemRankConversationBinding;
 import com.mqv.vmess.network.model.RemoteUser;
-import com.mqv.vmess.util.Const;
-import com.mqv.vmess.util.Picture;
 
 public class RankUserConversationAdapter extends ListAdapter<RemoteUser, RankUserConversationAdapter.RankUserViewHolder> {
     private final Context context;
@@ -60,10 +58,6 @@ public class RankUserConversationAdapter extends ListAdapter<RemoteUser, RankUse
         public void bind(RemoteUser item, Context context){
             mRankBinding.textFirstName.setText(item.getFirstName());
             mRankBinding.textLastName.setText(item.getLastName());
-
-            var randomIndex = getAdapterPosition() >= Const.DUMMIES_IMAGES_URL.length ?
-                    Const.DUMMIES_IMAGES_URL.length - 1 : getAdapterPosition();
-            Picture.loadUserAvatar(context, Const.DUMMIES_IMAGES_URL[randomIndex]).into(mRankBinding.imageAvatar);
         }
     }
 }

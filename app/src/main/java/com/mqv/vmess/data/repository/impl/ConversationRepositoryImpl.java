@@ -226,6 +226,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Single<List<Conversation>> suggestConversation(int size) {
+        return dao.suggestConversation(size);
+    }
+
+    @Override
     public Completable save(Conversation conversation) {
         return Completable.fromAction(() -> dao.saveConversationList(Collections.singletonList(conversation)));
     }

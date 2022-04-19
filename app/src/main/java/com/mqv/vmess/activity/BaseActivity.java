@@ -31,6 +31,7 @@ import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.MyActivityForResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -105,6 +106,12 @@ public abstract class BaseActivity<V extends ViewModel, B extends ViewBinding>
 
     public MyActivityForResult<String, Uri> getContentLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.GetContent());
+
+    public MyActivityForResult<String, List<Uri>> mGetMultipleContentLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.GetMultipleContents());
+
+    public MyActivityForResult<String[], List<Uri>> mGetMultipleDocument =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.OpenMultipleDocuments());
 
     public MyActivityForResult<String[], Map<String, Boolean>> mPermissionsLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.RequestMultiplePermissions());

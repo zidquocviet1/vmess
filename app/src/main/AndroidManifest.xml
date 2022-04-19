@@ -36,6 +36,16 @@
         android:theme="@style/Theme.RealTimeChatApplication"
         tools:ignore="DataExtractionRules">
         <activity
+            android:name=".activity.VideoPlayerActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
+            android:exported="true"
+            android:launchMode="singleTop" />
+        <activity
+            android:name=".activity.ForwardMessageActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
             android:name=".activity.GroupMemberActivity"
             android:exported="false" />
         <activity
@@ -67,10 +77,15 @@
             android:exported="true" />
         <activity
             android:name=".activity.ConversationActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
             android:exported="true"
             android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustResize" />
+            android:parentActivityName=".activity.MainActivity"
+            android:windowSoftInputMode="stateUnchanged">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activity.MainActivity" />
+        </activity>
         <activity
             android:name=".activity.preferences.PreferenceNotificationActivity"
             android:exported="true">
@@ -274,12 +289,12 @@
             android:name=".activity.br.AlarmReceiver"
             android:enabled="true"
             android:exported="true" />
-
-        <receiver android:name=".activity.br.MarkNotificationReadReceiver"
+        <receiver
+            android:name=".activity.br.MarkNotificationReadReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.mqv.vmess.MARK_NOTIFICATION_READ"/>
+                <action android:name="com.mqv.vmess.MARK_NOTIFICATION_READ" />
             </intent-filter>
         </receiver>
         <!--
@@ -301,7 +316,6 @@
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             tools:node="remove" />
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

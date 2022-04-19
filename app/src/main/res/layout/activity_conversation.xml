@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,9 +9,10 @@
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/footer"
-        android:fitsSystemWindows="true">
+        android:layout_height="0dp"
+        android:fitsSystemWindows="true"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appbar"
@@ -40,7 +41,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="10dp"/>
+                    android:layout_marginStart="10dp" />
 
                 <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/toolbar"
@@ -93,38 +94,37 @@
             android:clipToPadding="false"
             android:fitsSystemWindows="true"
             android:paddingBottom="8dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             android:visibility="gone"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
             tools:listitem="@layout/item_chat" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-
     <TextView
         android:id="@+id/text_loading"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
         android:gravity="center"
         android:text="@string/action_loading"
         android:textSize="16sp"
-        android:textStyle="bold|italic"
-        android:alpha="0.7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="2dp"
         android:elevation="10dp"
         android:fitsSystemWindows="true"
-        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
-        android:weightSum="10">
+        android:weightSum="10"
+        app:layout_constraintBottom_toTopOf="@id/layout_media_footer">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_camera"
@@ -137,20 +137,12 @@
             app:iconSize="24dp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_gallery"
-            style="@style/MaterialIconButton"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:backgroundTint="?android:colorBackground"
-            app:icon="@drawable/ic_round_photo_library"
-            app:iconSize="24dp" />
-
-        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_mic"
             style="@style/MaterialIconButton"
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:backgroundTint="?android:colorBackground"
+            android:visibility="gone"
             app:icon="@drawable/ic_round_mic"
             app:iconSize="24dp" />
 
@@ -167,7 +159,10 @@
             android:maxLines="5"
             android:minHeight="38dp"
             android:paddingStart="10dp"
-            android:paddingEnd="10dp" />
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp"
+            android:textSize="14sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_send_message"
@@ -195,13 +190,39 @@
         android:id="@+id/button_scroll_to_bottom"
         style="@style/MaterialIconButton"
         android:layout_above="@id/footer"
-        android:layout_centerInParent="true"
-        android:layout_gravity="end"
         android:layout_marginBottom="@dimen/all_margin_top_soft"
         android:backgroundTint="@color/white"
         android:elevation="4dp"
         android:rotation="-90"
         android:visibility="gone"
         app:icon="@drawable/ic_back"
-        app:iconSize="14dp" />
-</RelativeLayout>
+        app:iconSize="14dp"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <include
+        android:id="@+id/included_footer_option"
+        layout="@layout/item_conversation_chat_option"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/layout_media_footer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ViewStub
+            android:id="@+id/stub_media_footer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:layout_marginBottom="@dimen/all_margin_top_soft"
+            android:layout="@layout/item_conversation_media_footer"
+            android:visibility="gone"
+            tools:visibility="gone" />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

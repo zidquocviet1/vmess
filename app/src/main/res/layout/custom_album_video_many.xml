@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <com.mqv.vmess.ui.components.VideoView
+        android:id="@+id/video_1"
+        android:layout_width="105dp"
+        android:layout_height="140dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.mqv.vmess.ui.components.VideoView
+        android:id="@+id/video_2"
+        android:layout_width="105dp"
+        android:layout_height="140dp"
+        app:layout_constraintStart_toEndOf="@id/video_1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.mqv.vmess.ui.components.VideoView
+        android:id="@+id/video_3"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/video_1" />
+
+    <com.mqv.vmess.ui.components.VideoView
+        android:id="@+id/video_4"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:layout_constraintStart_toEndOf="@id/video_3"
+        app:layout_constraintTop_toBottomOf="@id/video_2" />
+
+    <com.mqv.vmess.ui.components.VideoView
+        android:id="@+id/video_more"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        app:layout_constraintStart_toEndOf="@id/video_4"
+        app:layout_constraintTop_toBottomOf="@id/video_2" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:alpha="0.2"
+        android:src="@color/black"
+        app:layout_constraintBottom_toBottomOf="@id/video_more"
+        app:layout_constraintEnd_toEndOf="@id/video_more"
+        app:layout_constraintStart_toStartOf="@id/video_more"
+        app:layout_constraintTop_toTopOf="@id/video_more"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize5Percent" />
+
+    <TextView
+        android:id="@+id/text_more"
+        tools:ignore="HardcodedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+2"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="@id/video_more"
+        app:layout_constraintEnd_toEndOf="@id/video_more"
+        app:layout_constraintStart_toStartOf="@id/video_more"
+        app:layout_constraintTop_toTopOf="@id/video_more" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

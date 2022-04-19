@@ -3,20 +3,22 @@ package com.mqv.vmess.ui.adapter
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import androidx.recyclerview.widget.DiffUtil
 import androidx.viewbinding.ViewBinding
 import com.mqv.vmess.R
 import com.mqv.vmess.databinding.ItemUserSelectionBinding
 import com.mqv.vmess.ui.data.UserSelection
-import com.mqv.vmess.util.Picture
 import java.util.*
+import java.util.function.BiConsumer
 
 const val ONLINE_PAYLOAD = "online"
 const val SELECTED_PAYLOAD = "selected"
 
 class UserSelectionAdapter(
     private val mContext: Context,
-    private val mMultiSelect: Boolean
+    private val mMultiSelect: Boolean,
+    private val mSingleSend: Boolean
 ) :
     BaseAdapter<UserSelection, ItemUserSelectionBinding>(object :
         DiffUtil.ItemCallback<UserSelection>() {
@@ -41,6 +43,8 @@ class UserSelectionAdapter(
         }
     }) {
 
+    private var mSendMessageListener: BiConsumer<View, Button>? = null
+
     override fun getViewRes() = R.layout.item_user_selection
 
     override fun getView(view: View) = ItemUserSelectionBinding.bind(view)
@@ -49,11 +53,15 @@ class UserSelectionAdapter(
         val itemBinding = binding as ItemUserSelectionBinding
 
         with(itemBinding) {
-            Picture.loadUserAvatar(mContext, item.photoUrl).into(includedImageAvatar.imageAvatar)
-            includedImageAvatar.imageActive.visibility =
-                if (item.isOnline) View.VISIBLE else View.GONE
+            if (item.isConversation) {
+                includedImageAvatar.setThumbnail(item.conversationMetadata!!.conversationThumbnail)
+            } else {
+                includedImageAvatar.setThumbnail(listOf(item.photoUrl))
+            }
+            includedImageAvatar.setActiveStatus(item.isOnline)
             radioSelect.visibility = if (mMultiSelect) View.VISIBLE else View.INVISIBLE
-            textDisplayName.text = item.displayName
+            buttonSendMessage.visibility = if (mSingleSend) View.VISIBLE else View.INVISIBLE
+            textDisplayName.text = if (item.isConversation) item.conversationMetadata?.conversationName else item.displayName
             radioSelect.isChecked = item.isSelected
         }
     }
@@ -67,8 +75,7 @@ class UserSelectionAdapter(
 
                     with(itemBinding) {
                         if (bundle.getBoolean(ONLINE_PAYLOAD, false)) {
-                            includedImageAvatar.imageActive.visibility =
-                                if (item.isOnline) View.VISIBLE else View.GONE
+                            includedImageAvatar.setActiveStatus(item.isOnline)
                         }
                         if (bundle.getBoolean(SELECTED_PAYLOAD, false)) {
                             radioSelect.isChecked = item.isSelected
@@ -78,5 +85,19 @@ class UserSelectionAdapter(
                 else -> {}
             }
         }
+    }
+
+    override fun afterCreateViewHolder(binding: ViewBinding) {
+        super.afterCreateViewHolder(binding)
+
+        with(binding as ItemUserSelectionBinding) {
+            buttonSendMessage.setOnClickListener { v ->
+                mSendMessageListener?.accept(binding.root, v as Button)
+            }
+        }
+    }
+
+    fun registerSendMessageClickListener(callback: BiConsumer<View, Button>?) {
+        mSendMessageListener = callback
     }
 }

@@ -1,6 +1,7 @@
 package com.mqv.vmess.util
 
 import com.mqv.vmess.network.model.Chat
+import com.mqv.vmess.network.model.type.MessageType
 
 object MessageUtil {
     private const val DUMMY_FIRST_CHAT_PREFIX = "DUMMY_FIRST_CHAT"
@@ -71,9 +72,25 @@ object MessageUtil {
     fun isChangeThumbnailMessage(message: Chat) = message.id.startsWith(CHANGE_GROUP_THUMBNAIL_ID)
 
     @JvmStatic
+    fun isPhotoMessage(message: Chat) = message.photos != null && message.photos.isNotEmpty()
+
+    @JvmStatic
+    fun isFileMessage(message: Chat) = message.files != null && message.files.isNotEmpty()
+
+    @JvmStatic
+    fun isVideoMessage(message: Chat) = message.videos != null && message.videos.isNotEmpty()
+
+    @JvmStatic
+    fun isShareMessage(message: Chat) = message.share != null
+
+    @JvmStatic
+    fun isCallMessage(message: Chat) = message.type == MessageType.CALL
+
+    @JvmStatic
     fun isMultiMediaMessage(message: Chat) =
-        (message.photos != null && message.photos.isNotEmpty()) ||
-                (message.files != null && message.files.isNotEmpty()) ||
-                message.share != null ||
-                (message.videos != null && message.videos.isNotEmpty())
+        isPhotoMessage(message) ||
+                isFileMessage(message) ||
+                isVideoMessage(message) ||
+                isShareMessage(message) ||
+                isCallMessage(message)
 }
