@@ -18,8 +18,10 @@ import androidx.annotation.NonNull;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.activity.viewmodel.LoginViewModel;
+import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.databinding.ActivityLoginBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
+import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.util.NetworkStatus;
 
 import java.util.Objects;
@@ -121,7 +123,10 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
             if (result == null)
                 return;
 
-            mBinding.buttonLogin.setEnabled(result == SUCCESS);
+            Result<User> loginResult = mViewModel.getLoginResult().getValue();
+            boolean      isLoading   = loginResult != null && loginResult.getStatus() == NetworkStatus.LOADING;
+
+            mBinding.buttonLogin.setEnabled(result == SUCCESS && !isLoading);
 
             if (result == EMAIL_ERROR) {
                 mBinding.textLayoutEmail.setError(getString(result.getMessage()));
