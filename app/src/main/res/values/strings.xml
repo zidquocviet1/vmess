@@ -274,7 +274,7 @@
     <string name="msg_permission_allow_app_use_external_storage_title">Allow &appname; to use your phone\'s storage?</string>
     <string name="msg_permission_external_storage_message">This lets &appname; store and access information like photos on your phone and its SD card.</string>
     <string name="msg_change_avatar_success">Change user avatar successfully</string>
-    <string name="msg_dont_have_any_user_active">Don\'t have any user active.</string>
+    <string name="msg_dont_have_any_user_active">Don\'t have any active user.</string>
     <string name="msg_copy_message_successfully">Copy message content successfully</string>
     <string name="msg_conversation_list_you_sent_photo">%1$s sent a photo</string>
     <string name="msg_conversation_list_you_sent_video">%1$s sent a video</string>
