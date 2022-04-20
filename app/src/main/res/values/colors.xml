@@ -16,4 +16,5 @@
     <color name="text_color">@color/black</color>
     <color name="navigation_background">@color/white</color>
     <color name="base_ripple_outline_button">#D1CCCC</color>
+    <color name="active_background_badge">#00a67e</color>
 </resources>

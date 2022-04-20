@@ -120,6 +120,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
             badge.setVisible(number > 0);
             badge.setNumber(number);
             badge.setMaxCharacterCount(MAX_BADGE_NUMBER);
+            badge.setBackgroundColor(getColor(R.color.active_background_badge));
         });
     }
 
