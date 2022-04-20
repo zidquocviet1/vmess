@@ -1,6 +1,5 @@
 package com.mqv.vmess.ui.fragment.viewmodel;
 
-import static com.mqv.vmess.network.model.type.ConversationStatusType.ARCHIVED;
 import static com.mqv.vmess.network.model.type.ConversationStatusType.INBOX;
 
 import androidx.annotation.NonNull;
@@ -11,16 +10,13 @@ import androidx.lifecycle.Transformations;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.ConversationListViewModel;
 import com.mqv.vmess.data.DatabaseObserver;
-import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
-import com.mqv.vmess.network.model.RemoteUser;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.Event;
-import com.mqv.vmess.util.Logging;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,37 +27,32 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
 public class ConversationFragmentViewModel extends ConversationListViewModel {
     private static final String TAG = ConversationFragmentViewModel.class.getSimpleName();
 
-    private final ConversationRepository                            conversationRepository;
-    private final ChatRepository                                    chatRepository;
-    private final MutableLiveData<List<RemoteUser>>                 rankUser;
-    private final MutableLiveData<Result<List<Conversation>>>       refreshConversationResult;
-    private final MutableLiveData<Event<Integer>>                   refreshFailureResult;
-    private final MutableLiveData<Event<String>>                    conversationInserted;
-    private final DatabaseObserver.ConversationListener             conversationObserver;
+    private final MutableLiveData<Result<List<Conversation>>> refreshConversationResult;
+    private final MutableLiveData<Event<Result<Boolean>>>     loadingConversationResult;
+    private final MutableLiveData<Event<Integer>>             refreshFailureResult;
+    private final MutableLiveData<Event<String>>              conversationInserted;
+    private final DatabaseObserver.ConversationListener       conversationObserver;
 
     public static final int                                         DEFAULT_PAGE_CHAT_LIST          = 0;
     public static final int                                         DEFAULT_SIZE_CHAT_LIST          = 40;
 
     @Inject
-    public ConversationFragmentViewModel(ConversationRepository conversationRepository,
-                                         ChatRepository chatRepository) {
+    public ConversationFragmentViewModel(ConversationRepository conversationRepository) {
         super(conversationRepository, INBOX);
 
-        this.conversationRepository         = conversationRepository;
-        this.chatRepository                 = chatRepository;
-        this.refreshConversationResult      = new MutableLiveData<>();
-        this.refreshFailureResult           = new MutableLiveData<>();
-        this.rankUser                       = new MutableLiveData<>();
-        this.conversationInserted           = new MutableLiveData<>();
-        this.conversationObserver           = new DatabaseObserver.ConversationListener() {
+        this.refreshConversationResult = new MutableLiveData<>();
+        this.loadingConversationResult = new MutableLiveData<>();
+        this.refreshFailureResult      = new MutableLiveData<>();
+        this.conversationInserted      = new MutableLiveData<>();
+        this.conversationObserver      = new DatabaseObserver.ConversationListener() {
             @Override
             public void onConversationInserted(@NonNull String conversationId) {
                 conversationInserted.postValue(new Event<>(conversationId));
@@ -90,12 +81,12 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
         cd.add(disposable);
     }
 
-    public LiveData<List<RemoteUser>> getRankUserListSafe() {
-        return rankUser;
-    }
-
     public LiveData<Result<List<Conversation>>> getRefreshConversationResult() {
         return refreshConversationResult;
+    }
+
+    public LiveData<Event<Result<Boolean>>> getLoadingConversationResult() {
+        return loadingConversationResult;
     }
 
     public LiveData<Event<Integer>> getRefreshFailureResult() {
@@ -149,10 +140,13 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     }
 
     private void fetchAllConversation() {
-        Consumer<List<Conversation>> onReceiveData = data -> Logging.debug(TAG, "Receive fresh data");
-        Consumer<Throwable>          onError       = Throwable::printStackTrace;
+        Disposable disposable = onRefresh(INBOX).startWith(Completable.fromAction(() -> loadingConversationResult.postValue(new Event<>(Result.Loading()))))
+                .doOnDispose(() -> loadingConversationResult.postValue(new Event<>(Result.Terminate())))
+                .compose(RxHelper.parseResponseData())
+                .subscribe(data -> saveCallResult(data, INBOX, () -> loadingConversationResult.postValue(new Event<>(Result.Success(true)))),
+                        t -> loadingConversationResult.postValue(new Event<>(Result.Fail(-1))));
 
-        initializeFetch(INBOX, onReceiveData, onError);
+        cd.add(disposable);
     }
 
     @Override

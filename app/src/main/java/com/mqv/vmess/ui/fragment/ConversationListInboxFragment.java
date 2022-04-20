@@ -11,16 +11,14 @@ import androidx.activity.result.ActivityResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.mqv.vmess.activity.MainActivity;
 import com.mqv.vmess.activity.SearchConversationActivity;
+import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.databinding.FragmentConversationBinding;
 import com.mqv.vmess.ui.adapter.ConversationListAdapter;
-import com.mqv.vmess.ui.adapter.RankUserConversationAdapter;
 import com.mqv.vmess.ui.fragment.viewmodel.ConversationFragmentViewModel;
 import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
@@ -30,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
-    private RankUserConversationAdapter mRankUserAdapter;
+    private boolean isFirstLoadingConversation;
 
     private static final String MESSAGE_RINGTONE = "message_receive.mp3";
 
@@ -53,14 +51,6 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
     @Override
     public void setupObserver() {
-        mViewModel.getRankUserListSafe().observe(this, remoteUsers -> {
-            if (remoteUsers != null && !remoteUsers.isEmpty()) {
-                mRankUserAdapter.submitList(remoteUsers);
-
-                stopRefresh();
-            }
-        });
-
         mViewModel.getRefreshConversationResult().observe(this, result -> {
             if (result == null) return;
 
@@ -89,6 +79,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
                     bindPresenceConversation(onlineUsers);
                 }
             });
+            mBinding.textNoChat.setVisibility((updatedList.isEmpty() && !isFirstLoadingConversation) ? View.VISIBLE : View.GONE);
         });
 
         mViewModel.getConversationInserted().observe(this, event -> {
@@ -119,6 +110,34 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
                 Toast.makeText(requireContext(), content, Toast.LENGTH_SHORT).show();
             }
         });
+
+        mViewModel.getLoadingConversationResult().observe(this, resultEvent -> {
+            if (!mAdapter.getCurrentList().isEmpty()) return;
+            if (resultEvent == null) return;
+
+            Result<Boolean> result = resultEvent.getContentIfNotHandled();
+
+            if (result != null) {
+                switch (result.getStatus()) {
+                    case LOADING:
+                        isFirstLoadingConversation = true;
+
+                        mBinding.recyclerMessages.setVisibility(View.GONE);
+                        mBinding.progressBarLoading.setVisibility(View.VISIBLE);
+                        mBinding.textNoChat.setVisibility(View.GONE);
+                        break;
+                    case SUCCESS:
+                    case ERROR:
+                    case TERMINATE:
+                        isFirstLoadingConversation = false;
+
+                        mBinding.recyclerMessages.setVisibility(View.VISIBLE);
+                        mBinding.progressBarLoading.setVisibility(View.GONE);
+                        mBinding.textNoChat.setVisibility(View.VISIBLE);
+                        break;
+                }
+            }
+        });
     }
 
     @NonNull
@@ -147,7 +166,6 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
     @Override
     public void initializeRecyclerview() {
         mConversations = new ArrayList<>();
-        mRankUserAdapter = new RankUserConversationAdapter(getContext());
         mAdapter = new ConversationListAdapter(getContext());
         mAdapter.registerOnConversationClick(onConversationClick());
 
@@ -156,10 +174,6 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
         mBinding.recyclerMessages.setItemAnimator(new DefaultItemAnimator());
         mBinding.recyclerMessages.setNestedScrollingEnabled(false);
         mBinding.recyclerMessages.setHasFixedSize(false);
-
-        mBinding.recyclerRankChat.setAdapter(mRankUserAdapter);
-        mBinding.recyclerRankChat.setLayoutManager(new GridLayoutManager(getContext(), 1, RecyclerView.HORIZONTAL, false));
-        mBinding.recyclerRankChat.setItemAnimator(new DefaultItemAnimator());
     }
 
     @Override
