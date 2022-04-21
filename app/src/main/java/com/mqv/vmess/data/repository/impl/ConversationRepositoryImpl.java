@@ -71,8 +71,8 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
-    public Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType) {
-        return dao.conversationAndLastChat(statusType);
+    public Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType, int size) {
+        return dao.conversationAndLastChat(statusType, size);
     }
 
     @Override
@@ -208,11 +208,28 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Single<Map<Conversation, Chat>> fetchCachePaging(ConversationStatusType type, int page, int size) {
+        return dao.fetchCachePaging(type, page, size);
+    }
+
+    @Override
     public Single<ApiResponse<Conversation>> findNormalByParticipantId(String participantId) {
         return getBearerTokenObservable()
                 .flatMap(token -> service.findNormalByParticipantId(token, participantId))
                 .singleOrError()
                 .subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Completable saveConversationWithoutNotify(List<Conversation> freshData, ConversationStatusType type) {
+        List<Conversation> updatedData = freshData.stream()
+                                                  .peek(u -> {
+                                                      u.setStatus(type);
+                                                      Collections.reverse(u.getChats());
+                                                  })
+                                                  .collect(Collectors.toList());
+
+        return Completable.fromAction(() -> dao.saveConversationListWithoutNotify(updatedData));
     }
 
     @Override
@@ -244,12 +261,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
                                                   })
                                                   .collect(Collectors.toList());
 
-        List<String> conversationListId = freshData.stream()
-                                                   .map(Conversation::getId)
-                                                   .collect(Collectors.toList());
-
-        return Completable.fromAction(() -> dao.saveConversationList(updatedData))
-                          .andThen(dao.deleteAll(conversationListId, type));
+        return Completable.fromAction(() -> dao.saveConversationList(updatedData));
     }
 
     @Override

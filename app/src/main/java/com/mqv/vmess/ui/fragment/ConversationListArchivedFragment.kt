@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.mqv.vmess.activity.viewmodel.ConversationListArchivedViewModel
 import com.mqv.vmess.databinding.FragmentConversationListArchivedBinding
-import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.ui.adapter.ConversationListAdapter
 
 class ConversationListArchivedFragment :
@@ -30,7 +29,7 @@ class ConversationListArchivedFragment :
     override fun setupObserver() {
         mViewModel.listObserver.observe(viewLifecycleOwner) { list ->
             mConversations = list
-            mAdapter.submitList(ArrayList<Conversation>(mConversations)) {
+            mAdapter.submitList(ArrayList(mConversations)) {
                 mViewModel.presenceUserListValue?.let {
                     bindPresenceConversation(it)
                 }

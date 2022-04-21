@@ -12,6 +12,7 @@ import androidx.room.Update;
 
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
+import com.mqv.vmess.network.model.ConversationGroup;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.model.type.ConversationType;
@@ -40,8 +41,8 @@ public abstract class ConversationDao {
             "inner join chat on chat_conversation_id = conversation_id and conversation_status = :statusType\n" +
             "group by conversation_id\n" +
             "order by max(chat_timestamp) desc\n" +
-            "limit 20")
-    public abstract Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType);
+            "limit :size")
+    public abstract Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType, int size);
 
     @Query("select * from conversation\n" +
             "inner join chat " +
@@ -49,6 +50,16 @@ public abstract class ConversationDao {
             "group by conversation_id\n" +
             "order by max(chat_timestamp) desc")
     public abstract Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);
+
+    @Query("select * from conversation\n" +
+            "inner join chat " +
+            "on chat_conversation_id = conversation_id and conversation_status = :statusType\n" +
+            "group by conversation_id\n" +
+            "order by max(chat_timestamp) desc\n" +
+            "limit :size\n" +
+            "offset(:size * :page)")
+    public abstract Single<Map<Conversation, Chat>> fetchCachePaging(ConversationStatusType statusType, int page, int size);
+
 
     @Query("select conversation_id, conversation_type, conversation_status, conversation_participants_id, `group` from conversation\n" +
             "inner join chat on chat_conversation_id = conversation_id\n" +
@@ -83,8 +94,22 @@ public abstract class ConversationDao {
     @Update
     abstract void privateUpdate(Conversation conversation);
 
+    @Query(" UPDATE conversation" +
+           " SET `conversation_participants_id` = :participants,`group` = :group,`conversation_type` = :type,`conversation_status` = :status" +
+           " WHERE `conversation_id` = :id")
+    abstract void privateUpdate(String id, List<User> participants, ConversationGroup group, ConversationType type, ConversationStatusType status);
+
     @Transaction
     public void saveConversationList(List<Conversation> data) {
+        saveConversationAndChat(data, true);
+    }
+
+    @Transaction
+    public void saveConversationListWithoutNotify(List<Conversation> data) {
+        saveConversationAndChat(data, false);
+    }
+
+    private void saveConversationAndChat(List<Conversation> data, boolean isNotify) {
         data.forEach(c -> {
             long result = saveIfNotExists(c);
 
@@ -92,9 +117,9 @@ public abstract class ConversationDao {
             if (result != -1) {
                 saveListChat(c.getChats());
             } else {
-                Map<Conversation, Chat> conversationMapper = conversationAndLastChat(c.getId());
-                List<Chat>              freshChat          = c.getChats();
-                Chat                    lastCacheChat      = Objects.requireNonNull(conversationMapper.get(c));
+                Map<Conversation, Chat> conversationMapper   = conversationAndLastChat(c.getId());
+                List<Chat>              freshChat            = c.getChats();
+                Chat                    lastCacheChat        = Objects.requireNonNull(conversationMapper.get(c));
                 Optional<Chat>          presenceChatOptional = freshChat.stream()
                                                                         .filter(ch -> ch.getId().equals(lastCacheChat.getId()))
                                                                         .findFirst();
@@ -117,7 +142,11 @@ public abstract class ConversationDao {
                 }
 
                 // update conversation [GROUP, PARTICIPANTS, STATUS]
-                privateUpdate(c);
+                if (isNotify) {
+                    privateUpdate(c);
+                } else {
+                    privateUpdate(c.getId(), c.getParticipants(), c.getGroup(), c.getType(), c.getStatus());
+                }
             }
         });
     }

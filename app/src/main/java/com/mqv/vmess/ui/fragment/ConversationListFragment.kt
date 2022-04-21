@@ -19,14 +19,18 @@ import com.mqv.vmess.manager.LoggedInUserManager
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
+import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ConversationOptionHandler
 import com.mqv.vmess.ui.adapter.ConversationListAdapter
 import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.util.AlertDialogUtil
+import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.MyActivityForResult
+import java.time.LocalDateTime
 import java.util.*
 import java.util.function.BiConsumer
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 
 /*
 * Base class for all the Fragment related to conversation list
@@ -39,7 +43,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     private lateinit var mConversationHandler: ConversationOptionHandler
 
     internal open lateinit var mAdapter: ConversationListAdapter
-    internal open lateinit var mConversations: MutableList<Conversation>
+    internal open lateinit var mConversations: MutableList<Conversation?>
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -145,7 +149,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     override fun removeConversationUI(conversation: Conversation) {
         mConversations.remove(conversation)
-        mAdapter.submitList(ArrayList(mConversations))
+        submitCurrentData()
     }
 
     override fun bindPresenceConversation(onlineUsersId: List<String>) {
@@ -164,7 +168,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                 .collect(
                     Collectors.toMap(
                         { c -> mConversations.indexOf(c) },
-                        { obj -> obj.participants })
+                        { obj -> obj?.participants })
                 )
                 .forEach { (index, users) ->
                     val hasAny = !Collections.disjoint(users, HashSet(onlineUsers))
@@ -178,6 +182,32 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                     }
                 }
         }
+    }
+
+    override fun addLoadingUI(onAdded: Runnable) {
+        Logging.debug(TAG, "Add temp conversation with id: ${-1} in charge of loading indicator view")
+
+        mConversations.add(Conversation("-1", mutableListOf(), ConversationType.NORMAL, ConversationStatusType.INBOX, LocalDateTime.now()))
+        mAdapter.submitList(ArrayList(mConversations), onAdded)
+    }
+
+    override fun removeLoadingUI() {
+        Logging.debug(TAG, "Remove temp conversation was added, and then submit list")
+
+        mConversations.removeLast()
+        submitCurrentData()
+    }
+
+    override fun onMoreConversation(conversation: List<Conversation>) {
+        Logging.debug(TAG, "Get new conversation list size = ${conversation.size}, prepend to current list and then submit and update to view model")
+
+        mConversations.addAll(conversation)
+        mViewModel.updateCurrentList(mConversations)
+        mViewModel.saveConversation(conversation)
+    }
+
+    private fun submitCurrentData() {
+        mAdapter.submitList(ArrayList(mConversations))
     }
 
     protected fun onConversationClick(): BiConsumer<Int, Boolean> = BiConsumer { pos, isLongClick ->
@@ -222,7 +252,12 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         onRefresh()
     }
 
+    protected fun registerLoadMore() {
+        mViewModel.loadMore()
+    }
+
     companion object {
         const val EXTRA_USER = "user"
+        private val TAG: String = ConversationListFragment::class.java.simpleName
     }
 }

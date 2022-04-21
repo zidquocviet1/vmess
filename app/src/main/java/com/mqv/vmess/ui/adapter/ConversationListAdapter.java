@@ -40,6 +40,8 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public static final String PRESENCE_ONLINE_PAYLOAD = "presence_online";
     public static final String THUMBNAIL_PAYLOAD = "avatar";
 
+    private static final int VIEW_LOAD_MORE = 0;
+
     public ConversationListAdapter(Context context) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
@@ -116,6 +118,11 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
         this.onDataSizeChanged = listener;
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        return getItem(position).getId().equals("-1") ? VIEW_LOAD_MORE : 1;
+    }
+
     @NonNull
     @Override
     public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -155,7 +162,11 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
     @Override
     public void onBindViewHolder(@NonNull ConversationViewHolder holder, int position) {
-        holder.getBindableItem().bind(getItem(position));
+        if (getItemViewType(position) == VIEW_LOAD_MORE) {
+            holder.getBindableItem().showLoading();
+        } else {
+            holder.getBindableItem().bind(getItem(position));
+        }
     }
 
     @Override

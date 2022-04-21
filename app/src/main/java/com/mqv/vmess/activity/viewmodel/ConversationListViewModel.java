@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.exception.PermissionDeniedException;
@@ -24,16 +25,18 @@ import com.mqv.vmess.ui.ConversationOptionHandler;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Event;
 import com.mqv.vmess.util.LiveDataUtil;
+import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Retriever;
 
 import java.net.ConnectException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
@@ -44,28 +47,34 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ConversationListViewModel extends ViewModel {
-    private   final ConversationRepository                  conversationRepository;
-    protected final MutableLiveData<List<Conversation>>     conversationListObserver;
-    protected final MutableLiveData<List<String>>           presenceUserListObserver;
-    protected final MutableLiveData<Pair<Boolean, Integer>> oneTimeLoadingResult;
-    protected final MutableLiveData<Event<Integer>>         errorEmitter;
-    protected final CompositeDisposable                     cd;
+    private   final ConversationRepository                             conversationRepository;
+    private   final ConversationStatusType                             statusType;
+    protected final MutableLiveData<List<Conversation>>                conversationListObserver;
+    protected final MutableLiveData<List<String>>                      presenceUserListObserver;
+    protected final MutableLiveData<Pair<Boolean, Integer>>            oneTimeLoadingResult;
+    protected final MutableLiveData<Event<Integer>>                    errorEmitter;
+    protected final MutableLiveData<Event<Result<List<Conversation>>>> pagingResult;
+    protected final CompositeDisposable                                cd;
+
+    private static final String TAG = ConversationListViewModel.class.getSimpleName();
 
     private static final int INITIALIZE_PAGE = 0;
 
+    private int        currentPage = 0;
+    private boolean    canLoadMore = true;
+    private Disposable conversationDisposable;
+
     public ConversationListViewModel(ConversationRepository conversationRepository, ConversationStatusType status) {
         this.conversationRepository   = conversationRepository;
+        this.statusType               = status;
         this.cd                       = new CompositeDisposable();
         this.conversationListObserver = new MutableLiveData<>(AppDependencies.getMemoryManager().getConversationListCache());
         this.presenceUserListObserver = new MutableLiveData<>(Collections.emptyList());
         this.oneTimeLoadingResult     = new MutableLiveData<>();
         this.errorEmitter             = new MutableLiveData<>();
+        this.pagingResult             = new MutableLiveData<>();
 
-        //noinspection ResultOfMethodCallIgnored
-        conversationRepository.conversationAndLastChat(status)
-                              .compose(RxHelper.applyFlowableSchedulers())
-                              .map(this::mapToListConversation)
-                              .subscribe(conversationListObserver::postValue);
+        registerConversationListObserver(status, Const.DEFAULT_CONVERSATION_PAGING_SIZE);
 
         //noinspection ResultOfMethodCallIgnored
         AppDependencies.getWebSocket()
@@ -74,12 +83,23 @@ public class ConversationListViewModel extends ViewModel {
                        .subscribe(presenceUserListObserver::postValue);
     }
 
+    private void registerConversationListObserver(ConversationStatusType status, int size) {
+        conversationDisposable = conversationRepository.conversationAndLastChat(status, size)
+                                                       .compose(RxHelper.applyFlowableSchedulers())
+                                                       .map(this::mapToListConversation)
+                                                       .subscribe(conversationListObserver::postValue);
+    }
+
     public LiveData<Event<Integer>> getOneTimeErrorObserver() {
         return errorEmitter;
     }
 
     public LiveData<Pair<Boolean, Integer>> getOneTimeLoadingResult() {
         return oneTimeLoadingResult;
+    }
+
+    public LiveData<Event<Result<List<Conversation>>>> getPagingResult() {
+        return pagingResult;
     }
 
     protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
@@ -98,7 +118,7 @@ public class ConversationListViewModel extends ViewModel {
 
     protected List<Conversation> mapToListConversation(Map<Conversation, Chat> map) {
         Iterator<Map.Entry<Conversation, Chat>> iterator = map.entrySet().iterator();
-        List<Conversation>                      result   = new ArrayList<>();
+        List<Conversation>                      result   = new LinkedList<>();
 
         while (iterator.hasNext()) {
             Map.Entry<Conversation, Chat> entry        = iterator.next();
@@ -112,7 +132,7 @@ public class ConversationListViewModel extends ViewModel {
 
     // Only call with the activity has swipe refresh layout
     public Observable<ApiResponse<List<Conversation>>> onRefresh(ConversationStatusType type) {
-        return conversationRepository.fetchByUid(type, INITIALIZE_PAGE, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
+        return conversationRepository.fetchByUid(type, currentPage, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
                                      .compose(RxHelper.applyObservableSchedulers());
     }
 
@@ -265,8 +285,71 @@ public class ConversationListViewModel extends ViewModel {
         cd.add(disposable);
     }
 
-    public void loadMore(int page, ConversationStatusType statusType) {
+    public void loadMore() {
+        if (!canLoadMore) return;
 
+        Disposable disposable = conversationRepository.fetchCachePaging(statusType, currentPage + 1, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
+                                                      .startWith(Completable.fromAction(() -> pagingResult.postValue(new Event<>(Result.Loading()))))
+                                                      .compose(RxHelper.applyFlowableSchedulers())
+                                                      .subscribe(mapper -> {
+                                                          List<Conversation> data = mapToListConversation(mapper);
+
+                                                          if (data.size() < Const.DEFAULT_CONVERSATION_PAGING_SIZE) {
+                                                              loadMoreConversationRemote(data);
+                                                          } else {
+                                                              handlePagingSuccess(data);
+                                                          }
+                                                      }, t -> loadMoreConversationRemote(Collections.emptyList()));
+        cd.add(disposable);
+    }
+
+    private void loadMoreConversationRemote(List<Conversation> cache) {
+        Disposable disposable = conversationRepository.fetchByUid(statusType, currentPage + 1, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
+                                                      .compose(RxHelper.applyObservableSchedulers())
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .subscribe(data -> {
+                                                          canLoadMore = !data.isEmpty();
+
+                                                          handlePagingSuccess(data.stream().peek(c -> {
+                                                              Collections.reverse(c.getChats());
+                                                              c.setStatus(statusType);
+                                                          }).collect(Collectors.toList()));
+                                                      }, t -> {
+                                                          Logging.debug(TAG, "Fetching conversation list from remote failed: " + t.getMessage());
+
+                                                          if (!cache.isEmpty()) {
+                                                              pagingResult.postValue(new Event<>(Result.Success(cache)));
+                                                          } else {
+                                                              pagingResult.postValue(new Event<>(Result.Fail(-1)));
+                                                          }
+                                                      });
+
+        cd.add(disposable);
+    }
+
+    private void handlePagingSuccess(List<Conversation> data) {
+        currentPage++;
+        pagingResult.postValue(new Event<>(Result.Success(data)));
+    }
+
+    public void saveConversation(List<Conversation> data) {
+        Logging.debug(TAG, "Dispose the current observer for fetch bunch of old conversation");
+
+        conversationDisposable.dispose();
+
+        cd.add(conversationRepository.saveConversationWithoutNotify(data, statusType)
+                                     .compose(RxHelper.applyCompleteSchedulers())
+                                     .onErrorComplete()
+                                     .doOnError(t -> Logging.debug(TAG, "Insert new conversation not complete: " + t.getMessage()))
+                                     .subscribe());
+
+        Logging.debug(TAG, "Register new observer for fetch bunch of conversation with size = " + (currentPage + 1) * Const.DEFAULT_CONVERSATION_PAGING_SIZE);
+
+        registerConversationListObserver(statusType, (currentPage + 1) * Const.DEFAULT_CONVERSATION_PAGING_SIZE);
+    }
+
+    public void updateCurrentList(List<Conversation> conversations) {
+        conversationListObserver.postValue(conversations);
     }
 
     public void forceClearDispose() {

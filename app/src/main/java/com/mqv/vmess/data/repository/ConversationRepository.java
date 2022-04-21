@@ -17,7 +17,7 @@ import io.reactivex.rxjava3.core.Single;
 public interface ConversationRepository {
     Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit);
 
-    Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType);
+    Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType, int size);
 
     Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);
 
@@ -29,7 +29,11 @@ public interface ConversationRepository {
 
     Single<List<Conversation>> fetchCached(ConversationStatusType type, int page, int size);
 
+    Single<Map<Conversation, Chat>> fetchCachePaging(ConversationStatusType type, int page, int size);
+
     Single<ApiResponse<Conversation>> findNormalByParticipantId(String participantId);
+
+    Completable saveConversationWithoutNotify(List<Conversation> freshData, ConversationStatusType type);
 
     Completable save(Conversation conversation);
 

@@ -282,6 +282,7 @@
     <string name="msg_conversation_list_you_sent_link">%1$s sent a link</string>
     <string name="msg_conversation_list_you_call">%1$s made a call</string>
     <string name="msg_conversation_list_the_call_has_ended">The call has ended</string>
+    <string name="msg_no_chats_yet">No chats yet. \nGet started by messaging a friend.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

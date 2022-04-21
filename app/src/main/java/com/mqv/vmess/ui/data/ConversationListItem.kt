@@ -268,6 +268,16 @@ class ConversationListItem(
         mBinding.textContentConversation.text = getUnsentMessage(item.lastChat, item.participants)
     }
 
+    fun showLoading() {
+        mBinding.progressBarLoading.visibility = View.VISIBLE
+        mBinding.includedImageAvatar.root.visibility = View.GONE
+        mBinding.imageConversationGroup.root.visibility = View.GONE
+        mBinding.textTitleConversation.visibility = View.GONE
+        mBinding.textContentConversation.visibility = View.GONE
+        mBinding.textCreatedAt.visibility = View.GONE
+        mBinding.layoutStatus.visibility = View.GONE
+    }
+
     private fun getContentFromMessage(item: Chat, metadata: ConversationMetadata): String {
         val whoSentDisplayName = if (isSelf(item)) mContext.getString(R.string.msg_you) else
             (getSenderFromChat(

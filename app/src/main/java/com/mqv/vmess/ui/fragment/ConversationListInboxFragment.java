@@ -18,9 +18,12 @@ import com.mqv.vmess.activity.MainActivity;
 import com.mqv.vmess.activity.SearchConversationActivity;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.databinding.FragmentConversationBinding;
+import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.ui.adapter.ConversationListAdapter;
 import com.mqv.vmess.ui.fragment.viewmodel.ConversationFragmentViewModel;
 import com.mqv.vmess.util.AlertDialogUtil;
+import com.mqv.vmess.util.Const;
+import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.RingtoneUtil;
 
@@ -29,8 +32,10 @@ import java.util.List;
 
 public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
     private boolean isFirstLoadingConversation;
+    private boolean isLoadMore;
 
     private static final String MESSAGE_RINGTONE = "message_receive.mp3";
+    private static final String TAG              = ConversationListInboxFragment.class.getSimpleName();
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -69,7 +74,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
         });
 
         mViewModel.getConversationListObserver().observe(this, updatedList -> {
-            if (updatedList == null) return;
+            if (updatedList == null || isLoadMore) return;
 
             mConversations = updatedList;
             mAdapter.submitList(new ArrayList<>(mConversations), () -> {
@@ -138,6 +143,38 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
                 }
             }
         });
+
+        mViewModel.getPagingResult().observe(this, event -> {
+            if (event == null) return;
+
+            Result<List<Conversation>> result = event.getContentIfNotHandled();
+
+            if (result != null) {
+                isLoadMore = result.getStatus() == NetworkStatus.LOADING;
+
+                switch (result.getStatus()) {
+                    case LOADING:
+                        Logging.debug(TAG, "Start loading animation and fetching new conversation");
+
+                        addLoadingUI(() -> mBinding.nestedScrollView.post(() -> mBinding.nestedScrollView.scrollTo(0, mBinding.nestedScrollView.getChildAt(0).getHeight())));
+                        break;
+                    case ERROR:
+                        Logging.debug(TAG, "Error, something when wrong during fetch new conversation, stop animation");
+
+                        removeLoadingUI();
+                        break;
+                    case SUCCESS:
+                        Logging.debug(TAG, "Fetch conversation list successfully, stop animation");
+
+                        removeLoadingUI();
+                        onMoreConversation(result.getSuccess());
+                        break;
+                    case TERMINATE:
+                        Logging.debug(TAG, "The user has terminated the fetching process");
+                        break;
+                }
+            }
+        });
     }
 
     @NonNull
@@ -174,6 +211,14 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
         mBinding.recyclerMessages.setItemAnimator(new DefaultItemAnimator());
         mBinding.recyclerMessages.setNestedScrollingEnabled(false);
         mBinding.recyclerMessages.setHasFixedSize(false);
+        mBinding.nestedScrollView.setOnScrollChangeListener((View.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if (mAdapter.getCurrentList().isEmpty()) return;
+            if (mAdapter.getCurrentList().size() < Const.DEFAULT_CONVERSATION_PAGING_SIZE) return;
+
+            if (!v.canScrollVertically(1) && !isLoadMore) {
+                registerLoadMore();
+            }
+        });
     }
 
     @Override
@@ -183,7 +228,16 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
     @Override
     public void onDataSizeChanged(boolean isEmpty) {
-
+        if (isEmpty) {
+            if (!isFirstLoadingConversation) {
+                mBinding.textNoChat.setVisibility(View.VISIBLE);
+            } else {
+                mBinding.textNoChat.setVisibility(View.GONE);
+            }
+        } else {
+            mBinding.textNoChat.setVisibility(View.GONE);
+            mBinding.recyclerMessages.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

@@ -285,4 +285,5 @@
     <string name="label_gallery">Thư viện</string>
     <string name="label_file">Tài liệu</string>
     <string name="title_notification_download_file">Tệp đang được tải xuống...</string>
+    <string name="msg_no_chats_yet">Không có cuộc trò chuyện nào. Hãy bắt đầu trò chuyện với bất kỳ bạn bè nào.</string>
 </resources>
