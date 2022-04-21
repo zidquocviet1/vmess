@@ -318,7 +318,7 @@ public class ConversationListViewModel extends ViewModel {
                                                           Logging.debug(TAG, "Fetching conversation list from remote failed: " + t.getMessage());
 
                                                           if (!cache.isEmpty()) {
-                                                              pagingResult.postValue(new Event<>(Result.Success(cache)));
+                                                              handlePagingSuccess(cache);
                                                           } else {
                                                               pagingResult.postValue(new Event<>(Result.Fail(-1)));
                                                           }
@@ -345,7 +345,13 @@ public class ConversationListViewModel extends ViewModel {
 
         Logging.debug(TAG, "Register new observer for fetch bunch of conversation with size = " + (currentPage + 1) * Const.DEFAULT_CONVERSATION_PAGING_SIZE);
 
-        registerConversationListObserver(statusType, (currentPage + 1) * Const.DEFAULT_CONVERSATION_PAGING_SIZE);
+        // Register new observer with the size is the current list is listed for user
+        List<Conversation> currentConversationList      = conversationListObserver.getValue();
+        int                numberOfElementNeedToObserve = currentConversationList == null ?
+                                                          Const.DEFAULT_CONVERSATION_PAGING_SIZE :
+                                                          currentConversationList.size() + data.size();
+
+        registerConversationListObserver(statusType, numberOfElementNeedToObserve);
     }
 
     public void updateCurrentList(List<Conversation> conversations) {

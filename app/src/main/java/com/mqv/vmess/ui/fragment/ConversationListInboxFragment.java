@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -30,7 +31,8 @@ import com.mqv.vmess.util.RingtoneUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding> {
+public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding>
+implements NestedScrollView.OnScrollChangeListener {
     private boolean isFirstLoadingConversation;
     private boolean isLoadMore;
 
@@ -56,6 +58,8 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
     @Override
     public void setupObserver() {
+        super.setupObserver();
+
         mViewModel.getRefreshConversationResult().observe(this, result -> {
             if (result == null) return;
 
@@ -161,12 +165,12 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
                     case ERROR:
                         Logging.debug(TAG, "Error, something when wrong during fetch new conversation, stop animation");
 
-                        removeLoadingUI();
+                        pendingRemoveLoading();
                         break;
                     case SUCCESS:
                         Logging.debug(TAG, "Fetch conversation list successfully, stop animation");
 
-                        removeLoadingUI();
+                        pendingRemoveLoading();
                         onMoreConversation(result.getSuccess());
                         break;
                     case TERMINATE:
@@ -211,14 +215,7 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
         mBinding.recyclerMessages.setItemAnimator(new DefaultItemAnimator());
         mBinding.recyclerMessages.setNestedScrollingEnabled(false);
         mBinding.recyclerMessages.setHasFixedSize(false);
-        mBinding.nestedScrollView.setOnScrollChangeListener((View.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
-            if (mAdapter.getCurrentList().isEmpty()) return;
-            if (mAdapter.getCurrentList().size() < Const.DEFAULT_CONVERSATION_PAGING_SIZE) return;
-
-            if (!v.canScrollVertically(1) && !isLoadMore) {
-                registerLoadMore();
-            }
-        });
+        mBinding.nestedScrollView.setOnScrollChangeListener(this);
     }
 
     @Override
@@ -246,5 +243,23 @@ public class ConversationListInboxFragment extends ConversationListFragment<Conv
 
     private void registerEvent() {
         mBinding.searchButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), SearchConversationActivity.class)));
+    }
+
+    @Override
+    public void onScrollChange(NestedScrollView v, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+        if (mAdapter.getCurrentList().isEmpty()) return;
+        if (mAdapter.getCurrentList().size() < Const.DEFAULT_CONVERSATION_PAGING_SIZE) return;
+
+        if (!v.canScrollVertically(1) && !isLoadMore) {
+            registerLoadMore();
+        }
+    }
+
+    private void pendingRemoveLoading() {
+        mBinding.nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) null);
+
+        removeLoadingUI();
+
+        mBinding.nestedScrollView.postDelayed(() -> mBinding.nestedScrollView.setOnScrollChangeListener(this), 500);
     }
 }
