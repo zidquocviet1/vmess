@@ -7,5 +7,6 @@ interface ConversationListChanged {
     fun removeLoadingUI()
     fun onMoreConversation(conversation: List<Conversation>)
     fun removeConversationUI(conversation: Conversation)
-    fun bindPresenceConversation(onlineUsersId: List<String>)
+    fun bindPresenceConversation()
+    fun bindNotificationOption()
 }

@@ -12,21 +12,26 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.ConversationOptionDao;
+import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.NetworkBoundResource;
 import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
+import com.mqv.vmess.network.model.ConversationOption;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.service.ConversationService;
 import com.mqv.vmess.util.Const;
+import com.mqv.vmess.util.DateTimeHelper;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.Retriever;
 import com.mqv.vmess.util.UserTokenUtil;
 
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,19 +53,22 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 public class ConversationRepositoryImpl implements ConversationRepository {
-    private final ConversationService service;
-    private final ConversationDao     dao;
-    private final ChatDao             chatDao;
-    private       FirebaseUser        user;
+    private final ConversationService   service;
+    private final ConversationDao       dao;
+    private final ConversationOptionDao optionDao;
+    private final ChatDao               chatDao;
+    private       FirebaseUser          user;
 
     @Inject
     public ConversationRepositoryImpl(ConversationService service,
                                       ConversationDao dao,
+                                      ConversationOptionDao optionDao,
                                       ChatDao chatDao) {
-        this.service = service;
-        this.dao     = dao;
-        this.chatDao = chatDao;
-        this.user    = FirebaseAuth.getInstance().getCurrentUser();
+        this.service   = service;
+        this.dao       = dao;
+        this.chatDao   = chatDao;
+        this.optionDao = optionDao;
+        this.user      = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> user = firebaseAuth.getCurrentUser());
     }
@@ -73,6 +81,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType, int size) {
         return dao.conversationAndLastChat(statusType, size);
+    }
+
+    @Override
+    public Flowable<List<ConversationNotificationOption>> observeNotificationOption() {
+        return optionDao.fetchAllNotificationNonExpired(DateTimeHelper.toLong(LocalDateTime.now()));
     }
 
     @Override
@@ -275,6 +288,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Completable insertNotificationOption(List<ConversationNotificationOption> option) {
+        return optionDao.insertAllNotification(option);
+    }
+
+    @Override
+    public Completable deleteNotificationOption(String conversationId) {
+        return optionDao.deleteNotification(conversationId);
+    }
+
+    @Override
+    public Completable deleteAllNotificationOption() {
+        return optionDao.deleteAll();
+    }
+
+    @Override
     public void deleteConversationChatRemote(Conversation conversation) {
         delete(conversation).andThen(getBearerTokenObservable()
                             .flatMap(token -> service.deleteConversationChat(token, conversation.getId())))
@@ -326,6 +354,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Observable<ApiResponse<Conversation>> leaveGroup(String conversationId) {
         return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.leaveGroup(token, conversationId));
+    }
+
+    @Override
+    public Observable<ApiResponse<List<ConversationOption>>> getAllMuteNotification() {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(service::getAllMuteNotification);
+    }
+
+    @Override
+    public Observable<ApiResponse<ConversationOption>> mute(String conversationId, long until) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.mute(token, conversationId, until));
+    }
+
+    @Override
+    public Observable<Boolean> umute(String conversationId) {
+        return UserTokenUtil.getTokenSingle(user).flatMapObservable(token -> service.unmute(token, conversationId));
     }
 
     @Override

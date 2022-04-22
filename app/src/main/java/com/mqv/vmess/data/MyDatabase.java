@@ -22,12 +22,15 @@ import com.mqv.vmess.data.converter.SocialLinksListConverter;
 import com.mqv.vmess.data.converter.SocialTypeConverter;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
 import com.mqv.vmess.data.dao.PendingMessageDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.SeenMessageDao;
 import com.mqv.vmess.data.dao.UserDao;
+import com.mqv.vmess.data.model.ConversationIgnoreOption;
+import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.model.FriendNotification;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
 import com.mqv.vmess.data.model.PendingMessage;
@@ -44,8 +47,10 @@ import com.mqv.vmess.ui.data.People;
                       Chat.class,
                       PendingMessage.class,
                       SeenMessage.class,
-                      FriendNotification.class},
-        version = 25,
+                      FriendNotification.class,
+                      ConversationNotificationOption.class,
+                      ConversationIgnoreOption.class},
+        version = 28,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -79,4 +84,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract PendingMessageDao getPendingMessageDao();
 
     public abstract SeenMessageDao getSeenMessageDao();
+
+    public abstract ConversationOptionDao getConversationOptionDao();
 }

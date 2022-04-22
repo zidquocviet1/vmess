@@ -1,8 +1,10 @@
 package com.mqv.vmess.data.repository;
 
+import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
+import com.mqv.vmess.network.model.ConversationOption;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 
 import java.io.File;
@@ -18,6 +20,8 @@ public interface ConversationRepository {
     Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit);
 
     Flowable<Map<Conversation, Chat>> conversationAndLastChat(ConversationStatusType statusType, int size);
+
+    Flowable<List<ConversationNotificationOption>> observeNotificationOption();
 
     Single<Map<Conversation, Chat>> conversationAndLastChat(String conversationId, ConversationStatusType statusType);
 
@@ -42,6 +46,12 @@ public interface ConversationRepository {
     Completable deleteAll();
 
     Completable delete(Conversation conversation);
+
+    Completable insertNotificationOption(List<ConversationNotificationOption> option);
+
+    Completable deleteNotificationOption(String conversationId);
+
+    Completable deleteAllNotificationOption();
 
     Single<Conversation> fetchCachedById(String conversationId);
 
@@ -76,4 +86,10 @@ public interface ConversationRepository {
     Observable<ApiResponse<Conversation>> removeGroupMember(String conversationId, String memberId);
 
     Observable<ApiResponse<Conversation>> leaveGroup(String conversationId);
+
+    Observable<ApiResponse<List<ConversationOption>>> getAllMuteNotification();
+
+    Observable<ApiResponse<ConversationOption>> mute(String conversationId, long until);
+
+    Observable<Boolean> umute(String conversationId);
 }

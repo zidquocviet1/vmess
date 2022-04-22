@@ -25,6 +25,9 @@ const val YEAR_PATTERN = "%s '%s' $TIME_PATTERN"
 object DateTimeHelper {
     val TAG: String = DateTimeHelper::class.java.simpleName
 
+    fun Long.expire() = this < LocalDateTime.now().toLong()
+
+    @JvmStatic
     fun LocalDateTime.toLong(): Long {
         return this.atZone(ZoneId.systemDefault()).toEpochSecond()
     }

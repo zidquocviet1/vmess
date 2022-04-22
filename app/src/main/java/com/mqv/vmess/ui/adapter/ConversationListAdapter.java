@@ -19,6 +19,10 @@ import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.ConversationGroup;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.ui.adapter.payload.ConversationNotificationPayload;
+import com.mqv.vmess.ui.adapter.payload.ConversationNotificationType;
+import com.mqv.vmess.ui.adapter.payload.ConversationPresencePayload;
+import com.mqv.vmess.ui.adapter.payload.ConversationPresenceType;
 import com.mqv.vmess.ui.data.ConversationListItem;
 
 import java.util.List;
@@ -37,7 +41,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public static final String LAST_CHAT_UNSENT_PAYLOAD = "last_chat_unsent";
     public static final String NAME_PAYLOAD = "name";
     public static final String PRESENCE_OFFLINE_PAYLOAD = "presence_offline";
-    public static final String PRESENCE_ONLINE_PAYLOAD = "presence_online";
     public static final String THUMBNAIL_PAYLOAD = "avatar";
 
     private static final int VIEW_LOAD_MORE = 0;
@@ -139,10 +142,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
         if (!payloads.isEmpty() && payloads.get(0).equals(LAST_CHAT_PAYLOAD)) {
             bindableItem.bindRecentMessage(getItem(position));
-        } else if (!payloads.isEmpty() && payloads.get(0).equals(PRESENCE_OFFLINE_PAYLOAD)) {
-            bindableItem.bindPresence(false);
-        } else if (!payloads.isEmpty() && payloads.get(0).equals(PRESENCE_ONLINE_PAYLOAD)) {
-            bindableItem.bindPresence(true);
         } else if (!payloads.isEmpty() && payloads.get(0) instanceof Bundle) {
             Bundle bundle = (Bundle) payloads.get(0);
 
@@ -158,6 +157,18 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                 bindableItem.bindUnsentMessage(getItem(position));
             }
         }
+
+        payloads.stream()
+                .filter(payload -> payload instanceof ConversationNotificationPayload)
+                .map(object -> (ConversationNotificationPayload)object)
+                .max((o1, o2) -> Long.compare(o2.getTimestamp(), o1.getTimestamp()))
+                .ifPresent(cnp -> bindableItem.bindNotificationStatus(cnp.getType() != ConversationNotificationType.ON));
+
+        payloads.stream()
+                .filter(payload -> payload instanceof ConversationPresencePayload)
+                .map(object -> (ConversationPresencePayload)object)
+                .max((o1, o2) -> Long.compare(o2.getTimestamp(), o1.getTimestamp()))
+                .ifPresent(cpp -> bindableItem.bindPresence(cpp.getType() == ConversationPresenceType.ONLINE));
     }
 
     @Override

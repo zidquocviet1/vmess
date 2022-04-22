@@ -81,13 +81,7 @@ implements NestedScrollView.OnScrollChangeListener {
             if (updatedList == null || isLoadMore) return;
 
             mConversations = updatedList;
-            mAdapter.submitList(new ArrayList<>(mConversations), () -> {
-                List<String> onlineUsers = mViewModel.getPresenceUserListValue();
-
-                if (onlineUsers != null) {
-                    bindPresenceConversation(onlineUsers);
-                }
-            });
+            submitAndBinding();
             mBinding.textNoChat.setVisibility((updatedList.isEmpty() && !isFirstLoadingConversation) ? View.VISIBLE : View.GONE);
         });
 
@@ -96,8 +90,6 @@ implements NestedScrollView.OnScrollChangeListener {
                 RingtoneUtil.open(requireContext(), MESSAGE_RINGTONE);
             }
         });
-
-        mViewModel.getPresenceUserListObserver().observe(this, this::bindPresenceConversation);
 
         mViewModel.getOneTimeLoadingResult().observe(this, pair -> {
             Boolean isLoading = pair.first;

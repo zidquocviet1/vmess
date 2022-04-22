@@ -243,6 +243,11 @@ class ConversationListItem(
             if (isActive) View.VISIBLE else View.GONE
     }
 
+    fun bindNotificationStatus(isTurnOff: Boolean) {
+        mBinding.iconNotification.visibility =
+            if (isTurnOff) View.VISIBLE else View.GONE
+    }
+
     fun bindConversationName(item: Conversation) {
         mBinding.textTitleConversation.text = getConversationMetadata(item).conversationName
     }

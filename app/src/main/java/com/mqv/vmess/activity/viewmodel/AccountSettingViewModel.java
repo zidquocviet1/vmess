@@ -25,12 +25,8 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
-public class AccountSettingViewModel extends CurrentUserViewModel {
-    private final HistoryLoggedInUserRepository historyUserRepository;
-    private final PeopleRepository peopleRepository;
+public class AccountSettingViewModel extends LogoutHandlerViewModel {
     private final LoginRepository loginRepository;
-    private final NotificationRepository notificationRepository;
-    private final ConversationRepository conversationRepository;
     private final MutableLiveData<Result<Boolean>> signOutStatus = new MutableLiveData<>();
     private Disposable logoutDisposable;
     private Disposable logoutLocalDisposable;
@@ -41,11 +37,9 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
                                    LoginRepository loginRepository,
                                    NotificationRepository notificationRepository,
                                    ConversationRepository conversationRepository) {
-        this.historyUserRepository = historyUserRepository;
-        this.peopleRepository = peopleRepository;
+        super(historyUserRepository, peopleRepository, notificationRepository, conversationRepository, loginRepository);
+
         this.loginRepository = loginRepository;
-        this.notificationRepository = notificationRepository;
-        this.conversationRepository = conversationRepository;
     }
 
     public LiveData<Result<Boolean>> getSignOutStatus() {
@@ -65,12 +59,7 @@ public class AccountSettingViewModel extends CurrentUserViewModel {
                             FirebaseAuth.getInstance().signOut();
                             AppDependencies.closeAllConnection();
 
-                            var localDisposable = historyUserRepository.signOut(currentUser.getUid())
-                                    .andThen(peopleRepository.deleteAll())
-                                    .andThen(notificationRepository.deleteAllLocal())
-                                    .andThen(conversationRepository.deleteAll())
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
+                            var localDisposable = removeAfterLogout(currentUser.getUid())
                                     .subscribe(() -> signOutStatus.setValue(Result.Success(response.getSuccess())),
                                             t -> handleSignOutError(R.string.error_unknown));
 

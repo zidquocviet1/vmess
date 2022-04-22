@@ -27,17 +27,11 @@ class ConversationListArchivedFragment :
         ConversationListArchivedViewModel::class.java
 
     override fun setupObserver() {
+        super.setupObserver()
+
         mViewModel.listObserver.observe(viewLifecycleOwner) { list ->
             mConversations = list
-            mAdapter.submitList(ArrayList(mConversations)) {
-                mViewModel.presenceUserListValue?.let {
-                    bindPresenceConversation(it)
-                }
-            }
-        }
-
-        mViewModel.presenceUserListObserver.observe(viewLifecycleOwner) { list ->
-            bindPresenceConversation(list)
+            submitAndBinding()
         }
     }
 

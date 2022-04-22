@@ -2,6 +2,7 @@ package com.mqv.vmess.di;
 
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.repository.ChatRepository;
@@ -50,8 +51,9 @@ public class RepoViewModelModule {
     @Provides
     public ConversationRepository provideConversationRepository(ConversationService service,
                                                                 ConversationDao dao,
+                                                                ConversationOptionDao optionDao,
                                                                 ChatDao chatDao) {
-        return new ConversationRepositoryImpl(service, dao, chatDao);
+        return new ConversationRepositoryImpl(service, dao, optionDao, chatDao);
     }
 
     @ViewModelScoped

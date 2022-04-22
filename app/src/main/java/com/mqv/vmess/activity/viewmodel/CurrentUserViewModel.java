@@ -10,6 +10,7 @@ import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.model.User;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public abstract class CurrentUserViewModel extends ViewModel {
     protected final MutableLiveData<FirebaseUser> firebaseUser = new MutableLiveData<>();
@@ -32,6 +33,10 @@ public abstract class CurrentUserViewModel extends ViewModel {
 
     public LiveData<User> getLoggedInUser() {
         return loggedInUser;
+    }
+
+    public void addDisposable(Disposable disposable) {
+        cd.add(disposable);
     }
 
     @Override

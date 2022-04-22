@@ -4,6 +4,7 @@ import static com.mqv.vmess.util.Const.AUTHORIZATION;
 
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.Conversation;
+import com.mqv.vmess.network.model.ConversationOption;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 
 import java.util.List;
@@ -74,4 +75,16 @@ public interface ConversationService {
     @PUT("conversation/{conversation-id}/group/leave")
     Observable<ApiResponse<Conversation>> leaveGroup(@Header(AUTHORIZATION) String token,
                                                      @Path("conversation-id") String conversationId);
+
+    @GET("conversation/mute-notification")
+    Observable<ApiResponse<List<ConversationOption>>> getAllMuteNotification(@Header(AUTHORIZATION) String token);
+
+    @PUT("conversation/mute")
+    Observable<ApiResponse<ConversationOption>> mute(@Header(AUTHORIZATION) String token,
+                                                     @Query("conversation-id") String conversationId,
+                                                     @Query("until") long until);
+
+    @PUT("conversation/unmute")
+    Observable<Boolean> unmute(@Header(AUTHORIZATION) String token,
+                               @Query("conversation-id") String conversationId);
 }

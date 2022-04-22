@@ -19,15 +19,13 @@ import io.reactivex.rxjava3.functions.Consumer;
 
 @HiltViewModel
 public class ConversationListArchivedViewModel extends ConversationListViewModel {
-    private final ConversationRepository                        repository;
-    private int                                                 currentPage;
+    private int currentPage;
 
     @Inject
     public ConversationListArchivedViewModel(ConversationRepository repository) {
         super(repository, ARCHIVED);
 
-        this.repository             = repository;
-        this.currentPage            = 0;
+        this.currentPage = 0;
 
         fetchArchivedChat();
     }
@@ -41,14 +39,6 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
             }
             return new ArrayList<>();
         });
-    }
-
-    public LiveData<List<String>> getPresenceUserListObserver() {
-        return getPresenceUserListObserverDistinct();
-    }
-
-    public List<String> getPresenceUserListValue() {
-        return getPresenceUserList();
     }
 
     private void fetchArchivedChat() {

@@ -22,15 +22,21 @@ import com.mqv.vmess.network.model.type.ConversationStatusType
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ConversationOptionHandler
 import com.mqv.vmess.ui.adapter.ConversationListAdapter
+import com.mqv.vmess.ui.adapter.payload.ConversationNotificationPayload
+import com.mqv.vmess.ui.adapter.payload.ConversationNotificationType
+import com.mqv.vmess.ui.adapter.payload.ConversationPresencePayload
+import com.mqv.vmess.ui.adapter.payload.ConversationPresenceType
 import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.util.AlertDialogUtil
+import com.mqv.vmess.util.DateTimeHelper.expire
+import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.MyActivityForResult
 import java.time.LocalDateTime
 import java.util.*
 import java.util.function.BiConsumer
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
+import kotlin.streams.toList
 
 /*
 * Base class for all the Fragment related to conversation list
@@ -41,6 +47,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     ConversationDialogFragment.ConversationOptionListener {
 
     private lateinit var mConversationHandler: ConversationOptionHandler
+    private lateinit var mNonExpireNotificationOption: List<String>
 
     internal open lateinit var mAdapter: ConversationListAdapter
     internal open lateinit var mConversations: MutableList<Conversation?>
@@ -57,6 +64,11 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     abstract fun postToRecyclerview(runnable: Runnable)
     abstract fun onDataSizeChanged(isEmpty: Boolean)
     override fun onRefresh() {}
+
+    override fun setupObserver() {
+        mViewModel.presenceUserListObserverDistinct.observe(this) { bindPresenceConversation() }
+        mViewModel.conversationNotificationOption.observe(this) { bindNotificationOption() }
+    }
 
     override fun onDelete(conversation: Conversation?) {
         MaterialAlertDialogBuilder(requireContext())
@@ -79,7 +91,19 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     override fun onMuteNotification(conversation: Conversation?) {
-        mViewModel.muteNotification(conversation)
+        AlertDialogUtil.showMuteNotificationSelectionDialog(requireContext()) { _, which ->
+            when (which) {
+                0 -> mViewModel.muteNotification(conversation, 1 * 60 * 60) // 1 hour
+                1 -> mViewModel.muteNotification(conversation, 8 * 60 * 60) // 8 hours
+                2 -> mViewModel.muteNotification(conversation, 1 * 24 * 60 * 60) // 1 day
+                3 -> mViewModel.muteNotification(conversation, 7 * 24 * 60 * 60) // 7 days
+                else -> mViewModel.muteNotification(conversation, Long.MAX_VALUE) // always
+            }
+        }
+    }
+
+    override fun onUnMuteNotification(conversation: Conversation?) {
+        mViewModel.unMuteNotification(conversation)
     }
 
     override fun onCreateGroup(conversation: Conversation?, whoCreateWith: User) {
@@ -90,7 +114,9 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
             if (result.resultCode == RESULT_OK) {
                 result.data?.let { intent ->
                     val userSelectedList =
-                        intent.getParcelableArrayListExtra<UserSelection>(AddGroupConversationActivity.EXTRA_GROUP_PARTICIPANTS)
+                        intent.getParcelableArrayListExtra<UserSelection>(
+                            AddGroupConversationActivity.EXTRA_GROUP_PARTICIPANTS
+                        )
 
                     userSelectedList?.let {
                         val userParticipants = it.stream()
@@ -105,7 +131,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                             }
                             .collect(Collectors.toList())
 
-                        mViewModel.createGroup(LoggedInUserManager.getInstance().loggedInUser, userParticipants)
+                        mViewModel.createGroup(
+                            LoggedInUserManager.getInstance().loggedInUser,
+                            userParticipants
+                        )
                     }
                 }
             }
@@ -113,11 +142,13 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     override fun onLeaveGroup(conversation: Conversation?) {
-        AlertDialogUtil.show(requireContext(),
+        AlertDialogUtil.show(
+            requireContext(),
             R.string.title_leave_group,
             R.string.msg_leave_group,
             R.string.action_yes,
-            R.string.action_cancel) { dialog, _ ->
+            R.string.action_cancel
+        ) { dialog, _ ->
             dialog.dismiss()
             mViewModel.leaveGroup(conversation)
         }
@@ -152,7 +183,8 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         submitCurrentData()
     }
 
-    override fun bindPresenceConversation(onlineUsersId: List<String>) {
+    override fun bindPresenceConversation() {
+        val onlineUsersId = mViewModel.presenceUserList
         if (onlineUsersId.isEmpty()) {
             mAdapter.notifyItemRangeChanged(
                 0,
@@ -173,7 +205,11 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                 .forEach { (index, users) ->
                     val hasAny = !Collections.disjoint(users, HashSet(onlineUsers))
                     val payload =
-                        if (hasAny) ConversationListAdapter.PRESENCE_ONLINE_PAYLOAD else ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD
+                        if (hasAny) {
+                            ConversationPresencePayload(ConversationPresenceType.ONLINE, LocalDateTime.now().toLong())
+                        } else {
+                            ConversationPresencePayload(ConversationPresenceType.OFFLINE, LocalDateTime.now().toLong())
+                        }
                     postToRecyclerview {
                         mAdapter.notifyItemChanged(
                             index,
@@ -184,10 +220,51 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         }
     }
 
-    override fun addLoadingUI(onAdded: Runnable) {
-        Logging.debug(TAG, "Add temp conversation with id: ${-1} in charge of loading indicator view")
+    override fun bindNotificationOption() {
+        mViewModel.conversationNotificationOption?.value?.let { option ->
+            mNonExpireNotificationOption = option.stream()
+                .filter { !it.until.expire() }
+                .map { it.conversationId }
+                .toList()
 
-        mConversations.add(Conversation("-1", mutableListOf(), ConversationType.NORMAL, ConversationStatusType.INBOX, LocalDateTime.now()))
+            mConversations.stream()
+                .forEach { conversation ->
+                    postToRecyclerview {
+                        val payload = if (mNonExpireNotificationOption.contains(conversation?.id)) {
+                            ConversationNotificationPayload(
+                                ConversationNotificationType.OFF,
+                                LocalDateTime.now().toLong()
+                            )
+                        } else {
+                            ConversationNotificationPayload(
+                                ConversationNotificationType.ON,
+                                LocalDateTime.now().toLong()
+                            )
+                        }
+                        mAdapter.notifyItemChanged(
+                            mConversations.indexOf(conversation),
+                            payload
+                        )
+                    }
+                }
+        }
+    }
+
+    override fun addLoadingUI(onAdded: Runnable) {
+        Logging.debug(
+            TAG,
+            "Add temp conversation with id: ${-1} in charge of loading indicator view"
+        )
+
+        mConversations.add(
+            Conversation(
+                "-1",
+                mutableListOf(),
+                ConversationType.NORMAL,
+                ConversationStatusType.INBOX,
+                LocalDateTime.now()
+            )
+        )
         mAdapter.submitList(ArrayList(mConversations), onAdded)
     }
 
@@ -199,7 +276,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     override fun onMoreConversation(conversation: List<Conversation>) {
-        Logging.debug(TAG, "Get new conversation list size = ${conversation.size}, prepend to current list and then submit and update to view model")
+        Logging.debug(
+            TAG,
+            "Get new conversation list size = ${conversation.size}, prepend to current list and then submit and update to view model"
+        )
 
         mConversations.addAll(conversation)
         mViewModel.updateCurrentList(mConversations)
@@ -221,7 +301,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     private fun openConversationOptionDialog(conversation: Conversation?) {
-        val dialog = ConversationDialogFragment.newInstance(this, conversation)
+        val dialog = ConversationDialogFragment.newInstance(
+            this,
+            conversation,
+            mNonExpireNotificationOption.stream().anyMatch { id -> id == conversation?.id })
         dialog.show(parentFragmentManager, null)
     }
 
@@ -254,6 +337,13 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     protected fun registerLoadMore() {
         mViewModel.loadMore()
+    }
+
+    protected fun submitAndBinding() {
+        mAdapter.submitList(ArrayList(mConversations)) {
+            bindNotificationOption()
+            bindPresenceConversation()
+        }
     }
 
     companion object {

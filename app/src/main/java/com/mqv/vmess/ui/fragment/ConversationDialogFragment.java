@@ -28,8 +28,11 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
     private FragmentConversationBottomDialogBinding mBinding;
     private Conversation mConversation;
     private User mUser;
+    private boolean isTurnOffNotification;
+
     private final ConversationOptionListener mListener;
     private static final String EXTRA_CONVERSATION = "extra_conversation";
+    private static final String EXTRA_NOTIFICATION = "extra_notification";
 
     public interface ConversationOptionListener {
         default void onUnArchive(Conversation conversation) {
@@ -41,6 +44,8 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
         void onDelete(Conversation conversation);
 
         void onMuteNotification(Conversation conversation);
+
+        void onUnMuteNotification(Conversation conversation);
 
         void onCreateGroup(Conversation conversation, User whoCreateWith);
 
@@ -57,11 +62,12 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
         mListener = listener;
     }
 
-    public static ConversationDialogFragment newInstance(ConversationOptionListener listener, Conversation conversation) {
+    public static ConversationDialogFragment newInstance(ConversationOptionListener listener, Conversation conversation, boolean isTurnOffNotification) {
         ConversationDialogFragment dialog = new ConversationDialogFragment(listener);
 
         Bundle args = new Bundle();
         args.putParcelable(EXTRA_CONVERSATION, conversation);
+        args.putBoolean(EXTRA_NOTIFICATION, isTurnOffNotification);
 
         dialog.setArguments(args);
         return dialog;
@@ -75,6 +81,7 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
 
         if (args !=  null) {
             mConversation = args.getParcelable(EXTRA_CONVERSATION);
+            isTurnOffNotification = args.getBoolean(EXTRA_NOTIFICATION, false);
         } else {
             throw new IllegalArgumentException("The conversation must not be null");
         }
@@ -111,7 +118,11 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             mBinding.itemArchive.getRoot().setVisibility(View.GONE);
         }
         bindItem(mBinding.itemDelete, R.string.label_conversation_delete, R.drawable.ic_round_delete);
-        bindItem(mBinding.itemMuteNotifications, R.string.label_conversation_mute_notifications, R.drawable.ic_round_notifications_off);
+        if (isTurnOffNotification) {
+            bindItem(mBinding.itemMuteNotifications, R.string.label_conversation_unmute_notifications, R.drawable.ic_round_notifications);
+        } else {
+            bindItem(mBinding.itemMuteNotifications, R.string.label_conversation_mute_notifications, R.drawable.ic_round_notifications_off);
+        }
         bindItem(mBinding.itemMarkUnread, R.string.label_conversation_mark_unread, R.drawable.ic_round_mark_email_unread);
 
         registerItemClickEvent();
@@ -168,7 +179,11 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             dismiss();
         });
         mBinding.itemMuteNotifications.getRoot().setOnClickListener(v -> {
-            mListener.onMuteNotification(mConversation);
+            if (isTurnOffNotification) {
+                mListener.onUnMuteNotification(mConversation);
+            } else {
+                mListener.onMuteNotification(mConversation);
+            }
             dismiss();
         });
         mBinding.itemCreateGroup.getRoot().setOnClickListener(v -> {

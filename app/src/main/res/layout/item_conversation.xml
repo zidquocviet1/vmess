@@ -33,11 +33,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/icon_notification"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="@dimen/all_margin"
+        android:layout_marginEnd="2dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_round_notifications_off"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/text_title_conversation"
+        app:layout_constraintEnd_toStartOf="@id/text_title_conversation"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@id/included_image_avatar"
+        app:layout_constraintTop_toTopOf="@id/text_title_conversation" />
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title_conversation"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/all_padding_common"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/title_conversation_dummy"
@@ -45,10 +59,10 @@
         app:layout_constraintBottom_toBottomOf="@id/guide_line"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0"
-        app:layout_constraintStart_toEndOf="@id/included_image_avatar"
+        app:layout_constraintStart_toEndOf="@id/icon_notification"
         app:layout_constraintTop_toTopOf="@id/included_image_avatar"
         app:layout_constraintVertical_bias="1"
-        app:layout_constraintWidth_percent="0.65" />
+        app:layout_goneMarginStart="@dimen/all_margin" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guide_line"
@@ -61,6 +75,7 @@
         android:id="@+id/text_content_conversation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/all_margin"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="@string/msg_conversation_content_dummy"
@@ -70,7 +85,7 @@
         app:layout_constraintEnd_toStartOf="@id/text_created_at"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="@id/text_title_conversation"
+        app:layout_constraintStart_toEndOf="@id/included_image_avatar"
         app:layout_constraintTop_toTopOf="@id/guide_line"
         app:layout_constraintVertical_bias="0" />
 

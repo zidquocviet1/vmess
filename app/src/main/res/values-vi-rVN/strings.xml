@@ -286,4 +286,9 @@
     <string name="label_file">Tài liệu</string>
     <string name="title_notification_download_file">Tệp đang được tải xuống...</string>
     <string name="msg_no_chats_yet">Không có cuộc trò chuyện nào. Hãy bắt đầu trò chuyện với bất kỳ bạn bè nào.</string>
+    <string name="action_mute_notification_1_hour">Tắt trong 1 giờ</string>
+    <string name="action_mute_notification_8_hour">Tắt trong 8 giờ</string>
+    <string name="action_mute_notification_1_day">Tắt trong 1 ngày</string>
+    <string name="action_mute_notification_7_day">Tắt trong 7 ngày</string>
+    <string name="action_mute_notification_always">Luôn luôn</string>
 </resources>

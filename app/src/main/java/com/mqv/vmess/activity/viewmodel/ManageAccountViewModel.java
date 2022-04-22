@@ -54,12 +54,11 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 @HiltViewModel
-public class ManageAccountViewModel extends CurrentUserViewModel {
+public class ManageAccountViewModel extends LogoutHandlerViewModel {
     private final HistoryLoggedInUserRepository historyUserRepository;
     private final LoginRepository loginRepository;
     private final PeopleRepository peopleRepository;
     private final NotificationRepository notificationRepository;
-    private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
@@ -82,11 +81,12 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
                                   ConversationRepository conversationRepository,
                                   UserRepository userRepository,
                                   FriendRequestRepository friendRequestRepository) {
+        super(historyUserRepository, peopleRepository, notificationRepository, conversationRepository, loginRepository);
+
         this.historyUserRepository = historyUserRepository;
         this.loginRepository = loginRepository;
         this.peopleRepository = peopleRepository;
         this.notificationRepository = notificationRepository;
-        this.conversationRepository = conversationRepository;
         this.userRepository = userRepository;
         this.friendRequestRepository = friendRequestRepository;
 
@@ -278,15 +278,8 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
     }
 
     private void saveLoggedInUser(FirebaseUser previousUser, User user, HistoryLoggedInUser historyUser) {
-        logoutPreviousUser(previousUser);
-
-        cd.add(historyUserRepository.signOut(previousUser.getUid())
-                .andThen(peopleRepository.deleteAll())
-                .andThen(notificationRepository.deleteAllLocal())
-                .andThen(conversationRepository.deleteAll())
-                .andThen(loginRepository.saveLoggedInUser(user, historyUser))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+        addDisposable(logout(previousUser, user, historyUser)
+                .compose(RxHelper.applyCompleteSchedulers())
                 .subscribe(() -> {
                             if (loginUserOnStop != null) {
                                 signInAgainFirebaseUser(loginUserOnStop);
@@ -339,10 +332,6 @@ public class ManageAccountViewModel extends CurrentUserViewModel {
 
     public void signInAgainFirebaseUser(FirebaseUser previousUser) {
         FirebaseAuth.getInstance().updateCurrentUser(previousUser);
-    }
-
-    private void logoutPreviousUser(FirebaseUser previousFirebaseUser) {
-        loginRepository.logout(previousFirebaseUser);
     }
 
     private void sendFcmTokenToServer() {

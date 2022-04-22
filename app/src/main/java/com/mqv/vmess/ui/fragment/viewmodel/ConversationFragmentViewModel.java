@@ -41,8 +41,8 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     private final MutableLiveData<Event<String>>              conversationInserted;
     private final DatabaseObserver.ConversationListener       conversationObserver;
 
-    public static final int                                         DEFAULT_PAGE_CHAT_LIST          = 0;
-    public static final int                                         DEFAULT_SIZE_CHAT_LIST          = 40;
+    public static final int DEFAULT_PAGE_CHAT_LIST = 0;
+    public static final int DEFAULT_SIZE_CHAT_LIST = 40;
 
     @Inject
     public ConversationFragmentViewModel(ConversationRepository conversationRepository) {
@@ -106,14 +106,6 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
 
     public LiveData<Event<String>> getConversationInserted() {
         return conversationInserted;
-    }
-
-    public LiveData<List<String>> getPresenceUserListObserver() {
-        return getPresenceUserListObserverDistinct();
-    }
-
-    public List<String> getPresenceUserListValue() {
-        return getPresenceUserList();
     }
 
     private void notifyConversationLastChatUpdate(Map<Conversation, Chat> map, String conversationId) {

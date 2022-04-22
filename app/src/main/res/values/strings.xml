@@ -197,6 +197,18 @@
     <string name="action_copy">Copy</string>
     <string name="action_unsent">Unsent</string>
     <string name="action_give_access">Give Access</string>
+    <string name="action_mute_notification_1_hour">Mute for 1 hour</string>
+    <string name="action_mute_notification_8_hour">Mute for 8 hours</string>
+    <string name="action_mute_notification_1_day">Mute for 1 day</string>
+    <string name="action_mute_notification_7_day">Mute for 7 days</string>
+    <string name="action_mute_notification_always">Always</string>
+    <array name="action_mute_notifications">
+        <item>@string/action_mute_notification_1_hour</item>
+        <item>@string/action_mute_notification_8_hour</item>
+        <item>@string/action_mute_notification_1_day</item>
+        <item>@string/action_mute_notification_7_day</item>
+        <item>@string/action_mute_notification_always</item>
+    </array>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>

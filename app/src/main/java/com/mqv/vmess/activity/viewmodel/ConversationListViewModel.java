@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.vmess.R;
+import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
@@ -31,6 +32,7 @@ import com.mqv.vmess.util.Retriever;
 
 import java.net.ConnectException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,14 +49,15 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ConversationListViewModel extends ViewModel {
-    private   final ConversationRepository                             conversationRepository;
-    private   final ConversationStatusType                             statusType;
-    protected final MutableLiveData<List<Conversation>>                conversationListObserver;
-    protected final MutableLiveData<List<String>>                      presenceUserListObserver;
-    protected final MutableLiveData<Pair<Boolean, Integer>>            oneTimeLoadingResult;
-    protected final MutableLiveData<Event<Integer>>                    errorEmitter;
-    protected final MutableLiveData<Event<Result<List<Conversation>>>> pagingResult;
-    protected final CompositeDisposable                                cd;
+    private   final ConversationRepository                                conversationRepository;
+    private   final ConversationStatusType                                statusType;
+    protected final MutableLiveData<List<Conversation>>                   conversationListObserver;
+    protected final MutableLiveData<List<String>>                         presenceUserListObserver;
+    protected final MutableLiveData<List<ConversationNotificationOption>> notificationOptionObserver;
+    protected final MutableLiveData<Pair<Boolean, Integer>>               oneTimeLoadingResult;
+    protected final MutableLiveData<Event<Integer>>                       errorEmitter;
+    protected final MutableLiveData<Event<Result<List<Conversation>>>>    pagingResult;
+    protected final CompositeDisposable                                   cd;
 
     private static final String TAG = ConversationListViewModel.class.getSimpleName();
 
@@ -65,22 +68,30 @@ public class ConversationListViewModel extends ViewModel {
     private Disposable conversationDisposable;
 
     public ConversationListViewModel(ConversationRepository conversationRepository, ConversationStatusType status) {
-        this.conversationRepository   = conversationRepository;
-        this.statusType               = status;
-        this.cd                       = new CompositeDisposable();
-        this.conversationListObserver = new MutableLiveData<>(AppDependencies.getMemoryManager().getConversationListCache());
-        this.presenceUserListObserver = new MutableLiveData<>(Collections.emptyList());
-        this.oneTimeLoadingResult     = new MutableLiveData<>();
-        this.errorEmitter             = new MutableLiveData<>();
-        this.pagingResult             = new MutableLiveData<>();
+        this.conversationRepository     = conversationRepository;
+        this.statusType                 = status;
+        this.cd                         = new CompositeDisposable();
+        this.conversationListObserver   = new MutableLiveData<>(AppDependencies.getMemoryManager().getConversationListCache());
+        this.presenceUserListObserver   = new MutableLiveData<>(Collections.emptyList());
+        this.oneTimeLoadingResult       = new MutableLiveData<>();
+        this.errorEmitter               = new MutableLiveData<>();
+        this.pagingResult               = new MutableLiveData<>();
+        this.notificationOptionObserver = new MutableLiveData<>();
 
         registerConversationListObserver(status, Const.DEFAULT_CONVERSATION_PAGING_SIZE);
+
+        //noinspection ResultOfMethodCallIgnored
+        conversationRepository.observeNotificationOption()
+                              .compose(RxHelper.applyFlowableSchedulers())
+                              .subscribe(notificationOptionObserver::postValue);
 
         //noinspection ResultOfMethodCallIgnored
         AppDependencies.getWebSocket()
                        .getPresenceUserList()
                        .onErrorComplete()
                        .subscribe(presenceUserListObserver::postValue);
+
+        fetchAllMuteNotification();
     }
 
     private void registerConversationListObserver(ConversationStatusType status, int size) {
@@ -102,7 +113,11 @@ public class ConversationListViewModel extends ViewModel {
         return pagingResult;
     }
 
-    protected LiveData<List<String>> getPresenceUserListObserverDistinct() {
+    public LiveData<List<ConversationNotificationOption>> getConversationNotificationOption() {
+        return notificationOptionObserver;
+    }
+
+    public LiveData<List<String>> getPresenceUserListObserverDistinct() {
         return LiveDataUtil.distinctUntilChanged(presenceUserListObserver, (oldList, newList) -> {
             if (newList == null) return false;
             if (oldList.isEmpty() && !newList.isEmpty()) return false;
@@ -112,7 +127,7 @@ public class ConversationListViewModel extends ViewModel {
         });
     }
 
-    protected List<String> getPresenceUserList() {
+    public List<String> getPresenceUserList() {
         return Retriever.getOrDefault(presenceUserListObserver.getValue(), Collections.emptyList());
     }
 
@@ -173,6 +188,21 @@ public class ConversationListViewModel extends ViewModel {
         cd.add(disposable);
     }
 
+    protected void fetchAllMuteNotification() {
+        Disposable disposable = conversationRepository.getAllMuteNotification()
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .flatMapCompletable(option -> {
+                                                          List<ConversationNotificationOption> notificationOptions = option.stream()
+                                                                                                                           .map(ConversationNotificationOption::fromConversationOption)
+                                                                                                                           .collect(Collectors.toList());
+                                                          return conversationRepository.insertNotificationOption(notificationOptions);
+                                                      })
+                                                      .compose(RxHelper.applyCompleteSchedulers())
+                                                      .onErrorComplete()
+                                                      .subscribe();
+        cd.add(disposable);
+    }
+
     public void delete(Conversation conversation) {
         conversationRepository.deleteConversationChatRemote(conversation);
     }
@@ -188,8 +218,30 @@ public class ConversationListViewModel extends ViewModel {
                               .subscribe();
     }
 
-    public void muteNotification(Conversation conversation) {
+    public void muteNotification(Conversation conversation, long until) {
+        long                                 currentMillis = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().getEpochSecond();
+        long                                 muteUntil     = Long.MAX_VALUE == until ? until : currentMillis + until;
+        List<ConversationNotificationOption> option        = Collections.singletonList(new ConversationNotificationOption(null, conversation.getId(), muteUntil, LocalDateTime.now()));
 
+        Disposable disposable = conversationRepository.mute(conversation.getId(), muteUntil)
+                                                      .startWith(conversationRepository.insertNotificationOption(option))
+                                                      .compose(RxHelper.applyObservableSchedulers())
+                                                      .compose(RxHelper.parseResponseData())
+                                                      .map(data -> Collections.singletonList(ConversationNotificationOption.fromConversationOption(data)))
+                                                      .flatMapCompletable(conversationRepository::insertNotificationOption)
+                                                      .onErrorComplete()
+                                                      .subscribe();
+
+        cd.add(disposable);
+    }
+
+    public void unMuteNotification(Conversation conversation) {
+        //noinspection ResultOfMethodCallIgnored
+        conversationRepository.umute(conversation.getId())
+                              .startWith(conversationRepository.deleteNotificationOption(conversation.getId()))
+                              .compose(RxHelper.applyObservableSchedulers())
+                              .onErrorComplete()
+                              .subscribe(isSuccess -> Logging.debug(TAG, "Unmute notification successfully, conversationId: " + conversation.getId()));
     }
 
     public void createGroup(@NonNull User creator, @NonNull List<User> participants) {
