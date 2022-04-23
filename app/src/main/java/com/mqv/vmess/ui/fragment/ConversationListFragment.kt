@@ -189,7 +189,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
             mAdapter.notifyItemRangeChanged(
                 0,
                 mConversations.size,
-                ConversationListAdapter.PRESENCE_OFFLINE_PAYLOAD
+                ConversationPresencePayload(ConversationPresenceType.OFFLINE, LocalDateTime.now().toLong())
             )
         } else {
             val onlineUsers: List<User?> = onlineUsersId.stream()

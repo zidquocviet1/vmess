@@ -40,7 +40,6 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public static final String LAST_CHAT_STATUS_PAYLOAD = "last_chat_status";
     public static final String LAST_CHAT_UNSENT_PAYLOAD = "last_chat_unsent";
     public static final String NAME_PAYLOAD = "name";
-    public static final String PRESENCE_OFFLINE_PAYLOAD = "presence_offline";
     public static final String THUMBNAIL_PAYLOAD = "avatar";
 
     private static final int VIEW_LOAD_MORE = 0;
