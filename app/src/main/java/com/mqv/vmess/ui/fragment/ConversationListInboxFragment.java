@@ -196,6 +196,12 @@ implements NestedScrollView.OnScrollChangeListener {
     }
 
     @Override
+    public void onStop() {
+        super.onStop();
+        isLoadMore = false;
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         mViewModel.forceClearDispose();
@@ -257,11 +263,15 @@ implements NestedScrollView.OnScrollChangeListener {
     }
 
     private void pendingRemoveLoading() {
-        mBinding.nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) null);
+        if (mBinding != null) {
+            mBinding.nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) null);
 
-        removeLoadingUI();
+            removeLoadingUI();
 
-        mBinding.nestedScrollView.postDelayed(() -> mBinding.nestedScrollView.setOnScrollChangeListener(this), 500);
+            mBinding.nestedScrollView.postDelayed(() -> {
+                if (mBinding != null) mBinding.nestedScrollView.setOnScrollChangeListener(this);
+            }, 500);
+        }
     }
 
     public void registerConversationSizedListener(ConversationSizeListener callback) {

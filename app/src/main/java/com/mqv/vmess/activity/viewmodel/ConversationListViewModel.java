@@ -339,6 +339,7 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
         if (!canLoadMore) return;
 
         Disposable disposable = conversationRepository.fetchCachePaging(statusType, currentPage + 1, Const.DEFAULT_CONVERSATION_PAGING_SIZE)
+                                                      .doOnDispose(() -> pagingResult.postValue(new Event<>(Result.Terminate())))
                                                       .startWith(Completable.fromAction(() -> pagingResult.postValue(new Event<>(Result.Loading()))))
                                                       .compose(RxHelper.applyFlowableSchedulers())
                                                       .subscribe(mapper -> {

@@ -275,8 +275,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     override fun removeLoadingUI() {
         Logging.debug(TAG, "Remove temp conversation was added, and then submit list")
 
-        mConversations.removeLast()
-        submitCurrentData()
+        if (mConversations.isNotEmpty()) {
+            mConversations.removeLast()
+            submitCurrentData()
+        }
     }
 
     override fun onMoreConversation(conversation: List<Conversation>) {

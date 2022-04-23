@@ -16,6 +16,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.core.widget.NestedScrollView
+            android:id="@+id/nested_scroll_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fillViewport="true"
@@ -82,7 +83,7 @@
         android:padding="10dp"
         android:letterSpacing="0.1"
         android:visibility="gone"
-        android:text="No chats yet. \nGet started by messaging a friend."
+        android:text="@string/msg_no_chats_yet"
         android:textAlignment="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
