@@ -75,6 +75,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private static final int VIEW_CHAT_RECEIVED_MULTI_MEDIA = 5;
     private static final int VIEW_CHAT_OUTGOING_MULTI_MEDIA = 7;
     private static final int VIEW_CHAT_UNSENT = 6;
+    private static final int VIEW_CHAT_WELCOME = 8;
 
     public static final String PROFILE_USER_PAYLOAD = "profile_user";
     public static final String TIMESTAMP_MESSAGE_PAYLOAD = "timestamp";
@@ -189,6 +190,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             return VIEW_CHAT_UNSENT;
         } else if (MessageUtil.isMultiMediaMessage(item)) {
             return item.getSenderId().equals(mCurrentUser.getUid()) ? VIEW_CHAT_OUTGOING_MULTI_MEDIA : VIEW_CHAT_RECEIVED_MULTI_MEDIA;
+        } else if (MessageUtil.isWelcomeMessage(item)) {
+            return VIEW_CHAT_WELCOME;
         } else {
             return VIEW_CHAT;
         }
@@ -298,7 +301,9 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         pool.setMaxRecycledViews(VIEW_LOAD_MORE, 1);
         pool.setMaxRecycledViews(VIEW_PROFILE_SELF, 1);
         pool.setMaxRecycledViews(VIEW_PROFILE, 1);
+        pool.setMaxRecycledViews(VIEW_PROFILE_GROUP, 1);
         pool.setMaxRecycledViews(VIEW_CHAT_UNSENT, 1);
+        pool.setMaxRecycledViews(VIEW_CHAT_WELCOME, 1);
     }
 
     static class ChatListViewHolder extends RecyclerView.ViewHolder {
