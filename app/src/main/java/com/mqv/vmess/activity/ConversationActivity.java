@@ -264,7 +264,7 @@ public class ConversationActivity
 
         mViewModel.getConversationActiveStatus().observe(this, isOnline -> {
             isActive = isOnline;
-            mBinding.conversationThumbnail.setActiveStatus(isActive);
+            mBinding.conversationThumbnail.setActiveStatus((isOnline && shouldShowHeader()));
             mBinding.toolbarSubtitle.setVisibility((isOnline && shouldShowHeader()) ? View.VISIBLE : View.GONE);
         });
 
