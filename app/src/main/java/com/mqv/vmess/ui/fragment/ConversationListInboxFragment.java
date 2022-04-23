@@ -33,11 +33,16 @@ import java.util.List;
 
 public class ConversationListInboxFragment extends ConversationListFragment<ConversationFragmentViewModel, FragmentConversationBinding>
 implements NestedScrollView.OnScrollChangeListener {
-    private boolean isFirstLoadingConversation;
-    private boolean isLoadMore;
+    private boolean                  isFirstLoadingConversation;
+    private boolean                  isLoadMore;
+    private ConversationSizeListener mCallback;
 
     private static final String MESSAGE_RINGTONE = "message_receive.mp3";
     private static final String TAG              = ConversationListInboxFragment.class.getSimpleName();
+
+    public interface ConversationSizeListener {
+        void onSizeChanged(int size);
+    }
 
     @Override
     public void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
@@ -113,7 +118,7 @@ implements NestedScrollView.OnScrollChangeListener {
         });
 
         mViewModel.getLoadingConversationResult().observe(this, resultEvent -> {
-            if (!mAdapter.getCurrentList().isEmpty()) return;
+            if (!mConversations.isEmpty()) return;
             if (resultEvent == null) return;
 
             Result<Boolean> result = resultEvent.getContentIfNotHandled();
@@ -217,6 +222,10 @@ implements NestedScrollView.OnScrollChangeListener {
 
     @Override
     public void onDataSizeChanged(boolean isEmpty) {
+        if (mCallback != null) {
+            mCallback.onSizeChanged(mAdapter.getCurrentList().size());
+        }
+
         if (isEmpty) {
             if (!isFirstLoadingConversation) {
                 mBinding.textNoChat.setVisibility(View.VISIBLE);
@@ -253,5 +262,9 @@ implements NestedScrollView.OnScrollChangeListener {
         removeLoadingUI();
 
         mBinding.nestedScrollView.postDelayed(() -> mBinding.nestedScrollView.setOnScrollChangeListener(this), 500);
+    }
+
+    public void registerConversationSizedListener(ConversationSizeListener callback) {
+        mCallback = callback;
     }
 }

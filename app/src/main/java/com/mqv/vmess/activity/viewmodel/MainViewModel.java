@@ -17,12 +17,14 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.util.MessageUtil;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 @HiltViewModel
 public class MainViewModel extends AbstractMainViewModel {
@@ -31,6 +33,8 @@ public class MainViewModel extends AbstractMainViewModel {
 
     private final MutableLiveData<Integer> notificationBadgeResult = new MutableLiveData<>();
     private final MutableLiveData<Integer> conversationBadgeResult = new MutableLiveData<>();
+
+    private Disposable conversationBadgeDisposable;
 
     @Inject
     public MainViewModel(UserRepository userRepository,
@@ -44,7 +48,6 @@ public class MainViewModel extends AbstractMainViewModel {
         this.conversationRepository = conversationRepository;
 
         onFirstLoad();
-        observeConversationUnreadBadge();
     }
 
     @Override
@@ -86,24 +89,29 @@ public class MainViewModel extends AbstractMainViewModel {
                 .subscribe(notificationBadgeResult::postValue, t -> notificationBadgeResult.setValue(0)));
     }
 
-    private void observeConversationUnreadBadge() {
+    public void observeConversationUnreadBadge(int visibleConversationSize) {
+        if (conversationBadgeDisposable != null && !conversationBadgeDisposable.isDisposed())
+            conversationBadgeDisposable.dispose();
+
         // Need to sync the currently limit conversation item list
         // DistinctUntilChanged to avoid load many times
-        cd.add(conversationRepository.observeUnreadConversation(ConversationStatusType.INBOX, 20)
-                .compose(RxHelper.applyFlowableSchedulers())
-                .subscribe(map -> {
-                    FirebaseUser user = getFirebaseUser().getValue();
+        conversationBadgeDisposable = conversationRepository.observeUnreadConversation(ConversationStatusType.INBOX, visibleConversationSize)
+                                                            .compose(RxHelper.applyFlowableSchedulers())
+                                                            .subscribe(map -> {
+                                                                FirebaseUser user = getFirebaseUser().getValue();
 
-                    if (user != null) {
-                        long unread = map.values()
-                                         .stream()
-                                         .filter(c -> !c.getSeenBy().contains(user.getUid()) &&
-                                                      c.getSenderId() != null &&
-                                                      !c.getSenderId().equals(user.getUid()))
-                                         .count();
-                        conversationBadgeResult.postValue(Long.valueOf(unread).intValue());
-                    }
-                }, t -> notificationBadgeResult.setValue(0)));
+                                                                if (user != null) {
+                                                                    long unread = map.values()
+                                                                                     .stream()
+                                                                                     .filter(c -> (MessageUtil.isDummyFirstMessagePair(c) ||
+                                                                                             (c.getSenderId() != null &&
+                                                                                             !c.getSenderId().equals(user.getUid()))) &&
+                                                                                             !c.getSeenBy().contains(user.getUid()))
+                                                                                     .count();
+                                                                    conversationBadgeResult.postValue(Long.valueOf(unread).intValue());
+                                                                }
+                                                            }, t -> notificationBadgeResult.setValue(0));
+        cd.add(conversationBadgeDisposable);
     }
 
     public void onFirstLoad() {

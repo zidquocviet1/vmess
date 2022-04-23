@@ -28,6 +28,7 @@ import com.mqv.vmess.network.NetworkConstraint;
 import com.mqv.vmess.network.websocket.WebSocketConnectionState;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.ui.fragment.BaseFragment;
+import com.mqv.vmess.ui.fragment.ConversationListInboxFragment;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
@@ -38,7 +39,10 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBinding>
-        implements View.OnClickListener, NavController.OnDestinationChangedListener, OnNetworkChangedListener {
+        implements View.OnClickListener,
+                   NavController.OnDestinationChangedListener,
+                   OnNetworkChangedListener,
+                   ConversationListInboxFragment.ConversationSizeListener {
     private static final int MAX_BADGE_NUMBER = 99;
 
     private NavHostFragment navHostFragment;
@@ -78,6 +82,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         AppDependencies.getMessageSenderProcessor();
 
         reloadFirebaseUser();
+        registerOnSizedConversationListChanged();
     }
 
     @Override
@@ -208,6 +213,20 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
             }
         } else if (state.isFailure() || state == WebSocketConnectionState.DISCONNECTED) {
             mBinding.textSubtitle.setVisibility(NetworkConstraint.isMet(this) ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onSizeChanged(int size) {
+        mViewModel.observeConversationUnreadBadge(size);
+    }
+
+    private void registerOnSizedConversationListChanged() {
+        Fragment fragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+
+        if (fragment instanceof ConversationListInboxFragment) {
+            ConversationListInboxFragment conversationFragment = (ConversationListInboxFragment) fragment;
+            conversationFragment.registerConversationSizedListener(this);
         }
     }
 }
