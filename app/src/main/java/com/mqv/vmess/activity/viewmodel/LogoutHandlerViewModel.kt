@@ -4,7 +4,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.mqv.vmess.data.model.HistoryLoggedInUser
 import com.mqv.vmess.data.repository.*
 import com.mqv.vmess.network.model.User
-import com.mqv.vmess.reactive.RxHelper
 import io.reactivex.rxjava3.core.Completable
 
 open class LogoutHandlerViewModel(
@@ -30,6 +29,4 @@ open class LogoutHandlerViewModel(
             .mergeWith(notificationRepository.deleteAllLocal())
             .mergeWith(conversationRepository.deleteAll())
             .mergeWith(conversationRepository.deleteAllNotificationOption())
-            .compose(RxHelper.applyCompleteSchedulers())
-
 }
