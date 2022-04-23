@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.SavedStateHandle;
@@ -40,7 +39,6 @@ import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.model.type.ConversationType;
 import com.mqv.vmess.network.model.type.MessageMediaUploadType;
-import com.mqv.vmess.network.model.type.MessageStatus;
 import com.mqv.vmess.network.model.type.MessageType;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.ConversationOptionHandler;
@@ -55,7 +53,6 @@ import com.mqv.vmess.util.Event;
 import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.LiveDataUtil;
 import com.mqv.vmess.util.Logging;
-import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.vmess.work.SendMessageWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
@@ -90,7 +87,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.HttpException;
 
 @HiltViewModel
-public class ConversationViewModel extends AndroidViewModel {
+public class ConversationViewModel extends MessageHandlerViewModel {
     private final ConversationRepository                            conversationRepository;
     private final ChatRepository                                    chatRepository;
     private final UserRepository                                    userRepository;
@@ -122,7 +119,7 @@ public class ConversationViewModel extends AndroidViewModel {
                                  MediaRepository mediaRepository,
                                  SavedStateHandle savedStateHandle,
                                  Application application) {
-        super(application);
+        super(application, chatRepository);
 
         this.conversationRepository   = repository;
         this.chatRepository           = chatRepository;
@@ -416,29 +413,6 @@ public class ConversationViewModel extends AndroidViewModel {
         conversationMetadata.postValue(metadata);
     }
 
-    private String markSeenAndReturnId(Chat chat, String userId) {
-        chat.setStatus(MessageStatus.SEEN);
-        chat.getSeenBy().add(userId);
-
-        updateChat(chat);
-
-        return chat.getId();
-    }
-
-    private void sendSeenMessage(Context context, List<String> ids, String conversationId) {
-        if (!ids.isEmpty()) {
-            Data data = new Data.Builder()
-                    .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, ids.toArray(new String[0]))
-                    .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
-                    .build();
-            WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(context, data));
-
-            AppDependencies.getDatabaseObserver().notifyConversationUpdated(conversationId);
-        } else {
-            Logging.show("No need to push seen messages, because the list unread message is empty");
-        }
-    }
-
     private void onGroupOptionChangedComplete(Observable<ApiResponse<Conversation>> observable) {
         Disposable disposable = observable.startWith(Completable.fromAction(() -> singleRequestCall.postValue(Result.Loading())))
                                           .compose(RxHelper.parseResponseData())
@@ -598,10 +572,6 @@ public class ConversationViewModel extends AndroidViewModel {
         cd.add(disposable);
     }
 
-    public void updateChat(Chat chat) {
-        chatRepository.updateCached(chat);
-    }
-
     public void seenDummyMessage(List<Chat> messages) {
         Observable.fromIterable(messages)
                   .flatMapSingle(c -> Completable.fromAction(() -> chatRepository.updateCached(c)).toSingleDefault(c))
@@ -612,22 +582,8 @@ public class ConversationViewModel extends AndroidViewModel {
                   .subscribe();
     }
 
-    public void postSeenMessageConversation(Context context, String conversationId, String userId) {
-        //noinspection ResultOfMethodCallIgnored
-        chatRepository.fetchIncomingByConversation(conversationId)
-                      .subscribeOn(Schedulers.io())
-                      .observeOn(Schedulers.io())
-                      .flattenAsObservable(list -> list)
-                      .map(incomingMessage -> {
-                          if (!incomingMessage.getSeenBy().contains(currentUser.getUid())) {
-                              return markSeenAndReturnId(incomingMessage, userId);
-                          } else {
-                              return "";
-                          }
-                      })
-                      .filter(id -> !id.equals(""))
-                      .toList()
-                      .subscribe((list, t) -> sendSeenMessage(context, list, conversationId));
+    public void postSeenMessageConversation(String conversationId) {
+        seenUnreadMessageInConversation(conversationId);
     }
 
     public void registerLoadMore(Conversation conversation) {

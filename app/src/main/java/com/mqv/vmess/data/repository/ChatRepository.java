@@ -32,6 +32,8 @@ public interface ChatRepository {
 
     Single<Chat> fetchCached(String id);
 
+    Single<Chat> findLastMessage(String conversationId);
+
     Completable saveCached(Chat chat);
 
     void saveCached(List<Chat> chat);

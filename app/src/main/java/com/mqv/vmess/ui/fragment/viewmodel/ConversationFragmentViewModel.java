@@ -2,6 +2,8 @@ package com.mqv.vmess.ui.fragment.viewmodel;
 
 import static com.mqv.vmess.network.model.type.ConversationStatusType.INBOX;
 
+import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -10,6 +12,7 @@ import androidx.lifecycle.Transformations;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.ConversationListViewModel;
 import com.mqv.vmess.data.DatabaseObserver;
+import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
@@ -45,8 +48,10 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     public static final int DEFAULT_SIZE_CHAT_LIST = 40;
 
     @Inject
-    public ConversationFragmentViewModel(ConversationRepository conversationRepository) {
-        super(conversationRepository, INBOX);
+    public ConversationFragmentViewModel(Application application,
+                                         ConversationRepository conversationRepository,
+                                         ChatRepository chatRepository) {
+        super(application, conversationRepository, chatRepository, INBOX);
 
         this.refreshConversationResult = new MutableLiveData<>();
         this.loadingConversationResult = new MutableLiveData<>();

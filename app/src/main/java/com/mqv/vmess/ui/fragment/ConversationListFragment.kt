@@ -160,8 +160,12 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         }
     }
 
-    override fun onMarkUnread(conversation: Conversation?) {
+    override fun onMarkUnread(conversation: Conversation) {
         mViewModel.markAsUnread(conversation)
+    }
+
+    override fun onMarkRead(conversation: Conversation?) {
+        mViewModel.markAsRead(conversation)
     }
 
     override fun onIgnore(conversation: Conversation?) {

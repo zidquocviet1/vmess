@@ -1,5 +1,8 @@
 package com.mqv.vmess.activity.viewmodel;
 
+import android.app.Application;
+
+import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 
@@ -11,8 +14,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 public class ConversationListRequestViewModel extends ConversationListViewModel{
 
     @Inject
-    public ConversationListRequestViewModel(ConversationRepository conversationRepository) {
-        super(conversationRepository, ConversationStatusType.REQUEST);
+    public ConversationListRequestViewModel(Application application,
+                                            ConversationRepository conversationRepository,
+                                            ChatRepository chatRepository) {
+        super(application, conversationRepository, chatRepository, ConversationStatusType.REQUEST);
     }
 
 }

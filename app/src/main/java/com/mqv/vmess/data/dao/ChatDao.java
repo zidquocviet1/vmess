@@ -52,6 +52,12 @@ public interface ChatDao {
     @Query("select * from chat where chat_id = :id")
     Single<Chat> findById(String id);
 
+    @Query("select * from chat\n" +
+            "where chat_conversation_id = :conversationId\n" +
+            "order by chat_timestamp desc\n" +
+            "limit 1")
+    Single<Chat> findLastMessage(String conversationId);
+
     @Update
     Completable update(Chat chat);
 

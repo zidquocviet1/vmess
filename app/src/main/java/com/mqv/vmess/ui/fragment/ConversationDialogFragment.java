@@ -20,15 +20,18 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.databinding.FragmentConversationBottomDialogBinding;
 import com.mqv.vmess.databinding.ItemPreferenceContentBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
+import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationType;
+import com.mqv.vmess.util.MessageUtil;
 
 public class ConversationDialogFragment extends BottomSheetDialogFragment {
     private FragmentConversationBottomDialogBinding mBinding;
     private Conversation mConversation;
     private User mUser;
     private boolean isTurnOffNotification;
+    private boolean isUnread;
 
     private final ConversationOptionListener mListener;
     private static final String EXTRA_CONVERSATION = "extra_conversation";
@@ -54,6 +57,8 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
         void onAddMember(Conversation conversation);
 
         void onMarkUnread(Conversation conversation);
+
+        void onMarkRead(Conversation conversation);
 
         void onIgnore(Conversation conversation);
     }
@@ -123,7 +128,23 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
         } else {
             bindItem(mBinding.itemMuteNotifications, R.string.label_conversation_mute_notifications, R.drawable.ic_round_notifications_off);
         }
-        bindItem(mBinding.itemMarkUnread, R.string.label_conversation_mark_unread, R.drawable.ic_round_mark_email_unread);
+        Chat lastChat = mConversation.getLastChat();
+
+        if (!MessageUtil.isDummyFirstMessagePair(lastChat) && !lastChat.getSenderId().equals(mUser.getUid())) {
+            mBinding.itemMarkUnread.getRoot().setVisibility(View.VISIBLE);
+
+            if (lastChat.getSeenBy().contains(mUser.getUid())) {
+                isUnread = true;
+
+                bindItem(mBinding.itemMarkUnread, R.string.label_conversation_mark_unread, R.drawable.ic_round_mark_email_unread);
+            } else {
+                isUnread = false;
+
+                bindItem(mBinding.itemMarkUnread, R.string.label_conversation_mark_read, R.drawable.ic_round_mark_email_read);
+            }
+        } else {
+            mBinding.itemMarkUnread.getRoot().setVisibility(View.GONE);
+        }
 
         registerItemClickEvent();
     }
@@ -199,7 +220,11 @@ public class ConversationDialogFragment extends BottomSheetDialogFragment {
             dismiss();
         });
         mBinding.itemMarkUnread.getRoot().setOnClickListener(v -> {
-            mListener.onMarkUnread(mConversation);
+            if (isUnread) {
+                mListener.onMarkUnread(mConversation);
+            } else {
+                mListener.onMarkRead(mConversation);
+            }
             dismiss();
         });
         mBinding.itemIgnore.getRoot().setOnClickListener(v -> {

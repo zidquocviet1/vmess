@@ -2,9 +2,12 @@ package com.mqv.vmess.activity.viewmodel;
 
 import static com.mqv.vmess.network.model.type.ConversationStatusType.ARCHIVED;
 
+import android.app.Application;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Transformations;
 
+import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.model.Conversation;
 
@@ -22,8 +25,10 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
     private int currentPage;
 
     @Inject
-    public ConversationListArchivedViewModel(ConversationRepository repository) {
-        super(repository, ARCHIVED);
+    public ConversationListArchivedViewModel(Application application,
+                                             ConversationRepository repository,
+                                             ChatRepository chatRepository) {
+        super(application, repository, chatRepository, ARCHIVED);
 
         this.currentPage = 0;
 

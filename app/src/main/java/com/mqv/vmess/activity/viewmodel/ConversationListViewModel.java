@@ -1,15 +1,16 @@
 package com.mqv.vmess.activity.viewmodel;
 
+import android.app.Application;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
+import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
@@ -48,7 +49,7 @@ import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class ConversationListViewModel extends ViewModel {
+public class ConversationListViewModel extends MessageHandlerViewModel {
     private   final ConversationRepository                                conversationRepository;
     private   final ConversationStatusType                                statusType;
     protected final MutableLiveData<List<Conversation>>                   conversationListObserver;
@@ -67,7 +68,12 @@ public class ConversationListViewModel extends ViewModel {
     private boolean    canLoadMore = true;
     private Disposable conversationDisposable;
 
-    public ConversationListViewModel(ConversationRepository conversationRepository, ConversationStatusType status) {
+    public ConversationListViewModel(Application application,
+                                     ConversationRepository conversationRepository,
+                                     ChatRepository chatRepository,
+                                     ConversationStatusType status) {
+        super(application, chatRepository);
+
         this.conversationRepository     = conversationRepository;
         this.statusType                 = status;
         this.cd                         = new CompositeDisposable();
@@ -180,14 +186,6 @@ public class ConversationListViewModel extends ViewModel {
         cd.add(disposable);
     }
 
-    protected void fetchCachedConversation(@NonNull String conversationId, Consumer<Conversation> onReceive) {
-        Disposable disposable = conversationRepository.fetchCachedById(conversationId)
-                                                      .compose(RxHelper.applySingleSchedulers())
-                                                      .subscribe(onReceive, Throwable::printStackTrace);
-
-        cd.add(disposable);
-    }
-
     protected void fetchAllMuteNotification() {
         Disposable disposable = conversationRepository.getAllMuteNotification()
                                                       .compose(RxHelper.parseResponseData())
@@ -287,8 +285,8 @@ public class ConversationListViewModel extends ViewModel {
         cd.add(disposable);
     }
 
-    public void markAsUnread(Conversation conversation) {
-
+    public void markAsRead(Conversation conversation) {
+        seenUnreadMessageInConversation(conversation.getId());
     }
 
     public void ignore(Conversation conversation) {

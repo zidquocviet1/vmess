@@ -108,6 +108,11 @@ public class ChatRepositoryImpl implements ChatRepository {
     }
 
     @Override
+    public Single<Chat> findLastMessage(String conversationId) {
+        return dao.findLastMessage(conversationId);
+    }
+
+    @Override
     public Completable saveCached(Chat chat) {
         return dao.insert(chat)
                   .subscribeOn(Schedulers.io())

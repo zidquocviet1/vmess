@@ -133,7 +133,7 @@ public abstract class ConversationDao {
                      * We need to add the next sublist to cache [F, G, H]
                      * */
                     Chat       presenceChat     = presenceChatOptional.get();
-                    int        index            = freshChat.indexOf(presenceChat);
+                    int        index            = freshChat.indexOf(presenceChat) + 1;
                     List<Chat> shouldInsertList = freshChat.subList(index, freshChat.size());
 
                     saveListChat(shouldInsertList);

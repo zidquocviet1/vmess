@@ -617,7 +617,7 @@ public class ConversationActivity
     }
 
     private void postRequestSeenMessages() {
-        mViewModel.postSeenMessageConversation(this, mConversation.getId(), mCurrentUser.getUid());
+        mViewModel.postSeenMessageConversation(mConversation.getId());
     }
 
     private void setToolbarTitle(String title) {

@@ -17,7 +17,7 @@
     <string name="label_conversation_mute_notifications">Tắt thông báo</string>
     <string name="label_conversation_unmute_notifications">Hủy tắt thông báo</string>
     <string name="label_conversation_create_group">Tạo nhóm với %1$s</string>
-    <string name="label_conversation_mark_unread">Đánh dấu đã đọc</string>
+    <string name="label_conversation_mark_unread">Đánh dấu chưa đọc</string>
     <string name="label_conversation_ignore_group">Bỏ qua nhóm</string>
     <string name="label_conversation_ignore_messages">Bỏ qua tin nhắn</string>
     <string name="label_conversation_add_members">Thêm thành viên</string>
@@ -291,4 +291,5 @@
     <string name="action_mute_notification_1_day">Tắt trong 1 ngày</string>
     <string name="action_mute_notification_7_day">Tắt trong 7 ngày</string>
     <string name="action_mute_notification_always">Luôn luôn</string>
+    <string name="label_conversation_mark_read">Đánh dấu đã đọc</string>
 </resources>
