@@ -39,13 +39,13 @@
                 android:targetClass=".activity.preferences.PreferenceFriendRequestActivity" />
         </Preference>
 
-        <Preference
-            android:icon="@drawable/ic_preferences_messages_requests"
-            android:key="@string/key_pref_messages_requests"
-            android:title="@string/title_preference_item_messages_requests" >
-            <intent android:action="com.tac.open.message_request"
-                android:targetClass=".activity.preferences.PreferenceMessageRequestActivity"/>
-        </Preference>
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_messages_requests"-->
+<!--            android:key="@string/key_pref_messages_requests"-->
+<!--            android:title="@string/title_preference_item_messages_requests" >-->
+<!--            <intent android:action="com.tac.open.message_request"-->
+<!--                android:targetClass=".activity.preferences.PreferenceMessageRequestActivity"/>-->
+<!--        </Preference>-->
 
         <Preference
             android:icon="@drawable/ic_preferences_toggle_status"
@@ -90,25 +90,25 @@
                 android:targetClass=".activity.preferences.PreferenceArchivedChatActivity"/>
         </Preference>
 
-        <Preference
-            android:icon="@drawable/ic_preferences_privacy"
-            android:key="@string/key_pref_privacy"
-            android:title="@string/title_preference_item_privacy" />
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_privacy"-->
+<!--            android:key="@string/key_pref_privacy"-->
+<!--            android:title="@string/title_preference_item_privacy" />-->
 
-        <Preference
-            android:icon="@drawable/ic_preferences_story"
-            android:key="@string/key_pref_story"
-            android:title="@string/title_preference_item_story" />
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_story"-->
+<!--            android:key="@string/key_pref_story"-->
+<!--            android:title="@string/title_preference_item_story" />-->
 
         <Preference
             android:icon="@drawable/ic_preferences_phone_contact"
             android:key="@string/key_pref_phone_contacts"
             android:title="@string/title_preference_item_phone_contacts" />
 
-        <Preference
-            android:icon="@drawable/ic_preferences_photo_media"
-            android:key="@string/key_pref_photos_and_media"
-            android:title="@string/title_preference_item_photos_and_media" />
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_photo_media"-->
+<!--            android:key="@string/key_pref_photos_and_media"-->
+<!--            android:title="@string/title_preference_item_photos_and_media" />-->
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -128,14 +128,14 @@
             android:key="@string/key_pref_report_problem"
             android:title="@string/title_preference_item_report_problem" />
 
-        <Preference
-            android:icon="@drawable/ic_preferences_robot_help"
-            android:key="@string/key_pref_help"
-            android:title="@string/title_preference_item_help" />
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_robot_help"-->
+<!--            android:key="@string/key_pref_help"-->
+<!--            android:title="@string/title_preference_item_help" />-->
 
-        <Preference
-            android:icon="@drawable/ic_preferences_legal_and_policies"
-            android:key="@string/title_preference_item_legal_policies"
-            android:title="@string/title_preference_item_legal_policies" />
+<!--        <Preference-->
+<!--            android:icon="@drawable/ic_preferences_legal_and_policies"-->
+<!--            android:key="@string/title_preference_item_legal_policies"-->
+<!--            android:title="@string/title_preference_item_legal_policies" />-->
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>
