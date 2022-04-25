@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.dao.ConversationDao;
+import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
 import com.mqv.vmess.network.model.Conversation;
@@ -92,6 +93,7 @@ public class NewConversationWorkWrapper extends BaseWorker {
     public static class NewConversationWorker extends RxWorker {
         private final ConversationService mService;
         private final ConversationDao mDao;
+        private final FriendNotificationDao mNotificationDao;
         private final FirebaseUser mUser;
         private final Executor backgroundExecutor = Executors.newSingleThreadExecutor();
         private final UserUtil mUserUtil;
@@ -101,10 +103,12 @@ public class NewConversationWorkWrapper extends BaseWorker {
                                      @Assisted @NonNull WorkerParameters workerParams,
                                      ConversationService service,
                                      ConversationDao dao,
+                                     FriendNotificationDao notificationDao,
                                      UserUtil userUtil) {
             super(context, workerParams);
             mService = service;
             mDao = dao;
+            mNotificationDao = notificationDao;
             mUser = FirebaseAuth.getInstance().getCurrentUser();
             mUserUtil = userUtil;
         }
@@ -127,6 +131,12 @@ public class NewConversationWorkWrapper extends BaseWorker {
         }
 
         private Single<Result> createCall(String otherId, Boolean isCallFromNotification) {
+            mNotificationDao.fetchRequestNotificationByUserId(otherId)
+                            .flatMapCompletable(mNotificationDao::delete)
+                            .subscribeOn(Schedulers.io())
+                            .onErrorComplete()
+                            .subscribe();
+
             if (isCallFromNotification) {
                 return mUserUtil.isRecentLogin()
                                 .flatMap(isRecentLogin -> {

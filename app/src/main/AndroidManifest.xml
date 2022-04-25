@@ -106,6 +106,7 @@
             android:exported="true"
             android:parentActivityName=".activity.UserActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="com.tac.open.friend.request" />

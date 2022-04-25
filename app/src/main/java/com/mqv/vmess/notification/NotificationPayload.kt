@@ -9,6 +9,7 @@ import java.util.*
 
 private const val KEY_WHO_ACCEPTED = "who_accepted"
 private const val KEY_WHO_UNFRIEND = "who_unfriend"
+private const val KEY_WHO_CANCEL = "who_cancel"
 private const val KEY_CONVERSATION_ID = "conversation_id"
 private const val KEY_WHO_SENT = "who_sent"
 private const val KEY_SENDER_ID = "sender_id"
@@ -34,6 +35,7 @@ sealed class NotificationPayload(
         ADDED_TO_GROUP,
         UNFRIEND,
         GROUP_CHANGE_OPTION,
+        CANCEL_FRIEND_REQUEST
     }
 
     class AcceptedFriendPayload(
@@ -128,7 +130,11 @@ sealed class NotificationPayload(
         }
 
         override fun toString(): String {
-            return "[Status Message Payload: ${status.name}, Message ID = $messageId, WhoSeen = ${whoSeen.orElse("NONE")}, Timestamp = $timestamp]"
+            return "[Status Message Payload: ${status.name}, Message ID = $messageId, WhoSeen = ${
+                whoSeen.orElse(
+                    "NONE"
+                )
+            }, Timestamp = $timestamp]"
         }
     }
 
@@ -226,6 +232,22 @@ sealed class NotificationPayload(
         }
     }
 
+    class CancelFriendRequestPayload(val whoCancel: String, override val timestamp: Long) :
+        NotificationPayload(timestamp) {
+        companion object {
+            fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
+                val whoCancel = map[KEY_WHO_CANCEL]!!
+                val timestamp = map[KEY_TIMESTAMP]!!.toLong()
+
+                return CancelFriendRequestPayload(whoCancel, timestamp)
+            }
+        }
+
+        override fun toString(): String {
+            return "Petitioner cancel: $whoCancel, Timestamp: $timestamp"
+        }
+    }
+
     companion object {
         @JvmStatic
         fun handleRawPayload(map: MutableMap<String, String>): NotificationPayload {
@@ -239,6 +261,9 @@ sealed class NotificationPayload(
                 NotificationType.ADDED_TO_GROUP -> ConversationGroupPayload.parsePayload(map)
                 NotificationType.UNFRIEND -> UnfriendPayload.parsePayload(map)
                 NotificationType.GROUP_CHANGE_OPTION -> GroupOptionChangedPayload.parsePayload(map)
+                NotificationType.CANCEL_FRIEND_REQUEST -> CancelFriendRequestPayload.parsePayload(
+                    map
+                )
             }
         }
     }

@@ -15,15 +15,13 @@ import com.mqv.vmess.databinding.ItemPeopleListBinding;
 import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Picture;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 
 public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewHolder> {
     private final Context mContext;
-    private final List<People> mMutableList;
     private final BiConsumer<Integer, Boolean> onClickConsumer;
 
-    public PeopleAdapter(Context mContext, List<People> data, BiConsumer<Integer, Boolean> onClickConsumer) {
+    public PeopleAdapter(Context mContext, BiConsumer<Integer, Boolean> onClickConsumer) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull People oldItem, @NonNull People newItem) {
@@ -36,14 +34,7 @@ public class PeopleAdapter extends ListAdapter<People, PeopleAdapter.PeopleViewH
             }
         });
         this.mContext = mContext;
-        this.mMutableList = data;
         this.onClickConsumer = onClickConsumer;
-    }
-
-    public void removeItem(int position) {
-        mMutableList.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(position, mMutableList.size());
     }
 
     @NonNull

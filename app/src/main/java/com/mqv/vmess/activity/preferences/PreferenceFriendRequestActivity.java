@@ -92,8 +92,11 @@ public class PreferenceFriendRequestActivity extends ToolbarActivity<FriendReque
                         mBinding.imageError.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.image_no_data));
                         mBinding.textError.setText(R.string.msg_friend_request_empty_list);
                     } else {
+                        mMutableList.clear();
                         mMutableList.addAll(list.stream().map(FriendRequest::new).collect(Collectors.toList()));
                         mAdapter.submitList(mMutableList);
+                        mBinding.imageError.setVisibility(View.GONE);
+                        mBinding.textError.setVisibility(View.GONE);
                     }
                     break;
             }

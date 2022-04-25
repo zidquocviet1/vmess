@@ -42,7 +42,8 @@ class NotificationHandler(
     private val gson: Gson
 ) : NotificationEntry {
     private val mUser = FirebaseAuth.getInstance().currentUser!!
-    private val mValidator: NotificationValidator = NotificationValidatorImpl(mDatabase.conversationOptionDao, mUser, mContext)
+    private val mValidator: NotificationValidator =
+        NotificationValidatorImpl(mDatabase.conversationOptionDao, mUser, mContext)
 
     override fun handleNotificationPayload(payload: NotificationPayload) {
         when (payload) {
@@ -53,6 +54,7 @@ class NotificationHandler(
             is ConversationGroupPayload -> handleConversationGroup(payload)
             is UnfriendPayload -> handleUnfriend(payload)
             is GroupOptionChangedPayload -> handleGroupChangeOption(payload)
+            is CancelFriendRequestPayload -> handleCancelFriendRequest(payload)
         }
     }
 
@@ -209,6 +211,7 @@ class NotificationHandler(
             .onErrorComplete()
             .subscribe { pair ->
                 NotificationUtil.sendFriendRequestNotification(mContext, pair.first, pair.second)
+                AppDependencies.getDatabaseObserver().notifyRequestFriend(whoSent)
             }
     }
 
@@ -248,6 +251,7 @@ class NotificationHandler(
 
                 NotificationUtil.sendAcceptedFriendRequestNotification(mContext, user, pair.second)
                 AppDependencies.getDatabaseObserver().notifyConversationInserted(pair.first.id)
+                AppDependencies.getDatabaseObserver().notifyConfirmFriend(whoConfirm)
             }
     }
 
@@ -313,7 +317,9 @@ class NotificationHandler(
             }
             .andThen(completable)
             .onErrorComplete()
-            .subscribe()
+            .subscribe {
+                AppDependencies.getDatabaseObserver().notifyUnfriend(whoUnfriend)
+            }
     }
 
     /*
@@ -524,9 +530,20 @@ class NotificationHandler(
             mUserService.sendFcmTokenToServer(bearerToken, Const.DEFAULT_AUTHORIZER, token)
         }.subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            .doOnError { Logging.debug(TAG, "Send fcm token to user fail")}
+            .doOnError { Logging.debug(TAG, "Send fcm token to user fail") }
             .compose(RxHelper.parseResponseData())
             .subscribe()
+    }
+
+    private fun handleCancelFriendRequest(payload: CancelFriendRequestPayload) {
+        AppDependencies.getDatabaseObserver().notifyCancelRequest(payload.whoCancel)
+
+        mDatabase.friendNotificationDao.fetchRequestNotificationByUserId(payload.whoCancel)
+            .flatMap { mDatabase.friendNotificationDao.delete(it).toSingleDefault(it.id!!) }
+            .subscribeOn(Schedulers.io())
+            .subscribe { id ->
+                NotificationUtil.removeNotification(mContext, id.toInt())
+            }
     }
 
     companion object {

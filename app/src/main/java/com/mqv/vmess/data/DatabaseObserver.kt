@@ -1,8 +1,12 @@
 package com.mqv.vmess.data
 
+import java.lang.RuntimeException
+
 class DatabaseObserver {
     private var messageListener: MutableMap<String, MutableSet<MessageListener>> = HashMap()
     private var conversationListener: MutableSet<ConversationListener> = HashSet()
+    private var friendRequestListener: MutableSet<FriendRequestListener> = HashSet()
+    private var noneFriendRequestListener: MutableSet<NoneFriendRequestListener> = HashSet()
 
     interface ConversationListener {
         fun onConversationInserted(conversationId: String)
@@ -12,6 +16,19 @@ class DatabaseObserver {
     interface MessageListener {
         fun onMessageInserted(messageId: String)
         fun onMessageUpdated(messageId: String)
+    }
+
+    interface FriendRequestListener {
+        fun onRequest(userId: String)
+        fun onConfirm(userId: String)
+        fun onUnfriend(userId: String)
+        fun onCancel(userId: String)
+    }
+
+    interface NoneFriendRequestListener : FriendRequestListener {
+        override fun onUnfriend(userId: String) {
+            throw RuntimeException()
+        }
     }
 
     fun registerConversationListener(listener: ConversationListener) {
@@ -30,6 +47,22 @@ class DatabaseObserver {
         unregisterMapListener(messageListener, listener)
     }
 
+    fun registerNoneFriendRequestListener(listener: NoneFriendRequestListener) {
+        noneFriendRequestListener.add(listener)
+    }
+
+    fun unregisterNoneFriendRequestListener(listener: NoneFriendRequestListener) {
+        noneFriendRequestListener.remove(listener)
+    }
+
+    fun registerFriendRequestListener(listener: FriendRequestListener) {
+        friendRequestListener.add(listener)
+    }
+
+    fun unregisterFriendRequestListener(listener: FriendRequestListener) {
+        friendRequestListener.remove(listener)
+    }
+
     fun notifyConversationInserted(conversationId: String) {
         conversationListener.forEach { it.onConversationInserted(conversationId) }
     }
@@ -44,6 +77,25 @@ class DatabaseObserver {
 
     fun notifyMessageUpdated(conversationId: String, messageId: String) {
         messageListener[conversationId]?.forEach { it.onMessageUpdated(messageId) }
+    }
+
+    fun notifyRequestFriend(userId: String) {
+        noneFriendRequestListener.forEach { it.onRequest(userId) }
+        friendRequestListener.forEach { it.onRequest(userId) }
+    }
+
+    fun notifyConfirmFriend(userId: String) {
+        noneFriendRequestListener.forEach { it.onConfirm(userId) }
+        friendRequestListener.forEach { it.onConfirm(userId) }
+    }
+
+    fun notifyUnfriend(userId: String) {
+        friendRequestListener.forEach { it.onUnfriend(userId) }
+    }
+
+    fun notifyCancelRequest(userId: String) {
+        noneFriendRequestListener.forEach { it.onCancel(userId) }
+        friendRequestListener.forEach { it.onCancel(userId) }
     }
 
     private fun <K, V> registerMapListener(map: MutableMap<K, MutableSet<V>>, key: K, listener: V) {

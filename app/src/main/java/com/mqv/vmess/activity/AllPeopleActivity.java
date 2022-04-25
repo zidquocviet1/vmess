@@ -20,19 +20,16 @@ import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Picture;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, ActivityAllPeopleBinding> {
-    private List<People> mPeopleList;
     private PeopleAdapter mAdapter;
     private AlertDialog peopleDialog;
     private DialogPeopleDetailBinding dialogPeopleDetailBinding;
     private User mCurrentUser;
-    private int mCurrentPosition;
 
     @Override
     public void binding() {
@@ -52,13 +49,6 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
 
         updateActionBarTitle(R.string.label_all_people);
 
-        ArrayList<People> listPeople = getIntent().getParcelableArrayListExtra("list_people");
-
-        if (listPeople == null) {
-            mPeopleList = new ArrayList<>();
-        } else {
-            mPeopleList = new ArrayList<>(listPeople);
-        }
         Objects.requireNonNull(mCurrentUser = LoggedInUserManager.getInstance().getLoggedInUser());
         setupRecyclerView();
     }
@@ -88,19 +78,21 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
                 case SUCCESS:
                     if (peopleDialog != null && peopleDialog.isShowing()) {
                         peopleDialog.dismiss();
-
-                        mAdapter.removeItem(mCurrentPosition);
-
                         Toast.makeText(this, R.string.msg_unfriend_successfully, Toast.LENGTH_SHORT).show();
                     }
                     break;
             }
         });
+
+        mViewModel.getPeopleListObserver().observe(this, people -> {
+            if (people != null) {
+                mAdapter.submitList(new ArrayList<>(people));
+            }
+        });
     }
 
     private void setupRecyclerView() {
-        mAdapter = new PeopleAdapter(this, mPeopleList, this::onErrorButtonClick);
-        mAdapter.submitList(mPeopleList);
+        mAdapter = new PeopleAdapter(this, this::onErrorButtonClick);
 
         mBinding.recyclerViewPeople.setAdapter(mAdapter);
         mBinding.recyclerViewPeople.setLayoutManager(new LinearLayoutManager(this));
@@ -108,8 +100,6 @@ public class AllPeopleActivity extends ToolbarActivity<AllPeopleViewModel, Activ
     }
 
     private void onErrorButtonClick(Integer position, boolean isButtonClick) {
-        mCurrentPosition = position;
-
         if (isButtonClick) {
             showDialog(mAdapter.getCurrentList().get(position));
         } else {

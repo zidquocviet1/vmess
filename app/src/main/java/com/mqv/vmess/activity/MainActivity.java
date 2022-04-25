@@ -26,13 +26,11 @@ import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.NetworkConstraint;
 import com.mqv.vmess.network.websocket.WebSocketConnectionState;
-import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.ui.fragment.BaseFragment;
 import com.mqv.vmess.ui.fragment.ConversationListInboxFragment;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
-import java.util.ArrayList;
 import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -141,10 +139,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         } else if (id == mBinding.buttonQrScanner.getId()) {
             startActivity(ConnectPeopleActivity.class);
         } else if (id == mBinding.buttonAllPeople.getId()) {
-            var listPeople = (ArrayList<People>) mViewModel.getListPeopleSafe().getValue();
-            var intent = new Intent(getApplicationContext(), AllPeopleActivity.class);
-            intent.putParcelableArrayListExtra("list_people", listPeople);
-            startActivity(intent);
+            startActivity(AllPeopleActivity.class);
         } else if (id == mBinding.buttonNotificationSettings.getId()) {
             startActivity(PreferenceNotificationActivity.class);
         }

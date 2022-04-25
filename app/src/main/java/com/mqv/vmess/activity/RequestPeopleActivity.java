@@ -142,6 +142,14 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                     break;
             }
         });
+
+        mViewModel.getFriendStatusObserver().observe(this, status -> {
+            if (status == null) return;
+
+            friendRequestStatus = status;
+
+            bindingUiStatus();
+        });
     }
 
     @Override
@@ -198,33 +206,41 @@ public class RequestPeopleActivity extends BaseActivity<RequestPeopleViewModel, 
                 mBinding.textJoined.setVisibility(View.GONE);
             }
 
-            if (friendRequestStatus != null) {
-                switch (friendRequestStatus) {
-                    case CONFIRM:
-                        mBinding.layoutButton.setVisibility(View.GONE);
-                        mBinding.buttonAddFriend.setVisibility(View.GONE);
-                        mBinding.buttonCancel.setVisibility(View.GONE);
-                        mBinding.buttonConfirm.setVisibility(View.GONE);
-                        break;
-                    case CANCEL:
-                        mBinding.layoutButton.setVisibility(View.VISIBLE);
-                        mBinding.buttonAddFriend.setVisibility(View.VISIBLE);
-                        mBinding.buttonCancel.setVisibility(View.GONE);
-                        mBinding.buttonConfirm.setVisibility(View.GONE);
-                        break;
-                    case REQUEST:
-                        mBinding.layoutButton.setVisibility(View.VISIBLE);
-                        mBinding.buttonAddFriend.setVisibility(View.GONE);
-                        mBinding.buttonCancel.setVisibility(View.VISIBLE);
-                        mBinding.buttonConfirm.setVisibility(View.GONE);
-                        break;
-                    case ACKNOWLEDGE:
-                        mBinding.layoutButton.setVisibility(View.VISIBLE);
-                        mBinding.buttonAddFriend.setVisibility(View.GONE);
-                        mBinding.buttonCancel.setVisibility(View.GONE);
-                        mBinding.buttonConfirm.setVisibility(View.VISIBLE);
-                        break;
-                }
+            bindingUiStatus();
+        }
+    }
+
+    private void bindingUiStatus() {
+        if (friendRequestStatus != null) {
+            switch (friendRequestStatus) {
+                case CONFIRM:
+                    mBinding.layoutButton.setVisibility(View.GONE);
+                    mBinding.buttonAddFriend.setVisibility(View.GONE);
+                    mBinding.buttonCancel.setVisibility(View.GONE);
+                    mBinding.buttonConfirm.setVisibility(View.GONE);
+                    mBinding.buttonMessage.setVisibility(View.VISIBLE);
+                    break;
+                case CANCEL:
+                    mBinding.layoutButton.setVisibility(View.VISIBLE);
+                    mBinding.buttonAddFriend.setVisibility(View.VISIBLE);
+                    mBinding.buttonCancel.setVisibility(View.GONE);
+                    mBinding.buttonConfirm.setVisibility(View.GONE);
+                    mBinding.buttonMessage.setVisibility(View.GONE);
+                    break;
+                case REQUEST:
+                    mBinding.layoutButton.setVisibility(View.VISIBLE);
+                    mBinding.buttonAddFriend.setVisibility(View.GONE);
+                    mBinding.buttonCancel.setVisibility(View.VISIBLE);
+                    mBinding.buttonConfirm.setVisibility(View.GONE);
+                    mBinding.buttonMessage.setVisibility(View.GONE);
+                    break;
+                case ACKNOWLEDGE:
+                    mBinding.layoutButton.setVisibility(View.VISIBLE);
+                    mBinding.buttonAddFriend.setVisibility(View.GONE);
+                    mBinding.buttonCancel.setVisibility(View.GONE);
+                    mBinding.buttonConfirm.setVisibility(View.VISIBLE);
+                    mBinding.buttonMessage.setVisibility(View.GONE);
+                    break;
             }
         }
     }

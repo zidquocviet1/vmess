@@ -16,7 +16,6 @@ import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.reactive.RxHelper;
-import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.MessageUtil;
 
 import java.util.List;
@@ -65,10 +64,6 @@ public class MainViewModel extends AbstractMainViewModel {
 
     public LiveData<Result<User>> getRemoteUserResultSafe() {
         return getRemoteUserResult();
-    }
-
-    public LiveData<List<People>> getListPeopleSafe() {
-        return getListPeople();
     }
 
     public LiveData<Integer> getNotificationBadgeResult() {

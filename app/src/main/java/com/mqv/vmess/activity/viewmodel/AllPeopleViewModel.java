@@ -13,6 +13,9 @@ import com.mqv.vmess.ui.data.People;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -26,17 +29,36 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 @HiltViewModel
 public class AllPeopleViewModel extends CurrentUserViewModel {
     private final MutableLiveData<Result<Boolean>> unfriendResult = new MutableLiveData<>();
-    private final PeopleRepository peopleRepository;
+    private final MutableLiveData<List<People>>    peopleList     = new MutableLiveData<>();
+
+    private final PeopleRepository       peopleRepository;
     private final ConversationRepository conversationRepository;
     private final NotificationRepository notificationRepository;
 
     @Inject
-    public AllPeopleViewModel(PeopleRepository peopleRepository,
+    public AllPeopleViewModel(PeopleRepository       peopleRepository,
                               ConversationRepository conversationRepository,
                               NotificationRepository notificationRepository) {
-        this.peopleRepository = peopleRepository;
+        this.peopleRepository       = peopleRepository;
         this.conversationRepository = conversationRepository;
         this.notificationRepository = notificationRepository;
+
+        loadFriendPeople();
+    }
+
+    private void loadFriendPeople() {
+        //noinspection ResultOfMethodCallIgnored
+        peopleRepository.getAll()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(people -> peopleList.postValue(people.stream()
+                                                       .filter(People::getFriend)
+                                                       .collect(Collectors.toList())),
+                                   t -> this.peopleList.setValue(new ArrayList<>()));
+    }
+
+    public LiveData<List<People>> getPeopleListObserver() {
+        return peopleList;
     }
 
     public LiveData<Result<Boolean>> getUnfriendResult() {
