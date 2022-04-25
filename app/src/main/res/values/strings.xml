@@ -62,6 +62,7 @@
     <string name="label_no_internet_connection">No Internet Connection</string>
     <string name="label_gallery">Gallery</string>
     <string name="label_file">File</string>
+    <string name="label_turn_off_all_notification">Turn off all notification of this app.</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>

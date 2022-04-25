@@ -1,9 +1,11 @@
 package com.mqv.vmess.notification
 
 import com.mqv.vmess.network.model.Chat
+import com.mqv.vmess.network.model.type.MessageStatus
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.*
 
 private const val KEY_WHO_ACCEPTED = "who_accepted"
 private const val KEY_WHO_UNFRIEND = "who_unfriend"
@@ -18,6 +20,8 @@ private const val KEY_MESSAGE_TIMESTAMP = "message_timestamp"
 private const val KEY_CHANGE_OPTION = "change_option"
 private const val KEY_MEMBER = "member"
 private const val KEY_NOTIFICATION_ID = "notification_id"
+private const val KEY_WHO_SEEN = "who_seen"
+private const val KEY_MESSAGE_STATUS = "message_status"
 
 sealed class NotificationPayload(
     open val timestamp: Long
@@ -45,7 +49,12 @@ sealed class NotificationPayload(
                 val notificationId = map[KEY_NOTIFICATION_ID]!!
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
-                return AcceptedFriendPayload(whoAccepted, conversationId, notificationId.toLong(), timestamp)
+                return AcceptedFriendPayload(
+                    whoAccepted,
+                    conversationId,
+                    notificationId.toLong(),
+                    timestamp
+                )
             }
         }
 
@@ -75,54 +84,51 @@ sealed class NotificationPayload(
     }
 
     class IncomingMessagePayload(
-        val senderId: String,
-        val messageId: String,
-        val conversationId: String,
+        val messageJson: String,
         override val timestamp: Long
     ) : NotificationPayload(timestamp) {
         companion object {
             fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
-                val senderId = map[KEY_SENDER_ID]!!
-                val messageId = map[KEY_MESSAGE_ID]!!
-                val conversationId = map[KEY_CONVERSATION_ID]!!
+                val messageJson = map["message"]!!
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
                 return IncomingMessagePayload(
-                    senderId,
-                    messageId,
-                    conversationId,
+                    messageJson,
                     timestamp
                 )
             }
         }
 
         override fun toString(): String {
-            return "Sender: $senderId," +
-                    " Message: $messageId," +
-                    " ConversationId: $conversationId," +
-                    " Timestamp: $timestamp"
+            return "MessageJson: $messageJson, Timestamp: $timestamp"
         }
     }
 
     class StatusMessagePayload(
         val messageId: String,
+        val status: MessageStatus,
+        val whoSeen: Optional<String>,
         override val timestamp: Long
     ) : NotificationPayload(timestamp) {
 
         companion object {
             fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
                 val messageId = map[KEY_MESSAGE_ID]!!
+                val statusName = map[KEY_MESSAGE_STATUS]!!
+                val whoSeen = map[KEY_WHO_SEEN]!!
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
                 return StatusMessagePayload(
                     messageId,
+                    MessageStatus.valueOf(statusName),
+                    if (whoSeen.isEmpty()) Optional.empty() else Optional.of(whoSeen),
                     timestamp
                 )
             }
         }
 
         override fun toString(): String {
-            return "[Status Message Payload, Message ID = $messageId, Timestamp = $timestamp]"
+            return "[Status Message Payload: ${status.name}, Message ID = $messageId, WhoSeen = ${whoSeen.orElse("NONE")}, Timestamp = $timestamp]"
         }
     }
 
@@ -192,7 +198,10 @@ sealed class NotificationPayload(
                     senderId,
                     messageContent,
                     conversationId,
-                    LocalDateTime.ofInstant(Instant.ofEpochMilli(messageTimestamp), ZoneId.systemDefault()),
+                    LocalDateTime.ofInstant(
+                        Instant.ofEpochMilli(messageTimestamp),
+                        ZoneId.systemDefault()
+                    ),
                     null,
                     null,
                     null,

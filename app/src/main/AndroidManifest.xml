@@ -297,6 +297,22 @@
                 <action android:name="com.mqv.vmess.MARK_NOTIFICATION_READ" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".activity.br.DirectReplyReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mqv.vmess.DIRECT_REPLY" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name=".activity.br.MarkReadReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mqv.vmess.MARK_READ_MESSAGE" />
+            </intent-filter>
+        </receiver>
         <!--
  Set custom default icon. This is used when no icon is set for incoming notification messages.
      See README(https://goo.gl/l4GJaQ) for more.
@@ -310,7 +326,7 @@
         -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/purple_200" />
+            android:resource="@color/purple_500" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

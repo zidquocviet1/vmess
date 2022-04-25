@@ -5,6 +5,7 @@ import com.mqv.vmess.data.model.ConversationIgnoreOption
 import com.mqv.vmess.data.model.ConversationNotificationOption
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Single
 
 @Dao
 interface ConversationOptionDao {
@@ -29,4 +30,12 @@ interface ConversationOptionDao {
 
     @Query("DELETE FROM conversation_notification_option")
     fun deleteAll(): Completable
+
+    @Query(
+        "SELECT EXISTS(SELECT *" +
+                " FROM conversation_notification_option" +
+                " where conversation_id = :conversationId and until > :currentTimeMilli" +
+                " limit 1)"
+    )
+    fun isTurnOffNotification(conversationId: String, currentTimeMilli: Long): Single<Boolean>
 }

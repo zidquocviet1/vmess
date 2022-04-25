@@ -74,8 +74,7 @@ public class AppDependencyProvider implements AppDependencies.Provider {
                                                                                        database.getConversationDao(),
                                                                                        database.getConversationOptionDao(),
                                                                                        database.getChatDao());
-        return new IncomingMessageProcessor(context,
-                                            database.getChatDao(),
+        return new IncomingMessageProcessor(database.getChatDao(),
                                             database.getConversationDao(),
                                             conversationRepository);
     }

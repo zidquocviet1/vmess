@@ -6,10 +6,14 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.media.AudioAttributes
+import android.provider.Settings
 import android.text.Html
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.text.HtmlCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -17,14 +21,17 @@ import com.mqv.vmess.R
 import com.mqv.vmess.activity.ConversationActivity
 import com.mqv.vmess.activity.br.DirectReplyReceiver
 import com.mqv.vmess.activity.br.MarkNotificationReadReceiver
+import com.mqv.vmess.activity.br.MarkReadReceiver
 import com.mqv.vmess.activity.preferences.PreferenceFriendRequestActivity
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.data.ConversationMapper
 import com.mqv.vmess.ui.data.ConversationMetadata
+import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Picture
-import java.time.ZoneId
+import com.mqv.vmess.util.ServiceUtil
+import java.util.*
 
 private const val CHANNEL_NAME_CONVERSATION = "Conversation"
 private const val CHANNEL_NAME_FRIEND_REQUEST = "Friend Request"
@@ -129,12 +136,12 @@ object NotificationUtil {
     @JvmStatic
     fun sendIncomingMessageNotification(
         context: Context,
-        metadata: MessageNotificationMetadata,
-        notificationId: Int
+        metadata: MessageNotificationMetadata
     ) {
         val conversation = metadata.conversation
         val message = metadata.message
         val sender = metadata.sender
+        val currentUser = FirebaseAuth.getInstance().currentUser!!
 
         getConversationMetadata(context, conversation)?.let {
             val intent = Intent(context, ConversationActivity::class.java).apply {
@@ -153,21 +160,47 @@ object NotificationUtil {
             val person = Person.Builder()
                 .setName(context.getString(R.string.label_you))
                 .build()
-            val style = NotificationCompat.MessagingStyle(person).let { style ->
-                style.conversationTitle =
-                    if (it.type == ConversationType.GROUP) it.conversationName else ""
-                style.isGroupConversation = conversation.group != null
-                style.addMessage(
-                    metadata.getTitle(context),
-                    message.timestamp.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                    Person.Builder().setName(sender.displayName).build()
-                )
+
+            val style = NotificationCompat.MessagingStyle(person)
+            style.conversationTitle =
+                if (it.type == ConversationType.GROUP) it.conversationName else ""
+            style.isGroupConversation = conversation.group != null
+
+            val statusNotification = ServiceUtil.getNotificationManager(context).activeNotifications
+            val messageForStyle = NotificationCompat.MessagingStyle.Message(
+                metadata.getTitle(context),
+                message.timestamp.toLong(),
+                if (message.senderId == currentUser.uid) null else Person.Builder()
+                    .setIcon(IconCompat.createWithBitmap(Picture.loadUserAvatarIntoBitmap(context, sender.photoUrl)))
+                    .setName(sender.displayName).build()
+            )
+
+            for (status in statusNotification) {
+                if (status.id == conversation.id.hashCode()) {
+                    val notification = status.notification
+                    val oldStyle =
+                        NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(
+                            notification
+                        )
+
+                    oldStyle?.let {
+                        val messages = LinkedList(oldStyle.messages)
+                        for (m in messages) {
+                            style.addMessage(m)
+                        }
+                    }
+                }
             }
-            val remoteInput = RemoteInput.Builder("reply").run {
+
+            style.addMessage(messageForStyle)
+
+            val remoteInput = RemoteInput.Builder(DirectReplyReceiver.KEY_TEXT_CONTENT).run {
                 setLabel(context.getString(R.string.action_reply))
                 build()
             }
-            val replyIntent = Intent(context, DirectReplyReceiver::class.java)
+            val replyIntent = Intent(context, DirectReplyReceiver::class.java).apply {
+                putExtra(DirectReplyReceiver.EXTRA_CONVERSATION_ID, conversation.id)
+            }
             val replyPendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(
                     context.applicationContext,
@@ -182,18 +215,35 @@ object NotificationUtil {
             )
                 .addRemoteInput(remoteInput)
                 .build()
+
+            val markReadIntent = Intent(context, MarkReadReceiver::class.java).apply {
+                putExtra(MarkReadReceiver.EXTRA_CONVERSATION_ID, conversation.id)
+            }
+            val markReadPendingIntent = PendingIntent.getBroadcast(
+                context.applicationContext,
+                conversation.hashCode(),
+                markReadIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
+            val markReadAction = NotificationCompat.Action.Builder(
+                null,
+                context.getString(R.string.label_conversation_mark_read),
+                markReadPendingIntent
+            ).build()
+
             sendNotification(
                 context = context,
-                id = notificationId,
+                id = conversation.id.hashCode(),
                 title = it.conversationName,
-                body = message.content,
+                body = metadata.getTitle(context),
                 channelId = CHANNEL_ID_INCOMING_MESSAGE,
                 channelName = CHANNEL_NAME_INCOMING_MESSAGE,
                 importance = NotificationManager.IMPORTANCE_HIGH,
                 pendingIntent = pendingIntent,
                 largeIcon = conversationThumbnailBitmap,
                 style = style,
-                actions = arrayOf(action)
+                onlyAlertOnce = message.senderId == currentUser.uid,
+                actions = arrayOf(action, markReadAction)
             )
         }
     }
@@ -209,10 +259,10 @@ object NotificationUtil {
         pendingIntent: PendingIntent? = null,
         largeIcon: Bitmap? = null,
         style: NotificationCompat.Style? = null,
+        onlyAlertOnce: Boolean = false,
         vararg actions: NotificationCompat.Action?
     ) {
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        val notificationChannel = NotificationChannel(channelId, channelName, importance)
         val notification = NotificationCompat.Builder(context, channelId).apply {
             setContentTitle(title)
             setContentText(body)
@@ -221,10 +271,22 @@ object NotificationUtil {
             setSmallIcon(R.drawable.ic_launcher_foreground)
             setContentIntent(pendingIntent)
             setStyle(style)
+            setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
+            setOnlyAlertOnce(onlyAlertOnce)
+            color = context.getColor(R.color.purple_500)
 
             for (a in actions)
                 addAction(a)
         }.build()
+        val notificationChannel = NotificationChannel(channelId, channelName, importance).apply {
+            val audioAttr = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            setSound(Settings.System.DEFAULT_NOTIFICATION_URI, audioAttr)
+            enableLights(true)
+            lightColor = Color.RED
+        }
 
         notificationManager.createNotificationChannel(notificationChannel)
         notificationManager.notify(id, notification)

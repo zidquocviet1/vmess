@@ -1,13 +1,5 @@
 package com.mqv.vmess.message;
 
-import android.app.Activity;
-import android.content.Context;
-
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.mqv.vmess.MainApplication;
-import com.mqv.vmess.activity.ConversationActivity;
-import com.mqv.vmess.activity.MainActivity;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
@@ -16,17 +8,14 @@ import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.exception.ResourceNotFoundException;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
-import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.websocket.WebSocketRequestMessage;
 import com.mqv.vmess.network.websocket.WebSocketResponse;
-import com.mqv.vmess.notification.MessageNotificationMetadata;
-import com.mqv.vmess.notification.NotificationUtil;
+import com.mqv.vmess.notification.NotificationHandler;
 import com.mqv.vmess.util.Logging;
 
 import java.net.HttpURLConnection;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -43,16 +32,13 @@ public final class IncomingMessageProcessor {
     private static final int RESPONSE_SEEN_MESSAGE = 201;
     private static final int RESPONSE_ACCEPTED_MESSAGE = 202;
 
-    private final Context context;
     private final ChatDao chatDao;
     private final ConversationDao conversationDao;
     private final ConversationRepository conversationRepository;
 
-    public IncomingMessageProcessor(Context context,
-                                    ChatDao chatDao,
+    public IncomingMessageProcessor(ChatDao chatDao,
                                     ConversationDao conversationDao,
                                     ConversationRepository conversationRepository) {
-        this.context = context;
         this.chatDao = chatDao;
         this.conversationDao = conversationDao;
         this.conversationRepository = conversationRepository;
@@ -179,30 +165,6 @@ public final class IncomingMessageProcessor {
     }
 
     private Completable notifyIncomingMessageNotification(Conversation conversation, Chat message) {
-        return Completable.fromAction(() -> {
-            MainApplication app             = (MainApplication) context.getApplicationContext();
-            Activity        currentActivity = app.getActiveActivity();
-            FirebaseUser    currentUser     = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
-
-            boolean isInCurrentConversationOrMainActivity;
-
-            if (currentActivity instanceof ConversationActivity) {
-                isInCurrentConversationOrMainActivity = ((ConversationActivity) currentActivity).getExtraConversationId().equals(conversation.getId());
-            } else {
-                isInCurrentConversationOrMainActivity = currentActivity instanceof MainActivity;
-            }
-
-            if (!isInCurrentConversationOrMainActivity && !message.getSenderId().equals(currentUser.getUid())) {
-                User sender = conversation.getParticipants()
-                                          .stream()
-                                          .filter(u -> u.getUid().equals(message.getSenderId()))
-                                          .findFirst()
-                                          .orElseThrow(ResourceNotFoundException::new);
-
-                MessageNotificationMetadata metadata = new MessageNotificationMetadata(sender, conversation, message);
-
-                NotificationUtil.sendIncomingMessageNotification(context, metadata, message.getId().hashCode());
-            }
-        });
+        return ((NotificationHandler)AppDependencies.getNotificationEntry()).notifyIncomingMessageNotification(conversation, message);
     }
 }

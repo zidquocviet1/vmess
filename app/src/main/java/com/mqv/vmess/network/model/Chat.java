@@ -471,6 +471,7 @@ public class Chat implements Parcelable {
     }
 
     public static class Builder {
+        private String id;
         private String senderId;
         private String conversationId;
         private String content;
@@ -481,6 +482,11 @@ public class Chat implements Parcelable {
         private List<Video> videos;
 
         private Builder() {
+        }
+
+        public Builder setId(String id) {
+            this.id = id;
+            return this;
         }
 
         public Builder setSenderId(String senderId) {
@@ -524,7 +530,7 @@ public class Chat implements Parcelable {
         }
 
         public Chat create() {
-            return new Chat(UUID.randomUUID().toString(),
+            return new Chat(id == null ? UUID.randomUUID().toString() : id,
                             senderId,
                             content,
                             conversationId,

@@ -16,6 +16,7 @@ import androidx.work.rxjava3.RxWorker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.data.dao.ChatDao;
+import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.StorageRepositoryImpl;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.exception.FileTooLargeException;
@@ -30,6 +31,7 @@ import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.MessageUtil;
+import com.mqv.vmess.util.UserTokenUtil;
 
 import java.io.File;
 import java.security.SecureRandom;
@@ -90,6 +92,7 @@ public class SendMessageWorkWrapper extends BaseWorker {
     public static class SendMessageWorker extends RxWorker {
         private final FirebaseUser user;
         private final ChatDao dao;
+        private final ChatRepositoryImpl chatRepository;
         private final StorageRepositoryImpl storageRepository;
         /**
          * @param appContext   The application {@link Context}
@@ -99,10 +102,12 @@ public class SendMessageWorkWrapper extends BaseWorker {
         public SendMessageWorker(@Assisted @NonNull Context appContext,
                                  @Assisted @NonNull WorkerParameters workerParams,
                                  ChatDao dao,
+                                 ChatRepositoryImpl chatRepository,
                                  StorageRepositoryImpl storageRepository) {
             super(appContext, workerParams);
             this.user              = FirebaseAuth.getInstance().getCurrentUser();
             this.dao               = dao;
+            this.chatRepository    = chatRepository;
             this.storageRepository = storageRepository;
         }
 
@@ -284,21 +289,33 @@ public class SendMessageWorkWrapper extends BaseWorker {
         }
 
         private Single<Result> sendMessage(Chat chat) {
-            WebSocketClient         webSocket = AppDependencies.getWebSocket();
-            WebSocketRequestMessage request   = new WebSocketRequestMessage(new SecureRandom().nextLong(),
-                                                                            WebSocketRequestMessage.Status.INCOMING_MESSAGE,
-                                                                            chat,
-                                                                            user.getUid());
+            if (LifecycleUtil.isAppForeground()) {
+                WebSocketClient         webSocket = AppDependencies.getWebSocket();
+                WebSocketRequestMessage request   = new WebSocketRequestMessage(new SecureRandom().nextLong(),
+                                                                                WebSocketRequestMessage.Status.INCOMING_MESSAGE,
+                                                                                chat,
+                                                                                user.getUid());
 
-            return webSocket.sendRequest(request)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(Schedulers.io())
-                            .doOnError(t -> webSocket.notifyMessageError(request))
-                            .flatMap(response -> {
-                                AppDependencies.getIncomingMessageProcessor().process(response);
-                                return Single.just(Result.success());
-                            })
-                            .onErrorReturnItem(Result.failure());
+                return webSocket.sendRequest(request)
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(Schedulers.io())
+                                .doOnError(t -> webSocket.notifyMessageError(request))
+                                .flatMap(response -> {
+                                    AppDependencies.getIncomingMessageProcessor().process(response);
+                                    return Single.just(Result.success());
+                                })
+                                .onErrorReturnItem(Result.failure());
+            } else {
+                return UserTokenUtil.getTokenSingle(user)
+                                    .flatMapObservable(token -> chatRepository.sendMessage(chat))
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(Schedulers.io())
+                                    .compose(RxHelper.parseResponseData())
+                                    .flatMapCompletable(chatRepository::saveCached)
+                                    .toSingleDefault(chat)
+                                    .map(c -> Result.success())
+                                    .onErrorReturnItem(Result.failure());
+            }
         }
 
         private List<File> convertToFiles(Chat chat) {

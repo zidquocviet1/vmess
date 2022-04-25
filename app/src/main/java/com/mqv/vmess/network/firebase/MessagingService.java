@@ -9,6 +9,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import com.mqv.vmess.activity.preferences.AppPreferences;
 import com.mqv.vmess.activity.preferences.AppPreferencesImpl;
 import com.mqv.vmess.dependencies.AppDependencies;
+import com.mqv.vmess.notification.NotificationHandler;
 import com.mqv.vmess.notification.NotificationPayload;
 import com.mqv.vmess.util.Logging;
 
@@ -34,6 +35,8 @@ public class MessagingService extends FirebaseMessagingService {
 
         AppPreferences mPreferences = new AppPreferencesImpl(this, PreferenceManager.getDefaultSharedPreferences(this));
         mPreferences.setFcmToken(s);
+
+        ((NotificationHandler)AppDependencies.getNotificationEntry()).registerFcmTokenToServer(s);
     }
 
     @Override

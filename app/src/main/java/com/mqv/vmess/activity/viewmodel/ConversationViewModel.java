@@ -305,7 +305,11 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                 //noinspection ResultOfMethodCallIgnored
                 conversationRepository.fetchCachedById(conversationId)
                                       .compose(RxHelper.applySingleSchedulers())
-                                      .subscribe(c -> setupConversationMetadata(c), t -> {});
+                                      .subscribe(c -> {
+                                          if (mConversation.getId().equals(conversationId)) {
+                                              setupConversationMetadata(c);
+                                          }
+                                      }, t -> {});
             }
         });
 

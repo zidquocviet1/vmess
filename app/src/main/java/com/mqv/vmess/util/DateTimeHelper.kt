@@ -2,6 +2,7 @@ package com.mqv.vmess.util
 
 import android.content.Context
 import com.mqv.vmess.R
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -31,6 +32,10 @@ object DateTimeHelper {
     fun LocalDateTime.toLong(): Long {
         return this.atZone(ZoneId.systemDefault()).toEpochSecond()
     }
+
+    @JvmStatic
+    fun Long.toLocalDateTime() =
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault())
 
     @JvmStatic
     @JvmOverloads

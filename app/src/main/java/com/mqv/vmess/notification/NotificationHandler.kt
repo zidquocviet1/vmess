@@ -12,22 +12,24 @@ import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
+import com.mqv.vmess.network.model.type.MessageStatus
 import com.mqv.vmess.network.service.ChatService
 import com.mqv.vmess.network.service.ConversationService
 import com.mqv.vmess.network.service.FriendRequestService
 import com.mqv.vmess.network.service.UserService
 import com.mqv.vmess.notification.NotificationPayload.*
+import com.mqv.vmess.notification.NotificationUtil.sendIncomingMessageNotification
 import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
 import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.ui.data.People
+import com.mqv.vmess.util.Const
+import com.mqv.vmess.util.DateTimeHelper.toLocalDateTime
 import com.mqv.vmess.util.Logging
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.util.*
 
 class NotificationHandler(
@@ -40,6 +42,7 @@ class NotificationHandler(
     private val gson: Gson
 ) : NotificationEntry {
     private val mUser = FirebaseAuth.getInstance().currentUser!!
+    private val mValidator: NotificationValidator = NotificationValidatorImpl(mDatabase.conversationOptionDao, mUser, mContext)
 
     override fun handleNotificationPayload(payload: NotificationPayload) {
         when (payload) {
@@ -58,42 +61,120 @@ class NotificationHandler(
     * Message from Group or User only
     * */
     private fun handleMessage(payload: IncomingMessagePayload) {
-        val messageId = payload.messageId
-        val senderId = payload.senderId
-        val conversationId = payload.conversationId
+        val message = gson.fromJson(payload.messageJson, Chat::class.java)
 
-        // Only handle the notification message in the background and the websocket is not available
-        if (AppDependencies.getWebSocket().isDead) {
-            shouldHaveConversationInCache(conversationId).zipWith(
-                notifyReceivedIncomingMessage(messageId)
-            ) { conversation, message -> Pair(conversation, message) }
-                .flatMap { checkCacheConversationAndReturnFresh(it, conversationId, messageId) }
-                .map { mapPairToMessageNotificationMetadata(it, senderId) }
-                .subscribe { metadata, _ ->
-                    NotificationUtil.sendIncomingMessageNotification(
-                        mContext,
-                        metadata,
-                        payload.messageId.hashCode()
+        shouldHaveConversationInCache(message.conversationId)
+            .map { optional ->
+                if (optional.isPresent) {
+                    Logging.debug(
+                        TAG,
+                        "Conversation appear in local database, check for duration of send time and current time"
                     )
+                    // If message was sent in the past for a long time, check for this if is duration from larger than 5 minute.
+                    // Then load the conversation from remote and then notify received
+                    return@map Pair(
+                        optional.get(),
+                        message.timestamp >= LocalDateTime.now().minusMinutes(5L)
+                    )
+                } else {
+                    Logging.debug(
+                        TAG,
+                        "Don't have any conversation with id: ${message.conversationId} in local database"
+                    )
+
+                    // Need to fetch conversation from remote
+                    return@map Pair(null, false)
                 }
-        }
+            }
+            .flatMap { pair ->
+                val shouldShowNotification = pair.second
+
+                Logging.debug(TAG, "Should show notification: $shouldShowNotification")
+
+                if (shouldShowNotification) {
+                    return@flatMap Single.just(pair.first!!)
+                } else {
+                    return@flatMap fetchConversation(message.conversationId)
+                }
+            }
+            .flatMapCompletable { conversation ->
+                notifyIncomingMessageNotification(
+                    conversation,
+                    message
+                )
+            }
+            .andThen(
+                mDatabase.chatDao.insert(message)
+                    .andThen(Completable.fromAction {
+                        AppDependencies.getDatabaseObserver()
+                            .notifyMessageInserted(message.conversationId, message.id)
+                    })
+                    .andThen(notifyReceivedIncomingMessage(message.id))
+            )
+            .doOnError {
+                Logging.debug(
+                    TAG,
+                    "Send incoming message not complete because: ${it.message}"
+                )
+            }
+            .onErrorComplete()
+            .subscribe { }
     }
 
     // Update the message status when participants push received or seen.
     private fun handleStatusMessage(payload: StatusMessagePayload) {
-        fetchIncomingMessageRemote(payload.messageId)
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .concatMapCompletable { c ->
-                mDatabase.chatDao.insert(c)
-                    .andThen {
-                        AppDependencies.getDatabaseObserver()
-                            .notifyMessageUpdated(c.conversationId, c.id)
-                    }
+        val status = payload.status
+        val whoSeen = payload.whoSeen
+        val messageId = payload.messageId
+
+        fetchCacheMessage(messageId).flatMapCompletable { message ->
+            Logging.debug(
+                TAG,
+                "The message with id = $messageId represent in the local database, new status is ${status.name}"
+            )
+
+            message.status = status
+
+            if (status == MessageStatus.SEEN) {
+                Logging.debug(TAG, "Add new user to seen message id list")
+
+                message.seenBy.add(whoSeen.get())
             }
-            .onErrorComplete()
-            .subscribe { NotificationUtil.removeNotification(mContext, payload.messageId.hashCode())}
+
+            return@flatMapCompletable insertMessage(message)
+        }.onErrorResumeWith {
+            Logging.debug(
+                TAG,
+                "This message don't represent in local database, make the remote to fetch message"
+            )
+
+            fetchIncomingMessageRemote(payload.messageId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .concatMapCompletable { insertMessage(it) }
+                .onErrorComplete()
+
+        }.subscribe {
+            NotificationUtil.removeNotification(
+                mContext,
+                payload.messageId.hashCode()
+            )
+        }
+
     }
+
+    private fun insertMessage(message: Chat): Completable =
+        mDatabase.chatDao.insert(message)
+            .subscribeOn(Schedulers.io())
+            .andThen {
+                Logging.debug(
+                    TAG,
+                    "Insert message to local database and then notify message updated to observers"
+                )
+
+                AppDependencies.getDatabaseObserver()
+                    .notifyMessageUpdated(message.conversationId, message.id)
+            }
 
     /*
     * Handle new conversation added, in this scenario when the user is added into a group by the others
@@ -310,48 +391,9 @@ class NotificationHandler(
         }
     }
 
-    private fun mapPairToMessageNotificationMetadata(
-        freshData: Pair<Conversation, Chat>,
-        senderId: String
-    ): MessageNotificationMetadata {
-        val conversation = freshData.first
-        val message = freshData.second
-        val sender = conversation.participants.stream()
-            .filter { it.uid == senderId }
-            .findFirst()
-            .orElseThrow { ResourceNotFoundException() }
-
-        return MessageNotificationMetadata(sender, conversation, message)
-    }
-
-    private fun checkCacheConversationAndReturnFresh(
-        pair: Pair<Optional<Conversation>, Chat>,
-        conversationId: String,
-        messageId: String
-    ): Single<Pair<Conversation, Chat>> {
-        if (pair.first.isPresent) {
-            val message = pair.second
-
-            return mDatabase.chatDao.insert(message)
-                .andThen(Single.create { emitter ->
-                    val conversation = pair.first.get()
-
-                    if (!emitter.isDisposed) {
-                        emitter.onSuccess(Pair(conversation, message))
-                    }
-                })
-        } else {
-            return fetchConversation(conversationId)
-                .map { conversation ->
-                    val message = conversation.chats.stream()
-                        .filter { it.id == messageId }
-                        .findFirst()
-                        .orElseThrow { ResourceNotFoundException() }
-
-                    Pair(conversation, message)
-                }
-        }
-    }
+    private fun fetchCacheMessage(messageId: String) =
+        mDatabase.chatDao.findById(messageId)
+            .subscribeOn(Schedulers.io())
 
     private fun fetchIncomingMessageRemote(messageId: String) =
         mUser.authorizeToken().flatMap { token ->
@@ -453,8 +495,39 @@ class NotificationHandler(
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
 
-    private fun Long.toLocalDateTime() =
-        LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault());
+    fun notifyIncomingMessageNotification(
+        conversation: Conversation,
+        message: Chat
+    ): Completable =
+        mValidator.shouldShowNotification(conversation, message)
+            .flatMapCompletable { isShow ->
+                Completable.fromAction {
+                    if (isShow) {
+                        val sender = conversation.participants
+                            .stream()
+                            .filter { u: User -> u.uid == message.senderId }
+                            .findFirst()
+                            .orElseThrow { ResourceNotFoundException() }
+                        val metadata =
+                            MessageNotificationMetadata(sender, conversation, message)
+                        sendIncomingMessageNotification(
+                            mContext,
+                            metadata
+                        )
+                    }
+                }
+            }
+
+    // TODO: check if the request not complete then insert the token to preference and the status of request. For request not complete then make the request at launch time
+    fun registerFcmTokenToServer(token: String) {
+        mUser.authorizeToken().flatMapObservable { bearerToken ->
+            mUserService.sendFcmTokenToServer(bearerToken, Const.DEFAULT_AUTHORIZER, token)
+        }.subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .doOnError { Logging.debug(TAG, "Send fcm token to user fail")}
+            .compose(RxHelper.parseResponseData())
+            .subscribe()
+    }
 
     companion object {
         val TAG: String = NotificationHandler::class.java.simpleName

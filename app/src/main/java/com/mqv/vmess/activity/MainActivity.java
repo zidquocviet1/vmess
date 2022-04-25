@@ -194,6 +194,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
     public void onLost() {
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void onConnectionStateChanged(WebSocketConnectionState state) {
         if (state == WebSocketConnectionState.CONNECTED) {
@@ -207,7 +208,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
             }
 
 
-            Fragment fragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+            Fragment fragment = getVisibleFragment();
 
             if (fragment instanceof BaseFragment) {
                 ((BaseFragment) fragment).onConnectionStateChanged();
@@ -223,11 +224,15 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
     }
 
     private void registerOnSizedConversationListChanged() {
-        Fragment fragment = navHostFragment.getChildFragmentManager().getFragments().get(0);
+        Fragment fragment = getVisibleFragment();
 
         if (fragment instanceof ConversationListInboxFragment) {
             ConversationListInboxFragment conversationFragment = (ConversationListInboxFragment) fragment;
             conversationFragment.registerConversationSizedListener(this);
         }
+    }
+
+    public Fragment getVisibleFragment() {
+        return navHostFragment.getChildFragmentManager().getFragments().get(0);
     }
 }
