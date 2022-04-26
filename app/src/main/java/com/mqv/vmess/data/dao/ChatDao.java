@@ -49,6 +49,17 @@ public interface ChatDao {
     @Query("select * from chat where chat_status = 'NOT_RECEIVED'")
     Single<List<Chat>> fetchNotReceivedChatList();
 
+    @Query("select chat_sender_id from chat" +
+            " where chat_conversation_id = :conversationId" +
+            " group by chat_sender_id" +
+            " having chat_sender_id != :currentUid and chat_sender_id != 'NULL'")
+    Single<List<String>> fetchSenderIdFromChat(String conversationId, String currentUid);
+
+    @Query("select chat_sender_id from chat" +
+            " group by chat_sender_id" +
+            " having chat_sender_id != :currentUid and chat_sender_id != 'NULL'")
+    Single<List<String>> fetchSenderIdFromChat(String currentUid);
+
     @Query("select * from chat where chat_id = :id")
     Single<Chat> findById(String id);
 

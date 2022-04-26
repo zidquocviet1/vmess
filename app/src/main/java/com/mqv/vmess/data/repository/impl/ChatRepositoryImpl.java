@@ -113,6 +113,16 @@ public class ChatRepositoryImpl implements ChatRepository {
     }
 
     @Override
+    public Single<List<String>> fetchSenderIdFromChat(String conversationId) {
+        return dao.fetchSenderIdFromChat(conversationId, user.getUid());
+    }
+
+    @Override
+    public Single<List<String>> fetchSenderIdFromChat() {
+        return dao.fetchSenderIdFromChat(user.getUid());
+    }
+
+    @Override
     public Completable saveCached(Chat chat) {
         return dao.insert(chat)
                   .subscribeOn(Schedulers.io())

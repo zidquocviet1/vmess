@@ -20,6 +20,8 @@ public interface PeopleRepository {
 
     Single<People> getCachedByUid(@NonNull String uid);
 
+    Single<Boolean> isUserPresent(String uid);
+
     Completable save(People people);
 
     Completable save(List<People> peopleList);

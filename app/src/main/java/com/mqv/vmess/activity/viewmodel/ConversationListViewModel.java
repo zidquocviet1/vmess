@@ -12,6 +12,8 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.FriendRequestRepository;
+import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
@@ -58,6 +60,7 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
     protected final MutableLiveData<Pair<Boolean, Integer>>               oneTimeLoadingResult;
     protected final MutableLiveData<Event<Integer>>                       errorEmitter;
     protected final MutableLiveData<Event<Result<List<Conversation>>>>    pagingResult;
+    protected final MutableLiveData<List<User>>                           userLeftGroup;
     protected final CompositeDisposable                                   cd;
 
     private static final String TAG = ConversationListViewModel.class.getSimpleName();
@@ -71,8 +74,10 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
     public ConversationListViewModel(Application application,
                                      ConversationRepository conversationRepository,
                                      ChatRepository chatRepository,
+                                     PeopleRepository peopleRepository,
+                                     FriendRequestRepository friendRequestRepository,
                                      ConversationStatusType status) {
-        super(application, chatRepository);
+        super(application, chatRepository, peopleRepository, friendRequestRepository);
 
         this.conversationRepository     = conversationRepository;
         this.statusType                 = status;
@@ -83,6 +88,7 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
         this.errorEmitter               = new MutableLiveData<>();
         this.pagingResult               = new MutableLiveData<>();
         this.notificationOptionObserver = new MutableLiveData<>();
+        this.userLeftGroup              = new MutableLiveData<>(Collections.emptyList());
 
         registerConversationListObserver(status, Const.DEFAULT_CONVERSATION_PAGING_SIZE);
 
@@ -98,6 +104,7 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
                        .subscribe(presenceUserListObserver::postValue);
 
         fetchAllMuteNotification();
+        setupConversationParticipants(userLeftGroup::postValue);
     }
 
     private void registerConversationListObserver(ConversationStatusType status, int size) {
@@ -131,6 +138,10 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
 
             return newList.containsAll(oldList) && oldList.containsAll(newList);
         });
+    }
+
+    public LiveData<List<User>> getUserLeftGroup() {
+        return userLeftGroup;
     }
 
     public List<String> getPresenceUserList() {

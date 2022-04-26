@@ -337,6 +337,13 @@ public class ConversationActivity
                                                      .orElse(-1))
                       .filter(i -> i >= 0)
                       .forEach(index -> mChatListAdapter.notifyItemChanged(index)));
+
+        mViewModel.getUserLeftGroup().observe(this, user -> {
+            if (mChatListAdapter != null) {
+                mChatListAdapter.setUserLeftGroup(user);
+                mChatListAdapter.notifyItemRangeChanged(0, mChatListAdapter.getCurrentList().size(), ChatListAdapter.MESSAGE_SENDER);
+            }
+        });
     }
 
     @Override

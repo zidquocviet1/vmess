@@ -45,10 +45,12 @@ import com.mqv.vmess.util.views.Stub;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> {
@@ -82,6 +84,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     public static final String MESSAGE_STATUS_PAYLOAD = "message_status";
     public static final String MESSAGE_UNSENT_PAYLOAD = "message_unsent";
     public static final String MESSAGE_SHAPE_PAYLOAD = "message_shape";
+    public static final String MESSAGE_SENDER = "message_sender";
 
     public interface ConversationGroupOption {
         void addMember();
@@ -139,6 +142,11 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
     public void changeChatUnsentStatus(int position) {
         notifyItemChanged(position, MESSAGE_UNSENT_PAYLOAD);
+    }
+
+    public void setUserLeftGroup(List<User> userLeftGroup) {
+        ChatNotificationMessageViewHolder.setUserLeftGroup(userLeftGroup);
+        ChatMultiMediaViewHolder.setUserLeftGroup(userLeftGroup);
     }
 
     public void setUserDetail(User user) {
@@ -216,16 +224,14 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mChatColorStateList,
                         mChatList,
                         mLinkPreviewListener,
-                        mVideoListener,
-                        mConversationMetadata);
+                        mVideoListener);
             case VIEW_CHAT_OUTGOING_MULTI_MEDIA:
                 return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_outgoing_multi_media, parent, false), false, mCurrentUser,
                         mParticipants,
                         mChatColorStateList,
                         mChatList,
                         mLinkPreviewListener,
-                        mVideoListener,
-                        mConversationMetadata);
+                        mVideoListener);
             default:
                 return new ChatListViewHolder(ItemChatBinding.bind(inflater.inflate(R.layout.item_chat, parent, false)),
                         mCurrentUser,
@@ -255,6 +261,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         bindableItem.bindUnsentMessage(getItem(position));
                     } else if (s.equals(MESSAGE_SHAPE_PAYLOAD)) {
                         bindableItem.bindMessageShape(getItem(position));
+                    } else if (s.equals(MESSAGE_SENDER)) {
+
                     }
                 }
             }
@@ -265,7 +273,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 profileHolder.bindTo(mOtherUserDetail);
             }
         } else if (holder instanceof ChatMultiMediaViewHolder) {
-            ((ChatMultiMediaViewHolder) holder).bind(getItem(position));
+            if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_SENDER)) {
+                ((ChatMultiMediaViewHolder) holder).bindNameAndAvatar(getItem(position));
+            } else {
+                ((ChatMultiMediaViewHolder) holder).bind(getItem(position));
+            }
+        } else if (holder instanceof ChatNotificationMessageViewHolder) {
+            ((ChatNotificationMessageViewHolder) holder).bind(getItem(position));
         }
     }
 
@@ -462,13 +476,19 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         private final ItemChatNotificationMessageBinding mBinding;
         private final List<User> mParticipants;
         private final Context mContext;
+        private static List<User> sUserLeftGroup = new ArrayList<>();
 
-        public ChatNotificationMessageViewHolder(@NonNull ItemChatNotificationMessageBinding binding, List<User> mParticipants) {
+        public ChatNotificationMessageViewHolder(@NonNull ItemChatNotificationMessageBinding binding,
+                                                 List<User> mParticipants) {
             super(binding.getRoot());
 
             this.mBinding = binding;
             this.mParticipants = mParticipants;
             this.mContext = binding.getRoot().getContext();
+        }
+
+        public static void setUserLeftGroup(List<User> userLeftGroup) {
+            sUserLeftGroup = userLeftGroup;
         }
 
         public void bind(Chat item) {
@@ -527,13 +547,22 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
 
         private User findUserIfNotExists(String senderId) {
+            Predicate<User> idPredicate = user -> user.getUid().equals(senderId);
+
             return mParticipants.stream()
-                                .filter(u -> u.getUid()
-                                              .equals(senderId))
+                                .filter(idPredicate)
                                 .findFirst()
-                                .orElse(new User.Builder()
-                                                .setDisplayName(mContext.getString(R.string.dummy_user_name))
-                                                .create());
+                                .orElse(sUserLeftGroup.stream()
+                                                      .filter(idPredicate)
+                                                      .findFirst()
+                                                      .orElse(createNonUser()));
+        }
+
+        private User createNonUser() {
+            return new User.Builder()
+                           .setUid("123")
+                           .setDisplayName(mContext.getString(R.string.dummy_user_name))
+                           .create();
         }
     }
 
@@ -556,14 +585,15 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
         boolean mIsReceived;
 
+        private static List<User> sUserLeftGroup = new ArrayList<>();
+
         public ChatMultiMediaViewHolder(@NonNull View itemView, boolean isReceived,
                                         @NonNull User user,
                                         @NonNull List<User> participants,
                                         @NonNull ColorStateList colorStateList,
                                         @NonNull List<Chat> listItem,
                                         @NonNull LinkPreviewListener linkPreviewListener,
-                                        @NonNull BiConsumer<Chat, Chat.Video> videoListener,
-                                        ConversationMetadata metadata) {
+                                        @NonNull BiConsumer<Chat, Chat.Video> videoListener) {
             super(itemView);
 
             if (isReceived) {
@@ -591,6 +621,16 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mReceivedIconDrawable.setTintList(colorStateList);
             mNotReceivedIconDrawable.setTintList(colorStateList);
             mSendingIconDrawable.setTintList(colorStateList);
+        }
+
+        public static void setUserLeftGroup(List<User> userLeftGroup) {
+            sUserLeftGroup = userLeftGroup;
+        }
+
+        public void bindNameAndAvatar(Chat chat) {
+            if (mIsReceived) {
+                Picture.loadUserAvatar(mContext, getSenderFromChat(chat.getSenderId()).getPhotoUrl()).into(mReceivedBinding.imageReceiver);
+            }
         }
 
         public void bind(Chat message) {
@@ -681,13 +721,22 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         }
 
         private User getSenderFromChat(String uid) {
+            Predicate<User> idPredicate = user -> user.getUid().equals(uid);
+
             return mParticipants.stream()
-                    .filter(u -> u.getUid().equals(uid))
-                    .findFirst()
-                    .orElse(new User.Builder()
-                                    .setUid("123")
-                                    .setDisplayName("Application User")
-                                    .create());
+                                .filter(idPredicate)
+                                .findFirst()
+                                .orElse(sUserLeftGroup.stream()
+                                                      .filter(idPredicate)
+                                                      .findFirst()
+                                                      .orElse(createNonUser()));
+        }
+
+        private User createNonUser() {
+            return new User.Builder()
+                           .setUid("123")
+                           .setDisplayName(mContext.getString(R.string.dummy_user_name))
+                           .create();
         }
 
         private void findLastSeenStatus(Chat item) {

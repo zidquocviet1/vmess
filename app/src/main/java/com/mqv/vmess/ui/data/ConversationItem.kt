@@ -13,6 +13,7 @@ import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.network.model.type.MessageStatus
 import com.mqv.vmess.ui.ImageAvatarView
 import com.mqv.vmess.util.Picture
+import java.util.*
 
 abstract class ConversationItem<T>(
     val mContext: Context,
@@ -188,6 +189,27 @@ abstract class ConversationItem<T>(
             .create()
         val index = participants?.indexOf(user)
 
-        return index?.run { return if (this == -1) null else participants[this] }
+        return index?.run { return if (this == -1) getUserIfNotAsParticipant(uid) else participants[this] }
+    }
+
+    private fun getUserIfNotAsParticipant(userId: String): User =
+        sUserLeftGroup.stream()
+            .filter { it.uid == userId }
+            .findFirst()
+            .orElse(createApplicationUser())
+
+    private fun createApplicationUser(): User =
+        User.Builder()
+            .setUid(UUID.randomUUID().toString())
+            .setDisplayName(mContext.getString(R.string.dummy_user_name))
+            .create()
+
+    companion object {
+        private var sUserLeftGroup: List<User> = mutableListOf()
+
+        @JvmStatic
+        fun setUserLeftGroup(userLeftGroup: List<User>) {
+            sUserLeftGroup = userLeftGroup
+        }
     }
 }

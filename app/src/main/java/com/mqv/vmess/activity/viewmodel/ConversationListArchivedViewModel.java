@@ -9,6 +9,8 @@ import androidx.lifecycle.Transformations;
 
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.FriendRequestRepository;
+import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.network.model.Conversation;
 
 import java.util.ArrayList;
@@ -27,8 +29,10 @@ public class ConversationListArchivedViewModel extends ConversationListViewModel
     @Inject
     public ConversationListArchivedViewModel(Application application,
                                              ConversationRepository repository,
+                                             PeopleRepository peopleRepository,
+                                             FriendRequestRepository friendRequestRepository,
                                              ChatRepository chatRepository) {
-        super(application, repository, chatRepository, ARCHIVED);
+        super(application, repository, chatRepository, peopleRepository, friendRequestRepository, ARCHIVED);
 
         this.currentPage = 0;
 

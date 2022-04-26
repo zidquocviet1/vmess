@@ -14,6 +14,8 @@ import com.mqv.vmess.activity.viewmodel.ConversationListViewModel;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.FriendRequestRepository;
+import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.model.Chat;
@@ -50,8 +52,10 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
     @Inject
     public ConversationFragmentViewModel(Application application,
                                          ConversationRepository conversationRepository,
+                                         PeopleRepository peopleRepository,
+                                         FriendRequestRepository friendRequestRepository,
                                          ChatRepository chatRepository) {
-        super(application, conversationRepository, chatRepository, INBOX);
+        super(application, conversationRepository, chatRepository, peopleRepository, friendRequestRepository, INBOX);
 
         this.refreshConversationResult = new MutableLiveData<>();
         this.loadingConversationResult = new MutableLiveData<>();

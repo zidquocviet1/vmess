@@ -60,6 +60,11 @@ public class PeopleRepositoryImpl implements PeopleRepository {
     }
 
     @Override
+    public Single<Boolean> isUserPresent(String uid) {
+        return peopleDao.isUserPresent(uid);
+    }
+
+    @Override
     public Completable save(People people) {
         return peopleDao.save(people);
     }

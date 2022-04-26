@@ -24,6 +24,7 @@ import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.FriendRequestRepository;
 import com.mqv.vmess.data.repository.MediaRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
@@ -105,6 +106,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     private final MutableLiveData<Event<Integer>>                   eventToast;
     private final MutableLiveData<Map<String, LinkPreviewMetadata>> linkPreviewMapper;
     private final MutableLiveData<List<Media>>                      mediaAttachment;
+    private final MutableLiveData<List<User>>                       userLeftGroup;
     private final DatabaseObserver.MessageListener                  messageListener;
     private final CompositeDisposable                               cd;
 
@@ -116,10 +118,11 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                  UserRepository userRepository,
                                  PeopleRepository peopleRepository,
                                  ChatRepository chatRepository,
+                                 FriendRequestRepository friendRequestRepository,
                                  MediaRepository mediaRepository,
                                  SavedStateHandle savedStateHandle,
                                  Application application) {
-        super(application, chatRepository);
+        super(application, chatRepository, peopleRepository, friendRequestRepository);
 
         this.conversationRepository   = repository;
         this.chatRepository           = chatRepository;
@@ -138,6 +141,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         this.eventToast               = new MutableLiveData<>();
         this.linkPreviewMapper        = new MutableLiveData<>(new ConcurrentHashMap<>());
         this.mediaAttachment          = new MutableLiveData<>();
+        this.userLeftGroup            = new MutableLiveData<>(Collections.emptyList());
         this.cd                       = new CompositeDisposable();
         this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
@@ -216,6 +220,10 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         return mediaAttachment;
     }
 
+    public LiveData<List<User>> getUserLeftGroup() {
+        return userLeftGroup;
+    }
+
     //// Private method
     private void getCacheConversationById(String conversationId) {
         Disposable disposable = conversationRepository.fetchCachedById(conversationId)
@@ -292,6 +300,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         conversationObserver.postValue(Result.Success(conversation));
 
         setupConversationMetadata(conversation);
+        setupConversationParticipants(conversation, userLeftGroup::postValue);
 
         AppDependencies.getDatabaseObserver().registerMessageListener(conversation.getId(), messageListener);
         AppDependencies.getDatabaseObserver().registerConversationListener(new DatabaseObserver.ConversationListener() {
@@ -378,6 +387,8 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                                       currentChatPage += 1;
 
                                                       chatRepository.saveCached(freshData);
+
+                                                      setupConversationParticipants(conversation, userLeftGroup::postValue);
                                                   } else if (response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
                                                       handleLoadChatError(R.string.error_user_not_in_conversation);
                                                   }

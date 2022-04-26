@@ -25,6 +25,9 @@ public interface PeopleDao {
     @Query("select * from people where uid = :uid")
     Single<People> getByUid(String uid);
 
+    @Query("select exists(select * from people where uid = :uid)")
+    Single<Boolean> isUserPresent(String uid);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable save(People people);
 

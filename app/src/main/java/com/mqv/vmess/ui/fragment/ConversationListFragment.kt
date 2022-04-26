@@ -26,6 +26,7 @@ import com.mqv.vmess.ui.adapter.payload.ConversationNotificationPayload
 import com.mqv.vmess.ui.adapter.payload.ConversationNotificationType
 import com.mqv.vmess.ui.adapter.payload.ConversationPresencePayload
 import com.mqv.vmess.ui.adapter.payload.ConversationPresenceType
+import com.mqv.vmess.ui.data.ConversationItem
 import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.util.AlertDialogUtil
 import com.mqv.vmess.util.DateTimeHelper.expire
@@ -68,6 +69,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     override fun setupObserver() {
         mViewModel.presenceUserListObserverDistinct.observe(this) { bindPresenceConversation() }
         mViewModel.conversationNotificationOption.observe(this) { bindNotificationOption() }
+        mViewModel.userLeftGroup.observe(this) { ConversationItem.setUserLeftGroup(it) }
     }
 
     override fun onDelete(conversation: Conversation?) {
