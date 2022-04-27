@@ -103,6 +103,7 @@ public class PeopleRepositoryImpl implements PeopleRepository {
                     return true;
 
                 var time = data.stream()
+                        .filter(p -> p.getFriend() != null && p.getFriend())
                         .map(p -> p.getAccessedDate().plusMinutes(10).compareTo(LocalDateTime.now()))
                         .filter(i -> i <= 0)
                         .collect(Collectors.toList());
