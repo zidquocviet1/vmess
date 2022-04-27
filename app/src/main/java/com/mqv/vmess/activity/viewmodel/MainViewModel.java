@@ -18,8 +18,6 @@ import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.MessageUtil;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -75,7 +73,12 @@ public class MainViewModel extends AbstractMainViewModel {
     }
 
     public LiveData<Integer> getPeopleActiveBadgeResult() {
-        return Transformations.map(getPresenceUserList(), List::size);
+        return Transformations.switchMap(getPresenceUserList(), ids ->
+                Transformations.map(getListPeople(), peopleList -> Long.valueOf(peopleList.stream()
+                                                                                          .filter(people -> people.getFriend() != null &&
+                                                                                                            people.getFriend() &&
+                                                                                                            ids.contains(people.getUid()))
+                                                                                          .count()).intValue()));
     }
 
     private void loadNotificationBadge() {
