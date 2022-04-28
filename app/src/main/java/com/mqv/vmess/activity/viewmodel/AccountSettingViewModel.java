@@ -60,7 +60,9 @@ public class AccountSettingViewModel extends LogoutHandlerViewModel {
                             AppDependencies.closeAllConnection();
 
                             var localDisposable = removeAfterLogout(currentUser.getUid())
-                                    .subscribe(() -> signOutStatus.setValue(Result.Success(response.getSuccess())),
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(Schedulers.io())
+                                    .subscribe(() -> signOutStatus.postValue(Result.Success(response.getSuccess())),
                                             t -> handleSignOutError(R.string.error_unknown));
 
                             logoutLocalDisposable = localDisposable;
