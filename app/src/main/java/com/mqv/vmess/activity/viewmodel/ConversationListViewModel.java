@@ -420,6 +420,10 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
         conversationListObserver.postValue(conversations);
     }
 
+    public void loadUserLeftGroup() {
+        setupConversationParticipants(userLeftGroup::postValue);
+    }
+
     public void forceClearDispose() {
         cd.clear();
     }
