@@ -351,6 +351,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         mAdapter.submitList(ArrayList(mConversations)) {
             bindNotificationOption()
             bindPresenceConversation()
+            mViewModel.loadUserLeftGroup()
         }
     }
 
