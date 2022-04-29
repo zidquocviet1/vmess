@@ -12,6 +12,7 @@ import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
 import com.mqv.vmess.data.dao.PeopleDao;
+import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.dao.UserDao;
 import com.mqv.vmess.util.Const;
 
@@ -74,5 +75,11 @@ public class DatabaseModule {
     @Singleton
     public ConversationOptionDao provideOptionDao(MyDatabase db) {
         return db.getConversationOptionDao();
+    }
+
+    @Provides
+    @Singleton
+    public RecentSearchDao provideRecentSearch(MyDatabase db) {
+        return db.getRecentSearchDao();
     }
 }

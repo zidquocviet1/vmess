@@ -9,9 +9,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.room.rxjava3.EmptyResultSetException
 import androidx.work.Data
 import com.google.firebase.auth.FirebaseAuth
+import com.mqv.vmess.data.model.RecentSearchPeople
 import com.mqv.vmess.data.repository.ChatRepository
 import com.mqv.vmess.data.repository.ConversationRepository
 import com.mqv.vmess.data.repository.PeopleRepository
+import com.mqv.vmess.data.repository.SearchRepository
 import com.mqv.vmess.dependencies.AppDependencies
 import com.mqv.vmess.manager.LoggedInUserManager
 import com.mqv.vmess.network.model.Chat
@@ -22,19 +24,25 @@ import com.mqv.vmess.reactive.RxHelper.applyCompleteSchedulers
 import com.mqv.vmess.ui.ConversationOptionHandler
 import com.mqv.vmess.ui.data.ConversationMapper
 import com.mqv.vmess.ui.data.People
+import com.mqv.vmess.ui.data.RecentSearch
 import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.ui.fragment.ConversationListFragment
 import com.mqv.vmess.ui.fragment.SuggestionFriendListFragment
+import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.MessageUtil
 import com.mqv.vmess.work.SendMessageWorkWrapper
 import com.mqv.vmess.work.WorkDependency
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import java.util.*
+import io.reactivex.rxjava3.schedulers.Schedulers
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import java.util.stream.Collectors
 import javax.inject.Inject
+import kotlin.streams.toList
 
 @HiltViewModel
 class UserSelectionListViewModel @Inject constructor(
@@ -42,12 +50,13 @@ class UserSelectionListViewModel @Inject constructor(
     private val peopleRepository: PeopleRepository,
     private val conversationRepository: ConversationRepository,
     private val messageRepository: ChatRepository,
+    private val recentSearchRepository: SearchRepository,
     application: Application
 ) : AndroidViewModel(application) {
     private val mCurrentUser = FirebaseAuth.getInstance().currentUser!!
     private val compositeDisposable = CompositeDisposable()
     private val _userSuggestionList = MutableLiveData(mutableListOf<UserSelection>())
-    private val _userRecentSearchList = MutableLiveData(mutableListOf<UserSelection>())
+    private val _userRecentSearchList = MutableLiveData(mutableListOf<RecentSearch>())
 
     private var whoCreateWith: UserSelection? = null
     private var messageToSend: Chat? = null
@@ -67,12 +76,37 @@ class UserSelectionListViewModel @Inject constructor(
         fetchSuggestedFriend(
             savedStateHandle.get<Boolean>(SuggestionFriendListFragment.ARG_INCLUDE_GROUP) ?: false
         )
+        fetchRecentSearchList()
 
         messageToSend = savedStateHandle.get(SuggestionFriendListFragment.ARG_MESSAGE_TO_SEND)
+
+        AppDependencies.getWebSocket().presenceUserList
+            .delay(2, TimeUnit.SECONDS)
+            .compose(RxHelper.applyObservableSchedulers())
+            .subscribe { presence ->
+                val suggestion = _userSuggestionList.value
+                val recentSearch = _userRecentSearchList.value
+
+                suggestion?.let {
+                    _userSuggestionList.postValue(
+                        it.stream().peek { selection ->
+                            selection.isOnline = presence.contains(selection.uid)
+                        }.toList().toMutableList()
+                    )
+                }
+
+                recentSearch?.let {
+                    _userRecentSearchList.postValue(
+                        it.stream().peek { rs -> rs.isOnline = presence.contains(rs.uid) }
+                            .toList()
+                            .toMutableList()
+                    )
+                }
+            }
     }
 
     val userSuggestionList: LiveData<MutableList<UserSelection>> get() = _userSuggestionList
-    val userRecentSearchList: LiveData<MutableList<UserSelection>> get() = _userRecentSearchList
+    val userRecentSearchList: LiveData<MutableList<RecentSearch>> get() = _userRecentSearchList
 
     fun notifyUserSelect(item: UserSelection) {
         createNewList().let {
@@ -269,6 +303,63 @@ class UserSelectionListViewModel @Inject constructor(
             .collect(Collectors.toList())
 
     private fun fetchRecentSearchList() {
+        compositeDisposable.add(
+            recentSearchRepository.getAll()
+                .flatMapObservable { Observable.fromIterable(it) }
+                .concatMapDelayError { search ->
+                    Observable.just(search)
+                        .zipWith(peopleRepository.getCachedByUid(search.userId).filter { it.friend }
+                            .toObservable()) { recentSearch, people ->
+                            RecentSearch(
+                                people.uid,
+                                people.photoUrl,
+                                people.displayName,
+                                isOnline = false,
+                                recentSearch.timestamp
+                            )
+                        }
+                }
+                .toList()
+                .doOnError { Logging.show("Cannot fetch recent search people because: ${it.message}") }
+                .onErrorReturnItem(mutableListOf())
+                .subscribeOn(Schedulers.io())
+                .subscribe { data ->
+                    _userRecentSearchList.postValue(
+                        data.stream()
+                            .sorted { o1, o2 -> o2.timestamp.compareTo(o1.timestamp) }
+                            .toList()
+                            .toMutableList()
+                    )
+                }
+        )
+    }
+
+    fun insertRecentSearch(userId: String) {
+        compositeDisposable.add(
+            recentSearchRepository.insert(RecentSearchPeople(userId, LocalDateTime.now().toLong()))
+                .subscribeOn(Schedulers.io())
+                .onErrorComplete()
+                .subscribe {
+                    Logging.show("Insert recent search successfully")
+                    fetchRecentSearchList()
+                }
+        )
+    }
+
+    fun removeRecentSearch(item: RecentSearchPeople) {
+        compositeDisposable.add(
+            recentSearchRepository.delete(item)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .onErrorComplete()
+                .subscribe {
+                    Logging.show("Delete recent search successfully")
+                    fetchRecentSearchList()
+                }
+        )
+    }
+
+    fun searching(name: String) {
 
     }
 

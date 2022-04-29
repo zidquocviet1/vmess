@@ -5,17 +5,20 @@ import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.PeopleDao;
+import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.MediaRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
+import com.mqv.vmess.data.repository.SearchRepository;
 import com.mqv.vmess.data.repository.StorageRepository;
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.ConversationRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.MediaRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.NotificationRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.PeopleRepositoryImpl;
+import com.mqv.vmess.data.repository.impl.SearchRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.StorageRepositoryImpl;
 import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
@@ -72,5 +75,11 @@ public class RepoViewModelModule {
     @Provides
     public MediaRepository provideMediaRepository() {
         return new MediaRepositoryImpl();
+    }
+
+    @ViewModelScoped
+    @Provides
+    public SearchRepository provideRecentSearchRepository(RecentSearchDao dao, PeopleDao peopleDao) {
+        return new SearchRepositoryImpl(dao, peopleDao);
     }
 }

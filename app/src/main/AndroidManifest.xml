@@ -74,7 +74,10 @@
             android:exported="true" />
         <activity
             android:name=".activity.SearchConversationActivity"
-            android:exported="true" />
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activity.ConversationActivity"
             android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"
@@ -104,9 +107,9 @@
         <activity
             android:name=".activity.preferences.PreferenceFriendRequestActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:parentActivityName=".activity.UserActivity"
             android:screenOrientation="portrait"
-            android:launchMode="singleTask"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="com.tac.open.friend.request" />

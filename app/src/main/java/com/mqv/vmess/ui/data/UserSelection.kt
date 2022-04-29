@@ -8,7 +8,7 @@ data class UserSelection(
     val uid: String,
     val photoUrl: String?,
     val displayName: String,
-    val isOnline: Boolean,
+    var isOnline: Boolean,
     var isSelected: Boolean,
     val isConversation: Boolean = false,
     val isGroup: Boolean = false,

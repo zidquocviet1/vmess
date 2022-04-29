@@ -4,6 +4,74 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".activity.SearchConversationActivity">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar"
+        style="@style/Widget.MaterialComponents.AppBarLayout.Surface"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:liftOnScroll="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:weightSum="20">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_back"
+                style="@style/MaterialIconButton"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/all_margin"
+                android:layout_weight="1"
+                android:backgroundTint="?android:colorBackground"
+                app:icon="@drawable/ic_back" />
+
+            <EditText
+                android:id="@+id/edit_search"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/all_margin"
+                android:layout_marginEnd="@dimen/all_margin"
+                android:layout_weight="18"
+                android:autofillHints="name"
+                android:background="@android:color/transparent"
+                android:hint="@string/action_search_message"
+                android:inputType="textAutoComplete"
+                android:textColorHint="@color/md_grey_500"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:ignore="LabelFor" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_delete"
+                style="@style/MaterialIconButton"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:backgroundTint="?android:colorBackground"
+                app:icon="@drawable/ic_round_close" />
+        </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <View
+        android:id="@+id/divider_picture"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?colorControlHighlight"
+        app:layout_constraintTop_toBottomOf="@id/appbar" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:defaultNavHost="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appbar"
+        app:navGraph="@navigation/search" />
 </androidx.constraintlayout.widget.ConstraintLayout>

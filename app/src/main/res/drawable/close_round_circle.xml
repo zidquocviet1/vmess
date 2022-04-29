@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <corners android:radius="1000dp" />
+            <solid android:color="@color/white" />
+        </shape>
+    </item>
+    <item>
+        <selector>
+            <item android:state_pressed="true">
+                <color android:color="@color/md_grey_500" />
+            </item>
+        </selector>
+    </item>
+    <item
+        android:bottom="2dp"
+        android:drawable="@drawable/ic_round_close"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
+    </item>
+</layer-list>

@@ -318,6 +318,7 @@
     <string name="error_qr_code_not_found">This qr code is not available</string>
     <string name="error_user_not_in_conversation">You not belong to this conversation. Permission denied!</string>
     <string name="error_create_group_conversation_fail">Something wrong when create a new group. Try again</string>
+    <string name="error_no_result_found_for">No results found for \"%1$s\".</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>

@@ -28,6 +28,9 @@ public interface PeopleDao {
     @Query("select exists(select * from people where uid = :uid)")
     Single<Boolean> isUserPresent(String uid);
 
+    @Query("select * from people where is_friend = 1 and displayName like '%' || :query || '%'")
+    Single<List<People>> search(String query);
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     Completable save(People people);
 

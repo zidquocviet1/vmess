@@ -34,8 +34,11 @@
         android:id="@+id/recycler_friend_recent_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
         android:visibility="gone"
-        android:layout_marginTop="@dimen/all_margin_top_soft"
         app:layout_constraintTop_toBottomOf="@id/text_recent_search"
         tools:listitem="@layout/item_user_selection" />
 

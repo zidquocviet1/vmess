@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="6dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/remove"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginTop="2dp"
+        android:background="@drawable/close_round_circle"
+        android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="@id/conversation_thumbnail"
+        app:layout_constraintTop_toTopOf="@id/conversation_thumbnail"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <com.mqv.vmess.ui.components.conversation.ConversationHeaderThumbnail
+        android:id="@+id/conversation_thumbnail"
+        android:layout_width="wrap_content"
+        android:padding="4dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_display_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:ellipsize="end"
+        android:maxEms="4"
+        android:maxLines="2"
+        android:text="@string/author_app_full_name"
+        android:textAlignment="center"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        app:layout_constraintEnd_toEndOf="@id/conversation_thumbnail"
+        app:layout_constraintStart_toStartOf="@id/conversation_thumbnail"
+        app:layout_constraintTop_toBottomOf="@id/conversation_thumbnail" />
+</androidx.constraintlayout.widget.ConstraintLayout>

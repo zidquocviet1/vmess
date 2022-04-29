@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Resources.getSystem
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -44,7 +45,6 @@ class ConversationHeaderThumbnail @JvmOverloads constructor(
             mBinding.imageActive.updateLayoutParams<ConstraintLayout.LayoutParams> {
                 bottomToBottom = R.id.image_single_avatar
                 endToEnd = R.id.image_single_avatar
-                marginEnd = (-4).dp
             }
         }
         mBinding.imageActive.visibility = if (isActive) View.VISIBLE else View.GONE
@@ -61,6 +61,11 @@ class ConversationHeaderThumbnail @JvmOverloads constructor(
             mBinding.imageSingleAvatar.visibility = INVISIBLE
             mBinding.layoutMultipleThumbnail.visibility = INVISIBLE
         }
+    }
+
+    fun setSingleThumbnailSize(width: Int, height: Int) {
+        mBinding.imageSingleAvatar.layoutParams = ViewGroup.LayoutParams(width, height)
+        mBinding.imageSingleAvatar.requestLayout()
     }
 
     private fun setSingleThumbnail(photoUrl: String?) {

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/search"
+    app:startDestination="@id/suggestionFriendListFragment">
+
+    <fragment
+        android:id="@+id/searchResultFragment"
+        android:name="com.mqv.vmess.ui.fragment.SearchResultFragment"
+        android:label="SearchResultFragment"
+        tools:layout="@layout/fragment_search_result">
+        <argument
+            android:name="name"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/suggestionFriendListFragment"
+        android:name="com.mqv.vmess.ui.fragment.SuggestionFriendListFragment"
+        android:label="fragment_suggestion_friend_list"
+        tools:layout="@layout/fragment_suggestion_friend_list">
+        <argument
+            android:name="hide_search_bar"
+            android:defaultValue="false"
+            app:argType="boolean" />
+
+        <action
+            android:id="@+id/action_search_result"
+            app:destination="@id/searchResultFragment" />
+        <action
+            android:id="@+id/action_conversation"
+            app:destination="@id/conversation_activity" />
+    </fragment>
+
+    <activity
+        android:id="@+id/conversation_activity"
+        android:name="com.mqv.vmess.activity.ConversationActivity"
+        tools:layout="@layout/activity_conversation">
+        <argument
+            android:name="participant_id"
+            app:argType="string"
+            app:nullable="false" />
+    </activity>
+</navigation>
