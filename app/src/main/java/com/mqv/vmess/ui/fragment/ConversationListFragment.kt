@@ -108,6 +108,23 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         mViewModel.unMuteNotification(conversation)
     }
 
+    fun createGroup(participants: List<UserSelection>) {
+        mViewModel.createGroup(
+            LoggedInUserManager.getInstance().loggedInUser,
+            participants.stream()
+                .map { us ->
+                    with(us) {
+                        return@with User.Builder()
+                            .setUid(uid)
+                            .setDisplayName(displayName)
+                            .setPhotoUrl(photoUrl)
+                            .create()
+                    }
+                }
+                .collect(Collectors.toList())
+        )
+    }
+
     override fun onCreateGroup(conversation: Conversation?, whoCreateWith: User) {
         val intent = Intent(requireContext(), AddGroupConversationActivity::class.java).apply {
             putExtra(EXTRA_USER, whoCreateWith)
@@ -121,22 +138,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                         )
 
                     userSelectedList?.let {
-                        val userParticipants = it.stream()
-                            .map { us ->
-                                with(us) {
-                                    return@with User.Builder()
-                                        .setUid(uid)
-                                        .setDisplayName(displayName)
-                                        .setPhotoUrl(photoUrl)
-                                        .create()
-                                }
-                            }
-                            .collect(Collectors.toList())
-
-                        mViewModel.createGroup(
-                            LoggedInUserManager.getInstance().loggedInUser,
-                            userParticipants
-                        )
+                        createGroup(it)
                     }
                 }
             }
@@ -195,7 +197,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
             mAdapter.notifyItemRangeChanged(
                 0,
                 mConversations.size,
-                ConversationPresencePayload(ConversationPresenceType.OFFLINE, LocalDateTime.now().toLong())
+                ConversationPresencePayload(
+                    ConversationPresenceType.OFFLINE,
+                    LocalDateTime.now().toLong()
+                )
             )
         } else {
             val onlineUsers: List<User?> = onlineUsersId.stream()
@@ -212,9 +217,15 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
                     val hasAny = !Collections.disjoint(users, HashSet(onlineUsers))
                     val payload =
                         if (hasAny) {
-                            ConversationPresencePayload(ConversationPresenceType.ONLINE, LocalDateTime.now().toLong())
+                            ConversationPresencePayload(
+                                ConversationPresenceType.ONLINE,
+                                LocalDateTime.now().toLong()
+                            )
                         } else {
-                            ConversationPresencePayload(ConversationPresenceType.OFFLINE, LocalDateTime.now().toLong())
+                            ConversationPresencePayload(
+                                ConversationPresenceType.OFFLINE,
+                                LocalDateTime.now().toLong()
+                            )
                         }
                     postToRecyclerview {
                         mAdapter.notifyItemChanged(

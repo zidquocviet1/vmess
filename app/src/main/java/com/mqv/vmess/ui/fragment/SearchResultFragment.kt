@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mqv.vmess.R
+import com.mqv.vmess.activity.AddConversationActivity
 import com.mqv.vmess.activity.SearchConversationActivity
 import com.mqv.vmess.databinding.FragmentSearchResultBinding
 import com.mqv.vmess.ui.adapter.BaseAdapter
@@ -33,8 +34,8 @@ class SearchResultFragment : BaseFragment<SearchViewModel, FragmentSearchResultB
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        if (context is SearchConversationActivity) {
-            mCallback = context
+        if (context is SearchConversationActivity || context is AddConversationActivity) {
+            mCallback = context as SuggestionFriendListFragment.SearchHandler
         }
     }
 

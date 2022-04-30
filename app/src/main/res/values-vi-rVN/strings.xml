@@ -294,4 +294,5 @@
     <string name="label_conversation_mark_read">Đánh dấu đã đọc</string>
     <string name="label_turn_off_all_notification">Tắt thông báo cho toàn bộ ứng dụng.</string>
     <string name="error_no_result_found_for">Không có kết quả đối với "%1$s".</string>
+    <string name="action_new_group">Tạo nhóm mới</string>
 </resources>

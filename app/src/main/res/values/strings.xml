@@ -211,6 +211,7 @@
         <item>@string/action_mute_notification_7_day</item>
         <item>@string/action_mute_notification_always</item>
     </array>
+    <string name="action_new_group">New group</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>

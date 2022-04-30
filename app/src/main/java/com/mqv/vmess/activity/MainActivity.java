@@ -26,11 +26,14 @@ import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.NetworkConstraint;
 import com.mqv.vmess.network.websocket.WebSocketConnectionState;
+import com.mqv.vmess.ui.data.UserSelection;
 import com.mqv.vmess.ui.fragment.BaseFragment;
+import com.mqv.vmess.ui.fragment.ConversationListFragment;
 import com.mqv.vmess.ui.fragment.ConversationListInboxFragment;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 import dagger.hilt.android.AndroidEntryPoint;
@@ -135,7 +138,20 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         if (id == mBinding.imageAvatar.getId()) {
             startActivity(UserActivity.class);
         } else if (id == mBinding.buttonAddConversation.getId()) {
-            startActivity(AddConversationActivity.class);
+            activityResultLauncher.launch(new Intent(this, AddConversationActivity.class), result -> {
+                if (result != null && result.getResultCode() == RESULT_OK) {
+                    Intent data = result.getData();
+                    if (data != null) {
+                        ArrayList<UserSelection> selections = data.getParcelableArrayListExtra(AddGroupConversationActivity.EXTRA_GROUP_PARTICIPANTS);
+                        Fragment visibleFragment = getVisibleFragment();
+
+                        if (visibleFragment instanceof ConversationListFragment) {
+                            //noinspection unchecked
+                            ((ConversationListFragment)visibleFragment).createGroup(selections);
+                        }
+                    }
+                }
+            });
         } else if (id == mBinding.buttonQrScanner.getId()) {
             startActivity(ConnectPeopleActivity.class);
         } else if (id == mBinding.buttonAllPeople.getId()) {

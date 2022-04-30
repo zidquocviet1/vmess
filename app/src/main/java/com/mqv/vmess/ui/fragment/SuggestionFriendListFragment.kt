@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.mqv.vmess.activity.AddConversationActivity
 import com.mqv.vmess.activity.SearchConversationActivity
 import com.mqv.vmess.activity.viewmodel.UserSelectionListViewModel
 import com.mqv.vmess.databinding.FragmentSuggestionFriendListBinding
@@ -27,6 +28,7 @@ class SuggestionFriendListFragment :
     private var mSingleSend = false
     private var mIncludeGroup = false
     private var mShouldHideSearchBar = false
+    private var mShouldHideRecentSearch = false
     private var mSearchHandler: SearchHandler? = null
 
     interface SearchHandler {
@@ -36,8 +38,8 @@ class SuggestionFriendListFragment :
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
-        if (context is SearchConversationActivity) {
-            mSearchHandler = context
+        if (context is SearchConversationActivity || context is AddConversationActivity) {
+            mSearchHandler = context as SearchHandler
         }
     }
 
@@ -48,6 +50,7 @@ class SuggestionFriendListFragment :
             mSingleSend = it.getBoolean(ARG_SINGLE_SEND, false)
             mIncludeGroup = it.getBoolean(ARG_INCLUDE_GROUP, false)
             mShouldHideSearchBar = it.getBoolean(ARG_HIDE_SEARCH_BAR, false)
+            mShouldHideRecentSearch = it.getBoolean(ARG_HIDE_RECENT_SEARCH, false)
         }
     }
 
@@ -107,7 +110,7 @@ class SuggestionFriendListFragment :
         }
 
         mViewModel.userRecentSearchList.observe(viewLifecycleOwner) { userRecentSearchList ->
-            if (mSearchHandler == null) {
+            if (mSearchHandler == null || mShouldHideRecentSearch) {
                 mBinding.textRecentSearch.visibility = View.GONE
                 mBinding.recyclerFriendRecentSearch.visibility = View.GONE
                 return@observe
@@ -157,6 +160,7 @@ class SuggestionFriendListFragment :
         const val ARG_INCLUDE_GROUP = "include_group"
         const val ARG_MESSAGE_TO_SEND = "message"
         const val ARG_HIDE_SEARCH_BAR = "hide_search_bar"
+        const val ARG_HIDE_RECENT_SEARCH = "hide_recent_search"
 
         @JvmStatic
         @JvmOverloads
@@ -164,7 +168,8 @@ class SuggestionFriendListFragment :
             multiSelect: Boolean = false,
             singleSend: Boolean = false,
             includeGroup: Boolean = false,
-            hideSearchBar: Boolean = false
+            hideSearchBar: Boolean = false,
+            hideRecentSearch: Boolean = false,
         ) =
             SuggestionFriendListFragment().apply {
                 arguments = Bundle().apply {
@@ -172,6 +177,7 @@ class SuggestionFriendListFragment :
                     putBoolean(ARG_SINGLE_SEND, singleSend)
                     putBoolean(ARG_INCLUDE_GROUP, includeGroup)
                     putBoolean(ARG_HIDE_SEARCH_BAR, hideSearchBar)
+                    putBoolean(ARG_HIDE_RECENT_SEARCH, hideRecentSearch)
                 }
             }
     }
