@@ -9,6 +9,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.room.rxjava3.EmptyResultSetException
 import androidx.work.Data
 import com.google.firebase.auth.FirebaseAuth
+import com.mqv.vmess.activity.AddGroupConversationActivity
 import com.mqv.vmess.data.model.RecentSearchPeople
 import com.mqv.vmess.data.repository.ChatRepository
 import com.mqv.vmess.data.repository.ConversationRepository
@@ -26,7 +27,6 @@ import com.mqv.vmess.ui.data.ConversationMapper
 import com.mqv.vmess.ui.data.People
 import com.mqv.vmess.ui.data.RecentSearch
 import com.mqv.vmess.ui.data.UserSelection
-import com.mqv.vmess.ui.fragment.ConversationListFragment
 import com.mqv.vmess.ui.fragment.SuggestionFriendListFragment
 import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Logging
@@ -62,7 +62,7 @@ class UserSelectionListViewModel @Inject constructor(
     private var messageToSend: Chat? = null
 
     init {
-        val firstSelectedUser = savedStateHandle.get<User>(ConversationListFragment.EXTRA_USER)
+        val firstSelectedUser = savedStateHandle.get<User>(AddGroupConversationActivity.EXTRA_USER)
         firstSelectedUser?.let { user ->
             with(user) {
                 whoCreateWith = UserSelection(
@@ -110,14 +110,18 @@ class UserSelectionListViewModel @Inject constructor(
 
     fun notifyUserSelect(item: UserSelection) {
         createNewList().let {
-            val position = it.indexOf(item)
-            val updatedUserSelection = with(item) {
-                UserSelection(uid, photoUrl, displayName, isOnline, isSelected = !isSelected)
+            if (whoCreateWith != null && whoCreateWith!!.uid == item.uid) {
+                return@let
+            } else {
+                val position = it.indexOf(item)
+                val updatedUserSelection = with(item) {
+                    UserSelection(uid, photoUrl, displayName, isOnline, isSelected = !isSelected)
+                }
+
+                it[position] = updatedUserSelection
+
+                _userSuggestionList.postValue(it)
             }
-
-            it[position] = updatedUserSelection
-
-            _userSuggestionList.postValue(it)
         }
     }
 
