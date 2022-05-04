@@ -23,11 +23,11 @@ abstract class ConversationItem<T>(
 ) : BindableConversation<T> {
     private val mErrorChatColor =
         ColorStateList.valueOf(ContextCompat.getColor(mContext, android.R.color.holo_red_light))
-    private val mReceivedIconDrawable =
+    protected val mReceivedIconDrawable =
         ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle)
-    private val mNotReceivedIconDrawable =
+    protected val mNotReceivedIconDrawable =
         ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle_outline)
-    private val mSendingIconDrawable =
+    protected val mSendingIconDrawable =
         ContextCompat.getDrawable(mContext, R.drawable.ic_outline_circle)
     private val mErrorIconDrawable =
         ContextCompat.getDrawable(mContext, R.drawable.ic_round_error)

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/conversation_preferences"
+    app:startDestination="@id/conversationDetailFragment">
+
+    <fragment
+        android:id="@+id/conversationDetailFragment"
+        android:name="com.mqv.vmess.ui.fragment.ConversationDetailFragment"
+        android:label="fragment_conversation_detail"
+        tools:layout="@layout/fragment_conversation_detail">
+        <action
+            android:id="@+id/action_addGroupConversationActivity"
+            app:destination="@id/addGroupConversationActivity" />
+        <action
+            android:id="@+id/action_notificationPreferenceFragment"
+            app:destination="@id/notificationPreferenceFragment" />
+        <action
+            android:id="@+id/action_conversationActivity"
+            app:destination="@id/conversationActivity" />
+        <action
+            android:id="@+id/action_inputDialogFragment"
+            app:destination="@id/inputDialogFragment" />
+        <action
+            android:id="@+id/action_conversationDetailFragment_to_colorAndWallpaperFragment"
+            app:destination="@id/colorAndWallpaperFragment" />
+        <action
+            android:id="@+id/action_conversationDetailFragment_to_mediaAndFileFragment"
+            app:destination="@id/mediaAndFileFragment" />
+        <action
+            android:id="@+id/action_conversationDetailFragment_to_notificationAndSoundFragment"
+            app:destination="@id/notificationAndSoundFragment" />
+        <action
+            android:id="@+id/action_conversationDetailFragment_to_muteNotificationDialogFragment"
+            app:destination="@id/muteNotificationDialogFragment" />
+        <action
+            android:id="@+id/action_conversationDetailFragment_to_handleThumbnailDialogFragment"
+            app:destination="@id/handleThumbnailDialogFragment" />
+        <action
+            android:id="@+id/action_VMessAlertDialogFragment"
+            app:destination="@id/VMessAlertDialogFragment" />
+    </fragment>
+
+    <activity
+        android:id="@+id/addGroupConversationActivity"
+        android:name="com.mqv.vmess.activity.AddGroupConversationActivity"
+        android:label="activity_add_group_conversation"
+        tools:layout="@layout/activity_add_group_conversation">
+        <argument
+            android:name="add_member"
+            app:argType="boolean" />
+        <argument
+            android:name="user"
+            app:argType="com.mqv.vmess.network.model.User"
+            app:nullable="true" />
+    </activity>
+    <fragment
+        android:id="@+id/notificationPreferenceFragment"
+        android:name="com.mqv.vmess.ui.fragment.NotificationPreferenceFragment"
+        android:label="fragment_notification_preference"
+        tools:layout="@layout/fragment_notification_preference" />
+    <activity
+        android:id="@+id/conversationActivity"
+        android:name="com.mqv.vmess.activity.ConversationActivity"
+        android:label="activity_conversation"
+        tools:layout="@layout/activity_conversation">
+        <argument
+            android:name="show_search_dialog"
+            app:argType="boolean" />
+    </activity>
+    <dialog
+        android:id="@+id/inputDialogFragment"
+        android:name="com.mqv.vmess.ui.fragment.InputDialogFragment"
+        android:label="InputDialogFragment"
+        tools:layout="@layout/dialog_enter_otp_code">
+        <argument
+            android:name="data"
+            app:argType="com.mqv.vmess.ui.fragment.InputDialogData" />
+        <argument
+            android:name="conversation_name"
+            app:argType="string" />
+    </dialog>
+    <fragment
+        android:id="@+id/colorAndWallpaperFragment"
+        android:name="com.mqv.vmess.ui.fragment.ColorAndWallpaperFragment"
+        android:label="fragment_color_and_wallpaper"
+        tools:layout="@layout/fragment_color_and_wallpaper">
+        <action
+            android:id="@+id/action_colorAndWallpaperBottomSheetDialog"
+            app:destination="@id/colorAndWallpaperBottomSheetDialog" />
+        <action
+            android:id="@+id/action_VMessAlertDialogFragment"
+            app:destination="@id/VMessAlertDialogFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/mediaAndFileFragment"
+        android:name="com.mqv.vmess.ui.fragment.MediaAndFileFragment"
+        android:label="fragment_media_and_file"
+        tools:layout="@layout/fragment_media_and_file" />
+    <fragment
+        android:id="@+id/notificationAndSoundFragment"
+        android:name="com.mqv.vmess.ui.fragment.NotificationAndSoundFragment"
+        android:label="fragment_notification_and_sound"
+        tools:layout="@layout/fragment_notification_and_sound" />
+    <dialog
+        android:id="@+id/muteNotificationDialogFragment"
+        android:name="com.mqv.vmess.ui.fragment.MuteNotificationDialogFragment"
+        android:label="MuteNotificationDialogFragment" />
+    <dialog
+        android:id="@+id/handleThumbnailDialogFragment"
+        android:name="com.mqv.vmess.ui.fragment.HandleThumbnailDialogFragment"
+        android:label="HandleThumbnailDialogFragment" />
+    <dialog
+        android:id="@+id/VMessAlertDialogFragment"
+        android:name="com.mqv.vmess.ui.fragment.VMessAlertDialogFragment"
+        android:label="VMessAlertDialogFragment">
+        <argument
+            android:name="data"
+            app:argType="com.mqv.vmess.ui.data.AlertDialogData"
+            app:nullable="false" />
+    </dialog>
+    <dialog
+        android:id="@+id/colorAndWallpaperBottomSheetDialog"
+        android:name="com.mqv.vmess.ui.fragment.ColorAndWallpaperBottomSheetDialog"
+        android:label="ColorAndWallpaperBottomSheetDialog">
+        <argument
+            android:name="current_color"
+            app:argType="string"
+            app:nullable="true" />
+
+        <argument
+            android:name="current_wallpaper_color"
+            app:argType="string"
+            app:nullable="true" />
+    </dialog>
+
+</navigation>

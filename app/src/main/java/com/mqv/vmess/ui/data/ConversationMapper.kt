@@ -36,7 +36,8 @@ object ConversationMapper {
             conversationCreatedBy,
             listOf(currentUser),
             type,
-            UNKNOWN_USER_ID
+            UNKNOWN_USER_ID,
+            currentUser.uid
         )
     }
 
@@ -60,7 +61,8 @@ object ConversationMapper {
             conversationCreatedBy,
             participants,
             type,
-            other.uid
+            other.uid,
+            currentUser.uid
         )
     }
 
@@ -110,7 +112,8 @@ object ConversationMapper {
             conversationCreatedBy,
             participants,
             type,
-            UNKNOWN_USER_ID
+            UNKNOWN_USER_ID,
+            currentUser.uid
         )
     }
 }

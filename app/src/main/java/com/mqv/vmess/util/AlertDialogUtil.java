@@ -57,6 +57,14 @@ public class AlertDialogUtil {
                 .show();
     }
 
+    public static AlertDialog createMuteNotificationSelectionDialog(Context context,
+                                                                    DialogInterface.OnClickListener onItemClick) {
+        return new MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.label_conversation_mute_notifications)
+                .setItems(R.array.action_mute_notifications, onItemClick)
+                .create();
+    }
+
     public static void showMuteNotificationSelectionDialog(Context context,
                                                            DialogInterface.OnClickListener onItemClick) {
         new MaterialAlertDialogBuilder(context)

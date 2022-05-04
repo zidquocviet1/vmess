@@ -11,6 +11,7 @@ import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -65,6 +66,7 @@ import com.mqv.vmess.ui.components.linkpreview.LinkPreviewListener;
 import com.mqv.vmess.ui.components.linkpreview.LinkPreviewMetadata;
 import com.mqv.vmess.ui.data.ImageThumbnail;
 import com.mqv.vmess.ui.data.Media;
+import com.mqv.vmess.ui.data.UserSelection;
 import com.mqv.vmess.ui.fragment.SuggestionFriendListFragment;
 import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.AlertDialogUtil;
@@ -101,6 +103,12 @@ public class ConversationActivity
                   ImageLongClickListener,
                   LinkPreviewListener,
                   ConversationMultiMediaFooter.Callback {
+    public static final String ACTION_SEARCH_MESSAGE = "search_message";
+    public static final String ACTION_ADD_MEMBER = "add_member";
+    public static final String ACTION_REMOVE_GROUP_MEMBER = "remove_group_member";
+    public static final String ACTION_LEAVE_GROUP = "leave_group";
+    public static final String EXTRA_REMOVE_MEMBER_ID = "remove_member_id";
+    public static final String EXTRA_MEMBER_TO_ADD = "member_to_add";
     public static final String EXTRA_CONVERSATION_ID = "conversation_id";
     public static final String EXTRA_PARTICIPANT_ID = "participant_id";
 
@@ -116,8 +124,6 @@ public class ConversationActivity
     private Stub<ConversationMultiMediaFooter> mMediaFooterStub;
     private FirebaseUser mCurrentUser;
 
-    // Default color for the whole conversation
-    private ColorStateList mDefaultColorStateList;
     private Animation slideUpAnimation;
     private Animation fadeAnimation;
 
@@ -151,7 +157,6 @@ public class ConversationActivity
         super.onCreate(savedInstanceState);
 
         mCurrentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
-        mDefaultColorStateList = ColorStateList.valueOf(getColor(R.color.purple_500));
         mMediaFooterStub = new Stub<>(mBinding.stubMediaFooter);
 
         slideUpAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.slide_up);
@@ -161,7 +166,6 @@ public class ConversationActivity
 
         registerEventClick();
         registerNetworkEventCallback(this);
-        setupColorUi();
         triggerIntent();
     }
 
@@ -344,6 +348,12 @@ public class ConversationActivity
                 mChatListAdapter.notifyItemRangeChanged(0, mChatListAdapter.getCurrentList().size(), ChatListAdapter.MESSAGE_SENDER);
             }
         });
+
+        mViewModel.getConversationColor().observe(this, color -> {
+            if (color != null) {
+                setupColorUi(color.getChatColor(), color.getWallpaperColor());
+            }
+        });
     }
 
     @Override
@@ -374,7 +384,8 @@ public class ConversationActivity
 
     private void registerEventClick() {
         mBinding.buttonBack.setOnClickListener(v -> onBackPressed());
-        mBinding.layoutTitle.setOnClickListener(v -> Logging.show("Open User Detail fragment"));
+        mBinding.layoutTitle.setOnClickListener(v -> openConversationDetail());
+        mBinding.conversationThumbnail.setOnClickListener(v -> openConversationDetail());
         mBinding.toolbar.setOnMenuItemClickListener(item -> {
             var itemId = item.getItemId();
 
@@ -387,7 +398,7 @@ public class ConversationActivity
 
                 return true;
             } else if (itemId == menu_about) {
-                Logging.show("Open Conversation Details Activity");
+                openConversationDetail();
 
                 return true;
             }
@@ -489,6 +500,39 @@ public class ConversationActivity
         mBinding.includedFooterOption.layoutSave.setOnClickListener(this::handleSaveMessageMedia);
     }
 
+    private void openConversationDetail() {
+        Intent intent = new Intent(this, ConversationDetailActivity.class);
+        intent.putExtra(ConversationDetailActivity.EXTRA_CONVERSATION_ID, mConversation.getId());
+
+        activityResultLauncher.launch(intent, result -> {
+            if (result.getResultCode() == RESULT_OK) {
+                Intent data = result.getData();
+                if (data != null) {
+                    String action = data.getAction();
+                    if (action != null) {
+                        switch (action) {
+                            case ACTION_ADD_MEMBER:
+                                ArrayList<UserSelection> members = data.getParcelableArrayListExtra(EXTRA_MEMBER_TO_ADD);
+
+                                mViewModel.addGroupMember(members.stream()
+                                                                 .map(UserSelection::getUid)
+                                                                 .collect(Collectors.toList()));
+                                break;
+                            case ACTION_SEARCH_MESSAGE:
+                                break;
+                            case ACTION_REMOVE_GROUP_MEMBER:
+                                mViewModel.removeGroupMember(data.getStringExtra(EXTRA_REMOVE_MEMBER_ID));
+                                break;
+                            case ACTION_LEAVE_GROUP:
+                                mViewModel.leaveGroup();
+                                break;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     private void showSendMessageButton() {
         mBinding.buttonMore.setVisibility(View.GONE);
         mBinding.buttonSendMessage.setVisibility(View.VISIBLE);
@@ -499,20 +543,25 @@ public class ConversationActivity
         mBinding.buttonSendMessage.setVisibility(View.GONE);
     }
 
-    private void setupColorUi() {
+    private void setupColorUi(String chatColor, String wallpaperColor) {
         var toolbarMenu = mBinding.toolbar.getMenu();
         var menuItemSize = toolbarMenu.size();
+        var wallpaperColorStateList = ColorStateList.valueOf(Color.parseColor(chatColor));
 
         for (int i = 0; i < menuItemSize; i++) {
             var menuItem = toolbarMenu.getItem(i);
-            menuItem.setIconTintList(mDefaultColorStateList);
+            menuItem.setIconTintList(wallpaperColorStateList);
         }
-        mBinding.buttonBack.setIconTint(mDefaultColorStateList);
-        mBinding.buttonCamera.setIconTint(mDefaultColorStateList);
-        mBinding.buttonMic.setIconTint(mDefaultColorStateList);
-        mBinding.buttonSendMessage.setIconTint(mDefaultColorStateList);
-        mBinding.buttonMore.setIconTint(mDefaultColorStateList);
-        mBinding.buttonScrollToBottom.setIconTint(mDefaultColorStateList);
+        mBinding.buttonBack.setIconTint(wallpaperColorStateList);
+        mBinding.buttonCamera.setIconTint(wallpaperColorStateList);
+        mBinding.buttonMic.setIconTint(wallpaperColorStateList);
+        mBinding.buttonSendMessage.setIconTint(wallpaperColorStateList);
+        mBinding.buttonMore.setIconTint(wallpaperColorStateList);
+        mBinding.buttonScrollToBottom.setIconTint(wallpaperColorStateList);
+        mBinding.recyclerChatList.setBackgroundColor(Color.parseColor(wallpaperColor));
+
+        mChatListAdapter.setChatColor(wallpaperColorStateList);
+        mChatListAdapter.notifyItemRangeChanged(0, mChatListAdapter.getCurrentList().size(), ChatListAdapter.MESSAGE_COLOR);
     }
 
     private void setupRecyclerView(List<User> mConversationParticipants, ConversationType type) {
@@ -520,7 +569,6 @@ public class ConversationActivity
         mChatListAdapter = new ChatListAdapter(this,
                                                 mChatList,
                                                 mConversationParticipants,
-                                                mDefaultColorStateList,
                                                 mCurrentUser,
                                                 type);
 
@@ -552,6 +600,7 @@ public class ConversationActivity
         mChatListAdapter.registerItemEventListener(this);
         mChatListAdapter.registerLinkPreviewListener(this);
         mChatListAdapter.registerVideoListener(this::handlePlayVideo);
+        mChatListAdapter.registerOpenConversationDetail(this::openConversationDetail);
     }
 
     private void checkForShowHeader() {

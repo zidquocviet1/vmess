@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_chat_wallpaper" />
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_disappearing_messages" />
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_notifications_and_sounds" />
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_view_media_files" />
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_create_group_with" />
+
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_see_group_member" />
+
+    <PreferenceCategory
+        android:title="@string/label_pref_privacy_category"
+        app:layout="@layout/item_preference_category">
+
+        <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_ignore_messages" />
+
+        <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_block" />
+
+        <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_report" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

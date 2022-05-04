@@ -38,4 +38,10 @@ interface ConversationOptionDao {
                 " limit 1)"
     )
     fun isTurnOffNotification(conversationId: String, currentTimeMilli: Long): Single<Boolean>
+
+    @Query("SELECT * FROM conversation_notification_option" +
+            " WHERE conversation_id = :conversationId" +
+            " ORDER BY until DESC" +
+            " LIMIT 1")
+    fun fetchLatestByConversationId(conversationId: String): Single<ConversationNotificationOption>
 }

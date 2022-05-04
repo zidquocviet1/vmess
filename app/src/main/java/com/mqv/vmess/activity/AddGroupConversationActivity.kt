@@ -112,6 +112,7 @@ class AddGroupConversationActivity :
     }
 
     companion object {
+        const val EXTRA_USER = "user"
         const val EXTRA_GROUP_PARTICIPANTS = "group_participants"
         const val EXTRA_ADD_MEMBER = "add_member"
     }

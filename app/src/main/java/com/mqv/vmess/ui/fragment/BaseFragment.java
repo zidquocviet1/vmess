@@ -1,6 +1,7 @@
 package com.mqv.vmess.ui.fragment;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,10 +26,15 @@ public abstract class BaseFragment<V extends ViewModel, B extends ViewBinding> e
     public B mBinding;
     public V mViewModel;
 
-    public MyActivityForResult<Intent, ActivityResult> mActivityLauncher =
+    protected MyActivityForResult<Intent, ActivityResult> mActivityLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.StartActivityForResult());
-    public MyActivityForResult<String[], Map<String, Boolean>> mPermissionLauncher =
+    protected MyActivityForResult<String[], Map<String, Boolean>> mPermissionLauncher =
             MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.RequestMultiplePermissions());
+    protected MyActivityForResult<Uri, Boolean> mTakePictureLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.TakePicture());
+    protected MyActivityForResult<String, Uri> mGetContentLauncher =
+            MyActivityForResult.registerActivityForResult(this, new ActivityResultContracts.GetContent());
+
 
     public abstract void binding(@NonNull LayoutInflater inflater, @Nullable ViewGroup container);
 

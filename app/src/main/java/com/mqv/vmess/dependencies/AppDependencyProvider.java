@@ -73,6 +73,7 @@ public class AppDependencyProvider implements AppDependencies.Provider {
         ConversationRepository conversationRepository = new ConversationRepositoryImpl(retrofit.create(ConversationService.class),
                                                                                        database.getConversationDao(),
                                                                                        database.getConversationOptionDao(),
+                                                                                       database.getConversationColorDao(),
                                                                                        database.getChatDao());
         return new IncomingMessageProcessor(database.getChatDao(),
                                             database.getConversationDao(),

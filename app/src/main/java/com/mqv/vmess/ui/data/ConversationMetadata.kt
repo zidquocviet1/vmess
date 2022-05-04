@@ -12,5 +12,6 @@ data class ConversationMetadata(
     val conversationCreatedBy: String,
     val conversationParticipants: List<User>,
     val type: ConversationType,
-    val otherUid: String
+    val otherUid: String,
+    val currentUserId: String
 ) : Parcelable

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.ColorAndWallpaperFragment">
+
+    <LinearLayout
+        android:id="@+id/layout_background"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/md_grey_300"
+        android:orientation="vertical"
+        android:padding="@dimen/all_padding_default"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_receiver"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/text_receiver_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:alpha="0.7"
+                android:ellipsize="end"
+                android:lines="1"
+                android:text="@string/author_app_first_name"
+                android:textSize="12sp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="@id/guide_line_2"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toStartOf="@id/text_receiver_content"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_line_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.7" />
+
+            <View
+                android:id="@+id/receiver_chat_background"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/background_rounded_chat"
+                android:backgroundTint="@color/base_background_color"
+                app:layout_constraintBottom_toBottomOf="@id/text_receiver_content"
+                app:layout_constraintEnd_toEndOf="@id/text_receiver_content"
+                app:layout_constraintStart_toStartOf="@id/text_receiver_content"
+                app:layout_constraintTop_toTopOf="@id/text_receiver_content" />
+
+            <TextView
+                android:id="@+id/text_receiver_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="4dp"
+                android:padding="@dimen/all_padding_default"
+                android:text="@string/dummy_chat_receiver_2"
+                android:textAlignment="viewStart"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintEnd_toEndOf="@id/guide_line_2"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@id/image_receiver"
+                app:layout_constraintTop_toBottomOf="@id/text_receiver_name"
+                app:layout_goneMarginTop="0dp" />
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/image_receiver"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/default_memoji"
+                app:layout_constraintBottom_toBottomOf="@id/text_receiver_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_sender"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="10dp">
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guide_line"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.3" />
+
+            <View
+                android:id="@+id/sender_chat_background"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/background_rounded_chat"
+                android:backgroundTint="@color/purple_500"
+                app:layout_constraintBottom_toBottomOf="@id/text_sender_content"
+                app:layout_constraintEnd_toEndOf="@id/text_sender_content"
+                app:layout_constraintStart_toStartOf="@id/text_sender_content"
+                app:layout_constraintTop_toTopOf="@id/text_sender_content" />
+
+            <TextView
+                android:id="@+id/text_sender_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/all_margin_top_soft"
+                android:padding="@dimen/all_padding_default"
+                android:text="@string/dummy_chat_sender_2"
+                android:textAlignment="viewStart"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintEnd_toStartOf="@id/layout_image_status"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toStartOf="@id/guide_line"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/layout_image_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/all_margin_top_soft"
+                app:layout_constraintBottom_toBottomOf="@id/text_sender_content"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_image_status_more"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="0dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/image_more_message_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/default_memoji"
+                        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+                    <TextView
+                        android:id="@+id/text_more_number"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@android:style/TextAppearance.DeviceDefault"
+                        android:textSize="8sp"
+                        android:textStyle="bold"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="SmallSp" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/image_message_status"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/default_memoji"
+                    android:visibility="visible"
+                    app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/divider1"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?colorControlHighlight"
+        app:layout_constraintTop_toBottomOf="@id/layout_background" />
+
+    <LinearLayout
+        android:id="@+id/layout_chat_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/divider1">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="9"
+            android:text="@string/label_chat_color"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="16sp" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_color"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="end"
+            android:background="@color/purple_500"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_reset_chat_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:padding="16dp"
+        android:text="@string/label_reset_chat_color"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/layout_chat_color" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?colorControlHighlight"
+        app:layout_constraintTop_toBottomOf="@id/text_reset_chat_color" />
+
+    <LinearLayout
+        android:id="@+id/layout_wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/divider">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="9"
+            android:text="@string/label_wallpaper"
+            android:textAppearance="@android:style/TextAppearance.Material.Body1"
+            android:textSize="16sp" />
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/image_wallpaper"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="end"
+            android:background="@color/md_grey_300"
+            app:shapeAppearanceOverlay="@style/ImageViewCornerSize20Percent" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_reset_wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:clickable="true"
+        android:padding="16dp"
+        android:text="@string/label_reset_wallpaper"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/layout_wallpaper" />
+</androidx.constraintlayout.widget.ConstraintLayout>

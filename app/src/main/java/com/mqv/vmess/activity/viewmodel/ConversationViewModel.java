@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.data.DatabaseObserver;
+import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
@@ -107,6 +108,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     private final MutableLiveData<Map<String, LinkPreviewMetadata>> linkPreviewMapper;
     private final MutableLiveData<List<Media>>                      mediaAttachment;
     private final MutableLiveData<List<User>>                       userLeftGroup;
+    private final MutableLiveData<ConversationColor>                conversationColor;
     private final DatabaseObserver.MessageListener                  messageListener;
     private final CompositeDisposable                               cd;
 
@@ -122,7 +124,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                  MediaRepository mediaRepository,
                                  SavedStateHandle savedStateHandle,
                                  Application application) {
-        super(application, chatRepository, peopleRepository, friendRequestRepository);
+        super(application, repository, chatRepository, peopleRepository, friendRequestRepository);
 
         this.conversationRepository   = repository;
         this.chatRepository           = chatRepository;
@@ -142,6 +144,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         this.linkPreviewMapper        = new MutableLiveData<>(new ConcurrentHashMap<>());
         this.mediaAttachment          = new MutableLiveData<>();
         this.userLeftGroup            = new MutableLiveData<>(Collections.emptyList());
+        this.conversationColor        = new MutableLiveData<>();
         this.cd                       = new CompositeDisposable();
         this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
@@ -222,6 +225,10 @@ public class ConversationViewModel extends MessageHandlerViewModel {
 
     public LiveData<List<User>> getUserLeftGroup() {
         return userLeftGroup;
+    }
+
+    public LiveData<ConversationColor> getConversationColor() {
+        return conversationColor;
     }
 
     //// Private method
@@ -333,6 +340,13 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                                .map(list -> !list.isEmpty() && !Collections.disjoint(new HashSet<>(list), participants))
                                                .subscribe(conversationActiveStatus::postValue);
         cd.add(disposable);
+
+        //noinspection ResultOfMethodCallIgnored
+        conversationRepository.fetchConversationColor(conversation.getId())
+                              .compose(RxHelper.applyFlowableSchedulers())
+                              .doOnError(t -> Logging.show("Don't have any conversation color."))
+                              .defaultIfEmpty(Collections.singletonList(new ConversationColor(mConversation.getId())))
+                              .subscribe(list -> conversationColor.postValue(list.get(0)), t -> conversationColor.postValue(new ConversationColor(mConversation.getId())));
     }
 
     private void onLoadConversationError(Throwable t) {

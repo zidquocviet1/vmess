@@ -36,6 +36,9 @@
         android:theme="@style/Theme.RealTimeChatApplication"
         tools:ignore="DataExtractionRules">
         <activity
+            android:name=".activity.ConversationDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.VideoPlayerActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="true"

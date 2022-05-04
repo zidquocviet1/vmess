@@ -1,5 +1,6 @@
 package com.mqv.vmess.data.repository;
 
+import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.Chat;
@@ -60,6 +61,12 @@ public interface ConversationRepository {
     Single<Boolean> isExists(String conversationId);
 
     Single<List<Conversation>> suggestConversation(int size);
+
+    Single<ConversationNotificationOption> fetchConversationOption(String conversationId);
+
+    Flowable<List<ConversationColor>> fetchConversationColor(String conversationId);
+
+    Completable saveConversationColor(ConversationColor color);
 
     void deleteConversationChatRemote(Conversation conversation);
 

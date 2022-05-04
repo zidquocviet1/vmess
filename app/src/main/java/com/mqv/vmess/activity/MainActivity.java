@@ -25,6 +25,7 @@ import com.mqv.vmess.databinding.ActivityMainBinding;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.NetworkConstraint;
+import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.websocket.WebSocketConnectionState;
 import com.mqv.vmess.ui.data.UserSelection;
 import com.mqv.vmess.ui.fragment.BaseFragment;
@@ -35,6 +36,7 @@ import com.mqv.vmess.util.Picture;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -44,6 +46,11 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
                    NavController.OnDestinationChangedListener,
                    OnNetworkChangedListener,
                    ConversationListInboxFragment.ConversationSizeListener {
+    public static final String ACTION_CREATE_GROUP        = "create_group";
+    public static final String ACTION_LEAVE_GROUP         = "leave_group";
+    public static final String ACTION_DELETE_CONVERSATION = "delete_conversation";
+    public static final String EXTRA_CONVERSATION         = "extra_conversation";
+
     private static final int MAX_BADGE_NUMBER = 99;
 
     private NavHostFragment navHostFragment;
@@ -84,6 +91,50 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
 
         reloadFirebaseUser();
         registerOnSizedConversationListChanged();
+    }
+
+    @SuppressWarnings({"unchecked"})
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        String action = intent.getAction();
+
+        if (action != null) {
+            switch (action) {
+                case ACTION_CREATE_GROUP:
+                    ArrayList<UserSelection> selections = intent.getParcelableArrayListExtra(AddGroupConversationActivity.EXTRA_GROUP_PARTICIPANTS);
+                    if (selections != null && !selections.isEmpty()) {
+                        castVisibleFragment(fragment -> fragment.createGroup(selections));
+                    }
+                    break;
+                case ACTION_LEAVE_GROUP: {
+                    Conversation conversation = intent.getParcelableExtra(EXTRA_CONVERSATION);
+
+                    if (conversation != null) {
+                        castVisibleFragment(fragment -> fragment.leaveGroup(conversation));
+                    }
+                    break;
+                }
+                case ACTION_DELETE_CONVERSATION: {
+                    Conversation conversation = intent.getParcelableExtra(EXTRA_CONVERSATION);
+
+                    if (conversation != null) {
+                        castVisibleFragment(fragment -> fragment.deleteConversation(conversation));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void castVisibleFragment(Consumer<ConversationListFragment> onCastSuccess) {
+        Fragment visibleFragment = getVisibleFragment();
+
+        if (visibleFragment instanceof ConversationListFragment) {
+            onCastSuccess.accept((ConversationListFragment)visibleFragment);
+        }
     }
 
     @Override
@@ -131,6 +182,7 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         });
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public void onClick(View v) {
         int id = v.getId();

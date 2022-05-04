@@ -11,8 +11,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.dao.ChatDao;
+import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
+import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.ApiResponse;
@@ -56,6 +58,7 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     private final ConversationService   service;
     private final ConversationDao       dao;
     private final ConversationOptionDao optionDao;
+    private final ConversationColorDao  colorDao;
     private final ChatDao               chatDao;
     private       FirebaseUser          user;
 
@@ -63,11 +66,13 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     public ConversationRepositoryImpl(ConversationService service,
                                       ConversationDao dao,
                                       ConversationOptionDao optionDao,
+                                      ConversationColorDao colorDao,
                                       ChatDao chatDao) {
         this.service   = service;
         this.dao       = dao;
         this.chatDao   = chatDao;
         this.optionDao = optionDao;
+        this.colorDao  = colorDao;
         this.user      = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> user = firebaseAuth.getCurrentUser());
@@ -258,6 +263,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     @Override
     public Single<List<Conversation>> suggestConversation(int size) {
         return dao.suggestConversation(size);
+    }
+
+    @Override
+    public Single<ConversationNotificationOption> fetchConversationOption(String conversationId) {
+        return optionDao.fetchLatestByConversationId(conversationId);
+    }
+
+    @Override
+    public Flowable<List<ConversationColor>> fetchConversationColor(String conversationId) {
+        return colorDao.fetch(conversationId);
+    }
+
+    @Override
+    public Completable saveConversationColor(ConversationColor color) {
+        return colorDao.insert(color);
     }
 
     @Override

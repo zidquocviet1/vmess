@@ -42,6 +42,7 @@ import com.mqv.vmess.ui.data.ConversationMetadata;
 import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.Picture;
 import com.mqv.vmess.util.views.Stub;
+import com.mqv.vmess.util.views.ViewUtil;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -56,7 +57,6 @@ import java.util.stream.Collectors;
 public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> {
     private final Context mContext;
     private final List<Chat> mChatList;
-    private final ColorStateList mChatColorStateList;
     private final User mCurrentUser;
     private final ConversationType mConversationType;
 
@@ -67,6 +67,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private BaseAdapter.ItemEventHandler mItemEventHandler;
     private LinkPreviewListener mLinkPreviewListener;
     private BiConsumer<Chat, Chat.Video> mVideoListener;
+    private Runnable mOpenDetailCallback;
 
     private static final int VIEW_PROFILE = -1;
     private static final int VIEW_PROFILE_SELF = 0;
@@ -85,6 +86,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     public static final String MESSAGE_UNSENT_PAYLOAD = "message_unsent";
     public static final String MESSAGE_SHAPE_PAYLOAD = "message_shape";
     public static final String MESSAGE_SENDER = "message_sender";
+    public static final String MESSAGE_COLOR = "message_color";
 
     public interface ConversationGroupOption {
         void addMember();
@@ -99,7 +101,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     public ChatListAdapter(Context context,
                            List<Chat> chatList,
                            List<User> participants,
-                           ColorStateList chatColorStateList,
                            @NonNull FirebaseUser user,
                            ConversationType type) {
         super(new DiffUtil.ItemCallback<>() {
@@ -120,7 +121,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
         });
         mContext = context;
-        mChatColorStateList = chatColorStateList;
         mCurrentUser = LoggedInUserManager.getInstance().parseFirebaseUser(user);
         mConversationType = type;
         mChatList = chatList;
@@ -157,6 +157,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mConversationMetadata = metadata;
     }
 
+    public void setChatColor(ColorStateList color) {
+        ConversationMessageItem.setChatColor(color);
+    }
+
     // Update the participants after new member was added
     public void setParticipants(@NonNull List<User> participants) {
         mParticipants = participants;
@@ -176,6 +180,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
 
     public void registerVideoListener(BiConsumer<Chat, Chat.Video> callback) {
         mVideoListener = callback;
+    }
+
+    public void registerOpenConversationDetail(Runnable callback) {
+        mOpenDetailCallback = callback;
     }
 
     @Override
@@ -213,7 +221,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         switch (type) {
             case VIEW_PROFILE:
             case VIEW_PROFILE_SELF:
-                return new ProfileViewHolder(ItemChatProfileBinding.bind(inflater.inflate(R.layout.item_chat_profile, parent, false)), mContext, type == VIEW_PROFILE_SELF);
+                return new ProfileViewHolder(ItemChatProfileBinding.bind(inflater.inflate(R.layout.item_chat_profile, parent, false)), mContext, type == VIEW_PROFILE_SELF, mOpenDetailCallback);
             case VIEW_PROFILE_GROUP:
                 return new ProfileGroupViewHolder(ItemChatProfileGroupBinding.bind(inflater.inflate(R.layout.item_chat_profile_group, parent, false)), mConversationCallback);
             case VIEW_CHAT_NOTIFICATION:
@@ -221,14 +229,12 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             case VIEW_CHAT_RECEIVED_MULTI_MEDIA:
                 return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_received_multi_media, parent, false), true, mCurrentUser,
                         mParticipants,
-                        mChatColorStateList,
                         mChatList,
                         mLinkPreviewListener,
                         mVideoListener);
             case VIEW_CHAT_OUTGOING_MULTI_MEDIA:
                 return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_outgoing_multi_media, parent, false), false, mCurrentUser,
                         mParticipants,
-                        mChatColorStateList,
                         mChatList,
                         mLinkPreviewListener,
                         mVideoListener);
@@ -236,7 +242,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 return new ChatListViewHolder(ItemChatBinding.bind(inflater.inflate(R.layout.item_chat, parent, false)),
                         mCurrentUser,
                         mParticipants,
-                        mChatColorStateList,
                         mChatList,
                         mConversationMetadata,
                         mItemEventHandler);
@@ -261,8 +266,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         bindableItem.bindUnsentMessage(getItem(position));
                     } else if (s.equals(MESSAGE_SHAPE_PAYLOAD)) {
                         bindableItem.bindMessageShape(getItem(position));
-                    } else if (s.equals(MESSAGE_SENDER)) {
-
+                    } else if (s.equals(MESSAGE_COLOR)) {
+                        bindableItem.bindMessageColor(getItem(position));
                     }
                 }
             }
@@ -327,14 +332,13 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         public ChatListViewHolder(@NonNull ItemChatBinding binding,
                                   @NonNull User user,
                                   @NonNull List<User> participants,
-                                  @NonNull ColorStateList colorStateList,
                                   @NonNull List<Chat> listItem,
                                   ConversationMetadata metadata,
                                   BaseAdapter.ItemEventHandler handler) {
             super(binding.getRoot());
 
             mBinding = binding;
-            mMessageItem = new ConversationMessageItem(binding, listItem, participants, user, metadata, colorStateList);
+            mMessageItem = new ConversationMessageItem(binding, listItem, participants, user, metadata);
 
             mBinding.senderChatBackground.setOnClickListener(v -> {
                 if (handler != null) {
@@ -374,12 +378,17 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         Context mContext;
         boolean mIsSelf;
 
-        public ProfileViewHolder(@NonNull ItemChatProfileBinding binding, Context context, boolean isSelf) {
+        public ProfileViewHolder(@NonNull ItemChatProfileBinding binding, Context context, boolean isSelf, Runnable openDetailCallback) {
             super(binding.getRoot());
 
             mBinding = binding;
             mContext = context;
             mIsSelf  = isSelf;
+            mBinding.buttonViewProfile.setOnClickListener(v -> {
+                if (openDetailCallback != null) {
+                    openDetailCallback.run();
+                }
+            });
         }
 
         public void bindTo(User user) {
@@ -426,49 +435,17 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 mBinding.buttonAddMember.setOnClickListener(v -> conversationCallback.addMember());
                 mBinding.buttonEditName.setOnClickListener(v -> conversationCallback.changeGroupName());
                 mBinding.buttonViewGroupMember.setOnClickListener(v -> conversationCallback.viewGroupMember());
-                mBinding.layoutGroupThumbnail.setOnClickListener(v -> conversationCallback.changeGroupThumbnail());
+                mBinding.conversationBanner.setOnThumbnailClickListener(conversationCallback::changeGroupThumbnail);
             }
         }
 
         public void bindGroup(ConversationMetadata metadata) {
-            mBinding.textGroupName.setText(metadata.getConversationName());
+            mBinding.conversationBanner.setMetadata(metadata);
+            mBinding.conversationBanner.setSingleThumbnailSize(
+                    ViewUtil.getLargeUserAvatarPixel(mContext.getResources()),
+                    ViewUtil.getLargeUserAvatarPixel(mContext.getResources())
+            );
             mBinding.textWhoCreated.setText(mContext.getString(R.string.label_who_create_this_group, metadata.getConversationCreatedBy()));
-
-            List<String> thumbnails = metadata.getConversationThumbnail();
-            List<User> participants = metadata.getConversationParticipants();
-
-            if (thumbnails.isEmpty()) {
-                Picture.loadUserAvatar(mContext, null).into(mBinding.imageAvatar3);
-
-                mBinding.layoutAvatar2.setVisibility(View.GONE);
-                mBinding.layoutAvatar1.setVisibility(View.GONE);
-                mBinding.textMoreNumber.setVisibility(View.GONE);
-            } else if (thumbnails.size() == 1) {
-                Picture.loadUserAvatar(mContext, thumbnails.get(0)).into(mBinding.imageAvatar3);
-
-                mBinding.layoutAvatar2.setVisibility(View.GONE);
-                mBinding.layoutAvatar1.setVisibility(View.GONE);
-                mBinding.textMoreNumber.setVisibility(View.GONE);
-            } else {
-                Picture.loadUserAvatar(mContext, thumbnails.get(0)).into(mBinding.imageAvatar3);
-                Picture.loadUserAvatar(mContext, thumbnails.get(1)).into(mBinding.imageAvatar2);
-
-                mBinding.layoutAvatar2.setVisibility(View.VISIBLE);
-
-                if (participants.size() == 3) {
-                    mBinding.layoutAvatar1.setVisibility(View.GONE);
-                } else if (participants.size() == 4) {
-                    Picture.loadUserAvatar(mContext, thumbnails.get(2)).into(mBinding.imageAvatar1);
-                    mBinding.layoutAvatar1.setVisibility(View.VISIBLE);
-                    mBinding.textMoreNumber.setVisibility(View.GONE);
-                } else {
-                    mBinding.layoutAvatar1.setVisibility(View.VISIBLE);
-                    mBinding.imageAvatar1.setVisibility(View.VISIBLE);
-                    mBinding.imageAvatar1.setImageDrawable(Picture.getErrorAvatarLoaded(mContext));
-                    mBinding.textMoreNumber.setVisibility(View.VISIBLE);
-                    mBinding.textMoreNumber.setText(mContext.getString(R.string.label_text_more_number, participants.size() - 3));
-                }
-            }
         }
     }
 
@@ -590,7 +567,6 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         public ChatMultiMediaViewHolder(@NonNull View itemView, boolean isReceived,
                                         @NonNull User user,
                                         @NonNull List<User> participants,
-                                        @NonNull ColorStateList colorStateList,
                                         @NonNull List<Chat> listItem,
                                         @NonNull LinkPreviewListener linkPreviewListener,
                                         @NonNull BiConsumer<Chat, Chat.Video> videoListener) {
@@ -618,9 +594,9 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle);
             mNotReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle_outline);
 
-            mReceivedIconDrawable.setTintList(colorStateList);
-            mNotReceivedIconDrawable.setTintList(colorStateList);
-            mSendingIconDrawable.setTintList(colorStateList);
+            mReceivedIconDrawable.setTintList(ConversationMessageItem.getChatColor());
+            mNotReceivedIconDrawable.setTintList(ConversationMessageItem.getChatColor());
+            mSendingIconDrawable.setTintList(ConversationMessageItem.getChatColor());
         }
 
         public static void setUserLeftGroup(List<User> userLeftGroup) {

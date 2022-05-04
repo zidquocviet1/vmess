@@ -12,6 +12,7 @@ import com.mqv.vmess.R
 import com.mqv.vmess.databinding.CustomLinkPreviewBinding
 import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.ui.components.linkpreview.LinkPreviewMetadata
+import com.mqv.vmess.ui.data.ConversationMessageItem
 import com.mqv.vmess.util.Picture
 
 class LinkPreviewView @JvmOverloads constructor(
@@ -32,7 +33,7 @@ class LinkPreviewView @JvmOverloads constructor(
             mBinding.textContent.setTextColor(getColor(R.color.black))
         } else {
             mBinding.divider.visibility = View.GONE
-            mBinding.messageBackground.backgroundTintList = ColorStateList.valueOf(getColor(R.color.purple_500))
+            mBinding.messageBackground.backgroundTintList = ConversationMessageItem.sChatColor
             mBinding.textContent.setTextColor(getColor(R.color.white))
         }
 

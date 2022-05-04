@@ -44,6 +44,10 @@
         <item name="cornerSize">5%</item>
     </style>
 
+    <style name="ImageViewCornerSize20Percent" parent="">
+        <item name="cornerSize">20%</item>
+    </style>
+
     <style name="TextInputLayoutOutlinedBoxCornerRadius" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
         <item name="boxCornerRadiusBottomEnd">@dimen/text_input_corner_radius</item>
         <item name="boxCornerRadiusBottomStart">@dimen/text_input_corner_radius</item>

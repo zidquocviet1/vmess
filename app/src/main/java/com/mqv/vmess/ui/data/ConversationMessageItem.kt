@@ -2,12 +2,14 @@ package com.mqv.vmess.ui.data
 
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.mqv.vmess.R
+import com.mqv.vmess.data.model.ConversationColor
 import com.mqv.vmess.databinding.ItemChatBinding
 import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.User
@@ -25,8 +27,7 @@ class ConversationMessageItem(
     private val mParticipants: List<User>,
     private val mCurrentUser: User,
     private val mMetadata: ConversationMetadata?,
-    private val mItemColor: ColorStateList
-) : ConversationItem<Chat>(mBinding.root.context, mParticipants, mCurrentUser, mItemColor) {
+) : ConversationItem<Chat>(mBinding.root.context, mParticipants, mCurrentUser, sChatColor) {
 
     private val mChatCornerRadius =
         mContext.resources.getDimensionPixelSize(R.dimen.chat_corner_radius)
@@ -108,7 +109,7 @@ class ConversationMessageItem(
         mBinding.layoutSender.visibility = View.VISIBLE
         mBinding.layoutWelcome.visibility = View.GONE
         mBinding.textSenderContent.text = item.content
-        mBinding.senderChatBackground.backgroundTintList = mItemColor
+        mBinding.senderChatBackground.backgroundTintList = sChatColor
 
         bindStatus(item)
     }
@@ -258,6 +259,15 @@ class ConversationMessageItem(
             mBinding.textTimestamp.text = getMessageDateTimeFormatted(mContext, item.timestamp)
         } else {
             mBinding.textTimestamp.visibility = View.GONE
+        }
+    }
+
+    fun bindMessageColor(item: Chat) {
+        if (item.senderId != null && item.senderId == mCurrentUser.uid) {
+            mBinding.senderChatBackground.backgroundTintList = sChatColor
+            mReceivedIconDrawable!!.setTintList(sChatColor)
+            mNotReceivedIconDrawable!!.setTintList(sChatColor)
+            mSendingIconDrawable!!.setTintList(sChatColor)
         }
     }
 
@@ -530,5 +540,17 @@ class ConversationMessageItem(
         val max = Arrays.stream(arr).summaryStatistics().max
 
         return (topLeft == max) || arr.distinct().size == 1
+    }
+
+    companion object {
+        var sChatColor: ColorStateList = ColorStateList.valueOf(Color.parseColor(ConversationColor.DEFAULT_CHAT_COLOR))
+
+        @JvmStatic
+        fun getChatColor(): ColorStateList = sChatColor
+
+        @JvmStatic
+        fun setChatColor(chatColor: ColorStateList) {
+            sChatColor = chatColor
+        }
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/menu_change_name"
+        app:showAsAction="never"
+        android:title="Change group name"/>
+
+    <item android:id="@+id/menu_change_thumbnail"
+        app:showAsAction="never"
+        android:title="Change group thumbnail"/>
+
+    <item android:id="@+id/menu_delete_conversation"
+        app:showAsAction="never"
+        android:title="Delete conversation"/>
+
+    <item android:id="@+id/menu_leave_group"
+        app:showAsAction="never"
+        android:title="Leave group"/>
+</menu>

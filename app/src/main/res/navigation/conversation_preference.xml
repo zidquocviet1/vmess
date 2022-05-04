@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/conversation_preference"
+    app:startDestination="@id/conversationPreferenceFragment">
+
+    <fragment
+        android:id="@+id/conversationPreferenceFragment"
+        android:name="com.mqv.vmess.ui.fragment.preference.ConversationPreferenceFragment"
+        android:label="ConversationPreferenceFragment">
+        <argument
+            android:name="conversation"
+            app:argType="com.mqv.vmess.ui.data.ConversationDetail"
+            app:nullable="false" />
+    </fragment>
+</navigation>

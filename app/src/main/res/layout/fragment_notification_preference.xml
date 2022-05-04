@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.NotificationPreferenceFragment">
+
+    <TextView
+        android:id="@+id/text_prompt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/all_padding_common"
+        android:text="@string/msg_prompt_notification_preference_disappearing_message"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/all_margin_top_soft"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/text_prompt">
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_off"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_off"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_one_minute"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_1_minute"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_five_minute"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_5_minute"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_one_hour"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_1_hour"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_five_hour"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_5_hour"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_one_day"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_1_day"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_one_week"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_1_week"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_four_week"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_4_week"
+            tools:ignore="RtlSymmetry" />
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/radio_custom_time"
+            style="@style/CustomMaterialRadioButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/all_padding_common"
+            android:text="@string/label_custom_time"
+            tools:ignore="RtlSymmetry" />
+    </RadioGroup>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/all_padding_common"
+        android:layout_marginBottom="@dimen/all_padding_common"
+        android:minHeight="52dp"
+        android:text="@string/action_save"
+        android:textSize="14sp"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

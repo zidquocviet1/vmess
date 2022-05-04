@@ -4,101 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:id="@+id/layout_group_thumbnail"
+    <com.mqv.vmess.ui.components.conversation.ConversationBannerView
+        android:id="@+id/conversation_banner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/all_margin"
-        android:layoutDirection="rtl"
-        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layout_avatar_1"
-            android:layout_width="@dimen/image_conversation"
-            android:layout_height="@dimen/image_conversation"
-            android:layout_marginEnd="-10dp"
-            android:background="@drawable/avatar_stroke_ripple"
-            android:padding="3dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/image_avatar_1"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_default_user_avatar"
-                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-
-            <TextView
-                android:id="@+id/text_more_number"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="@android:style/TextAppearance.DeviceDefault"
-                android:textDirection="ltr"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:visibility="visible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <LinearLayout
-            android:id="@+id/layout_avatar_2"
-            android:layout_width="@dimen/image_conversation"
-            android:layout_height="@dimen/image_conversation"
-            android:layout_marginEnd="-10dp"
-            android:background="@drawable/avatar_stroke_ripple"
-            android:padding="3dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/image_avatar_2"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_default_user_avatar"
-                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/layout_avatar_3"
-            android:layout_width="@dimen/image_conversation"
-            android:layout_height="@dimen/image_conversation"
-            android:background="@drawable/avatar_stroke_ripple"
-            android:padding="3dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/image_avatar_3"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/ic_default_user_avatar"
-                app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/text_group_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/all_margin"
-        android:text="@string/label_who_create_this_group"
-        android:textDirection="ltr"
-        android:textAppearance="@android:style/TextAppearance.DeviceDefault"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_group_thumbnail" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/text_who_created"
@@ -109,7 +22,7 @@
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_group_name" />
+        app:layout_constraintTop_toBottomOf="@id/conversation_banner" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_add_member"

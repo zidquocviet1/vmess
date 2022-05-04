@@ -5,36 +5,60 @@ import android.content.Context
 import android.util.Pair
 import androidx.lifecycle.AndroidViewModel
 import androidx.work.Data
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.mqv.vmess.R
+import com.mqv.vmess.data.model.ConversationNotificationOption
+import com.mqv.vmess.data.model.ConversationNotificationOption.Companion.fromConversationOption
 import com.mqv.vmess.data.repository.ChatRepository
+import com.mqv.vmess.data.repository.ConversationRepository
 import com.mqv.vmess.data.repository.FriendRequestRepository
 import com.mqv.vmess.data.repository.PeopleRepository
+import com.mqv.vmess.data.result.Result
 import com.mqv.vmess.dependencies.AppDependencies
+import com.mqv.vmess.network.ApiResponse
+import com.mqv.vmess.network.exception.PermissionDeniedException
 import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.Conversation
+import com.mqv.vmess.network.model.ConversationOption
 import com.mqv.vmess.network.model.User
+import com.mqv.vmess.network.model.type.ConversationStatusType
 import com.mqv.vmess.network.model.type.MessageStatus
+import com.mqv.vmess.reactive.RxHelper
+import com.mqv.vmess.reactive.RxHelper.applyObservableSchedulers
 import com.mqv.vmess.reactive.RxHelper.applySingleSchedulers
 import com.mqv.vmess.reactive.RxHelper.parseResponseData
+import com.mqv.vmess.ui.ConversationOptionHandler.Companion.addMemberObservable
 import com.mqv.vmess.ui.data.People
+import com.mqv.vmess.util.Event
+import com.mqv.vmess.util.FileProviderUtil.compressFileFuture
 import com.mqv.vmess.util.Logging
+import com.mqv.vmess.util.NetworkStatus
 import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper
 import com.mqv.vmess.work.WorkDependency
+import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import java.io.File
+import java.net.ConnectException
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.function.Consumer
+
+private val TAG = MessageHandlerViewModel::class.java.simpleName
 
 open class MessageHandlerViewModel(
     application: Application,
-    val chatRepository: ChatRepository,
-    val peopleRepository: PeopleRepository,
-    val friendRequestRepository: FriendRequestRepository
+    open val conversationRepository: ConversationRepository,
+    open val chatRepository: ChatRepository,
+    open val peopleRepository: PeopleRepository,
+    open val friendRequestRepository: FriendRequestRepository
 ) : AndroidViewModel(application) {
     private val cd = CompositeDisposable()
-    private val mUser = FirebaseAuth.getInstance().currentUser!!
+    protected val mUser = FirebaseAuth.getInstance().currentUser!!
 
     fun markAsUnread(conversation: Conversation) {
         chatRepository.findLastMessage(conversation.id)
@@ -162,6 +186,179 @@ open class MessageHandlerViewModel(
             ) { t ->
                 Logging.show("Can not fetch user left group because: ${t.message}")
             }
+    }
+
+    open fun muteNotification(conversationId: String, until: Long) {
+        val currentMillis =
+            LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().epochSecond
+        val muteUntil = if (Long.MAX_VALUE == until) until else currentMillis + until
+        val option = listOf(
+            ConversationNotificationOption(
+                null,
+                conversationId,
+                muteUntil,
+                LocalDateTime.now()
+            )
+        )
+        val disposable = conversationRepository.mute(conversationId, muteUntil)
+            .startWith(conversationRepository.insertNotificationOption(option))
+            .compose(applyObservableSchedulers())
+            .compose(parseResponseData())
+            .map { data: ConversationOption? ->
+                listOf(
+                    fromConversationOption(
+                        data!!
+                    )
+                )
+            }
+            .flatMapCompletable { result ->
+                conversationRepository.insertNotificationOption(
+                    result
+                )
+            }
+            .onErrorComplete()
+            .subscribe()
+        cd.add(disposable)
+    }
+
+    fun unMuteNotification(conversationId: String) {
+        //noinspection ResultOfMethodCallIgnored
+        conversationRepository.umute(conversationId)
+            .startWith(conversationRepository.deleteNotificationOption(conversationId))
+            .compose(applyObservableSchedulers())
+            .onErrorComplete()
+            .subscribe {
+                Logging.debug(
+                    TAG,
+                    "UnMute notification successfully, conversationId: $conversationId"
+                )
+            }
+    }
+
+    private fun handleGroupChangeState(
+        observable: Observable<ApiResponse<Conversation>>,
+        onLoading: Runnable,
+        onResult: Consumer<Conversation>,
+        onFailure: Consumer<Throwable>,
+        onErrorToast: Consumer<Event<Int>>
+    ) {
+        addDisposable(
+            observable.startWith(Completable.fromAction { onLoading.run() })
+                .compose(parseResponseData())
+                .flatMapSingle { c: Conversation ->
+                    c.status = ConversationStatusType.INBOX
+                    onResult.accept(c)
+                    conversationRepository.save(c).toSingleDefault(c.chats)
+                }
+                .compose(applyObservableSchedulers())
+                .subscribe({ list ->
+                    if (list.size == 1) {
+                        val message = list[0]
+                        AppDependencies.getDatabaseObserver()
+                            .notifyConversationUpdated(message.conversationId)
+                        AppDependencies.getDatabaseObserver()
+                            .notifyMessageInserted(message.conversationId, message.id)
+                    }
+                }) { t ->
+                    when (t) {
+                        is ConnectException -> onErrorToast.accept(Event(R.string.error_connect_server_fail))
+                        is FirebaseNetworkException -> onErrorToast.accept(Event(R.string.error_network_connection))
+                        is PermissionDeniedException -> onErrorToast.accept(Event(R.string.msg_user_dont_allow_added))
+                        else -> onErrorToast.accept(Event(R.string.error_unknown))
+                    }
+                    onFailure.accept(t)
+                }
+        )
+    }
+
+    fun changeGroupThumbnail(
+        file: File,
+        conversationId: String,
+        onLoading: Runnable,
+        onResult: Consumer<Conversation>,
+        onFailure: Consumer<Throwable>,
+        onErrorToast: Consumer<Event<Int>>
+    ) {
+        handleGroupChangeState(
+            Observable.fromFuture(
+                compressFileFuture(
+                    getApplication<Application>().applicationContext,
+                    file
+                )
+            ).flatMap { compress ->
+                conversationRepository.changeConversationGroupThumbnail(
+                    conversationId,
+                    compress
+                )
+            },
+            onLoading,
+            onResult,
+            onFailure,
+            onErrorToast
+        )
+    }
+
+    fun changeGroupName(
+        groupName: String,
+        conversationId: String,
+        onLoading: Runnable,
+        onResult: Consumer<Conversation>,
+        onFailure: Consumer<Throwable>,
+        onErrorToast: Consumer<Event<Int>>
+    ) {
+        handleGroupChangeState(
+            conversationRepository.changeConversationGroupName(
+                conversationId,
+                groupName
+            ),
+            onLoading,
+            onResult,
+            onFailure,
+            onErrorToast
+        )
+    }
+
+    fun addMember(
+        conversationId: String,
+        memberIds: List<String>,
+        onLoading: Runnable,
+        onResult: Consumer<Conversation>,
+        onFailure: Consumer<Throwable>,
+        onErrorToast: Consumer<Event<Int>>
+    ) {
+        addDisposable(
+            Observable.fromIterable(memberIds)
+                .flatMap { memberId ->
+                    addMemberObservable(
+                        conversationRepository,
+                        conversationId, memberId
+                    )
+                }
+                .compose(applyObservableSchedulers())
+                .subscribe(
+                    { result ->
+//                        oneTimeLoadingResult.postValue(
+//                            Pair.create(
+//                                result.status == NetworkStatus.LOADING,
+//                                R.string.action_loading
+//                            )
+//                        )
+                    }
+                ) { t ->
+//                    oneTimeLoadingResult.postValue(
+//                        Pair.create(
+//                            false,
+//                            R.string.action_loading
+//                        )
+//                    )
+                    when (t) {
+                        is ConnectException -> onErrorToast.accept(Event(R.string.error_connect_server_fail))
+                        is FirebaseNetworkException -> onErrorToast.accept(Event(R.string.error_network_connection))
+                        is PermissionDeniedException -> onErrorToast.accept(Event(R.string.msg_user_dont_allow_added))
+                        else -> onErrorToast.accept(Event(R.string.msg_permission_denied))
+                    }
+                }
+        )
     }
 
     fun addDisposable(disposable: Disposable) {

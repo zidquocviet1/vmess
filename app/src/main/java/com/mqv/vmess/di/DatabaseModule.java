@@ -7,6 +7,7 @@ import androidx.room.Room;
 
 import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.data.dao.ChatDao;
+import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
@@ -81,5 +82,11 @@ public class DatabaseModule {
     @Singleton
     public RecentSearchDao provideRecentSearch(MyDatabase db) {
         return db.getRecentSearchDao();
+    }
+
+    @Provides
+    @Singleton
+    public ConversationColorDao provideConversationColorDao(MyDatabase db) {
+        return db.getConversationColorDao();
     }
 }

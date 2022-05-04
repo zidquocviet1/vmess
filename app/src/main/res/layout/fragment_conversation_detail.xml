@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.fragment.ConversationDetailFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.mqv.vmess.ui.components.conversation.ConversationBannerView
+            android:id="@+id/conversation_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.mqv.vmess.ui.components.VMessRoundIconButton
+            android:id="@+id/button_phone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.mqv.vmess.ui.components.VMessRoundIconButton
+            android:id="@+id/button_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.mqv.vmess.ui.components.VMessRoundIconButton
+            android:id="@+id/button_notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.mqv.vmess.ui.components.VMessRoundIconButton
+            android:id="@+id/button_add_member"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <com.mqv.vmess.ui.components.VMessRoundIconButton
+            android:id="@+id/button_search"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <androidx.constraintlayout.helper.widget.Flow
+            android:id="@+id/flow_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/all_margin_top_soft"
+            android:orientation="horizontal"
+            app:constraint_referenced_ids="button_phone,button_video,button_notification,button_add_member,button_search"
+            app:layout_constraintBottom_toTopOf="@id/fragment_conversation_preference"
+            app:layout_constraintTop_toBottomOf="@id/conversation_banner" />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_conversation_preference"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:clipToPadding="false"
+            app:layout_constraintTop_toBottomOf="@id/flow_button" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

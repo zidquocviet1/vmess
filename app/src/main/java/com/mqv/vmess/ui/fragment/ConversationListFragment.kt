@@ -72,14 +72,18 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         mViewModel.userLeftGroup.observe(this) { ConversationItem.setUserLeftGroup(it) }
     }
 
+    fun deleteConversation(conversation: Conversation?) {
+        mViewModel.delete(conversation)
+        removeConversationUI(conversation!!)
+    }
+
     override fun onDelete(conversation: Conversation?) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.msg_delete_conversation_title)
             .setMessage(R.string.msg_delete_conversation_message)
             .setPositiveButton(R.string.action_delete) { dialog, _ ->
                 dialog.dismiss()
-                mViewModel.delete(conversation)
-                removeConversationUI(conversation!!)
+                deleteConversation(conversation)
             }
             .setNegativeButton(R.string.action_cancel, null)
             .setBackground(
@@ -127,7 +131,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     override fun onCreateGroup(conversation: Conversation?, whoCreateWith: User) {
         val intent = Intent(requireContext(), AddGroupConversationActivity::class.java).apply {
-            putExtra(EXTRA_USER, whoCreateWith)
+            putExtra(AddGroupConversationActivity.EXTRA_USER, whoCreateWith)
         }
         getLauncherByActivity()?.launch(intent) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -145,6 +149,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         }
     }
 
+    fun leaveGroup(conversation: Conversation?) {
+        mViewModel.leaveGroup(conversation)
+    }
+
     override fun onLeaveGroup(conversation: Conversation?) {
         AlertDialogUtil.show(
             requireContext(),
@@ -154,7 +162,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
             R.string.action_cancel
         ) { dialog, _ ->
             dialog.dismiss()
-            mViewModel.leaveGroup(conversation)
+            leaveGroup(conversation)
         }
     }
 
@@ -367,7 +375,6 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     companion object {
-        const val EXTRA_USER = "user"
         private val TAG: String = ConversationListFragment::class.java.simpleName
     }
 }

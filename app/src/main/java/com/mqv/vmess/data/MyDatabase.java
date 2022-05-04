@@ -21,6 +21,7 @@ import com.mqv.vmess.data.converter.MessageTypeConverter;
 import com.mqv.vmess.data.converter.SocialLinksListConverter;
 import com.mqv.vmess.data.converter.SocialTypeConverter;
 import com.mqv.vmess.data.dao.ChatDao;
+import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
@@ -30,6 +31,7 @@ import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.dao.SeenMessageDao;
 import com.mqv.vmess.data.dao.UserDao;
+import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.model.ConversationIgnoreOption;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
 import com.mqv.vmess.data.model.FriendNotification;
@@ -52,8 +54,9 @@ import com.mqv.vmess.ui.data.People;
                       FriendNotification.class,
                       ConversationNotificationOption.class,
                       ConversationIgnoreOption.class,
-                      RecentSearchPeople.class},
-        version = 29,
+                      RecentSearchPeople.class,
+                      ConversationColor.class},
+        version = 30,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -91,4 +94,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract ConversationOptionDao getConversationOptionDao();
 
     public abstract RecentSearchDao getRecentSearchDao();
+
+    public abstract ConversationColorDao getConversationColorDao();
 }

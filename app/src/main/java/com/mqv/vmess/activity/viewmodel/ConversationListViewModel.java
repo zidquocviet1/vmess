@@ -77,7 +77,7 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
                                      PeopleRepository peopleRepository,
                                      FriendRequestRepository friendRequestRepository,
                                      ConversationStatusType status) {
-        super(application, chatRepository, peopleRepository, friendRequestRepository);
+        super(application, conversationRepository, chatRepository, peopleRepository, friendRequestRepository);
 
         this.conversationRepository     = conversationRepository;
         this.statusType                 = status;
