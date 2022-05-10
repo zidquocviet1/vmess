@@ -12,6 +12,7 @@ import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
+import com.mqv.vmess.data.dao.LinkMetadataDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.dao.UserDao;
@@ -88,5 +89,11 @@ public class DatabaseModule {
     @Singleton
     public ConversationColorDao provideConversationColorDao(MyDatabase db) {
         return db.getConversationColorDao();
+    }
+
+    @Provides
+    @Singleton
+    public LinkMetadataDao provideLinkMetadataDao(MyDatabase db) {
+        return db.getLinkMetadataDao();
     }
 }

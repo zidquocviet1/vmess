@@ -88,18 +88,23 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>(getString(R.string.key_pref_view_media_files))?.let { preference ->
             (preference as ConversationPreference).apply {
-                setTitle(R.string.title_view_media_and_files)
+                setTitle(R.string.title_view_media_and_links)
                 setIcon(R.drawable.ic_round_photo_library)
             }
         }
         findPreference<Preference>(getString(R.string.key_pref_create_group_with))?.let { preference ->
             (preference as ConversationPreference).apply {
-                val participants = mConversationDetail.metadata.conversationParticipants
-                val other = participants.filter { user -> user.uid == mConversationDetail.metadata.otherUid }[0]
+                (mConversationDetail.metadata.type == ConversationType.GROUP).let { isGroup ->
+                    isVisible = !isGroup
 
-                setTitle(getString(R.string.label_conversation_create_group, other.displayName))
-                setIcon(R.drawable.ic_round_groups)
-                isVisible = mConversationDetail.metadata.type != ConversationType.GROUP
+                    if (!isGroup) {
+                        val participants = mConversationDetail.metadata.conversationParticipants
+                        val other = participants.filter { user -> user.uid == mConversationDetail.metadata.otherUid }[0]
+
+                        setTitle(getString(R.string.label_conversation_create_group, other.displayName))
+                        setIcon(R.drawable.ic_round_groups)
+                    }
+                }
             }
         }
 

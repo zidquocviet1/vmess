@@ -55,6 +55,15 @@ public class Picture {
         return photoUrl == null ? null : photoUrl.replace("localhost", Const.BASE_IP);
     }
 
+    public static GlideRequest<Drawable> loadOutsideImage(Context context, @Nullable String url) {
+        return GlideApp.with(context)
+                       .load(url)
+                       .error(getErrorAvatarLoaded(context))
+                       .fallback(getDefaultUserAvatar(context))
+                       .circleCrop()
+                       .diskCacheStrategy(DiskCacheStrategy.ALL);
+    }
+
     public static GlideRequest<Drawable> loadUserAvatar(Context context, @Nullable String url) {
         if (url == null) {
             return GlideApp.with(context)

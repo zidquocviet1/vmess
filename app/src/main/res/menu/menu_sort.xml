@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group
+        android:id="@+id/menu_group_sort"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/menu_latest"
+            android:title="@string/label_latest" />
+
+        <item
+            android:id="@+id/menu_oldest"
+            android:title="@string/label_oldest" />
+
+<!--        <item-->
+<!--            android:id="@+id/menu_largest"-->
+<!--            android:title="@string/label_largest" />-->
+
+<!--        <item-->
+<!--            android:id="@+id/menu_smallest"-->
+<!--            android:title="@string/label_smallest" />-->
+    </group>
+</menu>

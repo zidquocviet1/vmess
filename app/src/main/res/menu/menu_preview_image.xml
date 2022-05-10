@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_save"
+        android:title="@string/action_save" />
+
+    <item
+        android:id="@+id/menu_share_image"
+        android:title="@string/label_share_image" />
+
+    <item
+        android:id="@+id/menu_open_in_browser"
+        android:title="@string/label_open_image_in_browser" />
+</menu>

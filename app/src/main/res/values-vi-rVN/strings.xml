@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!DOCTYPE resources [<!ENTITY appname "VMess"><!ENTITY author "Mai Quoc Viet">]>
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="label_user_information">Tôi</string>
     <string name="label_edit_profile">Chỉnh sửa hồ sơ</string>
     <string name="label_edit_bio">Chỉnh sửa tiểu sử</string>
@@ -284,7 +284,7 @@
     <string name="action_give_access">Cho phép truy cập</string>
     <string name="label_gallery">Thư viện</string>
     <string name="label_file">Tài liệu</string>
-    <string name="title_notification_download_file">Tệp đang được tải xuống...</string>
+    <string name="title_notification_download_file">Tệp đang được tải xuống…</string>
     <string name="msg_no_chats_yet">Không có cuộc trò chuyện nào. Hãy bắt đầu trò chuyện với bất kỳ bạn bè nào.</string>
     <string name="action_mute_notification_1_hour">Tắt trong 1 giờ</string>
     <string name="action_mute_notification_8_hour">Tắt trong 8 giờ</string>
@@ -312,7 +312,7 @@
     <string name="label_pref_privacy_category">Quyền riêng tư và bảo mật</string>
     <string name="title_disappearing_messages">Tuỳ chỉnh hiển thị tin nhắn</string>
     <string name="title_chat_color_and_wallpaper">Màu &amp; hình nền tin nhắn</string>
-    <string name="title_view_media_and_files">Xem tệp &amp; đa phương tiện</string>
+    <string name="title_view_media_and_links">Xem đường dẫn &amp; đa phương tiện</string>
     <string name="title_media">Phương tiện truyền thông</string>
     <string name="title_pref_block">Chặn</string>
     <string name="title_pref_report_problem">Báo cáo vấn đề</string>
@@ -323,4 +323,31 @@
     <string name="label_reset_wallpaper">Đặt lại hình nền</string>
     <string name="label_color_default">Mặc định</string>
     <string name="action_reset">Đặt lại</string>
+    <string name="title_all">Tất cả</string>
+    <string name="title_media_and_links">Đường dẫn &amp; đa phương tiện</string>
+    <string name="label_latest">Gần đây nhất</string>
+    <string name="label_oldest">Lâu nhất</string>
+    <string name="label_largest">Kích thước lớn nhất</string>
+    <string name="label_smallest">Kích thước nhỏ nhất</string>
+    <string name="label_no_media">Không có file phương tiện</string>
+    <string name="label_share_image">Chia sẻ hình ảnh</string>
+    <string name="label_open_image_in_browser">Mở bằng trình duyệt</string>
+    <string name="label_zero_media_video_number">0 video</string>
+    <string name="label_zero_media_photo_number">0 hình ảnh</string>
+    <string name="label_zero_media_link_number">0 liên kiết</string>
+    <string name="label_zero_media_message_number">0 tin nhắn đa phương tiện</string>
+    <plurals name="label_media_photo_number" tools:ignore="UnusedQuantity">
+        <item quantity="one">%d hình ảnh</item>
+        <item quantity="other">%d hình ảnh</item>
+    </plurals>
+    <plurals name="label_media_links_number" tools:ignore="UnusedQuantity">
+        <item quantity="one">%d liên kết</item>
+        <item quantity="other">%d liên kết</item>
+    </plurals>
+    <plurals name="label_media_message_number" tools:ignore="UnusedQuantity">
+        <item quantity="one">%d tin nhắn đa phương tiện</item>
+        <item quantity="other">%d tin nhắn đa phương tiện</item>
+    </plurals>
+    <string name="label_customize_notifications">Tùy chỉnh thông báo</string>
+    <string name="label_sound_and_appearance_options">Âm thanh và hiển thị tùy chọn</string>
 </resources>

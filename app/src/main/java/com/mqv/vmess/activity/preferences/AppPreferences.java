@@ -45,4 +45,8 @@ public interface AppPreferences {
     void setUserAuthTokenExpiresTime(Long time);
 
     Long getUserAuthTokenExpiresTime();
+
+    void setMessageMediaSort(MessageMediaSort sort);
+
+    MessageMediaSort getMessageMediaSort();
 }

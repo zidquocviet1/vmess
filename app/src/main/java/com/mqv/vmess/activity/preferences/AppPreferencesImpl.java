@@ -128,4 +128,20 @@ public class AppPreferencesImpl implements AppPreferences {
     public Long getUserAuthTokenExpiresTime() {
         return mPreferences.getLong(Const.KEY_PREF_AUTH_USER_TOKEN_EXPIRES_TIME, 0L);
     }
+
+    @Override
+    public void setMessageMediaSort(MessageMediaSort sort) {
+        mPreferences.edit().putString(Const.KEY_PREF_MESSAGE_MEDIA_SORT, sort.name()).apply();
+    }
+
+    @Override
+    public MessageMediaSort getMessageMediaSort() {
+        try {
+            String sortType = mPreferences.getString(Const.KEY_PREF_MESSAGE_MEDIA_SORT, MessageMediaSort.LATEST.name());
+            return MessageMediaSort.valueOf(sortType);
+        } catch (ClassCastException ignore) {
+            setMessageMediaSort(MessageMediaSort.LATEST);
+            return MessageMediaSort.LATEST;
+        }
+    }
 }

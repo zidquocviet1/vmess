@@ -37,6 +37,7 @@
         tools:ignore="DataExtractionRules">
         <activity
             android:name=".activity.ConversationDetailActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:exported="false" />
         <activity
             android:name=".activity.VideoPlayerActivity"

@@ -17,4 +17,7 @@
     <color name="navigation_background">@color/white</color>
     <color name="base_ripple_outline_button">#D1CCCC</color>
     <color name="active_background_badge">#00a67e</color>
+    <color name="standard_link_color">#0000EE</color>
+    <color name="visited_link_color">#551A8B</color>
+    <color name="inactive_link_color">#EE0000</color>
 </resources>

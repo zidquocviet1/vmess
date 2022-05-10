@@ -8,9 +8,13 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 
+typealias PositionRetriever = (view: View) -> Int
+typealias ChildViewClickListener = (pos: Int) -> Unit
+
 abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.ItemCallback<T>) :
     ListAdapter<T, BaseAdapter.BaseViewHolder>(diffCallback) {
 
+    protected var mRetriever: PositionRetriever? = null
     private var eventHandler: ItemEventHandler? = null
 
     interface ItemEventHandler {
@@ -24,6 +28,13 @@ abstract class BaseAdapter<T : Any, VB : ViewBinding>(diffCallback: DiffUtil.Ite
     abstract fun bindItem(item: T, binding: ViewBinding)
 
     open fun bindItem(item: T, binding: ViewBinding, payloads: MutableList<Any>) {}
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        mRetriever = { view ->
+            recyclerView.getChildAdapterPosition(view)
+        }
+        super.onAttachedToRecyclerView(recyclerView)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         return BaseViewHolder(

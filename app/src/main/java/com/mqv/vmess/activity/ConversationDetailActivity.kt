@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.annotation.StringRes
@@ -13,8 +14,11 @@ import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.appbar.MaterialToolbar
 import com.mqv.vmess.R
+import com.mqv.vmess.activity.listener.MessageMediaSortHandler
+import com.mqv.vmess.activity.preferences.MessageMediaSort
 import com.mqv.vmess.activity.viewmodel.ConversationDetailViewModel
 import com.mqv.vmess.databinding.ActivityConversationDetailBinding
+import com.mqv.vmess.dependencies.AppDependencies
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.data.AlertDialogData
@@ -29,17 +33,18 @@ import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.NetworkStatus
 import dagger.hilt.android.AndroidEntryPoint
 
-typealias InflateMenuCallback = (isGroup: Boolean) -> Unit
+typealias InflateMenuCallback = (isGroup: Boolean, destination: Int) -> Unit
 
 @AndroidEntryPoint
 class ConversationDetailActivity :
     ToolbarActivity<ConversationDetailViewModel, ActivityConversationDetailBinding>(),
     NavController.OnDestinationChangedListener,
-    ConversationPreferenceFragment.ConversationPreferenceListener {
+    ConversationPreferenceFragment.ConversationPreferenceListener,
+    MessageMediaSortHandler {
 
-    private var mInflatedMenu: Boolean = false
     private var mInflateMenuCallback: InflateMenuCallback? = null
     private lateinit var mNavController: NavController
+    private lateinit var mNavHostFragment: NavHostFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,11 +53,15 @@ class ConversationDetailActivity :
 
         updateActionBarTitle(R.string.dummy_empty_string)
 
-        val navHostFragment =
+        mNavHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-
-        mNavController = navHostFragment.navController
+        mNavController = mNavHostFragment.navController
         mNavController.addOnDestinationChangedListener(this)
+
+        mNavController.currentBackStackEntry?.savedStateHandle?.getLiveData<String>(KEY_SUBTITLE)
+            ?.observe(this) { subtitle ->
+                supportActionBar?.subtitle = subtitle
+            }
     }
 
     override fun binding() {
@@ -64,9 +73,10 @@ class ConversationDetailActivity :
 
     override fun setupObserver() {
         mViewModel.conversationDetail.observe(this) { detail ->
-            if (!mInflatedMenu) {
-                mInflateMenuCallback?.invoke(detail.metadata.type == ConversationType.GROUP)
-            }
+            mInflateMenuCallback?.invoke(
+                detail.metadata.type == ConversationType.GROUP,
+                R.id.conversationDetailFragment
+            )
         }
         mViewModel.singleToast.observe(this) { event ->
             event?.getContentIfNotHandled()?.let {
@@ -89,10 +99,15 @@ class ConversationDetailActivity :
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        mInflateMenuCallback = { isGroup ->
-            mInflatedMenu = true
+        mInflateMenuCallback = { isGroup, destination ->
+            menu?.clear()
             menuInflater.inflate(
-                if (isGroup) R.menu.menu_conversation_detail_group else R.menu.menu_conversation_detail_personal,
+                if (destination == R.id.mediaAndFileFragment) {
+                    R.menu.menu_media_and_file
+                } else {
+                    if (isGroup) R.menu.menu_conversation_detail_group
+                    else R.menu.menu_conversation_detail_personal
+                },
                 menu
             )
         }
@@ -167,6 +182,29 @@ class ConversationDetailActivity :
                     )
                 }.show(supportFragmentManager, null)
             }
+            R.id.menu_sort -> {
+                PopupMenu(this, findViewById(R.id.menu_sort)).apply {
+                    inflate(R.menu.menu_sort)
+                    setOnMenuItemClickListener { item ->
+                        when (item.itemId) {
+                            R.id.menu_latest -> handleSortLatest()
+                            R.id.menu_oldest -> handleSortOldest()
+//                            R.id.menu_largest -> handleSortLargest()
+                            else -> handleSortSmallest()
+                        }
+                        return@setOnMenuItemClickListener true
+                    }
+
+                    when (AppDependencies.getAppPreferences().messageMediaSort) {
+                        MessageMediaSort.LATEST -> menu.findItem(R.id.menu_latest).isChecked = true
+                        MessageMediaSort.OLDEST -> menu.findItem(R.id.menu_oldest).isChecked = true
+//                        MessageMediaSort.LARGEST -> menu.findItem(R.id.menu_largest).isChecked =
+//                            true
+//                        else -> menu.findItem(R.id.menu_smallest).isChecked = true
+                        else -> {}
+                    }
+                }.show()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -177,26 +215,32 @@ class ConversationDetailActivity :
         arguments: Bundle?
     ) {
         when (destination.id) {
-            R.id.notificationPreferenceFragment -> changeActionBar(
-                R.string.title_disappearing_messages,
-                false
-            )
-            R.id.colorAndWallpaperFragment -> changeActionBar(
-                R.string.title_chat_color_and_wallpaper,
-                false
-            )
-            R.id.mediaAndFileFragment -> changeActionBar(
-                R.string.title_media,
-                false
-            )
-            R.id.notificationAndSoundFragment -> changeActionBar(
-                R.string.title_preference_item_notification_and_sounds,
-                false
-            )
-            R.id.conversationDetailFragment -> changeActionBar(
-                R.string.dummy_empty_string,
-                true
-            )
+            R.id.notificationPreferenceFragment -> changeActionBar(R.string.title_disappearing_messages)
+            R.id.colorAndWallpaperFragment -> changeActionBar(R.string.title_chat_color_and_wallpaper)
+            R.id.mediaAndFileFragment -> {
+                mInflateMenuCallback?.invoke(
+                    mViewModel.conversation.type == ConversationType.GROUP,
+                    destination.id
+                )
+
+                changeActionBar(
+                    R.string.title_media_and_links,
+                    shouldShowSubtitle = true,
+                    shouldShowMenu = true
+                )
+            }
+            R.id.notificationAndSoundFragment -> changeActionBar(R.string.title_preference_item_notification_and_sounds)
+            R.id.conversationDetailFragment -> {
+                mInflateMenuCallback?.invoke(
+                    mViewModel.conversation.type == ConversationType.GROUP,
+                    destination.id
+                )
+
+                changeActionBar(
+                    R.string.dummy_empty_string,
+                    true
+                )
+            }
         }
     }
 
@@ -293,7 +337,33 @@ class ConversationDetailActivity :
     override fun onReport() {
     }
 
-    private fun changeActionBar(@StringRes title: Int, shouldShowMenu: Boolean) {
+    override fun handleSortLatest() {
+        onSortSelected(MessageMediaSort.LATEST)
+        mViewModel.submitChangeSortType(MessageMediaSort.LATEST)
+    }
+
+    override fun handleSortOldest() {
+        onSortSelected(MessageMediaSort.OLDEST)
+        mViewModel.submitChangeSortType(MessageMediaSort.OLDEST)
+    }
+
+    override fun handleSortLargest() {
+        onSortSelected(MessageMediaSort.LARGEST)
+    }
+
+    override fun handleSortSmallest() {
+        onSortSelected(MessageMediaSort.SMALLEST)
+    }
+
+    override fun onSortSelected(type: MessageMediaSort) {
+        AppDependencies.getAppPreferences().messageMediaSort = type
+    }
+
+    private fun changeActionBar(
+        @StringRes title: Int,
+        shouldShowMenu: Boolean = false,
+        shouldShowSubtitle: Boolean = false
+    ) {
         updateActionBarTitle(title)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
@@ -301,6 +371,10 @@ class ConversationDetailActivity :
 
         for (i in 0 until menu.size()) {
             menu[i].isVisible = shouldShowMenu
+        }
+
+        if (!shouldShowSubtitle) {
+            supportActionBar?.subtitle = ""
         }
     }
 
@@ -310,5 +384,6 @@ class ConversationDetailActivity :
         const val EXTRA_CONVERSATION_ID = "conversation_id"
         const val KEY_DELETE_CONVERSATION = "delete_conversation"
         const val KEY_LEAVE_GROUP = "leave_group"
+        const val KEY_SUBTITLE = "subtitle"
     }
 }

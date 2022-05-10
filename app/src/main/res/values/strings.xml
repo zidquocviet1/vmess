@@ -86,6 +86,35 @@
     <string name="label_wallpaper">Wallpaper</string>
     <string name="label_reset_wallpaper">Reset wallpaper</string>
     <string name="label_color_default">Default</string>
+    <string name="label_latest">Latest</string>
+    <string name="label_oldest">Oldest</string>
+    <string name="label_largest">Largest</string>
+    <string name="label_smallest">Smallest</string>
+    <string name="label_no_media">No media</string>
+    <string name="label_share_image">Share image</string>
+    <string name="label_open_image_in_browser">Open in browser</string>
+    <string name="label_zero_media_video_number">0 video</string>
+    <string name="label_zero_media_photo_number">0 photo</string>
+    <string name="label_zero_media_link_number">0 link</string>
+    <string name="label_zero_media_message_number">0 media message</string>
+    <plurals name="label_media_video_number" translatable="false">
+        <item quantity="one">%d video</item>
+        <item quantity="other">%d videos</item>
+    </plurals>
+    <plurals name="label_media_photo_number">
+        <item quantity="one">%d photo</item>
+        <item quantity="other">%d photos</item>
+    </plurals>
+    <plurals name="label_media_links_number">
+        <item quantity="one">%d link</item>
+        <item quantity="other">%d links</item>
+    </plurals>
+    <plurals name="label_media_message_number">
+        <item quantity="one">%d media message</item>
+        <item quantity="other">%d media messages</item>
+    </plurals>
+    <string name="label_customize_notifications">Customize notifications</string>
+    <string name="label_sound_and_appearance_options">Sound and appearance options</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>
@@ -171,10 +200,12 @@
     <string name="title_notification_download_file">Downloading file…</string>
     <string name="title_disappearing_messages">Disappearing messages</string>
     <string name="title_chat_color_and_wallpaper">Chat color &amp; wallpaper</string>
-    <string name="title_view_media_and_files">View media &amp; files</string>
+    <string name="title_view_media_and_links">View media &amp; links</string>
+    <string name="title_media_and_links">Media &amp; links</string>
     <string name="title_media">Media</string>
     <string name="title_pref_block">Block</string>
     <string name="title_pref_report_problem">Report problem</string>
+    <string name="title_all">All</string>
 
     <string name="action_remove_from_group">Remove From Group</string>
     <string name="action_leave_group">Leave Group</string>
@@ -401,6 +432,4 @@
     <string name="key_pref_ignore_messages" translatable="false">key_pref_ignore_messages</string>
     <string name="key_pref_block" translatable="false">key_pref_block</string>
     <string name="key_pref_report" translatable="false">key_pref_report</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment" translatable="false">Hello blank fragment</string>
 </resources>

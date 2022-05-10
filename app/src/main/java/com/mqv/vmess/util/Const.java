@@ -1,5 +1,7 @@
 package com.mqv.vmess.util;
 
+import com.mqv.vmess.activity.preferences.MessageMediaSort;
+
 public final class Const {
     private static final int PORT = 443; // 443 for Https and 8080 or 80 for Http
     public static final String BASE_IP = "192.168.9.100";
@@ -20,6 +22,7 @@ public final class Const {
     public static final String KEY_PREF_NOTIFICATION_STATUS = "pref_notification_status";
     public static final String KEY_PREF_AUTH_USER_TOKEN = "auth_token";
     public static final String KEY_PREF_AUTH_USER_TOKEN_EXPIRES_TIME = "auth_token_expires_time";
+    public static final String KEY_PREF_MESSAGE_MEDIA_SORT = MessageMediaSort.LATEST.name();
 
     // DATABASE
     public static final String DATABASE_NAME = "tac_database";

@@ -17,6 +17,7 @@
         android:clickable="true"
         android:contentDescription="@null"
         android:focusable="true"
+        android:elevation="10dp"
         android:tintMode="src_in"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -31,6 +32,7 @@
         android:background="@drawable/ic_more_vertical"
         android:backgroundTint="@color/white"
         android:clickable="true"
+        android:elevation="10dp"
         android:contentDescription="@null"
         android:focusable="true"
         android:tintMode="src_in"
@@ -39,6 +41,7 @@
         app:tint="@android:color/transparent" />
 
     <ImageView
+        android:contentDescription="@null"
         android:id="@+id/imgAvatar"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -49,4 +52,12 @@
         app:layout_constraintHeight_percent="0.45"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:contentDescription="@null"
+        android:id="@+id/image_full_screen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:visibility="gone" />
 </androidx.constraintlayout.widget.ConstraintLayout>

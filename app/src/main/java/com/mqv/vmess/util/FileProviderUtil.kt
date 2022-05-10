@@ -117,6 +117,8 @@ object FileProviderUtil {
                     LocalDateTime.parse(date)
                 } catch (e: DateTimeParseException) {
                     LocalDateTime.MIN
+                } catch (e: NullPointerException) {
+                    LocalDateTime.MIN
                 }
                 images.add(
                     ImageThumbnail(

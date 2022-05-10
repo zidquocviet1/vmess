@@ -5,10 +5,12 @@ import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
+import com.mqv.vmess.data.dao.LinkMetadataDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.LinkMetadataRepository;
 import com.mqv.vmess.data.repository.MediaRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
@@ -16,6 +18,7 @@ import com.mqv.vmess.data.repository.SearchRepository;
 import com.mqv.vmess.data.repository.StorageRepository;
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.ConversationRepositoryImpl;
+import com.mqv.vmess.data.repository.impl.LinkMetadataRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.MediaRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.NotificationRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.PeopleRepositoryImpl;
@@ -83,5 +86,11 @@ public class RepoViewModelModule {
     @Provides
     public SearchRepository provideRecentSearchRepository(RecentSearchDao dao, PeopleDao peopleDao) {
         return new SearchRepositoryImpl(dao, peopleDao);
+    }
+
+    @ViewModelScoped
+    @Provides
+    public LinkMetadataRepository provideLinkMetadataRepository(LinkMetadataDao dao) {
+        return new LinkMetadataRepositoryImpl(dao);
     }
 }
