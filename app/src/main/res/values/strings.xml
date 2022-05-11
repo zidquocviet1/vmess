@@ -273,6 +273,7 @@
     </array>
     <string name="action_new_group">New group</string>
     <string name="action_reset">Reset</string>
+    <string name="action_undo">Undo</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -360,6 +361,7 @@
     <string name="msg_conversation_list_the_call_has_ended">The call has ended</string>
     <string name="msg_no_chats_yet">No chats yet. \nGet started by messaging a friend.</string>
     <string name="msg_prompt_notification_preference_disappearing_message">When enabled, new messages sent and received in this chat will disappear after they have been seen.</string>
+    <string name="msg_prompt_undo_delete_conversation">The conversation will be delete, click the Undo button to undo delete.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>

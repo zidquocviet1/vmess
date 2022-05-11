@@ -350,4 +350,6 @@
     </plurals>
     <string name="label_customize_notifications">Tùy chỉnh thông báo</string>
     <string name="label_sound_and_appearance_options">Âm thanh và hiển thị tùy chọn</string>
+    <string name="action_undo">Hoàn tác</string>
+    <string name="msg_prompt_undo_delete_conversation">Cuộc trò chuyện sẽ bị xóa bỏ, nhấn nút Hoàn tác để hủy bỏ việc xóa.</string>
 </resources>

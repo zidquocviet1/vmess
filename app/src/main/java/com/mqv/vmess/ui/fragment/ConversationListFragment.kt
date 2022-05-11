@@ -8,6 +8,8 @@ import androidx.activity.result.ActivityResult
 import androidx.core.content.ContextCompat
 import androidx.viewbinding.ViewBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import com.mqv.vmess.R
 import com.mqv.vmess.activity.AddGroupConversationActivity
 import com.mqv.vmess.activity.ConversationActivity
@@ -49,6 +51,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     private lateinit var mConversationHandler: ConversationOptionHandler
     private lateinit var mNonExpireNotificationOption: List<String>
+    private lateinit var mSnackbar: Snackbar
 
     internal open lateinit var mAdapter: ConversationListAdapter
     internal open lateinit var mConversations: MutableList<Conversation?>
@@ -57,8 +60,20 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         super.onViewCreated(view, savedInstanceState)
 
         initializeRecyclerview()
-        mAdapter.registerOnDataSizeChanged { onDataSizeChanged(it) }
+        mAdapter.registerOnDataSizeChanged { isEmpty ->
+            mBinding?.let {
+                onDataSizeChanged(isEmpty)
+            }
+        }
         mConversationHandler = ConversationOptionHandler(requireContext())
+        mSnackbar = Snackbar.make(mBinding.root, "", Snackbar.LENGTH_SHORT)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (mSnackbar.isShown) {
+            mSnackbar.dismiss()
+        }
     }
 
     abstract fun initializeRecyclerview()
@@ -73,8 +88,29 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
     }
 
     fun deleteConversation(conversation: Conversation?) {
-        mViewModel.delete(conversation)
         removeConversationUI(conversation!!)
+
+        mSnackbar.setText(R.string.msg_prompt_undo_delete_conversation)
+            .setActionTextColor(requireContext().getColor(R.color.purple_500))
+            .setAction(R.string.action_undo) {
+                mConversations.add(conversation)
+                mConversations.sortWith { o1, o2 ->
+                    if (o1 != null && o2 != null) {
+                        return@sortWith o2.lastChat.timestamp.compareTo(o1.lastChat.timestamp)
+                    } else {
+                        return@sortWith 0
+                    }
+                }
+                submitCurrentData()
+            }
+            .addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    if (event != DISMISS_EVENT_ACTION) {
+                        mViewModel.delete(conversation)
+                    }
+                }
+            })
+            .show()
     }
 
     override fun onDelete(conversation: Conversation?) {
