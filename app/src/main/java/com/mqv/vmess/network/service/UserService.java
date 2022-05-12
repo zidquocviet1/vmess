@@ -3,6 +3,7 @@ package com.mqv.vmess.network.service;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.ui.data.People;
+import com.mqv.vmess.ui.data.PhoneContact;
 import com.mqv.vmess.util.Const;
 
 import io.reactivex.rxjava3.core.Observable;
@@ -15,6 +16,7 @@ import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface UserService {
@@ -91,4 +93,9 @@ public interface UserService {
     Observable<ApiResponse<People>> getConnectPeopleByUid(@Header(Const.AUTHORIZATION) String token,
                                                           @Header(Const.AUTHORIZER) String authorizer,
                                                           @Query("uid") String uid);
+
+    @GET(value = "user/phone-contact/{phone-number}")
+    Observable<ApiResponse<PhoneContact>> getPhoneContactInfo(@Header(Const.AUTHORIZATION) String token,
+                                                              @Path("phone-number") String phoneNumber,
+                                                              @Query("cc") String countryCode);
 }

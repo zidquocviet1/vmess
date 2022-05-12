@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:padding="@dimen/all_padding_default">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/thumbnail"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <TextView
+        android:id="@+id/text_display_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/author_app_full_name"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@id/text_display_name"
+        app:layout_constraintEnd_toStartOf="@id/button_add_friend"
+        app:layout_constraintStart_toEndOf="@id/thumbnail"
+        app:layout_constraintTop_toTopOf="@id/thumbnail" />
+
+    <TextView
+        android:id="@+id/text_contact_name_and_phone_number"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/label_contact_name_and_phone_number"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/thumbnail"
+        app:layout_constraintEnd_toStartOf="@id/button_add_friend"
+        app:layout_constraintStart_toStartOf="@id/text_display_name"
+        app:layout_constraintTop_toBottomOf="@id/text_display_name" />
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/loading"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/button_add_friend"
+        app:layout_constraintEnd_toEndOf="@id/button_add_friend"
+        app:layout_constraintStart_toStartOf="@id/button_add_friend"
+        app:layout_constraintTop_toTopOf="@id/button_add_friend" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_add_friend"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/base_background_color"
+        android:minHeight="42dp"
+        android:outlineProvider="none"
+        android:text="@string/action_add_friend"
+        android:textAllCaps="false"
+        android:textColor="@color/purple_500"
+        android:textSize="11sp"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toBottomOf="@id/thumbnail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/thumbnail"
+        app:rippleColor="@android:color/darker_gray" />
+</androidx.constraintlayout.widget.ConstraintLayout>

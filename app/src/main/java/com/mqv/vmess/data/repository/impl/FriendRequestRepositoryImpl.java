@@ -70,6 +70,26 @@ public class FriendRequestRepositoryImpl implements FriendRequestRepository {
     }
 
     @Override
+    public Observable<ApiResponse<Boolean>> requestConnect(String uid) {
+        FirebaseUser currentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
+        String currentUserId = currentUser.getUid();
+        FriendRequest request = new FriendRequest(currentUserId, uid);
+
+        return UserTokenUtil.getTokenSingle(currentUser)
+                            .flatMapObservable(token -> service.requestConnect(token, Const.DEFAULT_AUTHORIZER, request));
+    }
+
+    @Override
+    public Observable<ApiResponse<Boolean>> cancelRequest(String uid) {
+        FirebaseUser currentUser = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
+        String currentUserId = currentUser.getUid();
+        FriendRequest request = new FriendRequest(currentUserId, uid, FriendRequestStatus.CANCEL);
+
+        return UserTokenUtil.getTokenSingle(currentUser)
+                            .flatMapObservable(token -> service.responseFriendRequest(token, Const.DEFAULT_AUTHORIZER, request));
+    }
+
+    @Override
     public Observable<ApiResponse<List<String>>> getFriendListId(String token) {
         return service.getFriendListId(Const.PREFIX_TOKEN + token);
     }

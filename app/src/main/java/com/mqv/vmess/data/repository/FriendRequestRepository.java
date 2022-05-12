@@ -33,6 +33,10 @@ public interface FriendRequestRepository {
                         Consumer<Observable<ApiResponse<Boolean>>> onAuthSuccess,
                         Consumer<Exception> onAuthFail);
 
+    Observable<ApiResponse<Boolean>> requestConnect(String uid);
+
+    Observable<ApiResponse<Boolean>> cancelRequest(String uid);
+
     Observable<ApiResponse<List<String>>> getFriendListId(String token);
 
     Observable<Boolean> isFriend(String userId);

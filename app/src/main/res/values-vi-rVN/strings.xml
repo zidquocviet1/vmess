@@ -352,4 +352,13 @@
     <string name="label_sound_and_appearance_options">Âm thanh và hiển thị tùy chọn</string>
     <string name="action_undo">Hoàn tác</string>
     <string name="msg_prompt_undo_delete_conversation">Cuộc trò chuyện sẽ bị xóa bỏ, nhấn nút Hoàn tác để hủy bỏ việc xóa.</string>
+    <string name="title_contacts">Danh bạ</string>
+    <string name="title_friend">Bạn bè</string>
+    <string name="action_allow_access_contacts">Cho phép truy cập danh bạ</string>
+    <string name="msg_permission_use_contact_rationale">Để nhập danh bạ của bạn, hãy cho phép truy cập vào danh bạ.</string>
+    <string name="msg_permission_permanent_denial_contact_title">Cho phép sử dụng danh bạ?</string>
+    <string name="msg_permission_permanent_denial_contact_message">Điều này cho phép chúng tôi truy cập vào danh bạ của bạn và thu thập thông tin để sử dụng tính năng này.</string>
+    <string name="msg_phone_contacts_fragment">Để sử dụng tính năng này, chúng tôi cần phải truy cập vào danh bạ trên thiết bị của bạn. Nhấn vào nút bên dưới để trao quyền cần thiết.</string>
+    <string name="msg_phone_contacts_empty_list_fragment">Không có bất kỳ người dùng nào phù hợp từ danh bạ của bạn.</string>
+    <string name="msg_phone_contacts_send_friend_error_fragment">Yêu cầu bạn bè chưa hoàn thành. Thử lại sau</string>
 </resources>

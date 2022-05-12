@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.google.firebase.auth.FirebaseUser;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.ui.data.PhoneContact;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -62,4 +63,6 @@ public interface UserRepository {
 
     Observable<List<User>> fetchUserUsingNBS(User remoteUser,
                                              FirebaseUser user);
+
+    Observable<ApiResponse<PhoneContact>> fetchPhoneContactInfo(String number);
 }

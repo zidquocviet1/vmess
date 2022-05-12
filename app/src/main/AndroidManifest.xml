@@ -18,6 +18,8 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
 
     <queries>
         <intent>
@@ -35,6 +37,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RealTimeChatApplication"
         tools:ignore="DataExtractionRules">
+        <activity
+            android:name=".activity.preferences.PreferencePhoneContactActivity"
+            android:screenOrientation="portrait"
+            android:exported="false"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="com.tac.open.phone_contacts" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".activity.ConversationDetailActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"

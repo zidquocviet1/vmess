@@ -16,6 +16,7 @@ import com.mqv.vmess.network.NetworkBoundResource;
 import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.service.UserService;
+import com.mqv.vmess.ui.data.PhoneContact;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.UserTokenUtil;
@@ -23,6 +24,7 @@ import com.mqv.vmess.util.UserTokenUtil;
 import java.net.HttpURLConnection;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -41,6 +43,7 @@ public class UserRepositoryImpl implements UserRepository {
     private final UserService userService;
     private final UserDao userDao;
     private final CompositeDisposable cd = new CompositeDisposable();
+    private static final String DEFAULT_PHONE_LOCALE = "VN";
 
     @Inject
     public UserRepositoryImpl(UserService userService, UserDao userDao) {
@@ -286,6 +289,12 @@ public class UserRepositoryImpl implements UserRepository {
                 throwable.printStackTrace();
             }
         }.asObservable();
+    }
+
+    @Override
+    public Observable<ApiResponse<PhoneContact>> fetchPhoneContactInfo(String number) {
+        return UserTokenUtil.getTokenSingle(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()))
+                            .flatMapObservable(token -> userService.getPhoneContactInfo(token, number, DEFAULT_PHONE_LOCALE));
     }
 
     private void handleCallRemoteUser(String token, String uid) {

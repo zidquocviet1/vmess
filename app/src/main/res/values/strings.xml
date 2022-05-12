@@ -115,6 +115,7 @@
     </plurals>
     <string name="label_customize_notifications">Customize notifications</string>
     <string name="label_sound_and_appearance_options">Sound and appearance options</string>
+    <string name="label_contact_name_and_phone_number" translatable="false">%1$s (%2$s)</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>
@@ -206,6 +207,8 @@
     <string name="title_pref_block">Block</string>
     <string name="title_pref_report_problem">Report problem</string>
     <string name="title_all">All</string>
+    <string name="title_contacts">Contacts</string>
+    <string name="title_friend">Friend</string>
 
     <string name="action_remove_from_group">Remove From Group</string>
     <string name="action_leave_group">Leave Group</string>
@@ -274,6 +277,7 @@
     <string name="action_new_group">New group</string>
     <string name="action_reset">Reset</string>
     <string name="action_undo">Undo</string>
+    <string name="action_allow_access_contacts">Allow access contacts</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -362,6 +366,12 @@
     <string name="msg_no_chats_yet">No chats yet. \nGet started by messaging a friend.</string>
     <string name="msg_prompt_notification_preference_disappearing_message">When enabled, new messages sent and received in this chat will disappear after they have been seen.</string>
     <string name="msg_prompt_undo_delete_conversation">The conversation will be delete, click the Undo button to undo delete.</string>
+    <string name="msg_permission_use_contact_rationale">To import your contact, allow access your contacts.</string>
+    <string name="msg_permission_permanent_denial_contact_title">&appname;Allow to use your contacts?</string>
+    <string name="msg_permission_permanent_denial_contact_message">&appname;This lets access your contacts and retrieve the information to use this feature.</string>
+    <string name="msg_phone_contacts_fragment">To use this feature, we need to access your contacts list on you device. Click the button below to grant necessary permission.</string>
+    <string name="msg_phone_contacts_empty_list_fragment">Don\'t have any user from your contacts list.</string>
+    <string name="msg_phone_contacts_send_friend_error_fragment">Make friend request not complete. Try again</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
