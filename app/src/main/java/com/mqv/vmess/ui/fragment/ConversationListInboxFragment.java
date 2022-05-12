@@ -192,6 +192,7 @@ implements NestedScrollView.OnScrollChangeListener {
             mViewModel.onRefresh();
         } else {
             Toast.makeText(requireContext(), "Fetching new conversation when you are offline.", Toast.LENGTH_SHORT).show();
+            stopRefresh();
         }
     }
 
