@@ -374,6 +374,7 @@
     <string name="msg_phone_contacts_send_friend_error_fragment">Make friend request not complete. Try again</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
+    <string name="error_phone_verification_limit_sms_per_day">Reach to the limited requests per day. Try later</string>
     <string name="error_verification_code_incorrect">The verification code is incorrect. Please check again!</string>
     <string name="error_file_not_found">Could not load the file. Try again</string>
     <string name="error_update_user_photo">Some error occurs when updating the user photo!</string>

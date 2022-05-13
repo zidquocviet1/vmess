@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthOptions;
@@ -92,7 +93,11 @@ public class GenerateOtpActivity extends AppCompatActivity {
                             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                 mBinding.buttonSend.setEnabled(true);
                                 mBinding.progressBarLoading.setVisibility(View.GONE);
-                                Toast.makeText(getApplicationContext(), R.string.error_phone_verification, Toast.LENGTH_SHORT).show();
+                                if (e instanceof FirebaseTooManyRequestsException) {
+                                    Toast.makeText(getApplicationContext(), R.string.error_phone_verification_limit_sms_per_day, Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(getApplicationContext(), R.string.error_phone_verification, Toast.LENGTH_SHORT).show();
+                                }
                             }, 1500);
                         }
 
