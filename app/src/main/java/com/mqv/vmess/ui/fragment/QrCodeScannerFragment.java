@@ -91,7 +91,9 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
         mCaptureManager = new CaptureManager(requireActivity(), mBinding.decoratedBarcodeView);
         mBinding.buttonEnableCamera.setOnClickListener(v -> requestCameraPermission());
 
-        requestCameraPermission();
+        if (isCameraGranted()) {
+            startScan();
+        }
     }
 
     @Override
@@ -138,7 +140,10 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
     @Override
     public void onResume() {
         super.onResume();
-        mCaptureManager.onResume();
+
+        if (isCameraGranted()) {
+            mCaptureManager.onResume();
+        }
 
         if (isScanFromImage) {
             new Handler(Looper.getMainLooper()).post(() -> {
@@ -262,6 +267,11 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
         if (!isFlashOff)
             mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_on));
         else mBinding.buttonFlash.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_round_flash_off));
+    }
+
+    private boolean isCameraGranted() {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     @Override

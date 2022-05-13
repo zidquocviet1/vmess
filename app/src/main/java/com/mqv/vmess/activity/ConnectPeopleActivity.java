@@ -2,6 +2,7 @@ package com.mqv.vmess.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.navigation.fragment.NavHostFragment;
@@ -18,6 +19,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class ConnectPeopleActivity extends BaseActivity<ConnectPeopleViewModel, ActivityConnectPeopleBinding> {
+    public static final String ACTION_FIND_USER = "find_user_by_id";
+    public static final String EXTRA_USER_ID = "id";
 
     @Override
     public void binding() {
@@ -33,9 +36,20 @@ public class ConnectPeopleActivity extends BaseActivity<ConnectPeopleViewModel, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        var navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-        var navController = Objects.requireNonNull(navHostFragment).getNavController();
-        NavigationUI.setupWithNavController(mBinding.bottomNav, navController);
+        var intent = getIntent();
+        var action = intent.getAction();
+
+        if (action != null && action.equals(ACTION_FIND_USER)) {
+            mViewModel.getConnectUserByUid(intent.getStringExtra(EXTRA_USER_ID));
+
+            mBinding.navHostFragment.setVisibility(View.GONE);
+        } else {
+            mBinding.navHostFragment.setVisibility(View.VISIBLE);
+
+            var navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            var navController = Objects.requireNonNull(navHostFragment).getNavController();
+            NavigationUI.setupWithNavController(mBinding.bottomNav, navController);
+        }
     }
 
     @Override

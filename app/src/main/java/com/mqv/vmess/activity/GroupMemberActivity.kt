@@ -71,6 +71,14 @@ class GroupMemberActivity : ToolbarActivity<AndroidViewModel, ActivityGroupMembe
                 }
                 true
             }
+            R.id.menu_view_profile -> {
+                val intent = Intent(this, ConnectPeopleActivity::class.java).apply {
+                    action = ConnectPeopleActivity.ACTION_FIND_USER
+                    putExtra(ConnectPeopleActivity.EXTRA_USER_ID, item.uid)
+                }
+                startActivity(intent)
+                true
+            }
             else -> false
         }
     }
@@ -103,5 +111,6 @@ class GroupMemberActivity : ToolbarActivity<AndroidViewModel, ActivityGroupMembe
         const val TYPE_ADMIN = 3
         const val TYPE_NICKNAME = 4
         const val TYPE_BLOCK = 5
+        const val TYPE_VIEW_PROFILE = 6
     }
 }
