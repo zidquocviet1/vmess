@@ -323,6 +323,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Completable deleteAllNotificationColor() {
+        return colorDao.deleteAll();
+    }
+
+    @Override
     public void deleteConversationChatRemote(Conversation conversation) {
         delete(conversation).andThen(getBearerTokenObservable()
                             .flatMap(token -> service.deleteConversationChat(token, conversation.getId())))

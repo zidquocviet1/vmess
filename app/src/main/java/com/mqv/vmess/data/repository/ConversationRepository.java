@@ -54,6 +54,8 @@ public interface ConversationRepository {
 
     Completable deleteAllNotificationOption();
 
+    Completable deleteAllNotificationColor();
+
     Single<Conversation> fetchCachedById(String conversationId);
 
     Single<List<Conversation>> fetchAllWithoutMessages();

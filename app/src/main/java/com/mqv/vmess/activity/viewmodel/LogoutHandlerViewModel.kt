@@ -29,4 +29,5 @@ open class LogoutHandlerViewModel(
             .mergeWith(notificationRepository.deleteAllLocal())
             .mergeWith(conversationRepository.deleteAll())
             .mergeWith(conversationRepository.deleteAllNotificationOption())
+            .mergeWith(conversationRepository.deleteAllNotificationColor())
 }
