@@ -22,7 +22,6 @@ import com.mqv.vmess.notification.NotificationUtil.sendIncomingMessageNotificati
 import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
 import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.ui.data.People
-import com.mqv.vmess.util.Const
 import com.mqv.vmess.util.DateTimeHelper.toLocalDateTime
 import com.mqv.vmess.util.Logging
 import io.reactivex.rxjava3.core.Completable
@@ -523,17 +522,6 @@ class NotificationHandler(
                     }
                 }
             }
-
-    // TODO: check if the request not complete then insert the token to preference and the status of request. For request not complete then make the request at launch time
-    fun registerFcmTokenToServer(token: String) {
-        mUser.authorizeToken().flatMapObservable { bearerToken ->
-            mUserService.sendFcmTokenToServer(bearerToken, Const.DEFAULT_AUTHORIZER, token)
-        }.subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .doOnError { Logging.debug(TAG, "Send fcm token to user fail") }
-            .compose(RxHelper.parseResponseData())
-            .subscribe()
-    }
 
     private fun handleCancelFriendRequest(payload: CancelFriendRequestPayload) {
         AppDependencies.getDatabaseObserver().notifyCancelRequest(payload.whoCancel)
