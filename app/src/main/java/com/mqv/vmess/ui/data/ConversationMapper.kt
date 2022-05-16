@@ -21,7 +21,7 @@ object ConversationMapper {
         return when (conversation.type!!) {
             ConversationType.SELF -> parseForSelf(currentUser, context)
             ConversationType.NORMAL -> parseForNormal(conversation.participants, currentUser)
-            ConversationType.GROUP -> parseForGroup(conversation, currentUser)
+            ConversationType.GROUP -> parseForGroup(conversation, currentUser, context)
         }
     }
 
@@ -66,7 +66,7 @@ object ConversationMapper {
         )
     }
 
-    private fun parseForGroup(conversation: Conversation, currentUser: User): ConversationMetadata {
+    private fun parseForGroup(conversation: Conversation, currentUser: User, context: Context): ConversationMetadata {
         val notSelfPredicate = Predicate { u: User -> u.uid != currentUser.uid }
         val group = conversation.group
         val participants = conversation.participants
@@ -101,8 +101,9 @@ object ConversationMapper {
 
         val creatorTemp = User.Builder()
             .setUid(group.creatorId)
+            .setDisplayName(context.getString(R.string.dummy_user_name))
             .create()
-        val creator = participants[participants.indexOf(creatorTemp)]
+        val creator = if (participants.indexOf(creatorTemp) != -1) participants[participants.indexOf(creatorTemp)] else creatorTemp
         val conversationCreatedBy = creator.displayName
         val type = ConversationType.GROUP
 
