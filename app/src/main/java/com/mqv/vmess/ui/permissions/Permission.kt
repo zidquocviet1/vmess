@@ -327,11 +327,11 @@ class Permission {
         }
 
         private fun executePreGrantedPermissionsRequest(request: PermissionRequest) {
-            val grantResults = Stream.of(requestedPermissions)
+            val grantResults = requestedPermissions!!.toList()
+                .stream()
                 .map { PackageManager.PERMISSION_GRANTED }
                 .toList()
                 .toIntArray()
-
             request.onResult(
                 requestedPermissions!!,
                 grantResults,
