@@ -226,4 +226,23 @@
             android:visibility="gone"
             tools:visibility="gone" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_new_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/background_new_message_selector"
+        android:elevation="1dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="6dp"
+        android:text="@string/label_conversation_activity_new_message"
+        android:textAlignment="center"
+        android:textAppearance="@android:style/TextAppearance.Material.Body1"
+        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_round_keyboard_double_arrow_down"
+        app:layout_constraintBottom_toTopOf="@id/footer"
+        app:layout_constraintEnd_toEndOf="@id/footer" />
 </androidx.constraintlayout.widget.ConstraintLayout>

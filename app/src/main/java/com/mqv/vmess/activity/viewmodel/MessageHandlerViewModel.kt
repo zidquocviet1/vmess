@@ -110,6 +110,36 @@ open class MessageHandlerViewModel(
             }
     }
 
+    fun seenUnreadMessageByTimestamp(conversationId: String, timestamp: LocalDateTime) {
+        chatRepository.fetchIncomingByConversation(conversationId)
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .flattenAsObservable { list -> list }
+            .map { incomingMessage ->
+                if (!incomingMessage.seenBy.contains(mUser.uid) && (incomingMessage.timestamp <= timestamp)) {
+                    incomingMessage.status = MessageStatus.SEEN
+                    incomingMessage.seenBy.add(mUser.uid)
+
+                    chatRepository.saveCached(incomingMessage)
+                        .subscribeOn(Schedulers.io())
+                        .subscribe()
+
+                    return@map incomingMessage.id
+                } else {
+                    return@map ""
+                }
+            }
+            .filter { id -> id != "" }
+            .toList()
+            .subscribe { list, _ ->
+                sendSeenMessage(
+                    getApplication<Application>().applicationContext,
+                    list,
+                    conversationId
+                )
+            }
+    }
+
     private fun sendSeenMessage(context: Context, ids: List<String>, conversationId: String) {
         if (ids.isNotEmpty()) {
             val data = Data.Builder()

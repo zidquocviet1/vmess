@@ -252,7 +252,7 @@ public class ConversationActivity
                 }
             } else {
                 mChatListAdapter.addChat(c);
-                seenUnseenMessage();
+                mViewModel.setNewMessageState(true);
             }
         });
 
@@ -263,6 +263,21 @@ public class ConversationActivity
             } else {
                 mBinding.buttonScrollToBottom.startAnimation(fadeAnimation);
                 mBinding.buttonScrollToBottom.setVisibility(View.GONE);
+            }
+        });
+
+        mViewModel.getNewMessageState().observe(this, shouldShow -> {
+            if (mLayoutManager != null) {
+                int position = mLayoutManager.findLastCompletelyVisibleItemPosition();
+                boolean finallyShow = shouldShow && (position < mChatListAdapter.getCurrentList().size() - 1);
+
+                if (finallyShow) {
+                    mBinding.textNewMessage.startAnimation(slideUpAnimation);
+                    mBinding.textNewMessage.setVisibility(View.VISIBLE);
+                } else {
+                    mBinding.textNewMessage.startAnimation(fadeAnimation);
+                    mBinding.textNewMessage.setVisibility(View.GONE);
+                }
             }
         });
 
@@ -299,7 +314,7 @@ public class ConversationActivity
                 mChatListAdapter.notifyItemRangeInserted(0, mConversation.getChats().size());
                 mChatListAdapter.registerAdapterDataObserver(mAdapterObserver);
 
-                seenUnseenMessage();
+                seenWelcomeChat();
             } else if (result.getStatus() == NetworkStatus.ERROR) {
                 Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
                 finish();
@@ -493,6 +508,15 @@ public class ConversationActivity
                 mLayoutManager.smoothScrollToPosition(mBinding.recyclerChatList, false, mChatList.size() - 1);
             }
         });
+        mBinding.textNewMessage.setOnClickListener(v -> {
+            int position = mLayoutManager.findLastVisibleItemPosition();
+
+            if (mChatList.size() - position >= NUM_ITEM_TO_SCROLL_FAST_THRESHOLD) {
+                mBinding.recyclerChatList.scrollToPosition(mChatList.size() - 1);
+            } else {
+                mLayoutManager.smoothScrollToPosition(mBinding.recyclerChatList, false, mChatList.size() - 1);
+            }
+        });
         mBinding.includedFooterOption.layoutUnsent.setOnClickListener(this::handleUnsentMessage);
         mBinding.includedFooterOption.layoutReply.setOnClickListener(this::handleReplyMessage);
         mBinding.includedFooterOption.layoutForward.setOnClickListener(this::handleForwardMessage);
@@ -591,6 +615,7 @@ public class ConversationActivity
                 checkForShowHeader();
                 checkForLoadMore(recyclerView);
                 checkForShowScrollButton();
+                checkForSeenMessage();
             }
         };
         mBinding.recyclerChatList.addOnScrollListener(mScrollListener);
@@ -656,9 +681,19 @@ public class ConversationActivity
         }
     }
 
-    private void seenUnseenMessage() {
-        seenWelcomeChat();
-        postRequestSeenMessages();
+    private void checkForSeenMessage() {
+        if (mLayoutManager != null) {
+            int position = mLayoutManager.findLastCompletelyVisibleItemPosition();
+            Chat item = mChatListAdapter.getCurrentList().get(position);
+
+            if (item != null) {
+                mViewModel.seenUnreadMessageByTimestamp(mConversation.getId(), item.getTimestamp());
+
+                if (position == mChatListAdapter.getCurrentList().size() - 1) {
+                    mViewModel.setNewMessageState(false);
+                }
+            }
+        }
     }
 
     private void seenWelcomeChat() {
@@ -670,10 +705,6 @@ public class ConversationActivity
                                             .peek(c -> c.getSeenBy().add(mCurrentUser.getUid()))
                                             .collect(Collectors.toList());
         mViewModel.seenDummyMessage(dummyMessages);
-    }
-
-    private void postRequestSeenMessages() {
-        mViewModel.postSeenMessageConversation(mConversation.getId());
     }
 
     private void setToolbarTitle(String title) {

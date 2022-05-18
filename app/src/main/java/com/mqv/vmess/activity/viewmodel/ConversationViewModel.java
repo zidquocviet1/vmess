@@ -101,6 +101,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     private final MutableLiveData<Chat>                             messageObserver;
     private final MutableLiveData<Boolean>                          scrollButtonState;
     private final MutableLiveData<Boolean>                          conversationActiveStatus;
+    private final MutableLiveData<Boolean>                          newMessageState;
     private final MutableLiveData<ConversationMetadata>             conversationMetadata;
     private final MutableLiveData<Result<Conversation>>             conversationObserver;
     private final MutableLiveData<Result<Conversation>>             singleRequestCall;
@@ -136,6 +137,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         this.moreChatResult           = new MutableLiveData<>();
         this.messageObserver          = new MutableLiveData<>();
         this.scrollButtonState        = new MutableLiveData<>(false);
+        this.newMessageState          = new MutableLiveData<>(false);
         this.conversationActiveStatus = new MutableLiveData<>(false);
         this.conversationMetadata     = new MutableLiveData<>();
         this.conversationObserver     = new MutableLiveData<>();
@@ -196,6 +198,8 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     }
 
     public LiveData<Boolean> getShowScrollButton() { return Transformations.distinctUntilChanged(scrollButtonState); }
+
+    public LiveData<Boolean> getNewMessageState() { return Transformations.distinctUntilChanged(newMessageState); }
 
     public LiveData<Boolean> getConversationActiveStatus() { return Transformations.distinctUntilChanged(conversationActiveStatus); }
 
@@ -611,10 +615,6 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                   .subscribe();
     }
 
-    public void postSeenMessageConversation(String conversationId) {
-        seenUnreadMessageInConversation(conversationId);
-    }
-
     public void registerLoadMore(Conversation conversation) {
         Preconditions.checkNotNull(conversation);
 
@@ -636,6 +636,10 @@ public class ConversationViewModel extends MessageHandlerViewModel {
 
     public void setScrollButtonState(boolean state) {
         scrollButtonState.setValue(state);
+    }
+
+    public void setNewMessageState(boolean state) {
+        newMessageState.setValue(state);
     }
 
     public void changeGroupName(String groupName) {
