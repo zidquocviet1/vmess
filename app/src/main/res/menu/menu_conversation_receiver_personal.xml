@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_view_profile"
+        android:title="@string/action_view_profile" />
+
+    <item
+        android:id="@+id/menu_phone_call"
+        android:title="@string/title_phone_call" />
+
+    <item
+        android:id="@+id/menu_video_call"
+        android:title="@string/title_video_call" />
+</menu>

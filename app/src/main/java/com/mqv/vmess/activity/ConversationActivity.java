@@ -1,8 +1,11 @@
 package com.mqv.vmess.activity;
 
 import static com.mqv.vmess.R.id.menu_about;
+import static com.mqv.vmess.R.id.menu_block;
 import static com.mqv.vmess.R.id.menu_phone_call;
+import static com.mqv.vmess.R.id.menu_send_message;
 import static com.mqv.vmess.R.id.menu_video_call;
+import static com.mqv.vmess.R.id.menu_view_profile;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -22,6 +25,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
@@ -32,6 +36,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -71,7 +76,6 @@ import com.mqv.vmess.ui.fragment.SuggestionFriendListFragment;
 import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.FileProviderUtil;
-import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.MediaUtil;
 import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.NetworkStatus;
@@ -405,11 +409,11 @@ public class ConversationActivity
             var itemId = item.getItemId();
 
             if (itemId == menu_phone_call) {
+                openCallActivity(false);
 
-                Logging.show("Start VoIP phone call");
                 return true;
             } else if (itemId == menu_video_call) {
-                Logging.show("Start WebRTC video call");
+                openCallActivity(true);
 
                 return true;
             } else if (itemId == menu_about) {
@@ -557,6 +561,17 @@ public class ConversationActivity
         });
     }
 
+    private void openReceiverPopupMenu(int position, View view) {
+        int menuRes = mConversation.getGroup() != null ?
+                R.menu.menu_conversation_receiver_group :
+                R.menu.menu_conversation_receiver_personal;
+
+        PopupMenu menu = new PopupMenu(this, view);
+        menu.inflate(menuRes);
+        menu.setOnMenuItemClickListener(item -> handleReceiverPopupMenu(item, position));
+        menu.show();
+    }
+
     private void showSendMessageButton() {
         mBinding.buttonMore.setVisibility(View.GONE);
         mBinding.buttonSendMessage.setVisibility(View.VISIBLE);
@@ -626,6 +641,7 @@ public class ConversationActivity
         mChatListAdapter.registerLinkPreviewListener(this);
         mChatListAdapter.registerVideoListener(this::handlePlayVideo);
         mChatListAdapter.registerOpenConversationDetail(this::openConversationDetail);
+        mChatListAdapter.registerOpenReceiverMenu(this::openReceiverPopupMenu);
     }
 
     private void checkForShowHeader() {
@@ -1084,6 +1100,38 @@ public class ConversationActivity
         });
 
         return data;
+    }
+
+    private boolean handleReceiverPopupMenu(MenuItem item, int position) {
+        Chat chat = mChatListAdapter.getCurrentList().get(position);
+        int  id   = item.getItemId();
+
+        if (id == menu_view_profile) {
+            Intent intent = new Intent(this, ConnectPeopleActivity.class);
+            intent.setAction(ConnectPeopleActivity.ACTION_FIND_USER);
+            intent.putExtra(ConnectPeopleActivity.EXTRA_USER_ID, chat.getSenderId());
+
+            startActivity(intent);
+            return true;
+        } else if (id == menu_phone_call) {
+            openCallActivity(false);
+            return true;
+        } else if (id == menu_video_call) {
+            openCallActivity(true);
+            return true;
+        } else if (id == menu_send_message) {
+            return true;
+        } else if (id == menu_block) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void openCallActivity(boolean isVideoEnabled) {
+        startActivity(isVideoEnabled ?
+                      WebRtcCallActivity.createVideoCallIntent(this) :
+                      WebRtcCallActivity.createAudioCallIntent(this));
     }
 
     private static class CustomLinearLayoutManager extends LinearLayoutManager {

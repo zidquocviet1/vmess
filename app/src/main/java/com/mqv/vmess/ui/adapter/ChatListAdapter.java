@@ -67,6 +67,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private BaseAdapter.ItemEventHandler mItemEventHandler;
     private LinkPreviewListener mLinkPreviewListener;
     private BiConsumer<Chat, Chat.Video> mVideoListener;
+    private BiConsumer<Integer, View> mOpenReceiverMenu;
     private Runnable mOpenDetailCallback;
 
     private static final int VIEW_PROFILE = -1;
@@ -186,6 +187,10 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mOpenDetailCallback = callback;
     }
 
+    public void registerOpenReceiverMenu(BiConsumer<Integer, View> callback) {
+        mOpenReceiverMenu = callback;
+    }
+
     @Override
     public int getItemViewType(int position) {
         var item = getItem(position);
@@ -231,20 +236,23 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mParticipants,
                         mChatList,
                         mLinkPreviewListener,
-                        mVideoListener);
+                        mVideoListener,
+                        mOpenReceiverMenu);
             case VIEW_CHAT_OUTGOING_MULTI_MEDIA:
                 return new ChatMultiMediaViewHolder(inflater.inflate(R.layout.item_chat_outgoing_multi_media, parent, false), false, mCurrentUser,
                         mParticipants,
                         mChatList,
                         mLinkPreviewListener,
-                        mVideoListener);
+                        mVideoListener,
+                        mOpenReceiverMenu);
             default:
                 return new ChatListViewHolder(ItemChatBinding.bind(inflater.inflate(R.layout.item_chat, parent, false)),
                         mCurrentUser,
                         mParticipants,
                         mChatList,
                         mConversationMetadata,
-                        mItemEventHandler);
+                        mItemEventHandler,
+                        mOpenReceiverMenu);
         }
     }
 
@@ -334,7 +342,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                   @NonNull List<User> participants,
                                   @NonNull List<Chat> listItem,
                                   ConversationMetadata metadata,
-                                  BaseAdapter.ItemEventHandler handler) {
+                                  BaseAdapter.ItemEventHandler handler,
+                                  BiConsumer<Integer, View> mOpenReceiverMenu) {
             super(binding.getRoot());
 
             mBinding = binding;
@@ -364,6 +373,11 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                     return true;
                 } else {
                     return false;
+                }
+            });
+            mBinding.imageReceiver.setOnClickListener(v -> {
+                if (mOpenReceiverMenu != null) {
+                    mOpenReceiverMenu.accept(getAbsoluteAdapterPosition(), v);
                 }
             });
         }
@@ -569,7 +583,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                         @NonNull List<User> participants,
                                         @NonNull List<Chat> listItem,
                                         @NonNull LinkPreviewListener linkPreviewListener,
-                                        @NonNull BiConsumer<Chat, Chat.Video> videoListener) {
+                                        @NonNull BiConsumer<Chat, Chat.Video> videoListener,
+                                        BiConsumer<Integer, View> mOpenReceiverMenu) {
             super(itemView);
 
             if (isReceived) {
@@ -577,6 +592,11 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                 mMediaThumbnailStub = new Stub<>(mReceivedBinding.mediaThumbnailStub);
                 mLinkPreviewStub = new Stub<>(mReceivedBinding.mediaLinkPreviewStub);
                 mVideoStub = new Stub<>(mReceivedBinding.mediaVideoStub);
+                mReceivedBinding.imageReceiver.setOnClickListener(v -> {
+                    if (mOpenReceiverMenu != null) {
+                        mOpenReceiverMenu.accept(getAbsoluteAdapterPosition(), v);
+                    }
+                });
             } else {
                 mOutgoingBinding = ItemChatOutgoingMultiMediaBinding.bind(itemView);
                 mMediaThumbnailStub = new Stub<>(mOutgoingBinding.mediaThumbnailStub);

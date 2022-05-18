@@ -210,6 +210,8 @@
     <string name="title_all">All</string>
     <string name="title_contacts">Contacts</string>
     <string name="title_friend">Friend</string>
+    <string name="title_phone_call">Phone call</string>
+    <string name="title_video_call">Video call</string>
 
     <string name="action_remove_from_group">Remove From Group</string>
     <string name="action_leave_group">Leave Group</string>
