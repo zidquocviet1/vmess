@@ -256,7 +256,7 @@ public class ConversationActivity
                 }
             } else {
                 mChatListAdapter.addChat(c);
-                mViewModel.setNewMessageState(true);
+                mViewModel.setNewMessageState(c.getSenderId() != null && !c.getSenderId().equals(mCurrentUser.getUid()));
             }
         });
 
