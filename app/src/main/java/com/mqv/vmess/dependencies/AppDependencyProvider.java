@@ -26,6 +26,7 @@ import com.mqv.vmess.network.websocket.WebSocketFactory;
 import com.mqv.vmess.network.websocket.WebSocketHeartbeatMonitor;
 import com.mqv.vmess.notification.NotificationEntry;
 import com.mqv.vmess.notification.NotificationHandler;
+import com.mqv.vmess.webrtc.WebRtcCallManager;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -108,6 +109,11 @@ public class AppDependencyProvider implements AppDependencies.Provider {
     @Override
     public AppPreferences provideAppPreferences() {
         return new AppPreferencesImpl(context, PreferenceManager.getDefaultSharedPreferences(context));
+    }
+
+    @Override
+    public WebRtcCallManager provideWebRtcCallManager() {
+        return new WebRtcCallManager(context);
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

@@ -365,4 +365,20 @@
     <string name="label_conversation_activity_new_message">Tin nhắn mới</string>
     <string name="title_phone_call">Gọi điện thoại</string>
     <string name="title_video_call">Gọi video</string>
+    <string name="label_speaker">Loa ngoài</string>
+    <string name="action_answer">Trả lời</string>
+    <string name="action_decline">Từ chối</string>
+    <string name="action_hang_up">Tắt máy</string>
+    <string name="action_mute">Tắt tiếng</string>
+    <string name="action_flip">Lật</string>
+    <string name="action_ending_call">Kết thúc cuộc gọi…</string>
+    <string name="msg_webrtc_permission_on_any_denied">Để sử dụng tính năng này bạn phải cho phép sử dụng hai quyền. Truy cập máy ảnh và loa thoại.</string>
+    <string name="msg_webrtc_some_permission_permanently_denied">Một quyền đã bị tắt, bạn phải vào cài đặt của ứng dụng để cho phép quyền truy cập.</string>
+    <string name="label_incoming_voice_call">Cuộc gọi đến (Âm thanh)</string>
+    <string name="label_incoming_video_call">Cuộc gọi đến (Video)</string>
+    <string name="action_starting_call">Bắt đầu cuộc gọi…</string>
+    <string name="action_connecting_call">Đang kết nối cuộc gọi…</string>
+    <string name="action_disconnecting_call">Đang ngắt kết nối cuộc gọi…</string>
+    <string name="msg_webrtc_user_deny_call">Người dùng này đã từ chối cuộc gọi của bạn.</string>
+    <string name="msg_webrtc_user_is_in_call">Người dùng này đang bận trong một cuộc gọi khác. Vui lòng thử lại sau.</string>
 </resources>

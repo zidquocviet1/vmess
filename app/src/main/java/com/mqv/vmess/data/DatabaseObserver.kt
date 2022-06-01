@@ -1,12 +1,24 @@
 package com.mqv.vmess.data
 
-import java.lang.RuntimeException
+import org.webrtc.IceCandidate
 
 class DatabaseObserver {
     private var messageListener: MutableMap<String, MutableSet<MessageListener>> = HashMap()
     private var conversationListener: MutableSet<ConversationListener> = HashSet()
     private var friendRequestListener: MutableSet<FriendRequestListener> = HashSet()
     private var noneFriendRequestListener: MutableSet<NoneFriendRequestListener> = HashSet()
+    private var webRtcCallListener: WebRtcCallListener? = null
+    private var offerSdp: String? = null
+    private var candidates: MutableList<IceCandidate> = mutableListOf()
+
+    interface WebRtcCallListener {
+        fun onOffer(sdp: String)
+        fun onAnswer(sdp: String)
+        fun onIceCandidate(candidate: IceCandidate)
+        fun onUserDenyCall()
+        fun onUserIsInCall()
+        fun onClose()
+    }
 
     interface ConversationListener {
         fun onConversationInserted(conversationId: String)
@@ -111,5 +123,46 @@ class DatabaseObserver {
         map.entries.forEach { entry ->
             entry.value.remove(listener)
         }
+    }
+
+    // Section to send and receive all about WebRTC call data. If it is continued develop in the future, suggest migrate to webSocket.
+    fun registerWebRtcCallListener(callback: WebRtcCallListener) {
+        webRtcCallListener = callback
+        offerSdp?.let { notifyRtcOffer(it) }
+        candidates.forEach { notifyIceCandidate(it) }
+    }
+
+    fun unregisterWebRtcCallListener() {
+        webRtcCallListener = null
+    }
+
+    fun notifyRtcAnswer(sdp: String) {
+        webRtcCallListener?.onAnswer(sdp)
+    }
+
+    fun notifyRtcOffer(sdp: String) {
+        if (webRtcCallListener == null) {
+            offerSdp = sdp
+        }
+        webRtcCallListener?.onOffer(sdp)
+    }
+
+    fun notifyIceCandidate(candidate: IceCandidate) {
+        if (webRtcCallListener == null) {
+            candidates.add(candidate)
+        }
+        webRtcCallListener?.onIceCandidate(candidate)
+    }
+
+    fun notifyRtcSessionClose() {
+        webRtcCallListener?.onClose()
+    }
+
+    fun notifyRtcDenyCall() {
+        webRtcCallListener?.onUserDenyCall()
+    }
+
+    fun notifyRtcUserIsInCall() {
+        webRtcCallListener?.onUserIsInCall()
     }
 }

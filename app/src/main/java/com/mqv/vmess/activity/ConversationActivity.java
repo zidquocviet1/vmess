@@ -1129,9 +1129,31 @@ public class ConversationActivity
     }
 
     private void openCallActivity(boolean isVideoEnabled) {
-        startActivity(isVideoEnabled ?
-                      WebRtcCallActivity.createVideoCallIntent(this) :
-                      WebRtcCallActivity.createAudioCallIntent(this));
+        if (mConversation.getType() == ConversationType.GROUP) {
+            Toast.makeText(this, "This feature is not support for group", Toast.LENGTH_SHORT).show();
+        } else {
+            Permission.with(this, mPermissionsLauncher)
+                      .request(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+                      .ifNecessary()
+                      .onAllGranted(() -> {
+                          //noinspection OptionalGetWithoutIsPresent
+                          String participantId = mConversation.getParticipants()
+                                                              .stream()
+                                                              .filter(u -> !u.getUid().equals(mCurrentUser.getUid()))
+                                                              .findFirst()
+                                                              .get()
+                                                              .getUid();
+
+                          startActivity(isVideoEnabled ?
+                                        WebRtcCallActivity.createVideoCallIntent(this, participantId) :
+                                        WebRtcCallActivity.createAudioCallIntent(this, participantId));
+                      })
+                      .onAnyDenied(() -> Toast.makeText(this, R.string.msg_webrtc_permission_on_any_denied, Toast.LENGTH_SHORT).show())
+                      .onSomePermanentlyDenied(granted -> Toast.makeText(this, R.string.msg_webrtc_some_permission_permanently_denied, Toast.LENGTH_SHORT).show())
+                      .withRationaleDialog(getString(R.string.msg_permission_camera_rational), R.drawable.ic_camera)
+                      .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_camera_title), getString(R.string.msg_permission_camera_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera)))
+                      .execute();
+        }
     }
 
     private static class CustomLinearLayoutManager extends LinearLayoutManager {

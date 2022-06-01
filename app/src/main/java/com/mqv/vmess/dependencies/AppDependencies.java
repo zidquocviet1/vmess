@@ -10,6 +10,7 @@ import com.mqv.vmess.message.IncomingMessageProcessor;
 import com.mqv.vmess.message.MessageSenderProcessor;
 import com.mqv.vmess.network.websocket.WebSocketClient;
 import com.mqv.vmess.notification.NotificationEntry;
+import com.mqv.vmess.webrtc.WebRtcCallManager;
 
 /*
 * Create a new Dependency class based on Service Locator Pattern
@@ -26,6 +27,7 @@ public class AppDependencies {
     private static volatile NotificationEntry notificationEntry;
     private static volatile MemoryManager memoryManager;
     private static volatile AppPreferences appPreferences;
+    private static volatile WebRtcCallManager webRtcCallManager;
 
     private static Provider provider;
 
@@ -137,6 +139,17 @@ public class AppDependencies {
         return appPreferences;
     }
 
+    public static WebRtcCallManager getWebRtcCallManager() {
+        if (webRtcCallManager == null) {
+            synchronized (LOCK) {
+                if (webRtcCallManager == null) {
+                    webRtcCallManager = provider.provideWebRtcCallManager();
+                }
+            }
+        }
+        return webRtcCallManager;
+    }
+
     public interface Provider {
         WebSocketClient provideWebSocket();
         IncomingMessageObserver provideIncomingMessageObserver();
@@ -145,5 +158,6 @@ public class AppDependencies {
         MessageSenderProcessor provideMessageSenderProcessor();
         NotificationEntry provideNotificationEntry();
         AppPreferences provideAppPreferences();
+        WebRtcCallManager provideWebRtcCallManager();
     }
 }

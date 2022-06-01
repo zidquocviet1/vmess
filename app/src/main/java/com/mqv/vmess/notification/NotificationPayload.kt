@@ -23,6 +23,10 @@ private const val KEY_MEMBER = "member"
 private const val KEY_NOTIFICATION_ID = "notification_id"
 private const val KEY_WHO_SEEN = "who_seen"
 private const val KEY_MESSAGE_STATUS = "message_status"
+private const val KEY_WEB_RTC_DATA = "web_rtc_message"
+private const val KEY_WEB_RTC_TYPE = "web_rtc_type"
+private const val KEY_WEB_RTC_CALLER = "caller"
+private const val KEY_WEB_RTC_VIDEO = "video_enabled"
 
 sealed class NotificationPayload(
     open val timestamp: Long
@@ -35,7 +39,8 @@ sealed class NotificationPayload(
         ADDED_TO_GROUP,
         UNFRIEND,
         GROUP_CHANGE_OPTION,
-        CANCEL_FRIEND_REQUEST
+        CANCEL_FRIEND_REQUEST,
+        WEB_RTC_MESSAGE
     }
 
     class AcceptedFriendPayload(
@@ -248,6 +253,43 @@ sealed class NotificationPayload(
         }
     }
 
+    class WebRtcMessagePayload(
+        val caller: String,
+        val isVideoCall: Boolean = false,
+        val data: String,
+        val type: WebRtcDataType,
+        override val timestamp: Long
+    ) :
+        NotificationPayload(timestamp) {
+
+        companion object {
+            fun parsePayload(map: MutableMap<String, String>): NotificationPayload {
+                val caller = map[KEY_WEB_RTC_CALLER] ?: ""
+                val isVideoCall = map[KEY_WEB_RTC_VIDEO]!!.toBoolean()
+                val data = map[KEY_WEB_RTC_DATA]!!
+                val type = map[KEY_WEB_RTC_TYPE]!!
+                val timestamp = map[KEY_TIMESTAMP]!!.toLong()
+
+                return WebRtcMessagePayload(caller, isVideoCall, data, WebRtcDataType.valueOf(type), timestamp)
+            }
+        }
+
+        override fun toString(): String {
+            return "WebRtc Message Type: $type, Timestamp: $timestamp"
+        }
+
+        enum class WebRtcDataType {
+            START_CALL,
+            HAS_HANDLED,
+            OFFER,
+            ANSWER,
+            CANDIDATE,
+            STOP_CALL,
+            DENY_CALL,
+            IS_IN_CALL
+        }
+    }
+
     companion object {
         @JvmStatic
         fun handleRawPayload(map: MutableMap<String, String>): NotificationPayload {
@@ -264,6 +306,7 @@ sealed class NotificationPayload(
                 NotificationType.CANCEL_FRIEND_REQUEST -> CancelFriendRequestPayload.parsePayload(
                     map
                 )
+                NotificationType.WEB_RTC_MESSAGE -> WebRtcMessagePayload.parsePayload(map)
             }
         }
     }

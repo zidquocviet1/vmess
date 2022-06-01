@@ -72,6 +72,7 @@
     <string name="label_group_member">Group Members</string>
     <string name="label_settings">Settings</string>
     <string name="label_camera">Camera</string>
+    <string name="label_speaker">Speaker</string>
     <string name="label_storage">Storage</string>
     <string name="label_no_internet_connection">No Internet Connection</string>
     <string name="label_gallery">Gallery</string>
@@ -117,6 +118,8 @@
     <string name="label_sound_and_appearance_options">Sound and appearance options</string>
     <string name="label_contact_name_and_phone_number" translatable="false">%1$s (%2$s)</string>
     <string name="label_conversation_activity_new_message">New messages</string>
+    <string name="label_incoming_voice_call">Incoming voice call</string>
+    <string name="label_incoming_video_call">Incoming video call</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>
@@ -281,6 +284,15 @@
     <string name="action_reset">Reset</string>
     <string name="action_undo">Undo</string>
     <string name="action_allow_access_contacts">Allow access contacts</string>
+    <string name="action_answer">Answer</string>
+    <string name="action_decline">Decline</string>
+    <string name="action_hang_up">Hang up</string>
+    <string name="action_mute">Mute</string>
+    <string name="action_flip">Flip</string>
+    <string name="action_ending_call">Ending call…</string>
+    <string name="action_starting_call">Starting call…</string>
+    <string name="action_connecting_call">Connecting call…</string>
+    <string name="action_disconnecting_call">Disconnecting call…</string>
     <!--The action to open activity in the preference screen-->
     <string name="action_pref_manage_accounts" translatable="false">com.tac.open.manage.accounts</string>
     <string name="action_pref_dark_mode" translatable="false">com.tac.open.dark.mode</string>
@@ -375,6 +387,11 @@
     <string name="msg_phone_contacts_fragment">To use this feature, we need to access your contacts list on you device. Click the button below to grant necessary permission.</string>
     <string name="msg_phone_contacts_empty_list_fragment">Don\'t have any user from your contacts list.</string>
     <string name="msg_phone_contacts_send_friend_error_fragment">Make friend request not complete. Try again</string>
+    <string name="msg_webrtc_permission_on_any_denied">To use this feature you must grant two permissions. Access camera and record audio.</string>
+    <string name="msg_webrtc_some_permission_permanently_denied">One permission has been disabled, you must go to the app settings to grant that permission.</string>
+    <string name="msg_webrtc_user_deny_call">User has denied your call.</string>
+    <string name="msg_webrtc_user_is_in_call">This user is calling in another call. Try later</string>
+    <string name="msg_webrtc_user_did_not_answer">User did not answer your call.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_phone_verification_limit_sms_per_day">Reach to the limited requests per day. Try later</string>

@@ -25,6 +25,7 @@ import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.dependencies.AppDependencyProvider;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.webrtc.CallManager;
 import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
@@ -206,5 +207,9 @@ public class MainApplication extends Application implements Configuration.Provid
                         WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
                     }
                 });
+    }
+
+    private void initializeRingRtc() {
+        CallManager.initialize(this);
     }
 }

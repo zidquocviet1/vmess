@@ -1,8 +1,10 @@
 package com.mqv.vmess.notification
 
 import android.content.Context
+import android.content.Intent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.gson.Gson
+import com.mqv.vmess.activity.service.CallNotificationService
 import com.mqv.vmess.data.MyDatabase
 import com.mqv.vmess.data.model.FriendNotification
 import com.mqv.vmess.data.model.FriendNotificationType
@@ -23,11 +25,14 @@ import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
 import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.ui.data.People
 import com.mqv.vmess.util.DateTimeHelper.toLocalDateTime
+import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Logging
+import com.mqv.vmess.webrtc.WebRtcCandidate
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
+import org.webrtc.IceCandidate
 import java.time.LocalDateTime
 import java.util.*
 
@@ -54,6 +59,7 @@ class NotificationHandler(
             is UnfriendPayload -> handleUnfriend(payload)
             is GroupOptionChangedPayload -> handleGroupChangeOption(payload)
             is CancelFriendRequestPayload -> handleCancelFriendRequest(payload)
+            is WebRtcMessagePayload -> handleWebRtcMessage(payload)
         }
     }
 
@@ -532,6 +538,45 @@ class NotificationHandler(
             .subscribe { id ->
                 NotificationUtil.removeNotification(mContext, id.toInt())
             }
+    }
+
+    private fun handleWebRtcMessage(payload: WebRtcMessagePayload) {
+        when (payload.type) {
+            WebRtcMessagePayload.WebRtcDataType.START_CALL -> {
+                if (payload.timestamp >= LocalDateTime.now().plusSeconds(50).toLong()) {
+                    val intent = Intent(mContext, CallNotificationService::class.java).apply {
+                        putExtra(CallNotificationService.EXTRA_CALLER, payload.caller)
+                        putExtra(CallNotificationService.EXTRA_VIDEO, payload.isVideoCall)
+                    }
+                    mContext.startForegroundService(intent)
+                }
+            }
+            WebRtcMessagePayload.WebRtcDataType.DENY_CALL -> {
+                AppDependencies.getDatabaseObserver().notifyRtcDenyCall()
+            }
+            WebRtcMessagePayload.WebRtcDataType.IS_IN_CALL -> {
+                AppDependencies.getDatabaseObserver().notifyRtcUserIsInCall()
+            }
+            WebRtcMessagePayload.WebRtcDataType.OFFER -> {
+                AppDependencies.getDatabaseObserver().notifyRtcOffer(payload.data)
+            }
+            WebRtcMessagePayload.WebRtcDataType.ANSWER -> {
+                AppDependencies.getDatabaseObserver().notifyRtcAnswer(payload.data)
+            }
+            WebRtcMessagePayload.WebRtcDataType.CANDIDATE -> {
+                val webRtcCandidate = gson.fromJson(payload.data, WebRtcCandidate::class.java)
+                val iceCandidate = with(webRtcCandidate) {
+                    IceCandidate(id, index, sdp)
+                }
+
+                AppDependencies.getDatabaseObserver().notifyIceCandidate(iceCandidate)
+            }
+            else -> {
+                mContext.stopService(Intent(mContext, CallNotificationService::class.java))
+
+                AppDependencies.getDatabaseObserver().notifyRtcSessionClose()
+            }
+        }
     }
 
     companion object {

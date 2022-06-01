@@ -37,11 +37,13 @@ private const val CHANNEL_NAME_CONVERSATION = "Conversation"
 private const val CHANNEL_NAME_FRIEND_REQUEST = "Friend Request"
 private const val CHANNEL_NAME_ACCEPTED_REQUEST = "Accepted Friend"
 private const val CHANNEL_NAME_INCOMING_MESSAGE = "Incoming Message"
+private const val CHANNEL_NAME_CALL = "Calling"
 
 private const val CHANNEL_ID_CONVERSATION = "1"
 private const val CHANNEL_ID_FRIEND_REQUEST = "2"
 private const val CHANNEL_ID_ACCEPTED = "3"
 private const val CHANNEL_ID_INCOMING_MESSAGE = "4"
+private const val CHANNEL_ID_CALL = "5"
 private const val REQUEST_CODE = 1212
 
 object NotificationUtil {
@@ -246,6 +248,13 @@ object NotificationUtil {
                 actions = arrayOf(action, markReadAction)
             )
         }
+    }
+
+    @JvmStatic
+    fun sendCallMessageNotification(
+        context: Context
+    ) {
+
     }
 
     private fun sendNotification(

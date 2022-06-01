@@ -10,6 +10,7 @@ import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
 import com.mqv.vmess.network.service.FriendRequestService;
 import com.mqv.vmess.network.service.NotificationService;
+import com.mqv.vmess.network.service.RtcService;
 import com.mqv.vmess.network.service.StorageService;
 import com.mqv.vmess.network.service.UserService;
 import com.mqv.vmess.util.Const;
@@ -98,5 +99,11 @@ public class NetworkModule {
     @Provides
     public StorageService provideStorageService(Retrofit retrofit) {
         return retrofit.create(StorageService.class);
+    }
+
+    @Singleton
+    @Provides
+    public RtcService provideRtcService(Retrofit retrofit) {
+        return retrofit.create(RtcService.class);
     }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/report_problem"
+    app:startDestination="@id/reportProblemFragment">
+
+    <fragment
+        android:id="@+id/reportProblemFragment"
+        android:name="com.mqv.vmess.ui.fragment.ReportProblemFragment"
+        android:label="fragment_report_problem"
+        tools:layout="@layout/fragment_report_problem" />
+</navigation>

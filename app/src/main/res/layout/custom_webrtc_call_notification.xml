@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="92dp"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/all_padding_default"
+    android:paddingEnd="@dimen/all_padding_default">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/text_caller"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/author_app_full_name"
+                android:textAppearance="@android:style/TextAppearance.Material.Notification.Title" />
+
+            <TextView
+                android:id="@+id/text_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/label_incoming_video_call"
+                android:textAppearance="@android:style/TextAppearance.Material.Notification.Emphasis" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/image_caller"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_gravity="center|end"
+            android:contentDescription="@null"
+            android:layoutDirection="rtl"
+            android:scaleType="centerCrop" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/button_decline"
+            style="@android:style/Widget.Material.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-3dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/red"
+            android:text="@string/action_decline"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/button_answer"
+            style="@android:style/Widget.Material.Button.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="-3dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/green"
+            android:text="@string/action_answer"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/button_hangup"
+            style="@android:style/Widget.Material.Button.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="-3dp"
+            android:backgroundTint="@color/red"
+            android:text="@string/action_hang_up"
+            android:textColor="@color/white"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>
