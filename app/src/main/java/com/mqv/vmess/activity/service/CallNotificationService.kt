@@ -13,19 +13,19 @@ import android.provider.Settings
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.room.rxjava3.EmptyResultSetException
+import com.google.firebase.auth.FirebaseAuth
 import com.mqv.vmess.R
 import com.mqv.vmess.activity.WebRtcCallActivity
 import com.mqv.vmess.activity.br.DeclineReceiver
 import com.mqv.vmess.activity.br.HangUpReceiver
 import com.mqv.vmess.data.repository.impl.PeopleRepositoryImpl
 import com.mqv.vmess.data.repository.impl.RtcRepositoryImpl
-import com.mqv.vmess.dependencies.AppDependencies
+import com.mqv.vmess.network.model.User
 import com.mqv.vmess.reactive.RxHelper
 import com.mqv.vmess.ui.data.People
 import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.Picture
 import com.mqv.vmess.util.ServiceUtil
-import com.mqv.vmess.work.LifecycleUtil
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -47,34 +47,22 @@ class CallNotificationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (LifecycleUtil.isAppForeground() && !AppDependencies.getWebRtcCallManager().shouldShowNotification) {
+        Logging.debug(TAG, "Show call notification message")
+
+        val participantId = intent?.extras?.getString(EXTRA_CALLER)
+        val isVideoEnable = intent?.extras?.getBoolean(EXTRA_VIDEO) ?: false
+
+        if (participantId == null) {
             Logging.debug(
                 TAG,
-                "The user is idle right now. Call will be ejected, send notification to eject that call to caller"
+                "Can't detect who is the caller. Caller id not found. Stop call service"
             )
 
-            intent?.extras?.getString(EXTRA_CALLER)?.let { participantId ->
-                rtcRepository.notifyBusy(participantId)
-                    .compose(RxHelper.applyObservableSchedulers())
-                    .onErrorComplete()
-                    .subscribe()
-            }
+            stopSelf()
         } else {
-            Logging.debug(TAG, "Show call notification message")
+            callId = (participantId + FirebaseAuth.getInstance().currentUser?.uid).hashCode()
 
-            val participantId = intent?.extras?.getString(EXTRA_CALLER)
-            val isVideoEnable = intent?.extras?.getBoolean(EXTRA_VIDEO) ?: false
-
-            if (participantId == null) {
-                Logging.debug(
-                    TAG,
-                    "Can't detect who is the caller. Caller id not found. Stop call service"
-                )
-
-                stopSelf()
-            } else {
-                getCallerInformationAndShowNotification(participantId, isVideoEnable)
-            }
+            getCallerInformationAndShowNotification(participantId, isVideoEnable)
         }
 
         return START_STICKY
@@ -92,10 +80,7 @@ class CallNotificationService : Service() {
                 }
             }
             .onErrorComplete {
-                // Send notification to reject the phone call
-
                 applicationContext.sendBroadcast(Intent(this, DeclineReceiver::class.java))
-
                 true
             }
             .subscribeOn(Schedulers.io())
@@ -117,22 +102,9 @@ class CallNotificationService : Service() {
                 Picture.loadUserAvatarIntoBitmap(applicationContext, people.photoUrl)
             )
         }
-        val notificationChannel =
-            NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                val audioAttr = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-                setSound(Settings.System.DEFAULT_RINGTONE_URI, audioAttr)
-                enableLights(true)
-                lightColor = Color.RED
-            }
 
-        ServiceUtil.getNotificationManager(this).createNotificationChannel(notificationChannel)
+        ServiceUtil.getNotificationManager(this)
+            .createNotificationChannel(getCallNotificationChannel())
 
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setCustomContentView(remoteView)
@@ -142,6 +114,7 @@ class CallNotificationService : Service() {
             .setAutoCancel(true)
             .setSound(Settings.System.DEFAULT_RINGTONE_URI)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
             .setFullScreenIntent(getFullScreenCallPendingIntent(isVideoEnable, participantId), true)
 
         startForeground(participantId.hashCode(), notificationBuilder.build())
@@ -180,11 +153,16 @@ class CallNotificationService : Service() {
         isVideoEnable: Boolean,
         participantId: String
     ): PendingIntent {
+        val intent = WebRtcCallActivity.createAnswerCallFromNotification(
+            applicationContext,
+            participantId,
+            isVideoEnable
+        )
         return PendingIntent.getActivity(
             applicationContext,
             0,
-            WebRtcCallActivity.createAnswerCallFromNotification(applicationContext, participantId, isVideoEnable),
-            PendingIntent.FLAG_UPDATE_CURRENT
+            intent,
+            PendingIntent.FLAG_MUTABLE
         )
     }
 
@@ -220,12 +198,33 @@ class CallNotificationService : Service() {
 
         val TAG: String = CallNotificationService::class.java.simpleName
 
+        var callId = -1
+
+        private fun getCallNotificationChannel(): NotificationChannel =
+            NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                val audioAttr = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+                setSound(Settings.System.DEFAULT_RINGTONE_URI, audioAttr)
+                enableLights(true)
+                lightColor = Color.RED
+            }
+
         fun cancelCallNotification(context: Context) {
             context.stopService(Intent(context, CallNotificationService::class.java))
         }
 
-        fun updateOngoingNotification(context: Context) {
+        fun updateAnsweredNotification(context: Context, participantId: String) {
+            cancelCallNotification(context)
+        }
 
+        fun updateConnectedNotification(context: Context, user: User) {
+            cancelCallNotification(context)
         }
     }
 }

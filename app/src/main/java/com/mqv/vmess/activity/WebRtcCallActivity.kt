@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Toast
 import com.mqv.vmess.R
+import com.mqv.vmess.activity.service.CallNotificationService
 import com.mqv.vmess.activity.viewmodel.WebRtcEvent
 import com.mqv.vmess.activity.viewmodel.WebRtcViewModel
 import com.mqv.vmess.databinding.ActivityWebRtcCallBinding
@@ -58,6 +59,7 @@ class WebRtcCallActivity : BaseActivity<WebRtcViewModel, ActivityWebRtcCallBindi
 
     override fun setupObserver() {
         mViewModel.micEnabled.observe(this, mBinding.screenView::setMicEnable)
+        mViewModel.remoteCameraState.observe(this, mBinding.screenView::setRemoteCameraState)
         mViewModel.webRtcControl.observe(this, mBinding.screenView::setWebRtcControls)
         mViewModel.user.observe(this, mBinding.screenView::setParticipant)
         mViewModel.cameraDirection.observe(this, mBinding.screenView::setCameraDirection)
@@ -121,8 +123,17 @@ class WebRtcCallActivity : BaseActivity<WebRtcViewModel, ActivityWebRtcCallBindi
                 mTimer.scheduleAtFixedRate(timerTask, 0, 1000)
             }
             is WebRtcEvent.ConnectedCall -> {
+                CallNotificationService.updateConnectedNotification(this, mViewModel.user.value!!)
+
                 mTimer.cancel()
                 mOutgoingRinger.stop()
+            }
+            is WebRtcEvent.TriggerAnswerFromNotification -> {
+                if (event.isVideoEnabled) {
+                    onAcceptCallPressed()
+                } else {
+                    onAcceptCallWithVoiceOnlyPressed()
+                }
             }
         }
     }
@@ -227,10 +238,14 @@ class WebRtcCallActivity : BaseActivity<WebRtcViewModel, ActivityWebRtcCallBindi
     }
 
     override fun onAcceptCallWithVoiceOnlyPressed() {
+        CallNotificationService.updateAnsweredNotification(this, mViewModel.recipient)
+
         mViewModel.answerCall(false)
     }
 
     override fun onAcceptCallPressed() {
+        CallNotificationService.updateAnsweredNotification(this, mViewModel.recipient)
+
         mViewModel.setSinks(mBinding.screenView.getRemoteSink(), mBinding.screenView.getLocalSink())
         mViewModel.answerCall(true)
     }

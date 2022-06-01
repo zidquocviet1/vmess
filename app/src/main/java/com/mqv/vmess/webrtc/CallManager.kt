@@ -149,6 +149,7 @@ class CallManager private constructor(
         mediaStream.videoTracks.forEach { track ->
             track.setEnabled(isVideoEnabled)
         }
+        sendChannelMessage(if (isVideoEnabled) CHANNEL_DATA_CAMERA_ENABLED else CHANNEL_DATA_CAMERA_DISABLED)
     }
 
     fun flipCameraDirection(context: Context, isFrontCamera: Boolean) {
@@ -184,11 +185,13 @@ class CallManager private constructor(
         )
         videoCapturer!!.startCapture(720, 1280, 30)
 
+        sendChannelMessage(if (isFrontCamera) CHANNEL_DATA_CAMERA_FRONT else CHANNEL_DATA_CAMERA_REAR)
+    }
+
+    private fun sendChannelMessage(message: String) {
         dataChannel?.send(
             DataChannel.Buffer(
-                ByteBuffer.wrap(
-                    (if (isFrontCamera) CHANNEL_DATA_CAMERA_FRONT else CHANNEL_DATA_CAMERA_REAR).toByteArray()
-                ),
+                ByteBuffer.wrap(message.toByteArray()),
                 false
             )
         )
@@ -239,6 +242,8 @@ class CallManager private constructor(
         const val KEY_OFFER_AUDIO = "OfferToReceiveAudio"
         const val CHANNEL_DATA_CAMERA_FRONT = "CAMERA_FRONT"
         const val CHANNEL_DATA_CAMERA_REAR = "CAMERA_REAR"
+        const val CHANNEL_DATA_CAMERA_ENABLED = "CAMERA_ENABLED"
+        const val CHANNEL_DATA_CAMERA_DISABLED = "CAMERA_DISABLED"
 //        private const val USERNAME = "openrelayproject"
 //        private const val PASSWORD = "openrelayproject"
 //        private val serverUrls = listOf(

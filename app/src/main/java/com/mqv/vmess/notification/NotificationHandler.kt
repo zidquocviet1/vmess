@@ -15,10 +15,7 @@ import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
 import com.mqv.vmess.network.model.type.MessageStatus
-import com.mqv.vmess.network.service.ChatService
-import com.mqv.vmess.network.service.ConversationService
-import com.mqv.vmess.network.service.FriendRequestService
-import com.mqv.vmess.network.service.UserService
+import com.mqv.vmess.network.service.*
 import com.mqv.vmess.notification.NotificationPayload.*
 import com.mqv.vmess.notification.NotificationUtil.sendIncomingMessageNotification
 import com.mqv.vmess.reactive.ReactiveExtension.authorizeToken
@@ -27,7 +24,9 @@ import com.mqv.vmess.ui.data.People
 import com.mqv.vmess.util.DateTimeHelper.toLocalDateTime
 import com.mqv.vmess.util.DateTimeHelper.toLong
 import com.mqv.vmess.util.Logging
+import com.mqv.vmess.webrtc.WebRtcCallManager
 import com.mqv.vmess.webrtc.WebRtcCandidate
+import com.mqv.vmess.work.LifecycleUtil
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
@@ -43,6 +42,7 @@ class NotificationHandler(
     private val mChatService: ChatService,
     private val mUserService: UserService,
     private val mFriendRequestService: FriendRequestService,
+    private val mRtcService: RtcService,
     private val gson: Gson
 ) : NotificationEntry {
     private val mUser = FirebaseAuth.getInstance().currentUser!!
@@ -543,12 +543,24 @@ class NotificationHandler(
     private fun handleWebRtcMessage(payload: WebRtcMessagePayload) {
         when (payload.type) {
             WebRtcMessagePayload.WebRtcDataType.START_CALL -> {
-                if (payload.timestamp >= LocalDateTime.now().plusSeconds(50).toLong()) {
-                    val intent = Intent(mContext, CallNotificationService::class.java).apply {
-                        putExtra(CallNotificationService.EXTRA_CALLER, payload.caller)
-                        putExtra(CallNotificationService.EXTRA_VIDEO, payload.isVideoCall)
+                if (LifecycleUtil.isAppForeground() && !AppDependencies.getWebRtcCallManager().shouldShowNotification) {
+                    Logging.debug(
+                        TAG,
+                        "The user is idle right now. Call will be ejected, send notification to eject that call to caller"
+                    )
+                    mUser.authorizeToken().flatMapObservable { token ->
+                        mRtcService.notifyBusy(token, payload.caller)
+                    }.subscribeOn(Schedulers.io())
+                        .onErrorComplete()
+                        .subscribe()
+                } else {
+                    if (payload.timestamp >= LocalDateTime.now().plusSeconds(50).toLong()) {
+                        val intent = Intent(mContext, CallNotificationService::class.java).apply {
+                            putExtra(CallNotificationService.EXTRA_CALLER, payload.caller)
+                            putExtra(CallNotificationService.EXTRA_VIDEO, payload.isVideoCall)
+                        }
+                        mContext.startForegroundService(intent)
                     }
-                    mContext.startForegroundService(intent)
                 }
             }
             WebRtcMessagePayload.WebRtcDataType.DENY_CALL -> {
@@ -568,13 +580,19 @@ class NotificationHandler(
                 val iceCandidate = with(webRtcCandidate) {
                     IceCandidate(id, index, sdp)
                 }
-
                 AppDependencies.getDatabaseObserver().notifyIceCandidate(iceCandidate)
             }
             else -> {
-                mContext.stopService(Intent(mContext, CallNotificationService::class.java))
+                val callId = (payload.caller + mUser.uid).hashCode()
+                val reserveCallId = (mUser.uid + payload.caller).hashCode()
 
-                AppDependencies.getDatabaseObserver().notifyRtcSessionClose()
+                if (callId == CallNotificationService.callId || reserveCallId == CallNotificationService.callId) {
+                    mContext.stopService(Intent(mContext, CallNotificationService::class.java))
+                }
+
+                if ((payload.caller + mUser.uid) == WebRtcCallManager.callId || (mUser.uid + payload.caller) == WebRtcCallManager.callId) {
+                    AppDependencies.getDatabaseObserver().notifyRtcSessionClose()
+                }
             }
         }
     }

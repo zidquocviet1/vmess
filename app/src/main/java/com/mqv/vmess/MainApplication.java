@@ -64,6 +64,7 @@ public class MainApplication extends Application implements Configuration.Provid
         clearAllNotification(this);
         startTimerForCheckingAuthToken();
         notifyAllIncomingMessage();
+        initializeRingRtc();
     }
 
     private void setAppTheme(DarkMode mode){

@@ -33,6 +33,7 @@ class WebRtcViewModel @Inject constructor(
     private val cd = CompositeDisposable()
     private val _cameraDirection = MutableLiveData(Pair(true, true))
     private val _micEnabled = MutableLiveData(true)
+    private val _remoteCameraEnabled = MutableLiveData(true)
     private val _webRtcControl = MutableLiveData(WebRtcControl.NONE)
     private val _user = MutableLiveData<User>()
     private val _state = MutableLiveData<WebRtcState>()
@@ -59,16 +60,18 @@ class WebRtcViewModel @Inject constructor(
 
     val user: LiveData<User> get() = _user
     val micEnabled: LiveData<Boolean> get() = _micEnabled
+    val remoteCameraState: LiveData<Boolean> get() = _remoteCameraEnabled
     val webRtcControl: LiveData<WebRtcControl> get() = _webRtcControl
     val state: LiveData<WebRtcState> get() = _state
     val cameraDirection: LiveData<Pair<Boolean, Boolean>> get() = _cameraDirection
     val event: LiveData<WebRtcEvent> get() = _event
     val countRinging: LiveData<Int> get() = _countRingingTime
+    val recipient: String = participantId
 
     init {
+        AppDependencies.getDatabaseObserver().registerWebRtcCallListener(RtcCallObserver())
         handleTypeAndUpdateWebRtcControl()
         handleUserInformation()
-        AppDependencies.getDatabaseObserver().registerWebRtcCallListener(RtcCallObserver())
     }
 
     private fun handleUserInformation() {
@@ -100,7 +103,7 @@ class WebRtcViewModel @Inject constructor(
         when (type) {
             WebRtcCallActivity.TYPE_AUDIO_CALL -> startCallInternal(false)
             WebRtcCallActivity.TYPE_VIDEO_CALL -> startCallInternal(true)
-            WebRtcCallActivity.TYPE_ANSWER_FROM_NOTIFICATION -> answerCall(isAnswerEnableVideo)
+            WebRtcCallActivity.TYPE_ANSWER_FROM_NOTIFICATION -> _event.value = WebRtcEvent.TriggerAnswerFromNotification(isAnswerEnableVideo)
             else -> updateWebRtcControl(
                 isVideoEnabled = isAnswerEnableVideo,
                 isMicEnabled = true,
@@ -317,6 +320,10 @@ class WebRtcViewModel @Inject constructor(
         override fun onCameraDirectionChanged(isFrontCamera: Boolean) {
             _cameraDirection.postValue(Pair(isFrontCamera, false))
         }
+
+        override fun onRemoteCameraVideo(isEnabled: Boolean) {
+            _remoteCameraEnabled.postValue(isEnabled)
+        }
     }
 }
 
@@ -324,4 +331,5 @@ sealed class WebRtcEvent(val message: Int) {
     class LocalStopCalling(message: Int) : WebRtcEvent(message) {}
     class StartRinging(val callType: CallType, errorMessage: Int) : WebRtcEvent(errorMessage) {}
     class ConnectedCall() : WebRtcEvent(-1) {}
+    class TriggerAnswerFromNotification(val isVideoEnabled: Boolean): WebRtcEvent(-1) {}
 }

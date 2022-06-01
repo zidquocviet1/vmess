@@ -45,10 +45,9 @@ class WebRtcCallView @JvmOverloads constructor(
                 controlCallListener?.onVideoChanged(
                     isOn
                 )
-                mBinding.callScreenFullParticipantAvatar.visibility =
-                    if (isOn) View.GONE else View.VISIBLE
-                mBinding.callScreenFullShade.visibility =
-                    if (isOn) View.GONE else View.VISIBLE
+                if (isConnected) {
+                    mBinding.cardPipScreenView.visibility = if (isOn) View.VISIBLE else View.INVISIBLE
+                }
             }
             callScreenAudioMicToggle.setOnCheckedChangeListener { _, isOn ->
                 controlCallListener?.onMicChanged(
@@ -110,6 +109,13 @@ class WebRtcCallView @JvmOverloads constructor(
                 mBinding.pipScreenView.setMirror(isFrontCamera && isLocalFlip)
             }
         }
+    }
+
+    fun setRemoteCameraState(isEnabled: Boolean) {
+        mBinding.callScreenFullParticipantAvatar.visibility =
+            if (isEnabled) View.GONE else View.VISIBLE
+        mBinding.callScreenFullShade.visibility =
+            if (isEnabled) View.GONE else View.VISIBLE
     }
 
     fun setParticipant(participant: User) {
