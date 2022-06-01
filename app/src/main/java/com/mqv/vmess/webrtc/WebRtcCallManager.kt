@@ -2,6 +2,7 @@ package com.mqv.vmess.webrtc
 
 import android.content.Context
 import android.content.Intent
+import com.google.firebase.auth.FirebaseAuth
 import com.mqv.vmess.activity.WebRtcCallActivity
 import com.mqv.vmess.activity.br.DeclineReceiver
 import com.mqv.vmess.activity.service.CallNotificationService
@@ -48,6 +49,7 @@ class WebRtcCallManager(private val context: Context) :
 
     fun setServiceModel(serviceModel: WebRtcServiceModel) {
         this.serviceModel = serviceModel
+        callId = serviceModel.recipient + FirebaseAuth.getInstance().currentUser?.uid
     }
 
     fun createConnection(isVideoEnabled: Boolean) {
@@ -69,7 +71,8 @@ class WebRtcCallManager(private val context: Context) :
 
         callManager.setRemoteSdp(offerSdp)
         isIdle = false
-//        callManager.sendSessionDescriptionAnswer()
+
+        CallNotificationService.cancelCallNotification(context)
     }
 
     fun setRemoteSdp(sdp: SessionDescription) {
@@ -327,6 +330,8 @@ class WebRtcCallManager(private val context: Context) :
 
     companion object {
         val TAG: String = WebRtcCallManager::class.java.simpleName
+
+        var callId: String = ""
     }
 
     override fun onBufferedAmountChange(p0: Long) {
@@ -349,6 +354,16 @@ class WebRtcCallManager(private val context: Context) :
 
                 rtcCallOption?.onCameraDirectionChanged(false)
             }
+            CallManager.CHANNEL_DATA_CAMERA_ENABLED -> {
+                Logging.debug(TAG, "Remote peer notify change camera enabled")
+
+                rtcCallOption?.onRemoteCameraVideo(true)
+            }
+            CallManager.CHANNEL_DATA_CAMERA_DISABLED -> {
+                Logging.debug(TAG, "Remote peer notify change camera disable")
+
+                rtcCallOption?.onRemoteCameraVideo(false)
+            }
             else -> {
                 Logging.debug(TAG, "Cannot realize the message from remote peer")
             }
@@ -366,4 +381,5 @@ interface RtcCallLifecycle {
 
 interface RtcCallOption {
     fun onCameraDirectionChanged(isFrontCamera: Boolean)
+    fun onRemoteCameraVideo(isEnabled: Boolean)
 }
