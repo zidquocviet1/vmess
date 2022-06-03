@@ -273,7 +273,7 @@ public class ConversationActivity
         mViewModel.getNewMessageState().observe(this, shouldShow -> {
             if (mLayoutManager != null) {
                 int position = mLayoutManager.findLastCompletelyVisibleItemPosition();
-                boolean finallyShow = shouldShow && (position < mChatListAdapter.getCurrentList().size() - 1);
+                boolean finallyShow = shouldShow && (position < mChatListAdapter.getCurrentList().size() - 2);
 
                 if (finallyShow) {
                     mBinding.textNewMessage.startAnimation(slideUpAnimation);
