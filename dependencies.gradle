@@ -9,6 +9,7 @@ dependencyResolutionManagement {
             version('retrofit', '2.9.0')
             version('work-manager', '2.7.0')
             version('media3', '1.0.0-alpha02')
+            version('libsignal', '0.17.0')
 
             // AndroidX
             alias('android-material').to('com.google.android.material:material:1.6.0')
@@ -76,6 +77,8 @@ dependencyResolutionManagement {
             alias('richlinkpreview').to('io.github.ponnamkarthik:richlinkpreview:1.0.9')
             alias('signal-ringrtc').to('org.signal:ringrtc-android:2.20.1')
             alias('google-webrtc').to('org.webrtc:google-webrtc:1.0.32006')
+            alias('libsignal-android').to('org.signal', 'libsignal-android').versionRef('libsignal')
+            alias('libsignal-client').to('org.signal', 'libsignal-client').versionRef('libsignal')
         }
 
         testLibs {

@@ -93,6 +93,9 @@ dependencies {
     implementation libs.coroutine.jdk
     implementation libs.jsoup
     implementation libs.richlinkpreview
+    implementation libs.google.webrtc
+    implementation libs.libsignal.android
+    implementation libs.libsignal.client
 
     kapt libs.glide.compiler
     kapt libs.room.compiler
