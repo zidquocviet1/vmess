@@ -23,6 +23,15 @@ public final class Const {
     public static final String KEY_PREF_AUTH_USER_TOKEN = "auth_token";
     public static final String KEY_PREF_AUTH_USER_TOKEN_EXPIRES_TIME = "auth_token_expires_time";
     public static final String KEY_PREF_MESSAGE_MEDIA_SORT = MessageMediaSort.LATEST.name();
+    public static final String KEY_PREF_ACCOUNT_ID = "account_id";
+    public static final String KEY_PREF_REGISTRATION_ID = "registration_id";
+    public static final String KEY_PREF_IDENTITY_KEY = "identity_key";
+    public static final String KEY_PREF_PRIVATE_IDENTITY_KEY = "private_identity_key";
+    public static final String KEY_PREF_NEXT_SIGNED_PRE_KEY_ID = "next_signed_pre_key_id";
+    public static final String KEY_PREF_ACTIVE_SIGNED_PRE_KEY_ID = "active_signed_pre_key_id";
+    public static final String KEY_PREF_SIGNED_PRE_KEY_REGISTERED = "signed_pre_key_registered";
+    public static final String KEY_PREF_SIGNED_PRE_KEY_FAILURE_COUNT = "signed_pre_key_failure_count";
+    public static final String KEY_PREF_NEXT_ONE_TIME_PRE_KEY_ID = "next_one_time_pre_key_id";
 
     // DATABASE
     public static final String DATABASE_NAME = "tac_database";

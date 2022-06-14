@@ -3,10 +3,12 @@ package com.mqv.vmess.dependencies;
 import androidx.annotation.MainThread;
 
 import com.mqv.vmess.activity.preferences.AppPreferences;
+import com.mqv.vmess.crypto.storage.LocalStorageSessionStore;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.manager.MemoryManager;
 import com.mqv.vmess.message.IncomingMessageObserver;
 import com.mqv.vmess.message.IncomingMessageProcessor;
+import com.mqv.vmess.message.MessageBuilder;
 import com.mqv.vmess.message.MessageSenderProcessor;
 import com.mqv.vmess.network.websocket.WebSocketClient;
 import com.mqv.vmess.notification.NotificationEntry;
@@ -28,6 +30,8 @@ public class AppDependencies {
     private static volatile MemoryManager memoryManager;
     private static volatile AppPreferences appPreferences;
     private static volatile WebRtcCallManager webRtcCallManager;
+    private static volatile LocalStorageSessionStore localStorageSessionStore;
+    private static volatile MessageBuilder messageBuilder;
 
     private static Provider provider;
 
@@ -150,6 +154,28 @@ public class AppDependencies {
         return webRtcCallManager;
     }
 
+    public static LocalStorageSessionStore getLocalStorageSessionStore() {
+        if (localStorageSessionStore == null) {
+            synchronized (LOCK) {
+                if (localStorageSessionStore == null) {
+                    localStorageSessionStore = provider.provideLocalStorageSessionStore();
+                }
+            }
+        }
+        return localStorageSessionStore;
+    }
+
+    public static MessageBuilder getMessageBuilder() {
+        if (messageBuilder == null) {
+            synchronized (LOCK) {
+                if (messageBuilder == null) {
+                    messageBuilder = provider.provideMessageBuilder();
+                }
+            }
+        }
+        return messageBuilder;
+    }
+
     public interface Provider {
         WebSocketClient provideWebSocket();
         IncomingMessageObserver provideIncomingMessageObserver();
@@ -159,5 +185,7 @@ public class AppDependencies {
         NotificationEntry provideNotificationEntry();
         AppPreferences provideAppPreferences();
         WebRtcCallManager provideWebRtcCallManager();
+        LocalStorageSessionStore provideLocalStorageSessionStore();
+        MessageBuilder provideMessageBuilder();
     }
 }

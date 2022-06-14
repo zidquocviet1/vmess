@@ -22,6 +22,7 @@ import com.mqv.vmess.data.repository.LoginRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
 import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.result.Result;
+import com.mqv.vmess.dependencies.AppDependencies;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.reactive.RxHelper;
@@ -198,6 +199,7 @@ public class VerifyOtpViewModel extends LogoutHandlerViewModel {
                     .subscribe(() -> loginResult.setValue(Result.Success(user)),
                             t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail))));
         }
+        AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
     }
 
     @Override

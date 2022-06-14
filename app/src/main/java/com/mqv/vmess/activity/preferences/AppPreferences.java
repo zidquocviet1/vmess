@@ -49,4 +49,42 @@ public interface AppPreferences {
     void setMessageMediaSort(MessageMediaSort sort);
 
     MessageMediaSort getMessageMediaSort();
+
+    void setAccountId(String id);
+
+    Optional<String> getAccountId();
+
+    void setRegistrationId(Integer id);
+
+    Integer getRegistrationId();
+
+    void setIdentityKey(String identityKey);
+
+    Optional<String> getIdentityKey();
+
+    Boolean isContainIdentityKey();
+
+    void setIdentityPrivateKey(String key);
+
+    Optional<String> getIdentityPrivateKey();
+
+    void setNextSignedPreKeyId(Integer value);
+
+    Integer getNextSignedPreKeyId();
+
+    void setActiveSignedPreKeyId(Integer value);
+
+    Integer getActiveSignedPreKeyId();
+
+    void setSignedPreKeyRegistered(Boolean value);
+
+    Boolean getSignedPreKeyRegistered();
+
+    void setSignedPreKeyFailureCount(Integer value);
+
+    Integer getSignedPreKeyFailureCount();
+
+    void setNextOneTimePreKeyId(Integer value);
+
+    Integer getNextOneTimePreKeyId();
 }

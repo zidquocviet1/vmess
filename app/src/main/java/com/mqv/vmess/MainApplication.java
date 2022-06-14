@@ -27,6 +27,7 @@ import com.mqv.vmess.dependencies.AppDependencyProvider;
 import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.webrtc.CallManager;
 import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
+import com.mqv.vmess.work.SubmitPreKeyBundleWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
 import java.time.Instant;
@@ -39,7 +40,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 
 @HiltAndroidApp
-public class MainApplication extends Application implements Configuration.Provider{
+public class MainApplication extends Application implements Configuration.Provider {
     @Inject AppPreferences    mPreferences;
     @Inject HiltWorkerFactory workerFactory;
     @Inject OkHttpClient      okHttpClient;
@@ -212,5 +213,9 @@ public class MainApplication extends Application implements Configuration.Provid
 
     private void initializeRingRtc() {
         CallManager.initialize(this);
+    }
+
+    private void registerAccountStateChangeForSubmitPreKeyBundle() {
+        AppDependencies.getDatabaseObserver().registerUserAccountListener(() -> SubmitPreKeyBundleWorkWrapper.enqueueIfNeeded(this));
     }
 }

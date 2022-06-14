@@ -10,6 +10,7 @@ import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
+import com.mqv.vmess.data.repository.KeyRepository;
 import com.mqv.vmess.data.repository.LinkMetadataRepository;
 import com.mqv.vmess.data.repository.MediaRepository;
 import com.mqv.vmess.data.repository.NotificationRepository;
@@ -19,6 +20,7 @@ import com.mqv.vmess.data.repository.SearchRepository;
 import com.mqv.vmess.data.repository.StorageRepository;
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.ConversationRepositoryImpl;
+import com.mqv.vmess.data.repository.impl.KeyRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.LinkMetadataRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.MediaRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.NotificationRepositoryImpl;
@@ -29,6 +31,7 @@ import com.mqv.vmess.data.repository.impl.StorageRepositoryImpl;
 import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
 import com.mqv.vmess.network.service.FriendRequestService;
+import com.mqv.vmess.network.service.KeyService;
 import com.mqv.vmess.network.service.NotificationService;
 import com.mqv.vmess.network.service.RtcService;
 import com.mqv.vmess.network.service.StorageService;
@@ -101,5 +104,11 @@ public class RepoViewModelModule {
     @Provides
     public RtcRepository provideRtcRepository(RtcService service) {
         return new RtcRepositoryImpl(service);
+    }
+
+    @ViewModelScoped
+    @Provides
+    public KeyRepository provideKeyRepository(KeyService keyService) {
+        return new KeyRepositoryImpl(keyService);
     }
 }

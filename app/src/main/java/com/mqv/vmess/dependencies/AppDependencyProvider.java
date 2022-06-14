@@ -5,19 +5,29 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
 import com.mqv.vmess.activity.preferences.AppPreferences;
 import com.mqv.vmess.activity.preferences.AppPreferencesImpl;
+import com.mqv.vmess.crypto.storage.LocalIdentityKeyStore;
+import com.mqv.vmess.crypto.storage.LocalPreKeyStore;
+import com.mqv.vmess.crypto.storage.LocalSenderKeyStore;
+import com.mqv.vmess.crypto.storage.LocalSessionStore;
+import com.mqv.vmess.crypto.storage.LocalStorageSessionStore;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.MyDatabase;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.impl.ConversationRepositoryImpl;
+import com.mqv.vmess.data.repository.impl.KeyRepositoryImpl;
 import com.mqv.vmess.message.IncomingMessageObserver;
 import com.mqv.vmess.message.IncomingMessageProcessor;
+import com.mqv.vmess.message.MessageBuilder;
 import com.mqv.vmess.message.MessageSenderProcessor;
 import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
 import com.mqv.vmess.network.service.FriendRequestService;
+import com.mqv.vmess.network.service.KeyService;
 import com.mqv.vmess.network.service.RtcService;
 import com.mqv.vmess.network.service.UserService;
 import com.mqv.vmess.network.websocket.WebSocketAlarmTimer;
@@ -116,6 +126,25 @@ public class AppDependencyProvider implements AppDependencies.Provider {
     @Override
     public WebRtcCallManager provideWebRtcCallManager() {
         return new WebRtcCallManager(context);
+    }
+
+    @Override
+    public LocalStorageSessionStore provideLocalStorageSessionStore() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            throw new IllegalStateException("User must not be null");
+        }
+
+        return new LocalStorageSessionStore(new LocalIdentityKeyStore(database, user.getUid()),
+                                            new LocalPreKeyStore(database, user.getUid()),
+                                            new LocalSessionStore(database, user.getUid()),
+                                            new LocalSenderKeyStore(database));
+    }
+
+    @Override
+    public MessageBuilder provideMessageBuilder() {
+        return new MessageBuilder(provideLocalStorageSessionStore(), new KeyRepositoryImpl(retrofit.create(KeyService.class)));
     }
 
     private WebSocketFactory provideWebSocketFactory(WebSocketHeartbeatMonitor monitor) {

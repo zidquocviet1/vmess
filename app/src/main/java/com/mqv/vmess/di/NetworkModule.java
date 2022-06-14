@@ -5,15 +5,21 @@ import android.content.Context;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mqv.vmess.network.OkHttpProvider;
+import com.mqv.vmess.network.adapter.ByteArrayAdapter;
+import com.mqv.vmess.network.adapter.ECPublicKeyAdapter;
+import com.mqv.vmess.network.adapter.IdentityKeyAdapter;
 import com.mqv.vmess.network.adapter.LocalDateTimeAdapter;
 import com.mqv.vmess.network.service.ChatService;
 import com.mqv.vmess.network.service.ConversationService;
 import com.mqv.vmess.network.service.FriendRequestService;
+import com.mqv.vmess.network.service.KeyService;
 import com.mqv.vmess.network.service.NotificationService;
 import com.mqv.vmess.network.service.RtcService;
 import com.mqv.vmess.network.service.StorageService;
 import com.mqv.vmess.network.service.UserService;
 import com.mqv.vmess.util.Const;
+
+import org.signal.libsignal.protocol.ecc.ECPublicKey;
 
 import java.time.LocalDateTime;
 
@@ -37,6 +43,9 @@ public class NetworkModule {
     public Gson provideGson() {
         var builder = new GsonBuilder()
                 .setPrettyPrinting()
+                .registerTypeAdapter(ECPublicKey.class, new ECPublicKeyAdapter())
+                .registerTypeAdapter(ByteArrayAdapter.class, new ByteArrayAdapter())
+                .registerTypeAdapter(IdentityKeyAdapter.class, new IdentityKeyAdapter())
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter());
         return builder.create();
     }
@@ -105,5 +114,11 @@ public class NetworkModule {
     @Provides
     public RtcService provideRtcService(Retrofit retrofit) {
         return retrofit.create(RtcService.class);
+    }
+
+    @Singleton
+    @Provides
+    public KeyService provideKeyService(Retrofit retrofit) {
+        return retrofit.create(KeyService.class);
     }
 }

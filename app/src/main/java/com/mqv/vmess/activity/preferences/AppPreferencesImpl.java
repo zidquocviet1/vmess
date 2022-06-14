@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.Logging;
 
+import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -143,5 +144,100 @@ public class AppPreferencesImpl implements AppPreferences {
             setMessageMediaSort(MessageMediaSort.LATEST);
             return MessageMediaSort.LATEST;
         }
+    }
+
+    @Override
+    public void setAccountId(String id) {
+        mPreferences.edit().putString(Const.KEY_PREF_ACCOUNT_ID, id).apply();
+    }
+
+    @Override
+    public Optional<String> getAccountId() {
+        return Optional.ofNullable(mPreferences.getString(Const.KEY_PREF_ACCOUNT_ID, null));
+    }
+
+    @Override
+    public void setRegistrationId(Integer id) {
+        mPreferences.edit().putInt(Const.KEY_PREF_REGISTRATION_ID, id).apply();
+    }
+
+    @Override
+    public Integer getRegistrationId() {
+        return mPreferences.getInt(Const.KEY_PREF_REGISTRATION_ID, 0);
+    }
+
+    @Override
+    public void setIdentityKey(String identityKey) {
+        mPreferences.edit().putString(Const.KEY_PREF_IDENTITY_KEY, identityKey).apply();
+    }
+
+    @Override
+    public Optional<String> getIdentityKey() {
+        return Optional.ofNullable(mPreferences.getString(Const.KEY_PREF_IDENTITY_KEY, null));
+    }
+
+    @Override
+    public Boolean isContainIdentityKey() {
+        return getIdentityKey().isPresent();
+    }
+
+    @Override
+    public void setIdentityPrivateKey(String key) {
+        mPreferences.edit().putString(Const.KEY_PREF_PRIVATE_IDENTITY_KEY, key).apply();
+    }
+
+    @Override
+    public Optional<String> getIdentityPrivateKey() {
+        return Optional.ofNullable(mPreferences.getString(Const.KEY_PREF_PRIVATE_IDENTITY_KEY, null));
+    }
+
+    @Override
+    public void setNextSignedPreKeyId(Integer value) {
+        mPreferences.edit().putInt(Const.KEY_PREF_NEXT_SIGNED_PRE_KEY_ID, value).apply();
+    }
+
+    @Override
+    public Integer getNextSignedPreKeyId() {
+        return mPreferences.getInt(Const.KEY_PREF_NEXT_SIGNED_PRE_KEY_ID, new SecureRandom().nextInt(0xFFFFFF));
+    }
+
+    @Override
+    public void setActiveSignedPreKeyId(Integer value) {
+        mPreferences.edit().putInt(Const.KEY_PREF_ACTIVE_SIGNED_PRE_KEY_ID, value).apply();
+    }
+
+    @Override
+    public Integer getActiveSignedPreKeyId() {
+        return mPreferences.getInt(Const.KEY_PREF_ACTIVE_SIGNED_PRE_KEY_ID, -1);
+    }
+
+    @Override
+    public void setSignedPreKeyRegistered(Boolean value) {
+        mPreferences.edit().putBoolean(Const.KEY_PREF_SIGNED_PRE_KEY_REGISTERED, value).apply();
+    }
+
+    @Override
+    public Boolean getSignedPreKeyRegistered() {
+        return mPreferences.getBoolean(Const.KEY_PREF_SIGNED_PRE_KEY_REGISTERED, false);
+    }
+
+    @Override
+    public void setSignedPreKeyFailureCount(Integer value) {
+        mPreferences.edit().putInt(Const.KEY_PREF_SIGNED_PRE_KEY_FAILURE_COUNT, value).apply();
+    }
+
+    @Override
+    public Integer getSignedPreKeyFailureCount() {
+        return mPreferences.getInt(Const.KEY_PREF_SIGNED_PRE_KEY_FAILURE_COUNT, 0);
+    }
+
+    @Override
+    public void setNextOneTimePreKeyId(Integer value) {
+        mPreferences.edit().putInt(Const.KEY_PREF_NEXT_ONE_TIME_PRE_KEY_ID, value).apply();
+    }
+
+    @Override
+    public Integer getNextOneTimePreKeyId() {
+        return mPreferences.getInt(Const.KEY_PREF_NEXT_ONE_TIME_PRE_KEY_ID, new SecureRandom().nextInt(0xFFFFFF));
     }
 }

@@ -6,6 +6,7 @@ import android.content.Context;
 import androidx.room.Room;
 
 import com.mqv.vmess.data.MyDatabase;
+import com.mqv.vmess.data.dao.AccountDao;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
@@ -95,5 +96,11 @@ public class DatabaseModule {
     @Singleton
     public LinkMetadataDao provideLinkMetadataDao(MyDatabase db) {
         return db.getLinkMetadataDao();
+    }
+
+    @Provides
+    @Singleton
+    public AccountDao provideAccountDao(MyDatabase db) {
+        return db.getAccountDao();
     }
 }

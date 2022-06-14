@@ -8,8 +8,13 @@ class DatabaseObserver {
     private var friendRequestListener: MutableSet<FriendRequestListener> = HashSet()
     private var noneFriendRequestListener: MutableSet<NoneFriendRequestListener> = HashSet()
     private var webRtcCallListener: WebRtcCallListener? = null
+    private var userAccountListener: UserAccountListener? = null
     private var offerSdp: String? = null
     private var candidates: MutableList<IceCandidate> = mutableListOf()
+
+    interface UserAccountListener {
+        fun onLoginSuccess()
+    }
 
     interface WebRtcCallListener {
         fun onOffer(sdp: String)
@@ -75,6 +80,14 @@ class DatabaseObserver {
         friendRequestListener.remove(listener)
     }
 
+    fun registerUserAccountListener(listener: UserAccountListener) {
+        userAccountListener = listener
+    }
+
+    fun unregisterUserAccountListener() {
+        userAccountListener = null
+    }
+
     fun notifyConversationInserted(conversationId: String) {
         conversationListener.forEach { it.onConversationInserted(conversationId) }
     }
@@ -108,6 +121,10 @@ class DatabaseObserver {
     fun notifyCancelRequest(userId: String) {
         noneFriendRequestListener.forEach { it.onCancel(userId) }
         friendRequestListener.forEach { it.onCancel(userId) }
+    }
+
+    fun notifyOnLoginStateChanged() {
+        userAccountListener?.onLoginSuccess()
     }
 
     private fun <K, V> registerMapListener(map: MutableMap<K, MutableSet<V>>, key: K, listener: V) {

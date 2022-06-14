@@ -289,6 +289,7 @@ public class ManageAccountViewModel extends LogoutHandlerViewModel {
 
                             AppDependencies.closeAllConnection();
                             sendFcmTokenToServer();
+                            AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
                         },
                         t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );

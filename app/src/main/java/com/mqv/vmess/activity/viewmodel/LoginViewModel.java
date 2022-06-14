@@ -224,6 +224,8 @@ public class LoginViewModel extends ViewModel {
                             loginResult.setValue(Result.Success(user));
 
                             sendFcmTokenToServer();
+
+                            AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
                         },
                         t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
         );
