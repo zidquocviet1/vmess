@@ -17,8 +17,8 @@ buildscript {
 }
 
 ext {
-    COMPILE_SDK = 31
-    TARGET_SDK = 31
+    COMPILE_SDK = 32
+    TARGET_SDK = 32
     MIN_SDK = 26
 
     JAVA_VERSION = JavaVersion.VERSION_11

@@ -4,7 +4,7 @@ dependencyResolutionManagement {
             version('lifecycle', '2.4.0')
             version('navigation', '2.4.2')
             version('hilt', '2.40.5')
-            version('room', '2.4.1')
+            version('room', '2.5.0-alpha02')
             version('paging', '3.0.1')
             version('retrofit', '2.9.0')
             version('work-manager', '2.7.0')
