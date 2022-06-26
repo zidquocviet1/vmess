@@ -717,6 +717,8 @@ public class ConversationActivity
     private void checkForSeenMessage() {
         if (mLayoutManager != null) {
             int position = mLayoutManager.findLastCompletelyVisibleItemPosition();
+            if (position < 0) return;
+
             Chat item = mChatListAdapter.getCurrentList().get(position);
 
             if (item != null) {
