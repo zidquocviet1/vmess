@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.google.firebase.FirebaseNetworkException;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
@@ -37,6 +38,7 @@ import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,7 +63,9 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
     protected final MutableLiveData<Event<Integer>>                       errorEmitter;
     protected final MutableLiveData<Event<Result<List<Conversation>>>>    pagingResult;
     protected final MutableLiveData<List<User>>                           userLeftGroup;
+    protected final MutableLiveData<Event<Conversation>>                  openConversationEvent;
     protected final CompositeDisposable                                   cd;
+    protected final Map<String, LocalPlaintextContentModel>               localPlaintextContentModels;
 
     private static final String TAG = ConversationListViewModel.class.getSimpleName();
 
@@ -89,7 +93,10 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
         this.pagingResult               = new MutableLiveData<>();
         this.notificationOptionObserver = new MutableLiveData<>();
         this.userLeftGroup              = new MutableLiveData<>(Collections.emptyList());
+        this.openConversationEvent      = new MutableLiveData<>();
+        this.localPlaintextContentModels = new HashMap<>();
 
+        loadLastOutgoingMessageContentForEncryptedConversation();
         registerConversationListObserver(status, Const.DEFAULT_CONVERSATION_PAGING_SIZE);
 
         //noinspection ResultOfMethodCallIgnored
@@ -144,8 +151,26 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
         return userLeftGroup;
     }
 
+    public LiveData<Event<Conversation>> getOpenConversationEvent() {
+        return openConversationEvent;
+    }
+
+    public Map<String, LocalPlaintextContentModel> getLocalPlaintextContentModel() {
+        return localPlaintextContentModels;
+    }
+
     public List<String> getPresenceUserList() {
         return Retriever.getOrDefault(presenceUserListObserver.getValue(), Collections.emptyList());
+    }
+
+    protected void loadLastOutgoingMessageContentForEncryptedConversation() {
+        Disposable disposable = conversationRepository.getLastOutgoingMessageForEncryptedConversation(this.statusType)
+                                                      .compose(RxHelper.applySingleSchedulers())
+                                                      .subscribe(result -> {
+                                                          localPlaintextContentModels.clear();
+                                                          localPlaintextContentModels.putAll(result);
+                                                      }, t -> {});
+        cd.add(disposable);
     }
 
     protected List<Conversation> mapToListConversation(Map<Conversation, Chat> map) {
@@ -291,6 +316,39 @@ public class ConversationListViewModel extends MessageHandlerViewModel {
                                                       }, t -> {
                                                           oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
                                                           emitterOneTimeErrorToast(R.string.error_create_group_conversation_fail);
+                                                      });
+
+        cd.add(disposable);
+    }
+
+    public void openOrCreateEncryptionConversation(String userId) {
+        Disposable disposable = conversationRepository.getOrCreateEncryptionConversation(userId)
+                                                      .startWith(Completable.fromAction(() ->
+                                                              oneTimeLoadingResult.postValue(Pair.create(true, R.string.action_creating_3_dot))))
+                                                      .subscribe(pair -> {
+                                                          boolean      hasLocal     = pair.getFirst();
+                                                          Conversation conversation = pair.getSecond();
+
+                                                          conversation.setStatus(ConversationStatusType.INBOX);
+
+                                                          if (hasLocal) {
+                                                              oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
+                                                              openConversationEvent.postValue(new Event<>(conversation));
+                                                          } else {
+                                                              //noinspection ResultOfMethodCallIgnored
+                                                              conversationRepository.save(conversation)
+                                                                      .compose(RxHelper.applyCompleteSchedulers())
+                                                                      .onErrorComplete()
+                                                                      .subscribe(() -> {
+                                                                          oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
+                                                                          AppDependencies.getDatabaseObserver().notifyConversationInserted(conversation.getId());
+                                                                          openConversationEvent.postValue(new Event<>(conversation));
+                                                                      });
+                                                          }
+                                                      }, t -> {
+                                                          t.printStackTrace();
+                                                          oneTimeLoadingResult.postValue(Pair.create(false, R.string.action_creating_3_dot));
+                                                          emitterOneTimeErrorToast(R.string.error_create_encryption_conversation_fail);
                                                       });
 
         cd.add(disposable);

@@ -15,7 +15,9 @@ import androidx.work.rxjava3.RxWorker;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.Gson;
 import com.mqv.vmess.data.dao.ChatDao;
+import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
 import com.mqv.vmess.data.repository.impl.StorageRepositoryImpl;
 import com.mqv.vmess.dependencies.AppDependencies;
@@ -24,6 +26,7 @@ import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.ForwardMessagePayload;
 import com.mqv.vmess.network.model.Type;
 import com.mqv.vmess.network.model.UploadResult;
+import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.network.model.type.MessageStatus;
 import com.mqv.vmess.network.websocket.WebSocketClient;
 import com.mqv.vmess.network.websocket.WebSocketRequestMessage;
@@ -36,6 +39,7 @@ import com.mqv.vmess.util.UserTokenUtil;
 import java.io.File;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -60,6 +64,7 @@ public class SendMessageWorkWrapper extends BaseWorker {
 
     public static final String EXTRA_MESSAGE_ID      = "message_id";
     public static final String EXTRA_FORWARD_MESSAGE = "forward_message";
+    public static final String EXTRA_IS_ENCRYPTED    = "is_encrypted";
 
     public SendMessageWorkWrapper(Context context, Data data) {
         super(context);
@@ -92,8 +97,10 @@ public class SendMessageWorkWrapper extends BaseWorker {
     public static class SendMessageWorker extends RxWorker {
         private final FirebaseUser user;
         private final ChatDao dao;
+        private final ConversationDao conversationDao;
         private final ChatRepositoryImpl chatRepository;
         private final StorageRepositoryImpl storageRepository;
+        private final Gson gson;
         /**
          * @param appContext   The application {@link Context}
          * @param workerParams Parameters to setup the internal state of this worker
@@ -102,13 +109,17 @@ public class SendMessageWorkWrapper extends BaseWorker {
         public SendMessageWorker(@Assisted @NonNull Context appContext,
                                  @Assisted @NonNull WorkerParameters workerParams,
                                  ChatDao dao,
+                                 ConversationDao conversationDao,
                                  ChatRepositoryImpl chatRepository,
-                                 StorageRepositoryImpl storageRepository) {
+                                 StorageRepositoryImpl storageRepository,
+                                 Gson gson) {
             super(appContext, workerParams);
             this.user              = FirebaseAuth.getInstance().getCurrentUser();
             this.dao               = dao;
+            this.conversationDao   = conversationDao;
             this.chatRepository    = chatRepository;
             this.storageRepository = storageRepository;
+            this.gson              = gson;
         }
 
         @NonNull
@@ -121,7 +132,7 @@ public class SendMessageWorkWrapper extends BaseWorker {
             Chat chat = dao.findById(getInputData().getString(EXTRA_MESSAGE_ID))
                            .subscribeOn(Schedulers.io())
                            .blockingGet();
-            return preProcessingSending(chat);
+            return preProcessingSending(chat).subscribeOn(Schedulers.io()).observeOn(Schedulers.io());
         }
 
         private Single<Result> preProcessingSending(Chat chat) {
@@ -132,7 +143,7 @@ public class SendMessageWorkWrapper extends BaseWorker {
                     return uploadFileBeforeSend(chat);
                 }
             } else {
-                return sendMessage(chat);
+                return sendMessage(chat, getInputData().getBoolean(EXTRA_IS_ENCRYPTED, false));
             }
         }
 
@@ -172,7 +183,7 @@ public class SendMessageWorkWrapper extends BaseWorker {
             }
             return dao.insert(chat)
                       .subscribeOn(Schedulers.io())
-                      .andThen(sendMessage(chat))
+                      .andThen(sendMessage(chat, false))
                       .doOnError(t -> Logging.show("Can not send message, failure: " + t.getMessage()))
                       .onErrorReturnItem(Result.failure());
         }
@@ -286,6 +297,33 @@ public class SendMessageWorkWrapper extends BaseWorker {
                                         raw.setUri(null);
                                         return raw;
                                     });
+        }
+
+        private Single<Result> sendMessage(Chat chat, boolean isEncrypted) {
+            if (isEncrypted) {
+                // Currently support encrypted plaintext message
+                String content          = chat.getContent();
+                String participantsJson = conversationDao.getParticipantByConversationId(chat.getConversationId())
+                                                         .subscribeOn(Schedulers.io())
+                                                         .blockingGet();
+                List<User> participants = Arrays.asList(gson.fromJson(participantsJson, User[].class));
+                String     remoteUser   = participants.stream()
+                                                      .filter(u -> !u.getUid().equals(chat.getSenderId()))
+                                                      .findFirst()
+                                                      .map(User::getUid)
+                                                      .orElse("");
+
+                return AppDependencies.getMessageBuilder()
+                                      .buildEncryptedMessage(remoteUser, 1, content)
+                                      .subscribeOn(Schedulers.io())
+                                      .map(encryptedMessage -> {
+                                          chat.setContent(encryptedMessage);
+                                          return chat;
+                                      })
+                                      .flatMap(this::sendMessage);
+            } else {
+                return sendMessage(chat);
+            }
         }
 
         private Single<Result> sendMessage(Chat chat) {

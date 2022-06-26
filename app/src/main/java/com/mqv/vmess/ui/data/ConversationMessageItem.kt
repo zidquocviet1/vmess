@@ -15,6 +15,7 @@ import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ImageAvatarView
+import com.mqv.vmess.ui.adapter.ChatListAdapter
 import com.mqv.vmess.util.DateTimeHelper.getMessageDateTimeFormatted
 import com.mqv.vmess.util.MessageUtil
 import java.time.temporal.ChronoUnit
@@ -27,7 +28,9 @@ class ConversationMessageItem(
     private val mParticipants: List<User>,
     private val mCurrentUser: User,
     private val mMetadata: ConversationMetadata?,
-) : ConversationItem<Chat>(mBinding.root.context, mParticipants, mCurrentUser, sChatColor) {
+    private val mIsEncryptionConversation: Boolean = false,
+    mLocalPlaintextCallback: ChatListAdapter.LocalPlaintextInterface,
+) : ConversationItem<Chat>(mBinding.root.context, mParticipants, mCurrentUser, mLocalPlaintextCallback, sChatColor) {
 
     private val mChatCornerRadius =
         mContext.resources.getDimensionPixelSize(R.dimen.chat_corner_radius)
@@ -108,17 +111,28 @@ class ConversationMessageItem(
         mBinding.layoutReceiver.visibility = View.GONE
         mBinding.layoutSender.visibility = View.VISIBLE
         mBinding.layoutWelcome.visibility = View.GONE
-        mBinding.textSenderContent.text = item.content
+        mBinding.textSenderContent.text = item.loadOutgoingMessageContent(mIsEncryptionConversation)
         mBinding.senderChatBackground.backgroundTintList = sChatColor
 
         bindStatus(item)
     }
 
     private fun bindReceiverMessage(item: Chat) {
+        val content = if (mIsEncryptionConversation) decryptPlaintextMessage(
+            item.content,
+            item.senderId
+        ) else item.content
+        if (content == mContext.getString(R.string.dummy_encrypted_message)) {
+            mBinding.textReceiverContent.typeface =
+                Typeface.create(mBinding.textReceiverContent.typeface, Typeface.ITALIC)
+        } else {
+            mBinding.textReceiverContent.typeface = Typeface.DEFAULT
+        }
+
         mBinding.layoutSender.visibility = View.GONE
         mBinding.layoutReceiver.visibility = View.VISIBLE
         mBinding.layoutWelcome.visibility = View.GONE
-        mBinding.textReceiverContent.text = item.content
+        mBinding.textReceiverContent.text = content
         mBinding.imageReceiver.visibility = View.VISIBLE
 
         // Render the sender profile image. Not otherUser because we have a group type
@@ -525,7 +539,8 @@ class ConversationMessageItem(
         }
     }
 
-    private fun isGroup() = if (mMetadata != null) mMetadata.type == ConversationType.GROUP else false
+    private fun isGroup() =
+        if (mMetadata != null) mMetadata.type == ConversationType.GROUP else false
 
     /*
     * Detect the incoming message by shape itself
@@ -543,7 +558,8 @@ class ConversationMessageItem(
     }
 
     companion object {
-        var sChatColor: ColorStateList = ColorStateList.valueOf(Color.parseColor(ConversationColor.DEFAULT_CHAT_COLOR))
+        var sChatColor: ColorStateList =
+            ColorStateList.valueOf(Color.parseColor(ConversationColor.DEFAULT_CHAT_COLOR))
 
         @JvmStatic
         fun getChatColor(): ColorStateList = sChatColor

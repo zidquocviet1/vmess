@@ -381,4 +381,8 @@
     <string name="action_disconnecting_call">Đang ngắt kết nối cuộc gọi…</string>
     <string name="msg_webrtc_user_deny_call">Người dùng này đã từ chối cuộc gọi của bạn.</string>
     <string name="msg_webrtc_user_is_in_call">Người dùng này đang bận trong một cuộc gọi khác. Vui lòng thử lại sau.</string>
+    <string name="msg_webrtc_user_did_not_answer">Người dùng không trả lời cuộc gọi.</string>
+    <string name="title_chat_create_e2ee_conversation">Tạo cuộc trò chuyện mã hóa đầu cuối</string>
+    <string name="error_create_encryption_conversation_fail">Đã có lỗi xảy ra khi tạo cuộc trò chuyện mã hóa đầu cuối. Vui lòng thử lại sau</string>
+    <string name="dummy_encrypted_message">Tin nhắn này đã được mã hóa</string>
 </resources>

@@ -17,6 +17,7 @@ import com.mqv.vmess.ui.data.ConversationDetail
 import com.mqv.vmess.ui.fragment.ConversationDetailFragment.Companion.KEY_MUTE_NOTIFICATION
 import com.mqv.vmess.util.DateTimeHelper.toLong
 import java.time.LocalDateTime
+import kotlin.properties.Delegates
 
 class ConversationPreferenceFragment : PreferenceFragmentCompat() {
     interface ConversationPreferenceListener {
@@ -29,10 +30,12 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
         fun onIgnoreMessage()
         fun onBlock()
         fun onReport()
+        fun onCreateEncryptionConversation(user: User)
     }
 
     private var mCallback: ConversationPreferenceListener? = null
     private lateinit var mConversationDetail: ConversationDetail
+    private var mIsEncryption by Delegates.notNull<Boolean>()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -48,6 +51,7 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
         super.onCreate(savedInstanceState)
         arguments?.let {
             mConversationDetail = it.getParcelable(ARG_CONVERSATION)!!
+            mIsEncryption = it.getBoolean(ARG_IS_ENCRYPTION, false)
         }
     }
 
@@ -60,6 +64,17 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        findPreference<Preference>(getString(R.string.key_pref_create_e2ee_conversation))?.let { preference ->
+            (preference as ConversationPreference).apply {
+                (mConversationDetail.metadata.type == ConversationType.GROUP).let { isGroup ->
+                    isVisible = !isGroup && !mIsEncryption
+
+                    setTitle(R.string.title_chat_create_e2ee_conversation)
+                    setIcon(R.drawable.ic_round_lock_24)
+                }
+            }
+        }
+
         findPreference<Preference>(getString(R.string.key_pref_chat_wallpaper))?.let { preference ->
             (preference as ConversationPreference).apply {
                 setTitle(R.string.title_chat_color_and_wallpaper)
@@ -99,9 +114,15 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
 
                     if (!isGroup) {
                         val participants = mConversationDetail.metadata.conversationParticipants
-                        val other = participants.filter { user -> user.uid == mConversationDetail.metadata.otherUid }[0]
+                        val other =
+                            participants.filter { user -> user.uid == mConversationDetail.metadata.otherUid }[0]
 
-                        setTitle(getString(R.string.label_conversation_create_group, other.displayName))
+                        setTitle(
+                            getString(
+                                R.string.label_conversation_create_group,
+                                other.displayName
+                            )
+                        )
                         setIcon(R.drawable.ic_round_groups)
                     }
                 }
@@ -164,22 +185,36 @@ class ConversationPreferenceFragment : PreferenceFragmentCompat() {
             getString(R.string.key_pref_notifications_and_sounds) -> mCallback?.onNotificationAndSound()
             getString(R.string.key_pref_view_media_files) -> mCallback?.onViewMediaAndFile()
             getString(R.string.key_pref_see_group_member) -> mCallback?.onSeeGroupMember()
-            getString(R.string.key_pref_create_group_with) -> {
-                val metadata = mConversationDetail.metadata
-                val participants = metadata.conversationParticipants
-
-                mCallback?.onCreateGroup(participants.filter { user -> user.uid != metadata.currentUserId }[0])
-            }
+            getString(R.string.key_pref_create_group_with) -> mCallback?.onCreateGroup(
+                extractOtherUser()
+            )
+            getString(R.string.key_pref_create_e2ee_conversation) -> mCallback?.onCreateEncryptionConversation(
+                extractOtherUser()
+            )
         }
         return super.onPreferenceTreeClick(preference)
     }
 
+    private fun extractOtherUser(): User {
+        val metadata = mConversationDetail.metadata
+        val participants = metadata.conversationParticipants
+
+        return participants.filter { user -> user.uid != metadata.currentUserId }[0]
+    }
+
     companion object {
         const val ARG_CONVERSATION = "conversation"
+        const val ARG_IS_ENCRYPTION = "is_encryption"
 
-        fun newInstance(conversationDetail: ConversationDetail): ConversationPreferenceFragment =
+        fun newInstance(
+            conversationDetail: ConversationDetail,
+            isEncryption: Boolean
+        ): ConversationPreferenceFragment =
             ConversationPreferenceFragment().apply {
-                arguments = bundleOf(ARG_CONVERSATION to conversationDetail)
+                arguments = bundleOf(
+                    ARG_CONVERSATION to conversationDetail,
+                    ARG_IS_ENCRYPTION to isEncryption
+                )
             }
     }
 }

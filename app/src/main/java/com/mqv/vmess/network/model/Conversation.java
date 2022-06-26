@@ -38,6 +38,9 @@ public class Conversation implements Parcelable {
     @SerializedName("last_chat")
     @Ignore
     private Chat lastChat;
+    @ColumnInfo(name = "is_encrypted", defaultValue = "0")
+    @SerializedName(value = "encrypted")
+    private Boolean isEncrypted;
 
     public Conversation(@NonNull String id,
                         List<User> participants,
@@ -49,6 +52,7 @@ public class Conversation implements Parcelable {
         this.type = type;
         this.status = status;
         this.creationTime = creationTime;
+        this.isEncrypted = false;
     }
 
     @Ignore
@@ -57,13 +61,15 @@ public class Conversation implements Parcelable {
                         List<Chat> chats,
                         ConversationType type,
                         ConversationStatusType status,
-                        LocalDateTime creationTime) {
+                        LocalDateTime creationTime,
+                        Boolean isEncrypted) {
         this.id = id;
         this.participants = participants;
         this.chats = chats;
         this.type = type;
         this.status = status;
         this.creationTime = creationTime;
+        this.isEncrypted = isEncrypted;
     }
 
     @Ignore
@@ -74,7 +80,8 @@ public class Conversation implements Parcelable {
                         ConversationType type,
                         ConversationStatusType status,
                         LocalDateTime creationTime,
-                        Chat lastChat) {
+                        Chat lastChat,
+                        Boolean isEncrypted) {
         this.id = id;
         this.participants = participants;
         this.chats = chats;
@@ -83,6 +90,7 @@ public class Conversation implements Parcelable {
         this.status = status;
         this.creationTime = creationTime;
         this.lastChat = lastChat;
+        this.isEncrypted = isEncrypted;
     }
 
     @Ignore
@@ -95,6 +103,7 @@ public class Conversation implements Parcelable {
         this.status = other.status;
         this.creationTime = other.creationTime;
         this.lastChat = other.lastChat;
+        this.isEncrypted = other.isEncrypted;
     }
 
     protected Conversation(Parcel in) {
@@ -183,6 +192,14 @@ public class Conversation implements Parcelable {
 
     public void setLastChat(Chat lastChat) {
         this.lastChat = lastChat;
+    }
+
+    public Boolean getEncrypted() {
+        return isEncrypted;
+    }
+
+    public void setEncrypted(Boolean encrypted) {
+        isEncrypted = encrypted;
     }
 
     @Override

@@ -59,6 +59,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     private final List<Chat> mChatList;
     private final User mCurrentUser;
     private final ConversationType mConversationType;
+    private final boolean mIsEncryptionConversation;
+    private final LocalPlaintextInterface mLocalPlaintextCallback;
 
     private List<User> mParticipants;
     private User mOtherUserDetail;
@@ -99,11 +101,17 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         void changeGroupThumbnail();
     }
 
+    public interface LocalPlaintextInterface {
+        String loadPlaintextContentForOutgoingEncryptedMessage(String conversationId, String messageId);
+    }
+
     public ChatListAdapter(Context context,
                            List<Chat> chatList,
                            List<User> participants,
                            @NonNull FirebaseUser user,
-                           ConversationType type) {
+                           ConversationType type,
+                           boolean isEncryptionConversation,
+                           LocalPlaintextInterface callback) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull Chat oldItem, @NonNull Chat newItem) {
@@ -126,6 +134,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         mConversationType = type;
         mChatList = chatList;
         mParticipants = participants;
+        mIsEncryptionConversation = isEncryptionConversation;
+        mLocalPlaintextCallback = callback;
     }
 
     public void addChat(Chat chat) {
@@ -252,7 +262,9 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mChatList,
                         mConversationMetadata,
                         mItemEventHandler,
-                        mOpenReceiverMenu);
+                        mOpenReceiverMenu,
+                        mIsEncryptionConversation,
+                        mLocalPlaintextCallback);
         }
     }
 
@@ -343,11 +355,19 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                                   @NonNull List<Chat> listItem,
                                   ConversationMetadata metadata,
                                   BaseAdapter.ItemEventHandler handler,
-                                  BiConsumer<Integer, View> mOpenReceiverMenu) {
+                                  BiConsumer<Integer, View> mOpenReceiverMenu,
+                                  boolean isEncryptionConversation,
+                                  LocalPlaintextInterface callback) {
             super(binding.getRoot());
 
             mBinding = binding;
-            mMessageItem = new ConversationMessageItem(binding, listItem, participants, user, metadata);
+            mMessageItem = new ConversationMessageItem(binding,
+                                                       listItem,
+                                                       participants,
+                                                       user,
+                                                       metadata,
+                                                       isEncryptionConversation,
+                                                       callback);
 
             mBinding.senderChatBackground.setOnClickListener(v -> {
                 if (handler != null) {

@@ -27,6 +27,7 @@ private const val KEY_WEB_RTC_DATA = "web_rtc_message"
 private const val KEY_WEB_RTC_TYPE = "web_rtc_type"
 private const val KEY_WEB_RTC_CALLER = "caller"
 private const val KEY_WEB_RTC_VIDEO = "video_enabled"
+private const val KEY_REFRESH_BUNDLE = "remote_address_refresh_pre_key_bundle"
 
 sealed class NotificationPayload(
     open val timestamp: Long
@@ -40,7 +41,8 @@ sealed class NotificationPayload(
         UNFRIEND,
         GROUP_CHANGE_OPTION,
         CANCEL_FRIEND_REQUEST,
-        WEB_RTC_MESSAGE
+        WEB_RTC_MESSAGE,
+        REFRESH_PRE_KEY_BUNDLE
     }
 
     class AcceptedFriendPayload(
@@ -270,7 +272,13 @@ sealed class NotificationPayload(
                 val type = map[KEY_WEB_RTC_TYPE]!!
                 val timestamp = map[KEY_TIMESTAMP]!!.toLong()
 
-                return WebRtcMessagePayload(caller, isVideoCall, data, WebRtcDataType.valueOf(type), timestamp)
+                return WebRtcMessagePayload(
+                    caller,
+                    isVideoCall,
+                    data,
+                    WebRtcDataType.valueOf(type),
+                    timestamp
+                )
             }
         }
 
@@ -287,6 +295,23 @@ sealed class NotificationPayload(
             STOP_CALL,
             DENY_CALL,
             IS_IN_CALL
+        }
+    }
+
+    class RefreshPreKeyBundlePayload(val remoteAddress: String?, timestamp: Long) :
+        NotificationPayload(timestamp) {
+
+        companion object {
+            fun parsePayload(map: MutableMap<String, String>): RefreshPreKeyBundlePayload {
+                val remoteAddress = map[KEY_REFRESH_BUNDLE]
+                val timestamp = map[KEY_TIMESTAMP]!!.toLong()
+
+                return RefreshPreKeyBundlePayload(remoteAddress, timestamp)
+            }
+        }
+
+        override fun toString(): String {
+            return "Refresh PreKeyBundle: [remoteAddress=$remoteAddress, timestamp=$timestamp]"
         }
     }
 
@@ -307,6 +332,7 @@ sealed class NotificationPayload(
                     map
                 )
                 NotificationType.WEB_RTC_MESSAGE -> WebRtcMessagePayload.parsePayload(map)
+                NotificationType.REFRESH_PRE_KEY_BUNDLE -> RefreshPreKeyBundlePayload.parsePayload(map)
             }
         }
     }

@@ -2,6 +2,8 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_create_e2ee_conversation"/>
+
     <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_chat_wallpaper" />
 
     <com.mqv.vmess.ui.components.ConversationPreference android:key="@string/key_pref_disappearing_messages" />

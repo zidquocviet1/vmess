@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 public class ConversationListAdapter extends ListAdapter<Conversation, ConversationListAdapter.ConversationViewHolder> {
     private final Context mContext;
     private final User mCurrentUser;
+    private final ChatListAdapter.LocalPlaintextInterface mCallback;
     private BiConsumer<Integer, Boolean> conversationConsumer;
     private Consumer<Boolean> onDataSizeChanged;
 
@@ -44,7 +45,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
     private static final int VIEW_LOAD_MORE = 0;
 
-    public ConversationListAdapter(Context context) {
+    public ConversationListAdapter(Context context, ChatListAdapter.LocalPlaintextInterface callback) {
         super(new DiffUtil.ItemCallback<>() {
             @Override
             public boolean areItemsTheSame(@NonNull Conversation oldItem, @NonNull Conversation newItem) {
@@ -70,6 +71,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
                                        oldItem.getGroup().equals(newItem.getGroup()))) &&
                        oldItem.getStatus().equals(newItem.getStatus()) &&
                        oldItem.getCreationTime().equals(newItem.getCreationTime()) &&
+                       Objects.equals(oldItem.getEncrypted(), newItem.getEncrypted()) &&
                        isLastChatEquals;
             }
 
@@ -102,6 +104,7 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
             }
         });
         mContext = context;
+        mCallback = callback;
 
         FirebaseUser user = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser());
 
@@ -130,7 +133,8 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
     public ConversationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         return new ConversationViewHolder(ItemConversationBinding.bind(LayoutInflater.from(mContext).inflate(R.layout.item_conversation, parent, false)),
                 mCurrentUser,
-                conversationConsumer);
+                conversationConsumer,
+                mCallback);
     }
 
     @Override
@@ -191,10 +195,11 @@ public class ConversationListAdapter extends ListAdapter<Conversation, Conversat
 
         public ConversationViewHolder(@NonNull ItemConversationBinding binding,
                                       User user,
-                                      BiConsumer<Integer, Boolean> conversationConsumer) {
+                                      BiConsumer<Integer, Boolean> conversationConsumer,
+                                      ChatListAdapter.LocalPlaintextInterface callback) {
             super(binding.getRoot());
 
-            mConversationListItem = new ConversationListItem(binding, user);
+            mConversationListItem = new ConversationListItem(binding, user, callback);
 
             itemView.setOnClickListener(v -> {
                 if (conversationConsumer != null)

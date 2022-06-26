@@ -12,16 +12,19 @@ import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ImageAvatarView
+import com.mqv.vmess.ui.adapter.ChatListAdapter
 import com.mqv.vmess.util.DateTimeHelper.getMessageDateTimeFormatted
 import com.mqv.vmess.util.MessageUtil
 
 class ConversationListItem(
     private val mBinding: ItemConversationBinding,
     private val mCurrentUser: User,
+    mPlaintextCallback: ChatListAdapter.LocalPlaintextInterface
 ) : ConversationItem<Conversation>(
     mBinding.root.context,
     listOf(),
     mCurrentUser,
+    mPlaintextCallback,
     ContextCompat.getColorStateList(mBinding.root.context, R.color.ic_background_tint)!!
 ) {
     private val mTextUnreadColor = ContextCompat.getColor(mContext, R.color.black)
@@ -75,6 +78,8 @@ class ConversationListItem(
         bindConversationName(item)
         bindConversationThumbnail(item)
         bindRecentMessage(item)
+
+        mBinding.iconEncrypted.visibility = if (item.encrypted == true) View.VISIBLE else View.GONE
     }
 
     override fun bindWelcomeMessage(welcomeMessage: Chat, nextItem: Chat?) {
@@ -196,7 +201,21 @@ class ConversationListItem(
                     getUnsentMessage(recentMessage, item.participants)
                 )
             } else {
-                textContent.append(getContentFromMessage(recentMessage, metadata))
+                val message =
+                    getContentFromMessage(recentMessage, metadata, item.encrypted ?: false, item.id)
+                if (message == mContext.getString(R.string.dummy_encrypted_message)) {
+                    mBinding.textContentConversation.typeface =
+                        if (!recentMessage.seenBy.contains(mCurrentUser.uid)) Typeface.create(
+                            mBinding.textContentConversation.typeface,
+                            Typeface.BOLD_ITALIC
+                        ) else Typeface.create(
+                            mBinding.textContentConversation.typeface,
+                            Typeface.ITALIC
+                        )
+                } else {
+                    mBinding.textContentConversation.typeface = Typeface.DEFAULT
+                }
+                textContent.append(message)
             }
         }
         val recentMessageReadableTimestamp = mContext.getString(
@@ -283,7 +302,12 @@ class ConversationListItem(
         mBinding.layoutStatus.visibility = View.GONE
     }
 
-    private fun getContentFromMessage(item: Chat, metadata: ConversationMetadata): String {
+    private fun getContentFromMessage(
+        item: Chat,
+        metadata: ConversationMetadata,
+        isEncrypted: Boolean,
+        conversationId: String
+    ): String {
         val whoSentDisplayName = if (isSelf(item)) mContext.getString(R.string.msg_you) else
             (getSenderFromChat(
                 item,
@@ -302,7 +326,7 @@ class ConversationListItem(
             mContext.getString(R.string.msg_conversation_list_you_sent_file, whoSentDisplayName)
         } else {
             if (item.senderId == mCurrentUser.uid) {
-                "$whoSentDisplayName: ${item.content}"
+                "$whoSentDisplayName: ${item.loadOutgoingMessageContent(conversationId, isEncrypted)}"
             } else {
                 if (metadata.type == ConversationType.GROUP) {
                     "${
@@ -310,11 +334,14 @@ class ConversationListItem(
                             item,
                             metadata.conversationParticipants
                         )?.displayName ?: mContext.getString(R.string.dummy_user_name)
-                    }: ${item.content}"
+                    }: ${item.getContentMessage(isEncrypted)}"
                 } else {
-                    item.content
+                    item.getContentMessage(isEncrypted)
                 }
             }
         }
     }
+
+    private fun Chat.getContentMessage(isEncrypted: Boolean): String =
+        if (isEncrypted) decryptPlaintextMessage(content, senderId) else content
 }

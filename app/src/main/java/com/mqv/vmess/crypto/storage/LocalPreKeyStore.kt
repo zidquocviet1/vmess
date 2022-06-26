@@ -24,7 +24,7 @@ class LocalPreKeyStore(
     @WorkerThread
     override fun loadPreKey(preKeyId: Int): PreKeyRecord =
         preKeyDao.getPreKey(preKeyId, userId).internalGet()?.toPreKeyRecord()
-            ?: throw InvalidKeyIdException("Key id is not valid")
+            ?: throw InvalidKeyIdException("Key id is not valid from local")
 
     @WorkerThread
     override fun storePreKey(preKeyId: Int, record: PreKeyRecord) {
@@ -51,7 +51,7 @@ class LocalPreKeyStore(
     @WorkerThread
     override fun loadSignedPreKey(signedPreKeyId: Int): SignedPreKeyRecord =
         signedPreKeyDao.getSignedPreKey(signedPreKeyId, userId).internalGet()
-            ?.toSignedPreKeyRecord() ?: throw InvalidKeyIdException("Signed PreKey id not valid")
+            ?.toSignedPreKeyRecord() ?: throw InvalidKeyIdException("Signed PreKey id not valid from local")
 
     @WorkerThread
     override fun loadSignedPreKeys(): MutableList<SignedPreKeyRecord> =

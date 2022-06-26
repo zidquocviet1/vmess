@@ -14,6 +14,7 @@ import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
 import com.mqv.vmess.data.dao.LinkMetadataDao;
+import com.mqv.vmess.data.dao.LocalPlaintextContentDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.dao.UserDao;
@@ -102,5 +103,11 @@ public class DatabaseModule {
     @Singleton
     public AccountDao provideAccountDao(MyDatabase db) {
         return db.getAccountDao();
+    }
+
+    @Provides
+    @Singleton
+    public LocalPlaintextContentDao provideLocalPlaintextContentDao(MyDatabase db) {
+        return db.getPlaintextContentDao();
     }
 }

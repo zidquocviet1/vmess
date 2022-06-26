@@ -3,6 +3,7 @@ package com.mqv.vmess.data.dao;
 import static androidx.room.OnConflictStrategy.IGNORE;
 import static androidx.room.OnConflictStrategy.REPLACE;
 
+import androidx.annotation.WorkerThread;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
@@ -246,4 +247,22 @@ public abstract class ConversationDao {
         conversation.setStatus(status);
         return update(conversation);
     }
+
+    @WorkerThread
+    public Conversation getEncryptionConversation(String currentUser, String userId) throws IllegalStateException {
+        return fetchAll().stream()
+                         .filter(c -> c.getGroup() == null)
+                         .filter(c -> c.getEncrypted() != null && c.getEncrypted() &&
+                                 c.getParticipants()
+                                         .stream()
+                                         .map(User::getUid)
+                                         .collect(Collectors.toList())
+                                         .containsAll(List.of(currentUser, userId)))
+                         .findFirst()
+                         .orElseThrow(IllegalStateException::new);
+    }
+
+    @WorkerThread
+    @Query("SELECT conversation_participants_id FROM conversation WHERE conversation_id = :conversationId")
+    public abstract Single<String> getParticipantByConversationId(String conversationId);
 }

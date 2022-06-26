@@ -6,9 +6,9 @@ import org.signal.libsignal.protocol.*
 import org.signal.libsignal.protocol.ecc.Curve
 import org.signal.libsignal.protocol.ecc.ECKeyPair
 import org.signal.libsignal.protocol.message.PreKeySignalMessage
-import org.signal.libsignal.protocol.state.PreKeyBundle
-import org.signal.libsignal.protocol.state.PreKeyRecord
-import org.signal.libsignal.protocol.state.SignedPreKeyRecord
+import org.signal.libsignal.protocol.message.SignalMessage
+import org.signal.libsignal.protocol.state.*
+import org.signal.libsignal.protocol.state.impl.InMemoryIdentityKeyStore
 import org.signal.libsignal.protocol.state.impl.InMemorySignalProtocolStore
 import org.signal.libsignal.protocol.util.KeyHelper
 
@@ -38,7 +38,7 @@ class EndToEndTest {
             }
         val bobSessionBuilder = SessionBuilder(bobInMemoryStore, ALICE.address)
 
-        bobSessionBuilder.process(ALICE.getPreKeyBundle())
+//        bobSessionBuilder.process(ALICE.getPreKeyBundle())
 
         val bobSessionCipher = SessionCipher(bobInMemoryStore, ALICE.address)
         val decryptedMessage =
@@ -48,6 +48,36 @@ class EndToEndTest {
         println("Decrypted message received by Bob: $readableMessage")
 
         Assert.assertEquals(message, readableMessage)
+    }
+
+    @Test
+    fun encrypt_and_decrypt_in_local_session() {
+        val aliceEncrypt = createPerson("alice", 1, ALICE_SIGNED_PRE_KEY_ID)
+        val bob = createPerson("bob", 2, BOB_SIGNED_PRE_KEY_ID)
+
+        val aliceStore = MyInMemorySignalProtocolStore(aliceEncrypt.identityKeyPair, aliceEncrypt.registrationId).apply {
+            storePreKey(aliceEncrypt.preKeyRecord.id, aliceEncrypt.preKeyRecord)
+            storeSignedPreKey(aliceEncrypt.signedPreKeyRecord.id, aliceEncrypt.signedPreKeyRecord)
+            saveIdentity(bob.address, bob.identityKeyPair.publicKey)
+        }
+        val aliceSessionBuilder = SessionBuilder(aliceStore, bob.address)
+
+        aliceSessionBuilder.process(bob.getPreKeyBundle())
+
+        val cipher = SessionCipher(aliceStore, bob.address)
+        val message = "Hello BOB, Alice here but i want to decrypt my message"
+        val encryptedMessage = cipher.encrypt(message.toByteArray())
+
+        println("Encrypted from Alice: ${encryptedMessage.serialize()}")
+
+        // Decrypt message from Alice local session
+        println("Start decrypted message in local Session")
+
+        // This is will cause InvalidMessageException. So just store plaintext outgoing message in local database
+        // Only decrypt incoming message from remote session.
+        val decryptedMessage = cipher.decrypt(PreKeySignalMessage(encryptedMessage.serialize()))
+
+        println("Message decrypted in local session: ${String(decryptedMessage)}")
     }
 
     companion object {
@@ -123,5 +153,34 @@ data class Person(
             signedPreKeyRecord.signature,
             identityKeyPair.publicKey
         )
+    }
+}
+
+class MyInMemorySignalProtocolStore(identityKeyPair: IdentityKeyPair, registrationId: Int) :
+    InMemorySignalProtocolStore(identityKeyPair, registrationId) {
+
+    private val identityStore: MyInMemoryIdentityStore = MyInMemoryIdentityStore(identityKeyPair, registrationId)
+
+    override fun isTrustedIdentity(
+        address: SignalProtocolAddress?,
+        identityKey: IdentityKey?,
+        direction: IdentityKeyStore.Direction?
+    ): Boolean {
+        return identityStore.isTrustedIdentity(address, identityKey, direction)
+    }
+}
+
+class MyInMemoryIdentityStore(identityKeyPair: IdentityKeyPair, registrationId: Int) :
+    InMemoryIdentityKeyStore(identityKeyPair, registrationId) {
+
+    override fun isTrustedIdentity(
+        address: SignalProtocolAddress?,
+        identityKey: IdentityKey?,
+        direction: IdentityKeyStore.Direction?
+    ): Boolean {
+        if (direction == IdentityKeyStore.Direction.RECEIVING) {
+            return true
+        }
+        return super.isTrustedIdentity(address, identityKey, direction)
     }
 }

@@ -23,6 +23,7 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.activity.ConversationActivity;
 import com.mqv.vmess.data.DatabaseObserver;
 import com.mqv.vmess.data.model.ConversationColor;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.data.repository.ChatRepository;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.data.repository.FriendRequestRepository;
@@ -112,6 +113,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     private final MutableLiveData<ConversationColor>                conversationColor;
     private final DatabaseObserver.MessageListener                  messageListener;
     private final CompositeDisposable                               cd;
+    private final List<LocalPlaintextContentModel>                  plaintextContentModels;
 
     private Conversation mConversation;
     private int currentChatPage = DEFAULT_PAGE_CHAT_LIST;
@@ -148,6 +150,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         this.userLeftGroup            = new MutableLiveData<>(Collections.emptyList());
         this.conversationColor        = new MutableLiveData<>();
         this.cd                       = new CompositeDisposable();
+        this.plaintextContentModels   = new ArrayList<>();
         this.messageListener          = new DatabaseObserver.MessageListener() {
             @Override
             public void onMessageInserted(@NonNull String messageId) {
@@ -235,6 +238,10 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         return conversationColor;
     }
 
+    public List<LocalPlaintextContentModel> getPlaintextContentModel() {
+        return plaintextContentModels;
+    }
+
     //// Private method
     private void getCacheConversationById(String conversationId) {
         Disposable disposable = conversationRepository.fetchCachedById(conversationId)
@@ -307,6 +314,17 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                               .doOnSubscribe(d -> Logging.show("Insert new conversation successfully"))
                               .onErrorComplete()
                               .subscribe();
+
+
+        //noinspection ResultOfMethodCallIgnored
+        conversationRepository.getAllReadableSenderMessage(conversation.getId())
+                              .compose(RxHelper.applyFlowableSchedulers())
+                              .doOnError(t -> Logging.show("Load plaintext content for encrypted outgoing message failed!!!"))
+                              .defaultIfEmpty(new ArrayList<>())
+                              .subscribe(data -> {
+                                  plaintextContentModels.clear();
+                                  plaintextContentModels.addAll(data);
+                              }, t -> {});
 
         conversationObserver.postValue(Result.Success(conversation));
 
@@ -563,13 +581,25 @@ public class ConversationViewModel extends MessageHandlerViewModel {
     }
 
     private Completable checkConversationAndReturn(boolean isExists, Chat chat) {
-        return isExists ? chatRepository.saveCached(chat) :
-                Completable.error(new EmptyResultSetException("empty"));
+        Completable completable;
+
+        if (mConversation.getEncrypted() != null && mConversation.getEncrypted()) {
+            LocalPlaintextContentModel model = new LocalPlaintextContentModel(chat.getId(), mConversation.getId(), chat.getContent());
+
+            completable = chatRepository.saveCached(chat)
+                    .andThen(conversationRepository.saveOutgoingEncryptedMessageContent(model));
+        } else {
+            completable = chatRepository.saveCached(chat);
+        }
+
+        return isExists ? completable : Completable.error(new EmptyResultSetException("empty"));
     }
 
     private void sendMessageWorker(Context context, String messageId) {
+        boolean isEncryptionConversation = mConversation.getEncrypted() != null && mConversation.getEncrypted();
         Data input = new Data.Builder()
                              .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, messageId)
+                             .putBoolean(SendMessageWorkWrapper.EXTRA_IS_ENCRYPTED, isEncryptionConversation)
                              .build();
 
         WorkDependency.enqueue(new SendMessageWorkWrapper(context, input));

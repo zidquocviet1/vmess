@@ -5,8 +5,10 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
+import androidx.room.rxjava3.EmptyResultSetException;
 
 import com.mqv.vmess.network.model.Chat;
+import com.mqv.vmess.network.model.type.MessageStatus;
 
 import java.util.List;
 
@@ -74,4 +76,22 @@ public interface ChatDao {
 
     @Update
     Completable update(List<Chat> chats);
+
+    @Query("UPDATE chat SET chat_status = :status WHERE chat_id = :id")
+    Completable updateMessageStatus(String id, MessageStatus status);
+
+    @Query("UPDATE chat SET chat_status = :status, seenBy = :seenBy WHERE chat_id = :id")
+    Completable updateSeenMessage(String id, List<String> seenBy, MessageStatus status);
+
+    default Completable insertOrUpdate(Chat chat) {
+        return Completable.fromAction(() -> {
+            try {
+                Chat exists = findById(chat.getId()).blockingGet();
+                exists.setStatus(chat.getStatus());
+                update(exists).subscribe();
+            } catch (EmptyResultSetException e) {
+                insert(chat).subscribe();
+            }
+        });
+    }
 }

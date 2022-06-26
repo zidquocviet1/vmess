@@ -31,6 +31,7 @@ import com.mqv.vmess.ui.data.UserSelection;
 import com.mqv.vmess.ui.fragment.BaseFragment;
 import com.mqv.vmess.ui.fragment.ConversationListFragment;
 import com.mqv.vmess.ui.fragment.ConversationListInboxFragment;
+import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.NetworkStatus;
 import com.mqv.vmess.util.Picture;
 
@@ -49,7 +50,9 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
     public static final String ACTION_CREATE_GROUP        = "create_group";
     public static final String ACTION_LEAVE_GROUP         = "leave_group";
     public static final String ACTION_DELETE_CONVERSATION = "delete_conversation";
+    public static final String ACTION_CREATE_ENCRYPTION   = "create_encryption";
     public static final String EXTRA_CONVERSATION         = "extra_conversation";
+    public static final String EXTRA_USER_ID              = "user_id";
 
     private static final int MAX_BADGE_NUMBER = 99;
 
@@ -124,6 +127,14 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
                     }
                     break;
                 }
+                case ACTION_CREATE_ENCRYPTION:
+                    String userId = intent.getStringExtra(EXTRA_USER_ID);
+                    if (userId != null) {
+                        castVisibleFragment(fragment -> fragment.openOrCreateEncryptionConversation(userId));
+                    } else {
+                        Logging.show("Unknown user id, so can not create new conversation");
+                    }
+                    break;
             }
         }
     }

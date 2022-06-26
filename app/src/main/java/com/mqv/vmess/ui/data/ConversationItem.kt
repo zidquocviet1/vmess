@@ -7,11 +7,13 @@ import android.view.ViewStub
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import com.mqv.vmess.R
+import com.mqv.vmess.message.MessageDecryption
 import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.network.model.type.MessageStatus
 import com.mqv.vmess.ui.ImageAvatarView
+import com.mqv.vmess.ui.adapter.ChatListAdapter
 import com.mqv.vmess.util.Picture
 import java.util.*
 
@@ -19,6 +21,7 @@ abstract class ConversationItem<T>(
     val mContext: Context,
     private val mParticipants: List<User>?,
     private val mCurrentUser: User,
+    private val mPlaintextCallback: ChatListAdapter.LocalPlaintextInterface,
     mIconColor: ColorStateList
 ) : BindableConversation<T> {
     private val mErrorChatColor =
@@ -190,6 +193,21 @@ abstract class ConversationItem<T>(
         val index = participants?.indexOf(user)
 
         return index?.run { return if (this == -1) getUserIfNotAsParticipant(uid) else participants[this] }
+    }
+
+    protected fun decryptPlaintextMessage(message: String, participant: String): String =
+        MessageDecryption.decrypt(mContext, message, participant, 1)
+
+    protected fun Chat.loadOutgoingMessageContent(isEncrypted: Boolean): String = if (isEncrypted) {
+        mPlaintextCallback.loadPlaintextContentForOutgoingEncryptedMessage("", id)
+    } else {
+        content
+    }
+
+    protected fun Chat.loadOutgoingMessageContent(conversationId: String = "", isEncrypted: Boolean): String = if (isEncrypted) {
+        mPlaintextCallback.loadPlaintextContentForOutgoingEncryptedMessage(conversationId, id)
+    } else {
+        content
     }
 
     private fun getUserIfNotAsParticipant(userId: String): User =

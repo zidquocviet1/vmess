@@ -48,6 +48,16 @@
         app:layout_constraintStart_toEndOf="@id/included_image_avatar"
         app:layout_constraintTop_toTopOf="@id/text_title_conversation" />
 
+    <ImageView
+        android:id="@+id/icon_encrypted"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:contentDescription="@null"
+        android:src="@drawable/background_encryption_icon"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/image_conversation_group"
+        app:layout_constraintTop_toTopOf="@id/image_conversation_group" />
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/text_title_conversation"
         android:layout_width="0dp"

@@ -12,5 +12,10 @@
             android:name="conversation"
             app:argType="com.mqv.vmess.ui.data.ConversationDetail"
             app:nullable="false" />
+        <argument
+            android:name="is_encryption"
+            android:defaultValue="false"
+            app:argType="boolean"
+            app:nullable="false" />
     </fragment>
 </navigation>

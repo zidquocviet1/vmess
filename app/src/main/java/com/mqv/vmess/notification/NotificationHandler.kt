@@ -27,6 +27,8 @@ import com.mqv.vmess.util.Logging
 import com.mqv.vmess.webrtc.WebRtcCallManager
 import com.mqv.vmess.webrtc.WebRtcCandidate
 import com.mqv.vmess.work.LifecycleUtil
+import com.mqv.vmess.work.RefreshRemotePreKeyBundleWorkWrapper
+import com.mqv.vmess.work.WorkDependency
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
@@ -60,6 +62,7 @@ class NotificationHandler(
             is GroupOptionChangedPayload -> handleGroupChangeOption(payload)
             is CancelFriendRequestPayload -> handleCancelFriendRequest(payload)
             is WebRtcMessagePayload -> handleWebRtcMessage(payload)
+            is RefreshPreKeyBundlePayload -> handleRefreshPreKeyBundle(payload)
         }
     }
 
@@ -595,6 +598,16 @@ class NotificationHandler(
                 }
             }
         }
+    }
+
+    private fun handleRefreshPreKeyBundle(payload: RefreshPreKeyBundlePayload) {
+        val remoteAddress = payload.remoteAddress
+
+        if (remoteAddress.isNullOrEmpty()) {
+            throw IllegalArgumentException("Can't specify the user to refresh pre key bundle")
+        }
+
+        WorkDependency.enqueue(RefreshRemotePreKeyBundleWorkWrapper(mContext, remoteAddress))
     }
 
     companion object {

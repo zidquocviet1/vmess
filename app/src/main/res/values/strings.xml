@@ -20,6 +20,7 @@
     <string name="dummy_first_chat_group">%1$s has created this group. Add new member to this group to share the story.</string>
     <string name="dummy_user_name">Application User</string>
     <string name="dummy_empty_string" translatable="false" />
+    <string name="dummy_encrypted_message">This message was encrypted</string>
 
     // activity label
     <string name="label_switch_accounts">Switch Accounts</string>
@@ -204,6 +205,7 @@
     <string name="title_send_to">Send to</string>
     <string name="title_notification_download_file">Downloading file…</string>
     <string name="title_disappearing_messages">Disappearing messages</string>
+    <string name="title_chat_create_e2ee_conversation">Create end-to-end encryption conversation</string>
     <string name="title_chat_color_and_wallpaper">Chat color &amp; wallpaper</string>
     <string name="title_view_media_and_links">View media &amp; links</string>
     <string name="title_media_and_links">Media &amp; links</string>
@@ -415,6 +417,7 @@
     <string name="error_user_not_in_conversation">You not belong to this conversation. Permission denied!</string>
     <string name="error_create_group_conversation_fail">Something wrong when create a new group. Try again</string>
     <string name="error_no_result_found_for">No results found for \"%1$s\".</string>
+    <string name="error_create_encryption_conversation_fail">Something wrong when creating a new encryption conversation. Try again</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
@@ -465,4 +468,5 @@
     <string name="key_pref_ignore_messages" translatable="false">key_pref_ignore_messages</string>
     <string name="key_pref_block" translatable="false">key_pref_block</string>
     <string name="key_pref_report" translatable="false">key_pref_report</string>
+    <string name="key_pref_create_e2ee_conversation" translatable="false">key_pref_create_e2ee_conversation</string>
 </resources>

@@ -17,12 +17,14 @@ import com.mqv.vmess.activity.MainActivity
 import com.mqv.vmess.activity.listener.ConversationListChanged
 import com.mqv.vmess.activity.preferences.PreferenceArchivedConversationActivity
 import com.mqv.vmess.activity.viewmodel.ConversationListViewModel
+import com.mqv.vmess.data.model.LocalPlaintextContentModel
 import com.mqv.vmess.manager.LoggedInUserManager
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationStatusType
 import com.mqv.vmess.network.model.type.ConversationType
 import com.mqv.vmess.ui.ConversationOptionHandler
+import com.mqv.vmess.ui.adapter.ChatListAdapter
 import com.mqv.vmess.ui.adapter.ConversationListAdapter
 import com.mqv.vmess.ui.adapter.payload.ConversationNotificationPayload
 import com.mqv.vmess.ui.adapter.payload.ConversationNotificationType
@@ -33,6 +35,7 @@ import com.mqv.vmess.ui.data.UserSelection
 import com.mqv.vmess.util.AlertDialogUtil
 import com.mqv.vmess.util.DateTimeHelper.expire
 import com.mqv.vmess.util.DateTimeHelper.toLong
+import com.mqv.vmess.util.Event
 import com.mqv.vmess.util.Logging
 import com.mqv.vmess.util.MyActivityForResult
 import java.time.LocalDateTime
@@ -85,6 +88,7 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         mViewModel.presenceUserListObserverDistinct.observe(this) { bindPresenceConversation() }
         mViewModel.conversationNotificationOption.observe(this) { bindNotificationOption() }
         mViewModel.userLeftGroup.observe(this) { ConversationItem.setUserLeftGroup(it) }
+        mViewModel.openConversationEvent.observe(this, ::openEncryptionConversation)
     }
 
     fun deleteConversation(conversation: Conversation?) {
@@ -146,6 +150,10 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
 
     override fun onUnMuteNotification(conversation: Conversation?) {
         mViewModel.unMuteNotification(conversation)
+    }
+
+    fun openOrCreateEncryptionConversation(userId: String) {
+        mViewModel.openOrCreateEncryptionConversation(userId)
     }
 
     fun createGroup(participants: List<UserSelection>) {
@@ -391,6 +399,12 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
         }
     }
 
+    private fun openEncryptionConversation(event: Event<Conversation>) {
+        event.getContentIfNotHandled()?.let {
+            openConversation(it)
+        }
+    }
+
     protected open fun onConversationOpenResult(result: ActivityResult?) {
     }
 
@@ -409,6 +423,24 @@ abstract class ConversationListFragment<V : ConversationListViewModel, VB : View
             mViewModel.loadUserLeftGroup()
         }
     }
+
+    protected fun getPlaintextCallback() =
+        ChatListAdapter.LocalPlaintextInterface { conversationId, messageId ->
+            val map = mViewModel.localPlaintextContentModel
+
+            if (map.isEmpty()) {
+                getString(R.string.dummy_encrypted_message)
+            } else {
+                map.getOrDefault(
+                    conversationId,
+                    LocalPlaintextContentModel(
+                        messageId,
+                        conversationId,
+                        getString(R.string.dummy_encrypted_message)
+                    )
+                ).content
+            }
+        }
 
     companion object {
         private val TAG: String = ConversationListFragment::class.java.simpleName

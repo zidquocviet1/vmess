@@ -337,6 +337,20 @@ class ConversationDetailActivity :
     override fun onReport() {
     }
 
+    override fun onCreateEncryptionConversation(user: User) {
+        setResult(RESULT_OK)
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                putExtra(
+                    MainActivity.EXTRA_USER_ID,
+                    user.uid
+                )
+                action = MainActivity.ACTION_CREATE_ENCRYPTION
+            }
+        )
+    }
+
     override fun handleSortLatest() {
         onSortSelected(MessageMediaSort.LATEST)
         mViewModel.submitChangeSortType(MessageMediaSort.LATEST)

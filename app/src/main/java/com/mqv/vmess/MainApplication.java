@@ -66,6 +66,7 @@ public class MainApplication extends Application implements Configuration.Provid
         startTimerForCheckingAuthToken();
         notifyAllIncomingMessage();
         initializeRingRtc();
+        registerAccountStateChangeForSubmitPreKeyBundle();
     }
 
     private void setAppTheme(DarkMode mode){

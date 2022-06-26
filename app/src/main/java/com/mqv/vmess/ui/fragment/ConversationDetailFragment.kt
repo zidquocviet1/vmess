@@ -189,7 +189,9 @@ class ConversationDetailFragment :
 
                 navController.setGraph(
                     navGraph, bundleOf(
-                        ConversationPreferenceFragment.ARG_CONVERSATION to it
+                        ConversationPreferenceFragment.ARG_CONVERSATION to it,
+                        ConversationPreferenceFragment.ARG_IS_ENCRYPTION to (mViewModel.conversation.encrypted
+                            ?: false)
                     )
                 )
             } else {

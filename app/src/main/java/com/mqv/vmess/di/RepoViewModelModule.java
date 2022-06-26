@@ -6,6 +6,7 @@ import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
 import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.LinkMetadataDao;
+import com.mqv.vmess.data.dao.LocalPlaintextContentDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.RecentSearchDao;
 import com.mqv.vmess.data.repository.ChatRepository;
@@ -66,8 +67,9 @@ public class RepoViewModelModule {
                                                                 ConversationDao dao,
                                                                 ConversationOptionDao optionDao,
                                                                 ConversationColorDao colorDao,
-                                                                ChatDao chatDao) {
-        return new ConversationRepositoryImpl(service, dao, optionDao, colorDao, chatDao);
+                                                                ChatDao chatDao,
+                                                                LocalPlaintextContentDao localPlaintextContentDao) {
+        return new ConversationRepositoryImpl(service, dao, optionDao, colorDao, chatDao, localPlaintextContentDao);
     }
 
     @ViewModelScoped

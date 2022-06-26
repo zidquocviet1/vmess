@@ -69,6 +69,8 @@ public class ConversationFragmentViewModel extends ConversationListViewModel {
 
             @Override
             public void onConversationUpdated(@NonNull String conversationId) {
+                loadLastOutgoingMessageContentForEncryptedConversation();
+
                 //noinspection ResultOfMethodCallIgnored
                 conversationRepository.conversationAndLastChat(conversationId, INBOX)
                                       .subscribeOn(Schedulers.io())

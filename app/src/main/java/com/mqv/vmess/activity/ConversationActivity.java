@@ -52,6 +52,7 @@ import com.mqv.vmess.R;
 import com.mqv.vmess.activity.br.MarkNotificationReadReceiver;
 import com.mqv.vmess.activity.listener.OnNetworkChangedListener;
 import com.mqv.vmess.activity.viewmodel.ConversationViewModel;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.databinding.ActivityConversationBinding;
 import com.mqv.vmess.databinding.DialogEnterOtpCodeBinding;
 import com.mqv.vmess.dependencies.AppDependencies;
@@ -609,7 +610,9 @@ public class ConversationActivity
                                                 mChatList,
                                                 mConversationParticipants,
                                                 mCurrentUser,
-                                                type);
+                                                type,
+                                                mConversation.getEncrypted(),
+                                                onLoadOutgoingEncryptedMessage());
 
         mLayoutManager = new CustomLinearLayoutManager(this);
         mLayoutManager.setReverseLayout(false);
@@ -642,6 +645,20 @@ public class ConversationActivity
         mChatListAdapter.registerVideoListener(this::handlePlayVideo);
         mChatListAdapter.registerOpenConversationDetail(this::openConversationDetail);
         mChatListAdapter.registerOpenReceiverMenu(this::openReceiverPopupMenu);
+    }
+
+    private ChatListAdapter.LocalPlaintextInterface onLoadOutgoingEncryptedMessage() {
+        return (conversationId, messageId) -> {
+            List<LocalPlaintextContentModel> models = mViewModel.getPlaintextContentModel();
+
+            if (models == null) return getString(R.string.dummy_encrypted_message);
+
+            return models.stream()
+                         .filter(model -> model.getMessageId().equals(messageId))
+                         .map(LocalPlaintextContentModel::getContent)
+                         .findFirst()
+                         .orElse(getString(R.string.dummy_encrypted_message));
+        };
     }
 
     private void checkForShowHeader() {

@@ -211,7 +211,7 @@ implements NestedScrollView.OnScrollChangeListener {
     @Override
     public void initializeRecyclerview() {
         mConversations = new ArrayList<>();
-        mAdapter = new ConversationListAdapter(getContext());
+        mAdapter = new ConversationListAdapter(getContext(), getPlaintextCallback());
         mAdapter.registerOnConversationClick(onConversationClick());
 
         mBinding.recyclerMessages.setAdapter(mAdapter);

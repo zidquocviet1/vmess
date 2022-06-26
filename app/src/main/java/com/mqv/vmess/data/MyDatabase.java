@@ -30,6 +30,7 @@ import com.mqv.vmess.data.dao.FriendNotificationDao;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
 import com.mqv.vmess.data.dao.IdentityKeyDao;
 import com.mqv.vmess.data.dao.LinkMetadataDao;
+import com.mqv.vmess.data.dao.LocalPlaintextContentDao;
 import com.mqv.vmess.data.dao.PendingMessageDao;
 import com.mqv.vmess.data.dao.PeopleDao;
 import com.mqv.vmess.data.dao.PreKeyDao;
@@ -47,6 +48,7 @@ import com.mqv.vmess.data.model.FriendNotification;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
 import com.mqv.vmess.data.model.IdentityKeyModel;
 import com.mqv.vmess.data.model.LinkMetadata;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.data.model.PendingMessage;
 import com.mqv.vmess.data.model.PreKeyModel;
 import com.mqv.vmess.data.model.RecentSearchPeople;
@@ -77,8 +79,9 @@ import com.mqv.vmess.ui.data.People;
                       PreKeyModel.class,
                       SenderKeyModel.class,
                       SignedPreKeyModel.class,
-                      SessionModel.class},
-        version = 33,
+                      SessionModel.class,
+                      LocalPlaintextContentModel.class},
+        version = 35,
         exportSchema = false)
 @TypeConverters(value = {LocalDateTimeConverter.class,
                          GenderConverter.class,
@@ -133,4 +136,6 @@ public abstract class MyDatabase extends RoomDatabase {
     public abstract AccountDao getAccountDao();
 
     public abstract SessionDao getSessionDao();
+
+    public abstract LocalPlaintextContentDao getPlaintextContentDao();
 }

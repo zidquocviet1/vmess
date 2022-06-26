@@ -37,7 +37,7 @@ class ConversationListArchivedFragment :
 
     override fun initializeRecyclerview() {
         mConversations = ArrayList()
-        mAdapter = ConversationListAdapter(requireContext())
+        mAdapter = ConversationListAdapter(requireContext(), getPlaintextCallback())
         mAdapter.registerOnConversationClick(onConversationClick())
 
         mBinding.recyclerViewArchivedChats.adapter = mAdapter

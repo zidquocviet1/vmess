@@ -14,6 +14,8 @@ import io.reactivex.rxjava3.core.Single;
 import okhttp3.MultipartBody;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -87,4 +89,9 @@ public interface ConversationService {
     @PUT("conversation/unmute")
     Observable<Boolean> unmute(@Header(AUTHORIZATION) String token,
                                @Query("conversation-id") String conversationId);
+
+    @POST("conversation/create/encryption")
+    @FormUrlEncoded
+    Observable<ApiResponse<Conversation>> createEncryptionConversation(@Header(AUTHORIZATION) String token,
+                                                                       @Field("userId") String userId);
 }

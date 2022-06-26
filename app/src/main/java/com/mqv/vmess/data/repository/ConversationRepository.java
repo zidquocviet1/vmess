@@ -2,6 +2,7 @@ package com.mqv.vmess.data.repository;
 
 import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.model.Chat;
 import com.mqv.vmess.network.model.Conversation;
@@ -16,6 +17,7 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import kotlin.Pair;
 
 public interface ConversationRepository {
     Flowable<Map<Conversation, Chat>> observeUnreadConversation(ConversationStatusType statusType, int limit);
@@ -81,6 +83,12 @@ public interface ConversationRepository {
     * */
     Observable<ApiResponse<Conversation>> createGroup(Conversation conversation);
 
+    Flowable<List<LocalPlaintextContentModel>> getAllReadableSenderMessage(String conversationId);
+
+    Completable saveOutgoingEncryptedMessageContent(LocalPlaintextContentModel model);
+
+    Single<Map<String, LocalPlaintextContentModel>> getLastOutgoingMessageForEncryptedConversation(ConversationStatusType status);
+
     /////// Conversation changes option
     Completable changeConversationStatus(Conversation conversation);
 
@@ -101,4 +109,6 @@ public interface ConversationRepository {
     Observable<ApiResponse<ConversationOption>> mute(String conversationId, long until);
 
     Observable<Boolean> umute(String conversationId);
+
+    Single<Pair<Boolean, Conversation>> getOrCreateEncryptionConversation(String userId);
 }

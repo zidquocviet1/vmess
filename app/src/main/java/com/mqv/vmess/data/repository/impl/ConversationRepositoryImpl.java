@@ -14,8 +14,10 @@ import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationColorDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.dao.ConversationOptionDao;
+import com.mqv.vmess.data.dao.LocalPlaintextContentDao;
 import com.mqv.vmess.data.model.ConversationColor;
 import com.mqv.vmess.data.model.ConversationNotificationOption;
+import com.mqv.vmess.data.model.LocalPlaintextContentModel;
 import com.mqv.vmess.data.repository.ConversationRepository;
 import com.mqv.vmess.network.ApiResponse;
 import com.mqv.vmess.network.NetworkBoundResource;
@@ -25,6 +27,7 @@ import com.mqv.vmess.network.model.Conversation;
 import com.mqv.vmess.network.model.ConversationOption;
 import com.mqv.vmess.network.model.type.ConversationStatusType;
 import com.mqv.vmess.network.service.ConversationService;
+import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.util.Const;
 import com.mqv.vmess.util.DateTimeHelper;
 import com.mqv.vmess.util.Logging;
@@ -55,25 +58,28 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 public class ConversationRepositoryImpl implements ConversationRepository {
-    private final ConversationService   service;
-    private final ConversationDao       dao;
-    private final ConversationOptionDao optionDao;
-    private final ConversationColorDao  colorDao;
-    private final ChatDao               chatDao;
-    private       FirebaseUser          user;
+    private final ConversationService      service;
+    private final ConversationDao          dao;
+    private final ConversationOptionDao    optionDao;
+    private final ConversationColorDao     colorDao;
+    private final ChatDao                  chatDao;
+    private final LocalPlaintextContentDao plaintextContentDao;
+    private       FirebaseUser             user;
 
     @Inject
     public ConversationRepositoryImpl(ConversationService service,
                                       ConversationDao dao,
                                       ConversationOptionDao optionDao,
                                       ConversationColorDao colorDao,
-                                      ChatDao chatDao) {
-        this.service   = service;
-        this.dao       = dao;
-        this.chatDao   = chatDao;
-        this.optionDao = optionDao;
-        this.colorDao  = colorDao;
-        this.user      = FirebaseAuth.getInstance().getCurrentUser();
+                                      ChatDao chatDao,
+                                      LocalPlaintextContentDao plaintextContentDao) {
+        this.service             = service;
+        this.dao                 = dao;
+        this.chatDao             = chatDao;
+        this.optionDao           = optionDao;
+        this.colorDao            = colorDao;
+        this.plaintextContentDao = plaintextContentDao;
+        this.user                = FirebaseAuth.getInstance().getCurrentUser();
 
         FirebaseAuth.getInstance().addAuthStateListener(firebaseAuth -> user = firebaseAuth.getCurrentUser());
     }
@@ -397,6 +403,23 @@ public class ConversationRepositoryImpl implements ConversationRepository {
     }
 
     @Override
+    public Single<kotlin.Pair<Boolean, Conversation>> getOrCreateEncryptionConversation(String userId) {
+        return Single.fromCallable(() -> {
+            try {
+                return new kotlin.Pair<>(true, dao.getEncryptionConversation(user.getUid(), userId));
+            } catch (IllegalStateException ignore) {
+                Conversation conversation = UserTokenUtil.getTokenSingle(user)
+                        .flatMapObservable(token -> service.createEncryptionConversation(token, userId))
+                        .compose(RxHelper.parseResponseData())
+                        .subscribeOn(Schedulers.io())
+                        .singleOrError()
+                        .blockingGet();
+                return new kotlin.Pair<>(false, conversation);
+            }
+        }).subscribeOn(Schedulers.io());
+    }
+
+    @Override
     public Single<Conversation> fetchCachedById(String conversationId) {
         return dao.fetchById(conversationId)
                   .flatMap(map -> {
@@ -431,6 +454,21 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         return getBearerTokenObservable()
                 .flatMap(token -> service.createGroup(token, conversation))
                 .subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Flowable<List<LocalPlaintextContentModel>> getAllReadableSenderMessage(String conversationId) {
+        return plaintextContentDao.fetchAll(conversationId);
+    }
+
+    @Override
+    public Completable saveOutgoingEncryptedMessageContent(LocalPlaintextContentModel model) {
+        return plaintextContentDao.insert(model);
+    }
+
+    @Override
+    public Single<Map<String, LocalPlaintextContentModel>> getLastOutgoingMessageForEncryptedConversation(ConversationStatusType status) {
+        return plaintextContentDao.getLastMessageForEncryptedConversation(status);
     }
 
     private Observable<String> getBearerTokenObservable() {
