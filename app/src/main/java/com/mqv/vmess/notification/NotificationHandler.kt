@@ -526,7 +526,8 @@ class NotificationHandler(
                             MessageNotificationMetadata(sender, conversation, message)
                         sendIncomingMessageNotification(
                             mContext,
-                            metadata
+                            metadata,
+                            conversation.encrypted
                         )
                     }
                 }

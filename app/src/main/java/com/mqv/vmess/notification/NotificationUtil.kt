@@ -10,6 +10,7 @@ import android.graphics.Color
 import android.media.AudioAttributes
 import android.provider.Settings
 import android.text.Html
+import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import androidx.core.app.RemoteInput
@@ -23,6 +24,7 @@ import com.mqv.vmess.activity.br.DirectReplyReceiver
 import com.mqv.vmess.activity.br.MarkNotificationReadReceiver
 import com.mqv.vmess.activity.br.MarkReadReceiver
 import com.mqv.vmess.activity.preferences.PreferenceFriendRequestActivity
+import com.mqv.vmess.message.MessageDecryption
 import com.mqv.vmess.network.model.Conversation
 import com.mqv.vmess.network.model.User
 import com.mqv.vmess.network.model.type.ConversationType
@@ -138,7 +140,8 @@ object NotificationUtil {
     @JvmStatic
     fun sendIncomingMessageNotification(
         context: Context,
-        metadata: MessageNotificationMetadata
+        metadata: MessageNotificationMetadata,
+        isEncrypted: Boolean
     ) {
         val conversation = metadata.conversation
         val message = metadata.message
@@ -168,12 +171,20 @@ object NotificationUtil {
                 if (it.type == ConversationType.GROUP) it.conversationName else ""
             style.isGroupConversation = conversation.group != null
 
+            val messageContent = decryptMessageIfNecessary(context, metadata, isEncrypted)
             val statusNotification = ServiceUtil.getNotificationManager(context).activeNotifications
             val messageForStyle = NotificationCompat.MessagingStyle.Message(
-                metadata.getTitle(context),
+                messageContent,
                 message.timestamp.toLong(),
                 if (message.senderId == currentUser.uid) null else Person.Builder()
-                    .setIcon(IconCompat.createWithBitmap(Picture.loadUserAvatarIntoBitmap(context, sender.photoUrl)))
+                    .setIcon(
+                        IconCompat.createWithBitmap(
+                            Picture.loadUserAvatarIntoBitmap(
+                                context,
+                                sender.photoUrl
+                            )
+                        )
+                    )
                     .setName(sender.displayName).build()
             )
 
@@ -202,6 +213,7 @@ object NotificationUtil {
             }
             val replyIntent = Intent(context, DirectReplyReceiver::class.java).apply {
                 putExtra(DirectReplyReceiver.EXTRA_CONVERSATION_ID, conversation.id)
+                putExtra(DirectReplyReceiver.EXTRA_IS_ENCRYPTED, conversation.encrypted)
             }
             val replyPendingIntent: PendingIntent =
                 PendingIntent.getBroadcast(
@@ -237,7 +249,7 @@ object NotificationUtil {
                 context = context,
                 id = conversation.id.hashCode(),
                 title = it.conversationName,
-                body = metadata.getTitle(context),
+                body = messageContent,
                 channelId = CHANNEL_ID_INCOMING_MESSAGE,
                 channelName = CHANNEL_NAME_INCOMING_MESSAGE,
                 importance = NotificationManager.IMPORTANCE_HIGH,
@@ -247,6 +259,22 @@ object NotificationUtil {
                 onlyAlertOnce = message.senderId == currentUser.uid,
                 actions = arrayOf(action, markReadAction)
             )
+        }
+    }
+
+    @WorkerThread
+    private fun decryptMessageIfNecessary(
+        context: Context,
+        metadata: MessageNotificationMetadata,
+        isEncrypted: Boolean
+    ): String {
+        return if (isEncrypted && metadata.isPlaintextMessage()) {
+            val content = metadata.message.content
+            val sender = metadata.sender.uid
+
+            MessageDecryption.decrypt(context, content, sender, 1)
+        } else {
+            metadata.getTitle(context)
         }
     }
 

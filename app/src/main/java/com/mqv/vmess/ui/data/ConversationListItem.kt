@@ -203,6 +203,8 @@ class ConversationListItem(
             } else {
                 val message =
                     getContentFromMessage(recentMessage, metadata, item.encrypted ?: false, item.id)
+
+                // Bugs will occur if normal message has content the same with dummy message
                 if (message == mContext.getString(R.string.dummy_encrypted_message)) {
                     mBinding.textContentConversation.typeface =
                         if (!recentMessage.seenBy.contains(mCurrentUser.uid)) Typeface.create(
@@ -213,7 +215,14 @@ class ConversationListItem(
                             Typeface.ITALIC
                         )
                 } else {
-                    mBinding.textContentConversation.typeface = Typeface.DEFAULT
+                    mBinding.textContentConversation.typeface =
+                        if (recentMessage.senderId != mCurrentUser.uid && !recentMessage.seenBy.contains(
+                                mCurrentUser.uid
+                            )
+                        ) Typeface.create(
+                            mBinding.textContentConversation.typeface,
+                            Typeface.BOLD
+                        ) else Typeface.DEFAULT
                 }
                 textContent.append(message)
             }
@@ -326,7 +335,12 @@ class ConversationListItem(
             mContext.getString(R.string.msg_conversation_list_you_sent_file, whoSentDisplayName)
         } else {
             if (item.senderId == mCurrentUser.uid) {
-                "$whoSentDisplayName: ${item.loadOutgoingMessageContent(conversationId, isEncrypted)}"
+                "$whoSentDisplayName: ${
+                    item.loadOutgoingMessageContent(
+                        conversationId,
+                        isEncrypted
+                    )
+                }"
             } else {
                 if (metadata.type == ConversationType.GROUP) {
                     "${

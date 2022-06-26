@@ -89,6 +89,8 @@ public interface ConversationRepository {
 
     Single<Map<String, LocalPlaintextContentModel>> getLastOutgoingMessageForEncryptedConversation(ConversationStatusType status);
 
+    Single<Boolean> isEncryptionConversation(String conversationId);
+
     /////// Conversation changes option
     Completable changeConversationStatus(Conversation conversation);
 

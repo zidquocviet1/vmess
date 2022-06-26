@@ -41,4 +41,27 @@ data class MessageNotificationMetadata(
             }
         }
     }
+
+    fun isPlaintextMessage(): Boolean {
+        return when {
+            isPhotoMessage(message) -> {
+                false
+            }
+            isVideoMessage(message) -> {
+                false
+            }
+            isFileMessage(message) -> {
+                false
+            }
+            isCallMessage(message) -> {
+                false
+            }
+            isShareMessage(message) -> {
+                false
+            }
+            else -> {
+                true
+            }
+        }
+    }
 }

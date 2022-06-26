@@ -41,8 +41,8 @@ class LocalPreKeyStore(
         preKeyDao.containsPreKey(preKeyId, userId).internalGet() ?: false
 
     @WorkerThread
-    override fun removePreKey(preKeyId: Int) =
-        preKeyDao.removePreKey(preKeyId, userId).internalExecute()
+    override fun removePreKey(preKeyId: Int) {
+    }
 
     // endregion
 

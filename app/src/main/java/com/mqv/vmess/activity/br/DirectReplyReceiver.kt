@@ -8,6 +8,7 @@ import androidx.room.rxjava3.EmptyResultSetException
 import androidx.work.Data
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.mqv.vmess.data.model.LocalPlaintextContentModel
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl
 import com.mqv.vmess.data.repository.impl.ConversationRepositoryImpl
 import com.mqv.vmess.dependencies.AppDependencies
@@ -47,6 +48,7 @@ class DirectReplyReceiver : HiltBroadcastReceiver() {
         val currentUser = FirebaseAuth.getInstance().currentUser!!
         val bundle = RemoteInput.getResultsFromIntent(intent)
         val conversationId = intent.getStringExtra(EXTRA_CONVERSATION_ID)
+        val isEncrypted = intent.getBooleanExtra(EXTRA_IS_ENCRYPTED, false)
         val plainText = bundle.getCharSequence(KEY_TEXT_CONTENT).toString()
         val messageId = UUID.randomUUID().toString()
 
@@ -83,7 +85,20 @@ class DirectReplyReceiver : HiltBroadcastReceiver() {
                         conversationId,
                         currentUser.uid
                     )
-                }.andThen(chatRepository.saveCached(chat)) else Completable.error(
+                }.andThen(
+                    if (isEncrypted) {
+                        val model =
+                            LocalPlaintextContentModel(chat.id, conversationId, chat.content)
+                        chatRepository.saveCached(chat)
+                            .andThen(
+                                conversationRepository.saveOutgoingEncryptedMessageContent(
+                                    model
+                                )
+                            )
+                    } else {
+                        chatRepository.saveCached(chat)
+                    }
+                ) else Completable.error(
                     EmptyResultSetException("empty")
                 )
             }
@@ -103,6 +118,7 @@ class DirectReplyReceiver : HiltBroadcastReceiver() {
                 Logging.debug(TAG, "Create worker to send message using websocket or http")
 
                 val input = Data.Builder()
+                    .putBoolean(SendMessageWorkWrapper.EXTRA_IS_ENCRYPTED, isEncrypted)
                     .putString(SendMessageWorkWrapper.EXTRA_MESSAGE_ID, messageId)
                     .build()
                 WorkDependency.enqueue(SendMessageWorkWrapper(context, input))
@@ -128,12 +144,19 @@ class DirectReplyReceiver : HiltBroadcastReceiver() {
             .zipWith(chatRepository.fetchCached(message)) { conversation, chat ->
                 MessageNotificationMetadata(user.toUser(), conversation, chat)
             }
+            .zipWith(conversationRepository.isEncryptionConversation(conversationId)) { metadata, isEncrypted ->
+                Pair(metadata, isEncrypted)
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            .subscribe { messageMetadata, _ ->
+            .subscribe { pair, _ ->
+                val messageMetadata = pair.first
+                val isEncrypted = pair.second
+
                 NotificationUtil.sendIncomingMessageNotification(
                     context,
-                    messageMetadata
+                    messageMetadata,
+                    isEncrypted
                 )
             }
     }
@@ -192,6 +215,7 @@ class DirectReplyReceiver : HiltBroadcastReceiver() {
         private val TAG = DirectReplyReceiver::class.java.simpleName
 
         const val EXTRA_CONVERSATION_ID = "conversationId"
+        const val EXTRA_IS_ENCRYPTED = "isEncrypted"
         const val KEY_TEXT_CONTENT = "key_content"
     }
 }

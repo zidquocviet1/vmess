@@ -514,7 +514,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
             chat.setType(MessageType.SHARE);
         }
 
-        saveMessageIntoCache(chat);
+        saveMessageIntoCache(chat, true);
         sendMessageWorker(context, chat.getId());
     }
 
@@ -560,13 +560,13 @@ public class ConversationViewModel extends MessageHandlerViewModel {
 
         Chat chat = builder.create();
 
-        saveMessageIntoCache(chat);
+        saveMessageIntoCache(chat, false);
         sendMessageWorker(context, chat.getId());
     }
 
-    private void saveMessageIntoCache(Chat chat) {
+    private void saveMessageIntoCache(Chat chat, boolean isPlaintext) {
         Disposable disposable = conversationRepository.isExists(mConversation.getId())
-                                                      .flatMapCompletable(isExists -> checkConversationAndReturn(isExists, chat))
+                                                      .flatMapCompletable(isExists -> checkConversationAndReturn(isExists, chat, isPlaintext))
                                                       .compose(RxHelper.applyCompleteSchedulers())
                                                       .subscribe(() -> {
                                                           messageObserver.postValue(chat);
@@ -580,10 +580,10 @@ public class ConversationViewModel extends MessageHandlerViewModel {
         cd.add(disposable);
     }
 
-    private Completable checkConversationAndReturn(boolean isExists, Chat chat) {
+    private Completable checkConversationAndReturn(boolean isExists, Chat chat, boolean isPlaintext) {
         Completable completable;
 
-        if (mConversation.getEncrypted() != null && mConversation.getEncrypted()) {
+        if (mConversation.getEncrypted() != null && mConversation.getEncrypted() && isPlaintext) {
             LocalPlaintextContentModel model = new LocalPlaintextContentModel(chat.getId(), mConversation.getId(), chat.getContent());
 
             completable = chatRepository.saveCached(chat)

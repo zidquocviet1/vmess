@@ -265,4 +265,7 @@ public abstract class ConversationDao {
     @WorkerThread
     @Query("SELECT conversation_participants_id FROM conversation WHERE conversation_id = :conversationId")
     public abstract Single<String> getParticipantByConversationId(String conversationId);
+
+    @Query("SELECT EXISTS(SELECT * FROM conversation WHERE is_encrypted = 1 AND conversation_id = :conversationId)")
+    public abstract Single<Boolean> isEncryptionConversation(String conversationId);
 }

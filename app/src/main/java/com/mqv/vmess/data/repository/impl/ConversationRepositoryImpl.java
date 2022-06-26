@@ -471,6 +471,11 @@ public class ConversationRepositoryImpl implements ConversationRepository {
         return plaintextContentDao.getLastMessageForEncryptedConversation(status);
     }
 
+    @Override
+    public Single<Boolean> isEncryptionConversation(String conversationId) {
+        return dao.isEncryptionConversation(conversationId);
+    }
+
     private Observable<String> getBearerTokenObservable() {
         return Observable.fromCallable(() -> {
                             try {
