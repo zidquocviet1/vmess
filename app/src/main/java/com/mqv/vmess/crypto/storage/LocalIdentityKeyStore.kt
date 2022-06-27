@@ -84,5 +84,9 @@ class LocalIdentityKeyStore(
                 identityKeyDao.getIdentityKey(address.name).internalGet()
             )
         )
+
+    fun removeAll() {
+        identityKeyDao.removeAll().internalExecute()
+    }
 }
 

@@ -287,6 +287,7 @@ public class ManageAccountViewModel extends LogoutHandlerViewModel {
                             }
                             loginResult.setValue(Result.Success(user));
 
+                            logout(previousUser);
                             AppDependencies.closeAllConnection();
                             sendFcmTokenToServer();
                             AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
@@ -363,5 +364,15 @@ public class ManageAccountViewModel extends LogoutHandlerViewModel {
                 .subscribe();
 
         cd.add(disposable);
+    }
+
+    private void logout(FirebaseUser previousFirebaseUser) {
+        loginRepository.logoutWithObserve(previousFirebaseUser, observable -> {
+            var disposable = observable
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(response -> {}, t -> {});
+            cd.add(disposable);
+        }, e -> {});
     }
 }

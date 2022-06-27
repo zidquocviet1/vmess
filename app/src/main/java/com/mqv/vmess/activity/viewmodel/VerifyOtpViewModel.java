@@ -36,6 +36,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
@@ -188,6 +189,7 @@ public class VerifyOtpViewModel extends LogoutHandlerViewModel {
     private void saveLoggedInUser(User user, HistoryLoggedInUser historyUser, FirebaseUser previousUser) {
         if (previousUser != null) {
             cd.add(logout(previousUser, user, historyUser)
+                    .andThen(Completable.fromAction(() -> logoutToRemovePreviousBundleKey(previousUser)))
                     .compose(RxHelper.applyCompleteSchedulers())
                     .subscribe(() -> loginResult.setValue(Result.Success(user)),
                             t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail)))
@@ -200,6 +202,16 @@ public class VerifyOtpViewModel extends LogoutHandlerViewModel {
                             t -> loginResult.setValue(Result.Fail(R.string.error_authentication_fail))));
         }
         AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
+    }
+
+    private void logoutToRemovePreviousBundleKey(FirebaseUser previousFirebaseUser) {
+        loginRepository.logoutWithObserve(previousFirebaseUser, observable -> {
+            var disposable = observable
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(response -> {}, t -> {});
+            cd.add(disposable);
+        }, e -> {});
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.mqv.vmess.activity.viewmodel
 import com.google.firebase.auth.FirebaseUser
 import com.mqv.vmess.data.model.HistoryLoggedInUser
 import com.mqv.vmess.data.repository.*
+import com.mqv.vmess.dependencies.AppDependencies
 import com.mqv.vmess.network.model.User
 import io.reactivex.rxjava3.core.Completable
 
@@ -30,4 +31,7 @@ open class LogoutHandlerViewModel(
             .mergeWith(conversationRepository.deleteAll())
             .mergeWith(conversationRepository.deleteAllNotificationOption())
             .mergeWith(conversationRepository.deleteAllNotificationColor())
+            .mergeWith(Completable.fromAction {
+                AppDependencies.getLocalStorageSessionStore().clearAll()
+            })
 }

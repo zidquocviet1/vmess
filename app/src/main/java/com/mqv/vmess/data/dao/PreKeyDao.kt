@@ -24,4 +24,7 @@ interface PreKeyDao {
 
     @Query("DELETE FROM pre_key WHERE keyId = :preKeyId AND userId = :userId")
     fun removePreKey(preKeyId: Int, userId: String): Completable
+
+    @Query("DELETE FROM pre_key")
+    fun removeAll(): Completable
 }

@@ -30,4 +30,7 @@ interface SignedPreKeyDao {
 
     @Query("DELETE FROM signed_pre_key WHERE keyId = :signedPreKeyId AND userId = :userId")
     fun removeSignedPreKey(signedPreKeyId: Int, userId: String): Completable
+
+    @Query("DELETE FROM signed_pre_key")
+    fun removeAll(): Completable
 }

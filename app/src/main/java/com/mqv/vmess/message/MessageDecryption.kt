@@ -26,12 +26,18 @@ object MessageDecryption {
 
             readableMessage
         } catch (e: Exception) {
-            return when (e) {
-                is InvalidKeyIdException, is UntrustedIdentityException, is LegacyMessageException -> context.getString(
-                    R.string.dummy_encrypted_message
-                )
-                else -> encodedMessage
-            }
+            context.getString(
+                R.string.dummy_encrypted_message
+            )
+
+//            return when (e) {
+//                is InvalidKeyIdException,
+//                is UntrustedIdentityException,
+//                is LegacyMessageException,
+//                is DuplicateMessageException,
+//                is InvalidMessageException ->
+//                else -> encodedMessage
+//            }
         }
     }
 }

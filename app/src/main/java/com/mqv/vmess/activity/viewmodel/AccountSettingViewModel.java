@@ -82,7 +82,7 @@ public class AccountSettingViewModel extends LogoutHandlerViewModel {
     }
 
     private void handleSignOutError(int error) {
-        signOutStatus.setValue(Result.Fail(error));
+        signOutStatus.postValue(Result.Fail(error));
     }
 
     public void dispose() {

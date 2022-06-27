@@ -89,6 +89,11 @@ class LocalPreKeyStore(
     override fun removeSignedPreKey(signedPreKeyId: Int) =
         signedPreKeyDao.removeSignedPreKey(signedPreKeyId, userId).internalExecute()
 
+    @WorkerThread
+    fun removeAll() {
+        preKeyDao.removeAll().internalExecute()
+        signedPreKeyDao.removeAll().internalExecute()
+    }
     // endregion
 
     private fun PreKeyModel.toPreKeyRecord(): PreKeyRecord {

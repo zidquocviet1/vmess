@@ -18,4 +18,7 @@ interface IdentityKeyDao {
 
     @Query("SELECT * FROM identity_key WHERE address = :address")
     fun getIdentityKeyModel(address: String): Single<IdentityKeyModel>
+
+    @Query("DELETE FROM identity_key")
+    fun removeAll(): Completable
 }

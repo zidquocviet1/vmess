@@ -77,4 +77,9 @@ class LocalSessionStore(database: MyDatabase, private val userId: String) :
     @WorkerThread
     override fun deleteAllSessions(name: String) =
         sessionDao.deleteAllSessionByRemoteAddress(userId, name).internalExecute()
+
+    @WorkerThread
+    fun removeAll() {
+        sessionDao.removeAll().internalExecute()
+    }
 }

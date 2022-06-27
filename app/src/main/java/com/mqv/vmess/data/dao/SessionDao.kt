@@ -30,4 +30,7 @@ interface SessionDao {
 
     @Query("DELETE FROM sessions WHERE userId = :userId AND remoteAddress = :remoteAddress")
     fun deleteAllSessionByRemoteAddress(userId: String, remoteAddress: String): Completable
+
+    @Query("DELETE FROM sessions")
+    fun removeAll(): Completable
 }

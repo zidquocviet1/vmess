@@ -12,7 +12,7 @@ class LocalStorageSessionStore(
     private val preKeyStore: LocalPreKeyStore,
     private val sessionStore: LocalSessionStore,
     private val senderKeyStore: LocalSenderKeyStore,
-) : SignalProtocolStore {
+) : VMessProtocolStore {
     override fun getIdentityKeyPair(): IdentityKeyPair = identityStore.identityKeyPair
 
     override fun getLocalRegistrationId(): Int = identityStore.localRegistrationId
@@ -87,4 +87,10 @@ class LocalStorageSessionStore(
         sender: SignalProtocolAddress,
         distributionId: UUID
     ): SenderKeyRecord? = senderKeyStore.loadSenderKey(sender, distributionId)
+
+    override fun clearAll() {
+        preKeyStore.removeAll()
+        sessionStore.removeAll()
+        identityStore.removeAll()
+    }
 }
