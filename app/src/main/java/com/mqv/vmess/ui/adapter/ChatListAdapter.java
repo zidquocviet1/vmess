@@ -158,6 +158,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     public void setUserLeftGroup(List<User> userLeftGroup) {
         ChatNotificationMessageViewHolder.setUserLeftGroup(userLeftGroup);
         ChatMultiMediaViewHolder.setUserLeftGroup(userLeftGroup);
+        ProfileGroupViewHolder.setUserLeftGroup(userLeftGroup);
     }
 
     public void setUserDetail(User user) {
@@ -457,6 +458,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
     static class ProfileGroupViewHolder extends RecyclerView.ViewHolder {
         private final ItemChatProfileGroupBinding mBinding;
         private final Context mContext;
+        private static List<User> sUserLeftGroup = new ArrayList<>();
 
         public ProfileGroupViewHolder(@NonNull ItemChatProfileGroupBinding binding,
                                       ConversationGroupOption conversationCallback) {
@@ -473,13 +475,31 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
         }
 
+        public static void setUserLeftGroup(List<User> userLeftGroup) {
+            sUserLeftGroup = userLeftGroup;
+        }
+
         public void bindGroup(ConversationMetadata metadata) {
             mBinding.conversationBanner.setMetadata(metadata);
             mBinding.conversationBanner.setSingleThumbnailSize(
                     ViewUtil.getLargeUserAvatarPixel(mContext.getResources()),
                     ViewUtil.getLargeUserAvatarPixel(mContext.getResources())
             );
-            mBinding.textWhoCreated.setText(mContext.getString(R.string.label_who_create_this_group, metadata.getConversationCreatedBy()));
+
+            String dummyUserDisplayName = mContext.getString(R.string.dummy_user_name);
+            String creatorName;
+
+            if (metadata.getConversationCreatedBy().equals(dummyUserDisplayName)) {
+                creatorName = sUserLeftGroup.stream()
+                        .filter(user -> Objects.deepEquals(user.getUid(), metadata.getCreatorGroupId()))
+                        .findFirst()
+                        .map(User::getDisplayName)
+                        .orElse(dummyUserDisplayName);
+            } else {
+                creatorName = metadata.getConversationCreatedBy();
+            }
+
+            mBinding.textWhoCreated.setText(mContext.getString(R.string.label_who_create_this_group, creatorName));
         }
     }
 

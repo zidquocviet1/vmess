@@ -114,7 +114,8 @@ object ConversationMapper {
             participants,
             type,
             UNKNOWN_USER_ID,
-            currentUser.uid
+            currentUser.uid,
+            group.creatorId
         )
     }
 }
