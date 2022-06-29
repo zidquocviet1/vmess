@@ -122,10 +122,12 @@
         android:layout_width="@dimen/image_icon_size"
         android:layout_height="@dimen/image_icon_size"
         android:layout_marginTop="@dimen/all_margin"
+        android:layout_marginEnd="20dp"
         android:background="@drawable/ripple_shapeable_image"
         android:tint="@android:color/transparent"
         android:tintMode="src_in"
-        app:layout_constraintEnd_toEndOf="@id/button_create_account"
+        app:layout_constraintEnd_toStartOf="@id/image_login_qr_code"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="@id/button_create_account"
         app:layout_constraintTop_toBottomOf="@id/text_or"
         app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
@@ -141,6 +143,32 @@
         app:layout_constraintStart_toStartOf="@id/image_login_phone"
         app:layout_constraintTop_toTopOf="@id/image_login_phone" />
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/image_login_qr_code"
+        android:layout_width="@dimen/image_icon_size"
+        android:layout_height="@dimen/image_icon_size"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="@dimen/all_margin"
+        android:background="@drawable/ripple_shapeable_image"
+        android:tint="@android:color/transparent"
+        android:tintMode="src_in"
+        app:layout_constraintEnd_toEndOf="@id/button_create_account"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toEndOf="@id/image_login_phone"
+        app:layout_constraintTop_toBottomOf="@id/text_or"
+        app:shapeAppearanceOverlay="@style/ImageViewCornerSize50Percent" />
+
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/ic_qr_scanner"
+        android:backgroundTint="@color/white"
+        android:contentDescription="@string/title_login_with_phone"
+        app:layout_constraintBottom_toBottomOf="@id/image_login_qr_code"
+        app:layout_constraintEnd_toEndOf="@id/image_login_qr_code"
+        app:layout_constraintStart_toStartOf="@id/image_login_qr_code"
+        app:layout_constraintTop_toTopOf="@id/image_login_qr_code" />
+
     <ImageView
         android:id="@+id/image_login_facebook"
         android:layout_width="@dimen/image_icon_size"
@@ -152,6 +180,7 @@
         android:contentDescription="@string/title_login_with_facebook"
         android:focusable="true"
         android:tintMode="src_in"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/image_login_phone"
         app:layout_constraintEnd_toStartOf="@id/image_login_phone"
         app:layout_constraintTop_toTopOf="@id/image_login_phone"
@@ -168,6 +197,7 @@
         android:contentDescription="@string/title_login_with_google"
         android:focusable="true"
         android:tintMode="src_in"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/image_login_phone"
         app:layout_constraintStart_toEndOf="@id/image_login_phone"
         app:layout_constraintTop_toTopOf="@id/image_login_phone"

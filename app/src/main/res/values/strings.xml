@@ -121,6 +121,7 @@
     <string name="label_conversation_activity_new_message">New messages</string>
     <string name="label_incoming_voice_call">Incoming voice call</string>
     <string name="label_incoming_video_call">Incoming video call</string>
+    <string name="label_or">Or</string>
 
     <string name="title_brand_name_short" translatable="false">VMess</string>
     <string name="title_brand_name" translatable="false">V Messenger</string>
