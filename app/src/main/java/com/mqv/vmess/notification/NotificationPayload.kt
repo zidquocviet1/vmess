@@ -2,8 +2,7 @@ package com.mqv.vmess.notification
 
 import com.mqv.vmess.network.model.Chat
 import com.mqv.vmess.network.model.type.MessageStatus
-import java.time.Instant
-import java.time.LocalDateTime
+import com.mqv.vmess.util.DateTimeHelper.toLocalDateTime
 import java.time.ZoneId
 import java.util.*
 
@@ -211,10 +210,7 @@ sealed class NotificationPayload(
                     senderId,
                     messageContent,
                     conversationId,
-                    LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(messageTimestamp),
-                        ZoneId.systemDefault()
-                    ),
+                    messageTimestamp.toLocalDateTime(ZoneId.of("UTC")),
                     null,
                     null,
                     null,

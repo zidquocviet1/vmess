@@ -38,6 +38,10 @@ object DateTimeHelper {
         LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.systemDefault())
 
     @JvmStatic
+    fun Long.toLocalDateTime(zoneId: ZoneId) =
+        LocalDateTime.ofInstant(Instant.ofEpochMilli(this), zoneId)
+
+    @JvmStatic
     @JvmOverloads
     fun getMessageDateTimeFormatted(
         context: Context,
