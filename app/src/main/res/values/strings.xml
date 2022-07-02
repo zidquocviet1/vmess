@@ -385,8 +385,8 @@
     <string name="msg_prompt_notification_preference_disappearing_message">When enabled, new messages sent and received in this chat will disappear after they have been seen.</string>
     <string name="msg_prompt_undo_delete_conversation">The conversation will be delete, click the Undo button to undo delete.</string>
     <string name="msg_permission_use_contact_rationale">To import your contact, allow access your contacts.</string>
-    <string name="msg_permission_permanent_denial_contact_title">&appname;Allow to use your contacts?</string>
-    <string name="msg_permission_permanent_denial_contact_message">&appname;This lets access your contacts and retrieve the information to use this feature.</string>
+    <string name="msg_permission_permanent_denial_contact_title">Allow &appname; to use your contacts?</string>
+    <string name="msg_permission_permanent_denial_contact_message">This lets &appname; access your contacts and retrieve the information to use this feature.</string>
     <string name="msg_phone_contacts_fragment">To use this feature, we need to access your contacts list on you device. Click the button below to grant necessary permission.</string>
     <string name="msg_phone_contacts_empty_list_fragment">Don\'t have any user from your contacts list.</string>
     <string name="msg_phone_contacts_send_friend_error_fragment">Make friend request not complete. Try again</string>
@@ -395,6 +395,8 @@
     <string name="msg_webrtc_user_deny_call">User has denied your call.</string>
     <string name="msg_webrtc_user_is_in_call">This user is calling in another call. Try later</string>
     <string name="msg_webrtc_user_did_not_answer">User did not answer your call.</string>
+    <string name="msg_scan_qr_code_permanently_dialog_message">This lets &appname; capture QR Code and then use it to login.</string>
+    <string name="msg_webrtc_call_is_not_available_for_group">This feature is not supported for group</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_phone_verification_limit_sms_per_day">Reach to the limited requests per day. Try later</string>
@@ -419,6 +421,7 @@
     <string name="error_create_group_conversation_fail">Something wrong when create a new group. Try again</string>
     <string name="error_no_result_found_for">No results found for \"%1$s\".</string>
     <string name="error_create_encryption_conversation_fail">Something wrong when creating a new encryption conversation. Try again</string>
+    <string name="error_permission_denied">Permission denied!</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>

@@ -7,6 +7,6 @@ import com.mqv.vmess.ui.permissions.Permission
 
 object StorageUtil {
     fun canReadDataFromMediaStore(context: Context) =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+//        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
                 Permission.hasAll(context, Manifest.permission.READ_EXTERNAL_STORAGE)
 }

@@ -1092,7 +1092,7 @@ public class ConversationActivity
     private void requestStoragePermission(Runnable onAllGranted) {
         Permission.with(this, mPermissionsLauncher)
                   .request(Manifest.permission.READ_EXTERNAL_STORAGE)
-                  .ifNecessary(!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q))
+                  .ifNecessary()
                   .onAllGranted(onAllGranted)
                   .withRationaleDialog(getString(R.string.msg_permission_external_storage_rational), R.drawable.ic_round_storage_24)
                   .withPermanentDenialDialog(getString(R.string.msg_permission_allow_app_use_external_storage_title), getString(R.string.msg_permission_external_storage_message), getString(R.string.msg_permission_settings_construction, getString(R.string.label_storage)))
@@ -1149,7 +1149,7 @@ public class ConversationActivity
 
     private void openCallActivity(boolean isVideoEnabled) {
         if (mConversation.getType() == ConversationType.GROUP) {
-            Toast.makeText(this, "This feature is not support for group", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_webrtc_call_is_not_available_for_group, Toast.LENGTH_SHORT).show();
         } else {
             Permission.with(this, mPermissionsLauncher)
                       .request(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
