@@ -35,7 +35,7 @@ class RationaleDialog {
                 if (i != drawables.size - 1) {
                     val plus = TextView(context)
                     plus.text = "+"
-                    plus.setTextSize(TypedValue.COMPLEX_UNIT_SP, 40f)
+                    plus.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
                     plus.setTextColor(Color.WHITE)
                     val layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
