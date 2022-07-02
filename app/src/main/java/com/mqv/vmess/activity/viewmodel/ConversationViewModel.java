@@ -285,6 +285,7 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                                       .singleOrError()
                                                       .map(list -> list.stream()
                                                                        .filter(c -> c.getType() == ConversationType.NORMAL &&
+                                                                                    c.getEncrypted() != null && !c.getEncrypted() &&
                                                                                     c.getParticipants().containsAll(expectedParticipants))
                                                                        .findFirst())
                                                       .flatMap(optional -> {
