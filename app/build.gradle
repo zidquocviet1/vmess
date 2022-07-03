@@ -19,8 +19,10 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField "String", "API_URL", "\"https://139.99.46.81/api/v1\""
-        buildConfigField "String", "SERVER_URL", "\"https://139.99.46.81\""
+        buildConfigField "String", "API_URL", "\"https://192.168.9.103/api/v1\""
+        buildConfigField "String", "SERVER_URL", "\"https://192.168.9.103\""
+        buildConfigField "String", "DEMO_LOGIN_TOKEN", "\"bWFpcXVvY3ZpZXQuc2luaHZpZW4udGR0dS41MTgwMDk1NC5raG9haG9jbWF5dGluaA==\""
+        buildConfigField "String", "DEMO_PASSWORD","\"Quocviet1!\""
     }
 
     buildTypes {
