@@ -538,6 +538,7 @@ class NotificationHandler(
 
         mDatabase.friendNotificationDao.fetchRequestNotificationByUserId(payload.whoCancel)
             .flatMap { mDatabase.friendNotificationDao.delete(it).toSingleDefault(it.id!!) }
+            .onErrorComplete()
             .subscribeOn(Schedulers.io())
             .subscribe { id ->
                 NotificationUtil.removeNotification(mContext, id.toInt())
