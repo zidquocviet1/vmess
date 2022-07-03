@@ -1,41 +1,33 @@
 {
   "project_info": {
-    "project_number": "875101732598",
-    "project_id": "tac-application",
-    "storage_bucket": "tac-application.appspot.com"
+    "project_number": "169874726504",
+    "project_id": "vmess-application",
+    "storage_bucket": "vmess-application.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:875101732598:android:e56cb3f5d39e3e5111f6d7",
+        "mobilesdk_app_id": "1:169874726504:android:be5228ab4cabb2b90fe5dd",
         "android_client_info": {
           "package_name": "com.mqv.vmess"
         }
       },
       "oauth_client": [
         {
-          "client_id": "875101732598-169vdfgi39h7f09ak7uolo2vt85720a0.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.mqv.vmess",
-            "certificate_hash": "1c319094e3cead6c351575c8bf6130e33ac8ef83"
-          }
-        },
-        {
-          "client_id": "875101732598-tsejpa9hbtl97uq71vuqguii9c6ruee7.apps.googleusercontent.com",
+          "client_id": "169874726504-v3budf8jngsasc96ipqj9fkh962p1a73.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAZiglYta0fFHFEdiORwQuYnuxb4Lzf7v8"
+          "current_key": "AIzaSyAN3FthUREY4sQWJnkzCQNAaMzJFbZRTwA"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "875101732598-tsejpa9hbtl97uq71vuqguii9c6ruee7.apps.googleusercontent.com",
+              "client_id": "169874726504-v3budf8jngsasc96ipqj9fkh962p1a73.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
