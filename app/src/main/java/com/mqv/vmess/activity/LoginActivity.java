@@ -17,11 +17,13 @@ import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.LoginViewModel;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.databinding.ActivityLoginBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.util.AlertDialogUtil;
 import com.mqv.vmess.util.NetworkStatus;
 
 import java.util.Objects;
@@ -65,6 +67,10 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         if (inState != null) {
             edtEmail.setText(inState.getString(STATE_EMAIL));
             edtPassword.setText(inState.getString(STATE_PASSWORD));
+        }
+
+        if (mAction == EXTRA_ADD_ACCOUNT) {
+            mBinding.imageLoginQrCode.setVisibility(View.GONE);
         }
     }
 
@@ -165,6 +171,25 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
                 Toast.makeText(this, loginResult.getError(), Toast.LENGTH_SHORT).show();
             }
         });
+
+        mViewModel.getDemoLoginResult().observe(this, result -> {
+            if (result == null) return;
+
+            if (result.getStatus() == NetworkStatus.SUCCESS) {
+                AlertDialogUtil.finishLoadingDialog();
+
+                LoggedInUserManager.getInstance().setLoggedInUser(result.getSuccess());
+                Intent mainIntent = new Intent(this, MainActivity.class);
+                startActivity(mainIntent);
+                finish();
+            } else if (result.getStatus() == NetworkStatus.LOADING) {
+                AlertDialogUtil.startLoadingDialog(this, getLayoutInflater(), R.string.action_loading);
+            } else {
+                AlertDialogUtil.finishLoadingDialog();
+
+                Toast.makeText(this, result.getError(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void setLoadingUi(boolean isLoading) {
@@ -172,6 +197,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         mBinding.buttonLogin.setEnabled(!isLoading);
         mBinding.buttonCreateAccount.setEnabled(!isLoading);
         mBinding.imageLoginPhone.setEnabled(!isLoading);
+        mBinding.imageLoginQrCode.setEnabled(!isLoading);
         mBinding.imageLoginFacebook.setEnabled(!isLoading);
         mBinding.imageLoginGoogle.setEnabled(!isLoading);
         mBinding.textForgotPassword.setClickable(!isLoading);
@@ -218,6 +244,7 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         mBinding.imageLoginPhone.setOnClickListener(this);
         mBinding.imageLoginFacebook.setOnClickListener(this);
         mBinding.imageLoginGoogle.setOnClickListener(this);
+        mBinding.imageLoginQrCode.setOnClickListener(this);
     }
 
     @Override
@@ -244,6 +271,8 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
         } else if (id == mBinding.imageLoginFacebook.getId()) {
 
         } else if (id == mBinding.imageLoginGoogle.getId()) {
+        } else if (id == mBinding.imageLoginQrCode.getId()) {
+            mViewModel.loginForDemoSection();
         }
     }
 }

@@ -9,7 +9,10 @@ import com.mqv.vmess.util.Const;
 import io.reactivex.rxjava3.core.Observable;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import retrofit2.Response;
 import retrofit2.http.Body;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -98,4 +101,8 @@ public interface UserService {
     Observable<ApiResponse<PhoneContact>> getPhoneContactInfo(@Header(Const.AUTHORIZATION) String token,
                                                               @Path("phone-number") String phoneNumber,
                                                               @Query("cc") String countryCode);
+
+    @FormUrlEncoded
+    @POST(value = "user/login/demo-user")
+    Observable<Response<ApiResponse<User>>> loginForDemoSection(@Field("token") String token);
 }

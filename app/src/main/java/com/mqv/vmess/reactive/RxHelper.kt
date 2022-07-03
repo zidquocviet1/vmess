@@ -110,7 +110,7 @@ object RxHelper {
 
     private fun parseError(statusCode: Int): Throwable {
         return when (statusCode) {
-            403 -> BadRequestException()
+            400, 403 -> BadRequestException()
             404 -> ResourceNotFoundException()
             406 -> PermissionDeniedException()
             409 -> ResourceConflictException()

@@ -11,11 +11,13 @@ import androidx.lifecycle.ViewModel;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.vmess.BuildConfig;
 import com.mqv.vmess.R;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
 import com.mqv.vmess.data.model.SignInProvider;
@@ -28,6 +30,9 @@ import com.mqv.vmess.data.repository.PeopleRepository;
 import com.mqv.vmess.data.repository.UserRepository;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.dependencies.AppDependencies;
+import com.mqv.vmess.network.ApiResponse;
+import com.mqv.vmess.network.exception.BadRequestException;
+import com.mqv.vmess.network.exception.FirebaseUnauthorizedException;
 import com.mqv.vmess.network.model.User;
 import com.mqv.vmess.reactive.RxHelper;
 import com.mqv.vmess.ui.data.People;
@@ -45,14 +50,17 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import okhttp3.Headers;
 
 @HiltViewModel
 public class LoginViewModel extends ViewModel {
     private final MutableLiveData<LoginRegisterValidationResult> loginValidationResult = new MutableLiveData<>();
     private final MutableLiveData<Result<User>> loginResult = new MutableLiveData<>();
+    private final MutableLiveData<Result<User>> demoLoginResult = new MutableLiveData<>();
     private final CompositeDisposable cd = new CompositeDisposable();
     private final LoginRepository loginRepository;
     private final HistoryLoggedInUserRepository historyUserRepository;
@@ -90,6 +98,8 @@ public class LoginViewModel extends ViewModel {
         return loginResult;
     }
 
+    public LiveData<Result<User>> getDemoLoginResult() { return demoLoginResult; }
+
     public FirebaseUser getCurrentLoginFirebaseUser() {
         return currentLoginFirebaseUser;
     }
@@ -107,6 +117,79 @@ public class LoginViewModel extends ViewModel {
         FirebaseAuth.getInstance().signOut();
 
         loginWithAuthCredential(EmailAuthProvider.getCredential(email, password), previousFirebaseUser);
+    }
+
+    public void loginForDemoSection() {
+        Disposable disposable = loginRepository.loginForDemoSection()
+                .startWith(Completable.fromAction(() -> demoLoginResult.postValue(Result.Loading())))
+                .flatMap(response -> {
+                    if (response.isSuccessful()) {
+                        Headers           headers  = response.headers();
+                        String            username = headers.get("username");
+                        ApiResponse<User> body     = response.body();
+
+                        if (username == null) return Observable.error(NoResponseHeaderException::new);
+                        if (body == null)     return Observable.error(new FirebaseUnauthorizedException(-1));
+
+                        return Observable.just(body)
+                                         .compose(RxHelper.parseResponseData())
+                                         .map(user -> new DemoUserData(username, user));
+                    }
+                    return Observable.error(new FirebaseUnauthorizedException(-1));
+                })
+                .compose(RxHelper.applyObservableSchedulers())
+                .subscribe(data -> {
+                    AuthCredential credential = EmailAuthProvider.getCredential(data.getUsername(), BuildConfig.DEMO_PASSWORD);
+                    FirebaseAuth.getInstance().signInWithCredential(credential)
+                            .addOnCompleteListener(authResult -> {
+                                if (authResult.isSuccessful()) {
+                                    AuthResult result = authResult.getResult();
+
+                                    if (result != null && result.getUser() != null) {
+                                        FirebaseUser firebaseUser = result.getUser();
+                                        saveLoggedInUserForDemo(data.getUser(), fetchHistoryUser(firebaseUser));
+                                    }
+                                } else if (authResult.isCanceled()) {
+                                    Exception e = authResult.getException();
+                                    int error;
+
+                                    if (e instanceof FirebaseNetworkException) {
+                                        error = R.string.error_network_connection;
+                                    } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                                        error = R.string.msg_login_failed;
+                                    } else if (e instanceof FirebaseAuthInvalidUserException) {
+                                        error = R.string.invalid_username_not_exists;
+                                    } else if (e instanceof FirebaseTooManyRequestsException) {
+                                        error = R.string.error_too_many_request;
+                                    } else {
+                                        error = R.string.error_unknown;
+                                    }
+                                    demoLoginResult.postValue(Result.Fail(error));
+                                }
+                            });
+                }, t -> {
+                    if (t instanceof BadRequestException) {
+                        demoLoginResult.postValue(Result.Fail(R.string.msg_login_failed));
+                    } else {
+                        demoLoginResult.postValue(Result.Fail(R.string.error_unknown));
+                    }
+                });
+
+        cd.add(disposable);
+    }
+
+    private void saveLoggedInUserForDemo(User user, HistoryLoggedInUser historyUser) {
+        cd.add(loginRepository.saveLoggedInUser(user, historyUser)
+                .compose(RxHelper.applyCompleteSchedulers())
+                .subscribe(() -> {
+                            demoLoginResult.postValue(Result.Success(user));
+
+                            sendFcmTokenToServer();
+
+                            AppDependencies.getDatabaseObserver().notifyOnLoginStateChanged();
+                        },
+                        t -> demoLoginResult.postValue(Result.Fail(R.string.error_authentication_fail)))
+        );
     }
 
     public void loginWithEmailAndPassword(String email, String password) {
@@ -284,5 +367,27 @@ public class LoginViewModel extends ViewModel {
     protected void onCleared() {
         super.onCleared();
         if (!cd.isDisposed()) cd.dispose();
+    }
+
+    private static class DemoUserData {
+        private final String username;
+        private final User user;
+
+        private DemoUserData(String username, User user) {
+            this.username = username;
+            this.user = user;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public User getUser() {
+            return user;
+        }
+    }
+
+    private static class NoResponseHeaderException extends Exception {
+        NoResponseHeaderException() {}
     }
 }

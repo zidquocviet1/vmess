@@ -6,6 +6,7 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.mqv.vmess.BuildConfig;
 import com.mqv.vmess.data.dao.HistoryLoggedInUserDao;
 import com.mqv.vmess.data.dao.UserDao;
 import com.mqv.vmess.data.model.HistoryLoggedInUser;
@@ -28,6 +29,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import retrofit2.Response;
 
 /**
  * Class that requests authentication and user information from the remote data source and
@@ -177,6 +179,11 @@ public class LoginRepositoryImpl implements LoginRepository {
                             }
                         }),
                 Throwable::printStackTrace), Throwable::printStackTrace);
+    }
+
+    @Override
+    public Observable<Response<ApiResponse<User>>> loginForDemoSection() {
+        return service.loginForDemoSection(BuildConfig.DEMO_LOGIN_TOKEN);
     }
 
     private void validateIdToken(FirebaseUser user,
