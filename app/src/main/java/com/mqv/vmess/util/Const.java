@@ -4,7 +4,7 @@ import com.mqv.vmess.activity.preferences.MessageMediaSort;
 
 public final class Const {
     private static final int PORT = 443; // 443 for Https and 8080 or 80 for Http
-    public static final String BASE_IP = "192.168.9.100";
+    public static final String BASE_IP = "139.99.61.233";
     public static final String BASE_URL = "https://" + BASE_IP + ":" + PORT + "/api/v1/";
     public static final Long NETWORK_TIME_OUT = 20L;
     public static final String CONTENT_TYPE = "application/json";
