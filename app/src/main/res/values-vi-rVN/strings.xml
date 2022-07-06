@@ -389,4 +389,5 @@
     <string name="msg_scan_qr_code_permanently_dialog_message">Điều này sẽ cho phép &appname; đăng nhập bằng mã QR.</string>
     <string name="error_permission_denied">Quyền truy cập bị từ chối!</string>
     <string name="msg_webrtc_call_is_not_available_for_group">Chức năng này không thể sử dụng đối với cuộc trò chuyện nhóm</string>
+    <string name="msg_scan_qr_for_login_demo_section">Quét mã QR mà người quản trị gửi cho bạn để đăng nhập vào hệ thống.</string>
 </resources>

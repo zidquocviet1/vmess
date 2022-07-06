@@ -1,6 +1,7 @@
 package com.mqv.vmess.ui.fragment;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
@@ -40,10 +41,13 @@ import java.util.List;
 
 public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, FragmentQrCodeScannerBinding>
         implements DecoratedBarcodeView.TorchListener {
+    public static final String KEY_SCAN_FOR_LOGIN = "key_scan_login";
+
     private CaptureManager mCaptureManager;
     private boolean isFlashOff = true;
     private boolean isBarcodeViewPaused = false;
     private boolean isScanFromImage = false;
+    private boolean isScanForLogin = false;
 
     private final BarcodeCallback callback = new BarcodeCallback() {
         @Override
@@ -54,7 +58,15 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
             isBarcodeViewPaused = true;
 
-            mViewModel.getConnectUserByQrCode(code);
+            if (isScanForLogin) {
+                Intent resultIntent = new Intent();
+                resultIntent.putExtra("qrCode", code);
+
+                requireActivity().setResult(Activity.RESULT_OK, resultIntent);
+                requireActivity().finish();
+            } else {
+                mViewModel.getConnectUserByQrCode(code);
+            }
         }
 
         @Override
@@ -62,6 +74,16 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
         }
     };
+
+    public static QrCodeScannerFragment newInstance(boolean isScanForLogin) {
+        QrCodeScannerFragment fragment = new QrCodeScannerFragment();
+
+        Bundle args = new Bundle();
+        args.putBoolean(KEY_SCAN_FOR_LOGIN, isScanForLogin);
+        fragment.setArguments(args);
+
+        return fragment;
+    }
 
     public QrCodeScannerFragment() {
         // Required empty public constructor
@@ -74,7 +96,17 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
     @Override
     public Class<ConnectPeopleViewModel> getViewModelClass() {
+        if (isScanForLogin) return null;
         return ConnectPeopleViewModel.class;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getArguments() != null) {
+            isScanForLogin = getArguments().getBoolean(KEY_SCAN_FOR_LOGIN, false);
+        }
     }
 
     @Override
@@ -98,43 +130,45 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
     @Override
     public void setupObserver() {
-        mViewModel.getConnectUserResult().observe(getViewLifecycleOwner(), result -> {
-            if (result == null)
-                return;
+        if (!isScanForLogin) {
+            mViewModel.getConnectUserResult().observe(getViewLifecycleOwner(), result -> {
+                if (result == null)
+                    return;
 
-            var status = result.getStatus();
+                var status = result.getStatus();
 
-            mBinding.progressBarLoading.setVisibility(status == NetworkStatus.LOADING ? View.VISIBLE : View.GONE);
-            mBinding.textAddCode.setEnabled(status != NetworkStatus.LOADING);
-            mBinding.buttonFlash.setEnabled(status != NetworkStatus.LOADING);
+                mBinding.progressBarLoading.setVisibility(status == NetworkStatus.LOADING ? View.VISIBLE : View.GONE);
+                mBinding.textAddCode.setEnabled(status != NetworkStatus.LOADING);
+                mBinding.buttonFlash.setEnabled(status != NetworkStatus.LOADING);
 
-            if (status != NetworkStatus.LOADING && isBarcodeViewPaused) {
-                mBinding.decoratedBarcodeView.resume();
-            }
+                if (status != NetworkStatus.LOADING && isBarcodeViewPaused) {
+                    mBinding.decoratedBarcodeView.resume();
+                }
 
-            switch (status) {
-                case SUCCESS:
-                    var user = result.getSuccess();
-                    var firebaseUser = mViewModel.getFirebaseUser().getValue();
+                switch (status) {
+                    case SUCCESS:
+                        var user = result.getSuccess();
+                        var firebaseUser = mViewModel.getFirebaseUser().getValue();
 
-                    if (firebaseUser != null) {
-                        if (user.getUid().equals(firebaseUser.getUid())) {
-                            Toast.makeText(requireContext(), R.string.msg_request_yourself, Toast.LENGTH_SHORT).show();
-                        } else {
-                            var intent = new Intent(requireActivity(), RequestPeopleActivity.class);
-                            intent.putExtra("user", user);
-                            startActivity(intent);
-                            requireActivity().finish();
+                        if (firebaseUser != null) {
+                            if (user.getUid().equals(firebaseUser.getUid())) {
+                                Toast.makeText(requireContext(), R.string.msg_request_yourself, Toast.LENGTH_SHORT).show();
+                            } else {
+                                var intent = new Intent(requireActivity(), RequestPeopleActivity.class);
+                                intent.putExtra("user", user);
+                                startActivity(intent);
+                                requireActivity().finish();
+                            }
                         }
-                    }
-                    break;
-                case ERROR:
-                    Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
-                    break;
-            }
+                        break;
+                    case ERROR:
+                        Toast.makeText(requireContext(), result.getError(), Toast.LENGTH_SHORT).show();
+                        break;
+                }
 
-            mViewModel.resetConnectUserResult();
-        });
+                mViewModel.resetConnectUserResult();
+            });
+        }
     }
 
     @Override
@@ -163,7 +197,7 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mViewModel.removeQrCodeObservable();
+        if (!isScanForLogin) mViewModel.removeQrCodeObservable();
     }
 
     @Override
@@ -242,8 +276,18 @@ public class QrCodeScannerFragment extends BaseFragment<ConnectPeopleViewModel, 
 
                 isScanFromImage = true;
 
-                mViewModel.getConnectUserByQrCode(result.getText());
-                mBinding.textAddCode.setEnabled(false);
+                String qrContent = result.getText();
+
+                if (isScanForLogin) {
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("qrCode", qrContent);
+
+                    requireActivity().setResult(Activity.RESULT_OK, resultIntent);
+                    requireActivity().finish();
+                } else {
+                    mViewModel.getConnectUserByQrCode(qrContent);
+                    mBinding.textAddCode.setEnabled(false);
+                }
             } catch (NotFoundException e) {
                 Toast.makeText(requireActivity(), "Not found the qr code in this image", Toast.LENGTH_SHORT).show();
             }

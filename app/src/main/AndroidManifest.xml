@@ -43,10 +43,14 @@
         android:theme="@style/Theme.RealTimeChatApplication"
         tools:ignore="DataExtractionRules">
         <activity
+            android:name=".activity.LoginDemoActivity"
+            android:exported="false" />
+        <activity
             android:name=".activity.ReportProblemActivity"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.tac.open.report_problem" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

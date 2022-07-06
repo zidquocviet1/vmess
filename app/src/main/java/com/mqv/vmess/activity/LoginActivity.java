@@ -4,6 +4,7 @@ import static com.mqv.vmess.ui.validator.LoginRegisterValidationResult.EMAIL_ERR
 import static com.mqv.vmess.ui.validator.LoginRegisterValidationResult.PASSWORD_ERROR;
 import static com.mqv.vmess.ui.validator.LoginRegisterValidationResult.SUCCESS;
 
+import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -17,13 +18,16 @@ import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.mqv.vmess.BuildConfig;
 import com.mqv.vmess.R;
 import com.mqv.vmess.activity.viewmodel.LoginViewModel;
 import com.mqv.vmess.data.result.Result;
 import com.mqv.vmess.databinding.ActivityLoginBinding;
 import com.mqv.vmess.manager.LoggedInUserManager;
 import com.mqv.vmess.network.model.User;
+import com.mqv.vmess.ui.permissions.Permission;
 import com.mqv.vmess.util.AlertDialogUtil;
+import com.mqv.vmess.util.Logging;
 import com.mqv.vmess.util.NetworkStatus;
 
 import java.util.Objects;
@@ -272,7 +276,32 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
         } else if (id == mBinding.imageLoginGoogle.getId()) {
         } else if (id == mBinding.imageLoginQrCode.getId()) {
-            mViewModel.loginForDemoSection();
+            Permission.with(this, mPermissionsLauncher)
+                    .request(Manifest.permission.CAMERA)
+                    .ifNecessary()
+                    .withPermanentDenialDialog(
+                            getString(R.string.msg_scan_qr_code_permanently_dialog_message),
+                            getString(R.string.msg_camera_permission),
+                            getString(R.string.msg_permission_settings_construction, getString(R.string.label_camera))
+                    )
+                    .onAllGranted(() -> {
+                        Intent intent = new Intent(this, LoginDemoActivity.class);
+                        activityResultLauncher.launch(intent, result -> {
+                            if (result.getResultCode() == RESULT_OK) {
+                                Intent data = result.getData();
+                                if (data != null) {
+                                    String code = data.getStringExtra("qrCode");
+                                    Logging.debug("Login", "Qr Code: " + code);
+
+                                    if (code.equals(BuildConfig.DEMO_LOGIN_TOKEN)) {
+                                        mViewModel.loginForDemoSection();
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .onAnyDenied(() -> {})
+                    .execute();
         }
     }
 }

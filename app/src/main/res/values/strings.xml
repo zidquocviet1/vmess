@@ -397,6 +397,7 @@
     <string name="msg_webrtc_user_did_not_answer">User did not answer your call.</string>
     <string name="msg_scan_qr_code_permanently_dialog_message">This lets &appname; capture QR Code and then use it to login.</string>
     <string name="msg_webrtc_call_is_not_available_for_group">This feature is not supported for group</string>
+    <string name="msg_scan_qr_for_login_demo_section">Scan the QR code that given from Admin to login for demo section.</string>
 
     <string name="error_phone_verification">Verification failed, please try again!</string>
     <string name="error_phone_verification_limit_sms_per_day">Reach to the limited requests per day. Try later</string>
