@@ -15,8 +15,8 @@ android {
         applicationId "com.mqv.vmess"
         minSdk MIN_SDK
         targetSdk TARGET_SDK
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "API_URL", "\"https://139.99.61.233/api/v1\""
@@ -98,6 +98,9 @@ dependencies {
     implementation libs.google.webrtc
     implementation libs.libsignal.android
     implementation libs.libsignal.client
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     kapt libs.glide.compiler
     kapt libs.room.compiler
