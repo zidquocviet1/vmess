@@ -295,6 +295,8 @@ public class LoginActivity extends BaseActivity<LoginViewModel, ActivityLoginBin
 
                                     if (code.equals(BuildConfig.DEMO_LOGIN_TOKEN)) {
                                         mViewModel.loginForDemoSection();
+                                    } else {
+                                        Toast.makeText(this, R.string.msg_wrong_qr_code_for_login_demo, Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             }
