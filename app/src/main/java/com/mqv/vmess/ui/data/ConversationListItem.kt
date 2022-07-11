@@ -83,7 +83,7 @@ class ConversationListItem(
     }
 
     override fun bindWelcomeMessage(welcomeMessage: Chat, nextItem: Chat?) {
-        markAsUnread(!welcomeMessage.seenBy.contains(mCurrentUser.uid))
+        markAsUnread(!welcomeMessage.seenBy.contains(mCurrentUser.uid) && (welcomeMessage.senderId != null && welcomeMessage.senderId != mCurrentUser.uid))
 
         mBinding.statusNormalViewstub.visibility = View.GONE
         mBinding.statusGroupViewstub.visibility = View.GONE
