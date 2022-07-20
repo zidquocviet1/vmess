@@ -147,23 +147,31 @@
             app:icon="@drawable/ic_round_mic"
             app:iconSize="24dp" />
 
-        <EditText
-            android:id="@+id/edit_text_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="10"
-            android:autofillHints="@null"
-            android:background="@drawable/background_rounded_chat"
-            android:backgroundTint="@color/base_background_color"
-            android:hint="@string/prompt_write_message"
-            android:inputType="textCapSentences|textMultiLine"
-            android:maxLines="5"
-            android:minHeight="38dp"
-            android:paddingStart="10dp"
-            android:paddingTop="4dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="4dp"
-            android:textSize="14sp" />
+            android:layout_weight="10">
+
+            <EditText
+                android:id="@+id/edit_text_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="@null"
+                android:background="@drawable/background_rounded_chat"
+                android:backgroundTint="@color/base_background_color"
+                android:hint="@string/prompt_write_message"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxWidth="100dp"
+                android:maxLines="5"
+                android:minHeight="38dp"
+                android:paddingStart="10dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="4dp"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_send_message"
