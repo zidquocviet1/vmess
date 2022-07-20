@@ -107,11 +107,24 @@ public class SelectPhotoActivity extends ToolbarActivity<AndroidViewModel, Activ
     @Override
     protected void onStart() {
         super.onStart();
-        var images = FileProviderUtil.getAllPhotoFromExternal(getContentResolver(), null);
-        images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
 
-        adapter.submitList(images);
-        adapter.notifyItemRangeChanged(0, images.size());
+        Permission.with(this, mPermissionsLauncher)
+                .request(Manifest.permission.READ_EXTERNAL_STORAGE)
+                .ifNecessary()
+                .withPermanentDenialDialog(
+                        "Allow load images?",
+                        "VMess need your permission to load images from your gallery. But read external storage permission was denied",
+                        "To enable this permission you need to click the Go to Settings button below otherwise cancel it."
+                )
+                .onAllGranted(() -> {
+                    var images = FileProviderUtil.getAllPhotoFromExternal(getContentResolver(), null);
+                    images.add(CAMERA_POSITION, new ImageThumbnail(Long.MAX_VALUE));
+
+                    adapter.submitList(images);
+                    adapter.notifyItemRangeChanged(0, images.size());
+                })
+                .onAnyDenied(() -> Toast.makeText(this, R.string.error_not_have_storage_permission_to_load_image_for_change_avatar, Toast.LENGTH_SHORT).show())
+                .execute();
     }
 
     @Override
