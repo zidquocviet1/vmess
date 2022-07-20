@@ -428,7 +428,7 @@ public class ConversationActivity
             Map<MessageMediaUploadType, List<String>> selectedMedia = mMediaFooterStub.get().getSelectedListMediaAsPath();
 
             if (selectedMedia.isEmpty()) {
-                String plainText = mBinding.editTextContent.getText().toString();
+                String plainText = mBinding.editTextContent.getText().toString().trim();
                 mBinding.editTextContent.getText().clear();
 
                 mViewModel.sendMessage(this, plainText);
