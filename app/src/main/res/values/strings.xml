@@ -424,6 +424,7 @@
     <string name="error_no_result_found_for">No results found for \"%1$s\".</string>
     <string name="error_create_encryption_conversation_fail">Something wrong when creating a new encryption conversation. Try again</string>
     <string name="error_permission_denied">Permission denied!</string>
+    <string name="error_not_have_storage_permission_to_load_image_for_change_avatar">Permission read external storage is not granted, we can\'t load your images from gallery!!!</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
