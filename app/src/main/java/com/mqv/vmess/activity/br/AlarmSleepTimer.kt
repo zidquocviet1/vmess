@@ -12,7 +12,7 @@ class AlarmSleepTimer(private val context: Context) {
         val alarmManager = context.getSystemService(AlarmManager::class.java)
         val alarmIntent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, alarmIntent, 0)
+            PendingIntent.getBroadcast(context, 0, alarmIntent, PendingIntent.FLAG_IMMUTABLE)
 
         if (pendingIntent != null) {
             alarmManager.setRepeating(
