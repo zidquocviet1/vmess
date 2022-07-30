@@ -41,8 +41,11 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
     private final Data mInputData;
 
-    public static final String EXTRA_MARK_AS_READ    = "maskAsRead";
     public static final String EXTRA_LIST_MESSAGE_ID = "message_id";
+    public static final String EXTRA_TYPE = "extra_type";
+    public static final int EXTRA_RECEIVED = 0;
+    public static final int EXTRA_SEEN = 1;
+    public static final int EXTRA_UNSENT = 2;
 
     public PushMessageAcknowledgeWorkWrapper(Context context, Data data) {
         super(context);
@@ -94,13 +97,18 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
         @NonNull
         @Override
         public Single<Result> createWork() {
-            boolean isMarkAsRead = getInputData().getBoolean(EXTRA_MARK_AS_READ, false);
+            int type = getInputData().getInt(EXTRA_TYPE, -1);
             String[] messageIds = getInputData().getStringArray(EXTRA_LIST_MESSAGE_ID);
 
-            if (isMarkAsRead) {
-                return messageIds == null ? Single.just(Result.failure()) : markAsReadWork(Arrays.asList(messageIds));
+            if (messageIds == null) {
+                return Single.just(Result.failure());
             } else {
-                return messageIds == null ? Single.just(Result.failure()) : responseReceivedWork(Arrays.asList(messageIds));
+                switch (type) {
+                    case EXTRA_RECEIVED: return responseReceivedWork(Arrays.asList(messageIds));
+                    case EXTRA_SEEN: return markAsReadWork(Arrays.asList(messageIds));
+                    case EXTRA_UNSENT: return unsentMessage(Arrays.asList(messageIds));
+                    default: return Single.just(Result.failure());
+                }
             }
         }
 
@@ -137,6 +145,24 @@ public class PushMessageAcknowledgeWorkWrapper extends BaseWorker {
                                  .onErrorReturnItem(Result.failure());
             } else {
                 return sendReceivedMessageBackground(messageIds);
+            }
+        }
+
+        private Single<Result> unsentMessage(List<String> messageIds) {
+            if (LifecycleUtil.isAppForeground()) {
+                return Observable.fromIterable(messageIds)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(Schedulers.io())
+                        .concatMapSingle(chatDao::findById)
+                        .concatMapSingle(c -> sendWebsocketRequest(WebSocketRequestMessage.Status.UNSENT, c))
+                        .flatMapCompletable(response -> {
+                            AppDependencies.getIncomingMessageProcessor().process(response);
+                            return Completable.complete();
+                        })
+                        .toSingleDefault(Result.success())
+                        .onErrorReturnItem(Result.failure());
+            } else {
+                return sendSeenMessageBackground(messageIds);
             }
         }
 

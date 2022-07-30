@@ -71,7 +71,7 @@ class MarkReadReceiver : HiltBroadcastReceiver() {
                     PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID,
                     ids.toTypedArray()
                 )
-                .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, true)
+                .putInt(PushMessageAcknowledgeWorkWrapper.EXTRA_TYPE, PushMessageAcknowledgeWorkWrapper.EXTRA_SEEN)
                 .build()
             WorkDependency.enqueue(PushMessageAcknowledgeWorkWrapper(context, data))
             AppDependencies.getDatabaseObserver().notifyConversationUpdated(conversationId)

@@ -56,6 +56,7 @@ import com.mqv.vmess.util.Event;
 import com.mqv.vmess.util.FileProviderUtil;
 import com.mqv.vmess.util.LiveDataUtil;
 import com.mqv.vmess.util.Logging;
+import com.mqv.vmess.work.PushMessageAcknowledgeWorkWrapper;
 import com.mqv.vmess.work.SendMessageWorkWrapper;
 import com.mqv.vmess.work.WorkDependency;
 
@@ -720,6 +721,29 @@ public class ConversationViewModel extends MessageHandlerViewModel {
                                                           }
                                                           singleRequestCall.postValue(Result.Fail(-1));
                                                       });
+        cd.add(disposable);
+    }
+
+    public void unsentMessageWebSocket(Context context, Chat message) {
+        Disposable disposable = conversationRepository.isExists(message.getConversationId())
+                .flatMapCompletable(isExists -> isExists ?
+                        Completable.fromAction(() -> chatRepository.updateCached(message)) :
+                        Completable.error(new EmptyResultSetException("empty")))
+                .compose(RxHelper.applyCompleteSchedulers())
+                .subscribe(() -> {
+                    AppDependencies.getDatabaseObserver().notifyConversationUpdated(message.getConversationId());
+                    Data data = new Data.Builder()
+                            .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, new String[]{message.getId()})
+                            .putInt(PushMessageAcknowledgeWorkWrapper.EXTRA_TYPE, PushMessageAcknowledgeWorkWrapper.EXTRA_UNSENT)
+                            .build();
+                    WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(context, data));
+                }, t -> {
+                    if (t instanceof EmptyResultSetException) {
+                        eventToast.postValue(new Event<>(R.string.error_conversation_has_been_deleted));
+                    } else if (t instanceof NetworkException) {
+                        eventToast.postValue(new Event<>(((NetworkException)t).getStringRes()));
+                    }
+                });
         cd.add(disposable);
     }
 

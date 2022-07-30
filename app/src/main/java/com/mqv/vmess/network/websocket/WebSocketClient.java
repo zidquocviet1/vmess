@@ -203,7 +203,7 @@ public class WebSocketClient {
                 // Decrypt the request message and return the readable message
                 if (isServiceMessage(request)) {
                     return new WebSocketResponse(HttpURLConnection.HTTP_OK, request.getBody());
-                } else if (isAcceptedMessage(request) || isSeenMessage(request)) {
+                } else if (isAcceptedMessage(request) || isSeenMessage(request) || isUnsentMessage(request)) {
                     return new WebSocketResponse(HttpURLConnection.HTTP_ACCEPTED, request.getBody());
                 } else if (isEmptyMessage(request)) {
                     return null;
@@ -224,6 +224,10 @@ public class WebSocketClient {
 
     private static boolean isSeenMessage(WebSocketRequestMessage request) {
         return request.getStatus() == WebSocketRequestMessage.Status.SEEN_MESSAGE;
+    }
+
+    private static boolean isUnsentMessage(WebSocketRequestMessage request) {
+        return request.getStatus() == WebSocketRequestMessage.Status.UNSENT;
     }
 
     private static boolean isEmptyMessage(WebSocketRequestMessage request) {

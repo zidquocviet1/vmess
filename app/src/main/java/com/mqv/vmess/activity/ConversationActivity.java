@@ -976,7 +976,7 @@ public class ConversationActivity
 
         shouldShowFooterOption(false);
 
-        mViewModel.unsentMessage(message);
+        mViewModel.unsentMessageWebSocket(this, message);
     }
 
     private void handleSaveMessageMedia(View view) {

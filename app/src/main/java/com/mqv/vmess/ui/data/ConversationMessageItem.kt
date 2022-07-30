@@ -111,7 +111,7 @@ class ConversationMessageItem(
         mBinding.layoutReceiver.visibility = View.GONE
         mBinding.layoutSender.visibility = View.VISIBLE
         mBinding.layoutWelcome.visibility = View.GONE
-        mBinding.textSenderContent.text = item.loadOutgoingMessageContent(mIsEncryptionConversation)
+        mBinding.textSenderContent.text = if (item.isUnsent) "" else item.loadOutgoingMessageContent(mIsEncryptionConversation)
         mBinding.senderChatBackground.backgroundTintList = sChatColor
 
         bindStatus(item)
@@ -132,7 +132,7 @@ class ConversationMessageItem(
         mBinding.layoutSender.visibility = View.GONE
         mBinding.layoutReceiver.visibility = View.VISIBLE
         mBinding.layoutWelcome.visibility = View.GONE
-        mBinding.textReceiverContent.text = content
+        mBinding.textReceiverContent.text = if (item.isUnsent) "" else content
         mBinding.imageReceiver.visibility = View.VISIBLE
 
         // Render the sender profile image. Not otherUser because we have a group type
@@ -142,6 +142,10 @@ class ConversationMessageItem(
     private fun bindUnsentMessage(item: Chat, background: View, contentView: TextView) {
         renderUnsentMessage(background, contentView, getUnsentMessage(item))
         bindMessageShape(item)
+
+        mMetadata?.let {
+            bindMessageStatus(item, mParticipants, it.type)
+        }
     }
 
     private fun renderUnsentMessage(background: View, contentView: TextView, content: String) {

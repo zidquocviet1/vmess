@@ -31,6 +31,7 @@ public final class IncomingMessageProcessor {
     private static final int RESPONSE_INCOMING_MESSAGE = 200;
     private static final int RESPONSE_SEEN_MESSAGE = 201;
     private static final int RESPONSE_ACCEPTED_MESSAGE = 202;
+    private static final int RESPONSE_UNSENT_MESSAGE = 204;
 
     private final ChatDao chatDao;
     private final ConversationDao conversationDao;
@@ -65,6 +66,9 @@ public final class IncomingMessageProcessor {
             action = chatDao.update(body)
                             .andThen(Completable.fromAction(() -> databaseObserver.notifyMessageUpdated(conversationId, messageId)))
                             .andThen(onSeenMessageSuccess(messageId));
+        } else if (status == RESPONSE_UNSENT_MESSAGE) {
+            action = chatDao.update(body)
+                    .andThen(Completable.fromAction(() -> databaseObserver.notifyMessageUpdated(conversationId, messageId)));
         } else {
             action = Completable.complete();
         }

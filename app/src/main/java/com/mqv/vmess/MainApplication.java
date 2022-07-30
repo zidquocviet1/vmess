@@ -3,6 +3,7 @@ package com.mqv.vmess;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -67,6 +68,10 @@ public class MainApplication extends Application implements Configuration.Provid
         notifyAllIncomingMessage();
         initializeRingRtc();
         registerAccountStateChangeForSubmitPreKeyBundle();
+
+//        Notify play services to send socket connection heartbeat
+        sendBroadcast(new Intent("com.google.android.intent.action.GTALK_HEARTBEAT"));
+        sendBroadcast(new Intent("com.google.android.intent.action.MCS_HEARTBEAT"));
     }
 
     private void setAppTheme(DarkMode mode){
@@ -205,7 +210,7 @@ public class MainApplication extends Application implements Configuration.Provid
                     if (!list.isEmpty()) {
                         Data data = new Data.Builder()
                                             .putStringArray(PushMessageAcknowledgeWorkWrapper.EXTRA_LIST_MESSAGE_ID, list.toArray(new String[0]))
-                                            .putBoolean(PushMessageAcknowledgeWorkWrapper.EXTRA_MARK_AS_READ, false)
+                                            .putInt(PushMessageAcknowledgeWorkWrapper.EXTRA_TYPE, PushMessageAcknowledgeWorkWrapper.EXTRA_RECEIVED)
                                             .build();
                         WorkDependency.enqueue(new PushMessageAcknowledgeWorkWrapper(this, data));
                     }
