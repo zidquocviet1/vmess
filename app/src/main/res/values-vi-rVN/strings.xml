@@ -393,4 +393,5 @@
     <string name="msg_wrong_qr_code_for_login_demo">Sai mã QR, sử dụng mã QR được cung cấp bởi Mai Quốc Việt</string>
     <string name="error_not_have_storage_permission_to_load_image_for_change_avatar">Quyền đọc bộ nhớ không cho được cho phép, chúng tôi không thể tải những hình ảnh trong thư viện của bạn.</string>
     <string name="error_username_or_email_not_found">Tên người dùng hoặc địa chỉ email không tồn tại</string>
+    <string name="error_video_to_large">Video bạn gửi có kích thước quá lớn, máy chủ không thể xử lý vui lòng thử với một video nhỏ hơn.</string>
 </resources>

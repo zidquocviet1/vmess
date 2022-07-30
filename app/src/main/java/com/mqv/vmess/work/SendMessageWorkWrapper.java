@@ -2,6 +2,7 @@ package com.mqv.vmess.work;
 
 import android.content.Context;
 import android.util.Pair;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.hilt.work.HiltWorker;
@@ -16,6 +17,7 @@ import androidx.work.rxjava3.RxWorker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.gson.Gson;
+import com.mqv.vmess.R;
 import com.mqv.vmess.data.dao.ChatDao;
 import com.mqv.vmess.data.dao.ConversationDao;
 import com.mqv.vmess.data.repository.impl.ChatRepositoryImpl;
@@ -37,6 +39,7 @@ import com.mqv.vmess.util.MessageUtil;
 import com.mqv.vmess.util.UserTokenUtil;
 
 import java.io.File;
+import java.net.SocketException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Arrays;
@@ -47,6 +50,7 @@ import java.util.stream.Collectors;
 
 import dagger.assisted.Assisted;
 import dagger.assisted.AssistedInject;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -160,7 +164,11 @@ public class SendMessageWorkWrapper extends BaseWorker {
                              .toList()
                              .flatMap(list -> {
                                  if (chat.getStatus() != MessageStatus.ERROR) return onResponseUploading(chat, list);
-                                 else return Single.just(Result.failure());
+                                 else {
+                                     return Completable.fromAction(() -> chatRepository.updateCached(chat))
+                                             .andThen(Completable.fromAction(() -> AppDependencies.getDatabaseObserver().notifyMessageUpdated(chat.getConversationId(), chat.getId())))
+                                             .toSingleDefault(Result.failure());
+                                 }
                              });
         }
 
@@ -284,6 +292,9 @@ public class SendMessageWorkWrapper extends BaseWorker {
         }
 
         private Chat.Media handleUploadFileError(Throwable t) {
+            if (t instanceof FileTooLargeException || t instanceof SocketException) {
+                Toast.makeText(getApplicationContext(), R.string.error_video_to_large, Toast.LENGTH_SHORT).show();
+            }
             return null;
         }
 

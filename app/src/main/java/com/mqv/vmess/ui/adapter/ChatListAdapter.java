@@ -301,6 +301,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         } else if (holder instanceof ChatMultiMediaViewHolder) {
             if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_SENDER)) {
                 ((ChatMultiMediaViewHolder) holder).bindNameAndAvatar(getItem(position));
+            } else if (!payloads.isEmpty() && payloads.get(0).equals(MESSAGE_STATUS_PAYLOAD)) {
+                ((ChatMultiMediaViewHolder) holder).bindReceiverThumbnailAndMessageStatus(getItem(position));
             } else {
                 ((ChatMultiMediaViewHolder) holder).bind(getItem(position));
             }
@@ -613,6 +615,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
         Drawable mReceivedIconDrawable;
         Drawable mNotReceivedIconDrawable;
         Drawable mSendingIconDrawable;
+        Drawable mErrorIconDrawable;
 
         boolean mIsReceived;
 
@@ -653,10 +656,12 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             mSendingIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_outline_circle);
             mReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle);
             mNotReceivedIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_check_circle_outline);
+            mErrorIconDrawable = ContextCompat.getDrawable(mContext, R.drawable.ic_round_error);
 
             mReceivedIconDrawable.setTintList(ConversationMessageItem.getChatColor());
             mNotReceivedIconDrawable.setTintList(ConversationMessageItem.getChatColor());
             mSendingIconDrawable.setTintList(ConversationMessageItem.getChatColor());
+            mErrorIconDrawable.setTintList(ColorStateList.valueOf(ContextCompat.getColor(mContext, android.R.color.holo_red_light)));
         }
 
         public static void setUserLeftGroup(List<User> userLeftGroup) {
@@ -689,7 +694,7 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
             }
         }
 
-        private void bindReceiverThumbnailAndMessageStatus(Chat message) {
+        public void bindReceiverThumbnailAndMessageStatus(Chat message) {
             if (mIsReceived) {
                 Picture.loadUserAvatar(mContext, getSenderFromChat(message.getSenderId()).getPhotoUrl())
                         .into(mReceivedBinding.imageReceiver);
@@ -706,6 +711,8 @@ public class ChatListAdapter extends ListAdapter<Chat, RecyclerView.ViewHolder> 
                         mOutgoingBinding.imageMessageStatus.setImageDrawable(mNotReceivedIconDrawable);
                     } else if (status == MessageStatus.RECEIVED) {
                         mOutgoingBinding.imageMessageStatus.setImageDrawable(mReceivedIconDrawable);
+                    } else if (status == MessageStatus.ERROR) {
+                        mOutgoingBinding.imageMessageStatus.setImageDrawable(mErrorIconDrawable);
                     }
                 }
                 findLastSeenStatus(message);

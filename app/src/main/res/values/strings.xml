@@ -426,6 +426,7 @@
     <string name="error_create_encryption_conversation_fail">Something wrong when creating a new encryption conversation. Try again</string>
     <string name="error_permission_denied">Permission denied!</string>
     <string name="error_not_have_storage_permission_to_load_image_for_change_avatar">Permission read external storage is not granted, we can\'t load your images from gallery!!!</string>
+    <string name="error_video_to_large">Your video file is too large, currently server can\'t process it so use the smaller one.</string>
 
     <string name="prompt_email_or_phone">Email or Phone number</string>
     <string name="prompt_email">Email</string>
