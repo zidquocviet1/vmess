@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.AudioAttributes
+import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.widget.RemoteViews
@@ -133,7 +134,7 @@ class CallNotificationService : Service() {
             applicationContext,
             0,
             fullScreenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
@@ -145,7 +146,7 @@ class CallNotificationService : Service() {
             applicationContext,
             0,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
@@ -162,7 +163,7 @@ class CallNotificationService : Service() {
             applicationContext,
             0,
             intent,
-            PendingIntent.FLAG_MUTABLE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_MUTABLE
         )
     }
 
@@ -172,7 +173,7 @@ class CallNotificationService : Service() {
             applicationContext,
             0,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT
         )
     }
 
