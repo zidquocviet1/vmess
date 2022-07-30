@@ -20,7 +20,7 @@ import com.mqv.vmess.util.NetworkStatus;
 
 public class UsernameConnectionFragment extends BaseFragment<ConnectPeopleViewModel, FragmentUsernameConnectionBinding>
         implements TextWatcher, View.OnClickListener {
-    private static final int MAX_USER_NAME_LENGTH = 20;
+    private static final int MAX_USER_NAME_LENGTH = 50;
 
     public UsernameConnectionFragment() {
         // Required empty public constructor

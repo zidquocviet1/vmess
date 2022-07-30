@@ -109,7 +109,11 @@ public class ConnectPeopleViewModel extends CurrentUserViewModel {
                     var message = t.getMessage();
 
                     if (message != null && message.equals("HTTP 404 ")) {
-                        connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
+                        if (requestCode == QR_CODE_REQUEST) {
+                            connectUserResult.setValue(Result.Fail(R.string.error_qr_code_not_found));
+                        } else {
+                            connectUserResult.setValue(Result.Fail(R.string.error_username_or_email_not_found));
+                        }
                     } else
                         connectUserResult.setValue(Result.Fail(R.string.error_connect_server_fail));
                 });

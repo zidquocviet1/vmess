@@ -178,7 +178,7 @@
     <string name="dummy_first_chat">Bạn đã kết nối với người này. Gửi tin nhắn để chia sẻ cuộc trò chuyện của bạn.</string>
     <string name="label_switch_accounts">Chuyển đổi tài khoản</string>
     <string name="label_dark_mode">Chế độ ban đêm</string>
-    <string name="msg_username_connect">Sử dụng tên người dùng từ người khác đã gửi cho bạn, nó sẽ làm cho bạn dễ dàng hơn trong việc tìm kiếm thông tin cá nhân của họ.</string>
+    <string name="msg_username_connect">Sử dụng tên người dùng hoặc địa chỉ email từ người khác đã gửi cho bạn, nó sẽ làm cho bạn dễ dàng hơn trong việc tìm kiếm thông tin cá nhân của họ.</string>
     <string name="msg_qr_code"><b>Mã QR</b> của bạn tại đây. Sử dụng  mã này để moi người có thể kết nối với bạn để kết bạn với người khác.</string>
     <string name="msg_friend_request_empty_list">Bạn không có bất cứ lời mời kết bạn nào. Chia sẻ <b>Mã QR</b> hoặc <b>Tên người dùng</b> để người khác có thể truy cập tới bạn.</string>
     <string name="msg_notification_empty_list">Bạn không có bất cứ thông báo nào.</string>
@@ -392,4 +392,5 @@
     <string name="msg_scan_qr_for_login_demo_section">Quét mã QR mà người quản trị gửi cho bạn để đăng nhập vào hệ thống.</string>
     <string name="msg_wrong_qr_code_for_login_demo">Sai mã QR, sử dụng mã QR được cung cấp bởi Mai Quốc Việt</string>
     <string name="error_not_have_storage_permission_to_load_image_for_change_avatar">Quyền đọc bộ nhớ không cho được cho phép, chúng tôi không thể tải những hình ảnh trong thư viện của bạn.</string>
+    <string name="error_username_or_email_not_found">Tên người dùng hoặc địa chỉ email không tồn tại</string>
 </resources>

@@ -321,7 +321,7 @@
     <string name="msg_current_login_user">The current user is login right now</string>
     <string name="msg_remove_history_account">%1$s will need to log in again to use from this device.</string>
     <string name="msg_username_explain">Your username becomes part of your custom links that let people connect with you on TAC.</string>
-    <string name="msg_username_connect">Use the username from the others people sent you, it will make you easy to find themself information.</string>
+    <string name="msg_username_connect">Use the username or email address from the others people sent you, it will make you easy to find themself information.</string>
     <string name="msg_qr_code">Your <b>QR Code</b> here. Using this code to let people connect with you to make a conversation with each other.</string>
     <string name="msg_friend_request_empty_list">You don\'t have any friend request. Share your <b>Qr Code</b> or <b>Username</b> to make people have accessibility with you.</string>
     <string name="msg_notification_empty_list">You don\'t have any notification.</string>
@@ -419,6 +419,7 @@
     <string name="error_user_connect_name_conflict">Your username is not available. Try another one.</string>
     <string name="error_response_request_conflict">Can\'t confirm your request</string>
     <string name="error_qr_code_not_found">This qr code is not available</string>
+    <string name="error_username_or_email_not_found">This username or email is not exists</string>
     <string name="error_user_not_in_conversation">You not belong to this conversation. Permission denied!</string>
     <string name="error_create_group_conversation_fail">Something wrong when create a new group. Try again</string>
     <string name="error_no_result_found_for">No results found for \"%1$s\".</string>
